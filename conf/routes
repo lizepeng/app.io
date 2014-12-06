@@ -1,0 +1,26 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                  controllers.Application.index
+GET     /wiki              controllers.Application.wiki
+GET     /about             controllers.Application.about
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file      controllers.Assets.at(path="/public", file)
+
+GET     /files             controllers.Files.index
+POST    /files             controllers.Files.upload
+GET     /files/:id         controllers.Files.download(id: UUID)
+POST    /files/:id/rm      controllers.Files.remove(id: UUID)
+
+
+GET     /login             controllers.Sessions.nnew
+POST    /login             controllers.Sessions.create
+POST    /logout            controllers.Sessions.destroy
+
+GET     /users/:id         controllers.Users.show(id: UUID)
+GET     /users/            controllers.Users.index
+GET     /join              controllers.Users.nnew
+POST    /join              controllers.Users.create

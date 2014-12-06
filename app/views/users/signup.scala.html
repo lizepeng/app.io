@@ -1,0 +1,103 @@
+@(fm: Form[_])(implicit request: UserRequest[_])
+
+@import helper._
+
+@main(MSG("sign.up.head")){
+
+  <div class="page-header">
+    <h1>Join App.io <br>
+      <small>The best way to connect the world</small>
+    </h1>
+  </div>
+
+  <div class="row" >
+    <div class="col-xs-10 col-xs-offset-1
+                col-sm-7  col-sm-offset-0
+                col-md-6  col-md-offset-1
+                col-lg-5  col-lg-offset-2
+                signup-form">
+      <h4>@MSG("Create your personal account")</h4>
+      @fm.globalErrors.map { gerr =>
+        @common._alert("danger", gerr.message)
+      }
+
+      @form(action = routes.Users.create(), 'class -> "form-signup") {
+
+        @inputText(fm("email"),
+          'placeholder -> MSG("email"),
+          'class       -> "form-control",
+          'type        -> "email",
+          'tabindex    -> 1)
+
+        @inputPassword(fm("password"),
+          'placeholder -> MSG("password"),
+          'class       -> "form-control",
+          'type        -> "password",
+          'tabindex    -> 2)
+
+        @inputPassword(fm("password_confirmation"),
+          'placeholder -> MSG("confirm your password"),
+          'class       -> "form-control",
+          'type        -> "password",
+          'tabindex    -> 3)
+        <p class="tos-info">
+          <small>
+            By clicking on "Create an account" below, you are agreeing to the
+            <a href="#" >Terms of Service</a> and the <a href="#" >Privacy Policy.</a>
+          </small>
+        </p>
+
+        <button type="submit" class="btn btn-success" tabindex="5">
+          @MSG("Create an account")
+        </button>
+      }
+    </div>
+
+    <div class="col-xs-10 col-xs-offset-1
+                col-sm-5  col-sm-offset-0
+                col-md-4  col-md-offset-0
+                col-lg-3  col-lg-offset-0 ">
+
+      <ul class="list-group">
+        <li class="list-group-item">
+          <h4>You'll love App.io</h4>
+        </li>
+        <li class="list-group-item">
+          <strong>Unlimited</strong>
+          collaborators
+          </li>
+        <li class="list-group-item">
+          <strong>Unlimited</strong>
+          public repositories
+        </li>
+        <li class="list-group-item">
+          <i class="fa fa-check"></i>
+          Great communication
+        </li>
+        <li class="list-group-item">
+          <i class="fa fa-check"></i>
+          Open source community
+        </li>
+      </ul>
+    </div>
+  </div>
+}(css)
+
+@css = {
+  <style>
+    .tos-info {
+      border-style: solid none;
+      border-width: 1px 0px;
+      border-color: #e5e5e5;
+      padding: 10px 0px;
+    }
+
+    .fa-check {
+      color: green;
+    }
+
+    .signup-form {
+      padding-bottom: 20px;
+    }
+  </style>
+}

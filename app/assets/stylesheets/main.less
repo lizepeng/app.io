@@ -1,0 +1,141 @@
+/* GLOBAL STYLES
+-------------------------------------------------- */
+/* Padding below the footer and lighter body text */
+// @import "lib/bootstrap/less/bootstrap.less";
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  padding-top: 100px;
+  padding-bottom: 100px;
+  color: #5a5a5a;
+}
+
+
+/* CUSTOMIZE THE NAVBAR
+-------------------------------------------------- */
+/* Used for positioning it into place. */
+.navbar-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 20;
+
+  .navbar {
+    padding-right: 15px;
+    padding-left: 15px;
+
+    .container {
+      width: auto;
+    }
+  }
+
+  > .container {
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
+.navbar-brand {
+  color: #fff !important;
+}
+
+.user-nav li {
+  a, form {
+    padding: 15px 10px;
+    margin: 0px;
+  }
+}
+
+.form-inline-btn {
+  background: none;
+  color: #9d9d9d;
+  border: 0;
+  padding: 0px;
+  position: relative;
+  top: -1px;
+  &:hover {
+    color: #fff;
+  }
+}
+
+.site-footer {
+  margin-top: 10px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 90px;
+  .container {
+    padding-top: 15px;
+    border-top: 1px solid #e5e5e5;
+  }
+  p, ul {
+    margin: 20px 0;
+  }
+  ul {
+    float: right;
+  }
+}
+
+.unread {
+  font-size: 12px;
+  position: relative;
+  top: -9px;
+  right: -6px;
+  color: #fff;
+}
+
+.btn-circle {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  padding: 0px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  border-radius: 15px;
+}
+
+/* RESPONSIVE CSS
+-------------------------------------------------- */
+
+/* Extra small devices */
+@media (max-width: 767px) {
+
+  body {
+    padding-top: 60px;
+  }
+
+  .navbar-wrapper .navbar {
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
+/* Small devices */
+@media (min-width: 768px) and (max-width: 991px) {
+
+  .navbar-wrapper {
+    margin-top: 20px;
+    padding: 0 15px;
+
+    .navbar {
+      padding-right: 0;
+      padding-left: 0;
+      border-radius: 4px;
+    }
+  }
+}
+
+/* Medium devices */
+@media (min-width: 992px) and (max-width: 1199px) {
+
+}
+
+/* Large devices */
+@media (min-width: 1200px) {
+
+}

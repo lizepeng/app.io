@@ -1,0 +1,9 @@
+@(key: String = "success", msg: String = "")
+
+<div class="alert alert-@key">
+  <button type="button" class="close" data-dismiss="alert">&times;</button>
+  @key match {
+    case "danger" | "warning" => {<i class="fa fa-warning"></i>}
+  }
+  <strong style="margin-right: 20px;">@MSG(s"alert.$key.title")</strong>@MSG(msg)
+</div>

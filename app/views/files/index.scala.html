@@ -1,0 +1,69 @@
+@(files: Seq[cfs.File])(implicit request: UserRequest[_])
+
+@import helper._
+
+@main(MSG("Files")) {
+
+  <div class="row">
+    <div class="col-xs-9 col-xs-offset-3">
+      @_upload("html", "picture")
+    </div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <h2 style="margin-left: 20px">
+    <i class="fa fa-hdd-o fa-lg"></i>
+    Attachments</h2>
+  </div>
+  <div class="row">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th class="col-xs-1"></th>
+            <th class="col-xs-7">Name</th>
+            <th class="col-xs-2">Size</th>
+            <th class="col-xs-2" colspan="2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @files.map { f =>
+            <tr>
+              <td>
+                <i class="fa fa-lg @FileIcon(f.name)"></i>
+              </td>
+              <td>@f.name</td>
+              <td class="text-right">@FileSize(f.size)</td>
+              <td>
+                <a href="@routes.Files.download(f.id)">
+                  <i class="fa fa-download fa-lg"></i>
+                </a>
+              </td>
+              <td>
+                @form(routes.Files.remove(f.id), 'class -> "form-inline") {
+                  <button type="submit" class="btn form-inline-btn">
+                    <i class="fa fa-trash-o fa-lg text-danger"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}(css, _upload("js"))
+
+@css = {
+  @_upload("css")
+  <style>
+    .table {
+      table-layout:fixed;
+    }
+
+    .table td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+}

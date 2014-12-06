@@ -1,0 +1,6 @@
+@(title: String, above_content: Html = Html(""))(
+  content: Html)(
+  css: Html = Html(""), js: Html = Html(""))(
+  implicit request: UserRequest[_])
+
+@main(title, above_content)(content)(js, css)(request)

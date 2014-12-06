@@ -1,0 +1,79 @@
+@(fm: Form[_])(implicit request: UserRequest[_])
+
+@import helper._
+
+@main(MSG("sign.in.head")){
+
+  @fm.globalErrors.map { gerr =>
+    @common._alert("danger", gerr.message)
+  }
+
+  <div class="container" >
+    @form(action = routes.Sessions.create(), 'class -> "form-signin") {
+
+      <h2 class="form-signin-heading">@MSG("sign.in.head")</h2>
+
+      @inputText(fm("email"),
+        'placeholder -> MSG("email"),
+        'class       -> "form-control",
+        'type        -> "email",
+        'tabindex    -> 1,
+        '_icons      -> "fa fa-envelope-o fa-fw"
+        )(_fe_input_login, request.lang)
+
+      @inputPassword(fm("password"),
+        'placeholder -> MSG("password"),
+        'class       -> "form-control",
+        'tabindex    -> 2,
+        '_icons      -> "fa fa-key fa-fw"
+        )(_fe_input_login, request.lang)
+
+      <div style="margin-top: 20px;">
+        @checkbox(fm("remember_me"),
+        'tabindex -> 3,
+        '_text -> MSG("remember.me")
+        )(common._fe_input, request.lang)
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="5">
+        @MSG("sign.in")
+      </button>
+
+      <span class="help-inline">@MSG("user.pwd.forgot")</span>
+    }
+  </div>
+}(css = css)
+
+@css = {
+  <style>
+
+    .form-signin {
+      max-width: 330px;
+      padding: 15px;
+      margin: 0 auto;
+    }
+
+    .form-signin .form-signin-heading,
+    .form-signin .checkbox {
+      margin-bottom: 10px;
+    }
+
+    .form-signin .checkbox {
+      font-weight: normal;
+    }
+
+    .form-signin .form-control {
+      position: relative;
+      height: auto;
+      -webkit-box-sizing: border-box;
+         -moz-box-sizing: border-box;
+              box-sizing: border-box;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .form-signin .form-control:focus {
+      z-index: 2;
+    }
+  </style>
+}

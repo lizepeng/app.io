@@ -1,0 +1,20 @@
+@(formaction: Call, title: String="", msg: String="", cls: String="dialog-confirm")(
+  implicit lang: Lang)
+
+@import helper._
+
+<div class="@cls modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3>@title</h3>
+  </div>
+  <div class="modal-body">
+    <p>@msg</p>
+  </div>
+  <div class="modal-footer">
+    @form(formaction, 'class -> "navbar-form") {
+      <button class="btn btn-primary" aria-hidden="true"><i class="icon-ok"></i> @MSG("OK")</button>
+      <button class="btn" data-dismiss="modal" aria-hidden="true">@MSG("cancel")</button>
+    }
+  </div>
+</div>

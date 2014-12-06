@@ -1,0 +1,7 @@
+@(textType: String)(html: Html)(css: Html = Html(""))(js: Html = Html(""))
+
+@textType match {
+  case "html" => {@html}
+  case "css"  => {@css}
+  case "js"   => {@js}
+}

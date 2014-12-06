@@ -1,0 +1,48 @@
+@(textType: String, name: String, isDev: Boolean = play.api.Play.isDev(play.api.Play.current))
+
+@textType match {
+  case "js" => {
+    @name match {
+      case "google-chart" => {
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+      }
+      case "kinetic" => {
+        @js("kinetic-v4.5.4" + ".js", "kinetic-v4.5.4" + ".min.js", "libs/kinetic")
+      }
+      case path => {
+        @js(path + ".js", path + ".min.js", "javascripts")
+      }
+    }
+  }
+  case "css" => {
+    @name match {
+      case path => {
+        @css(path + ".css", path + ".min.css", "stylesheets")
+      }
+    }
+  }
+}
+
+@css(name: String, minified: String, root: String) = {
+  @if(isDev){
+    @stylesheet(name, root)
+  } else {
+    @stylesheet(minified, root)
+  }
+}
+
+@js(name: String, minified: String, root: String) = {
+  @if(isDev){
+    @javascript(name, root)
+  } else {
+    @javascript(minified, root)
+  }
+}
+
+@stylesheet(path: String, root: String) = {
+  <link rel="stylesheet" href="@routes.Assets.at(root + "/" + path)">
+}
+
+@javascript(path: String, root: String) = {
+  <script src="@routes.Assets.at(root + "/" + path)" type="text/javascript"></script>
+}

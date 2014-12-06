@@ -1,0 +1,19 @@
+@(fm: Form[_])
+
+@import helper._
+
+<fieldset>
+  <legend>@MSG("address")</legend>
+  @input(fm("address.postcode"),
+    '_label->MSG("address.postcode"), 'class->"span2"){ (id, name, value, args) =>
+    <div class="input-prepend">
+      <span class="add-on">〒</span>
+      <input type="text" name="@name" id="@id" value="@value" @toHtmlArgs(args)>
+    </div>
+  }
+  @inputText(fm("address.country"), '_label->MSG("address.country"), 'class->"span2")
+  @inputText(fm("address.state"), '_label->MSG("address.state"), 'class->"span3")
+  @inputText(fm("address.city"), '_label->MSG("address.city"), 'class->"span5")
+  @textarea(fm("address.street"), '_label->MSG("address.street"), 'class->"span5")
+  @inputText(fm("address.building"), '_label->MSG("address.building"), 'class->"span5")
+</fieldset>

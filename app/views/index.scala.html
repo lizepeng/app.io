@@ -1,0 +1,281 @@
+@()(implicit request: UserRequest[_])
+
+@main("Welcome to App.io", above_content = carousel){
+  <div class="page-header text-center">
+    <h1>Why you'll love App.io<br>
+      <small>Powerful features to make software development more collaborative</small>
+    </h1>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
+      <span class="text-info">
+        <i class="fa fa-comments-o fa-4x icon-circle"></i>
+      </span>
+      <h3>Great collaboration starts with communication.</h3>
+      <p>Review changes, comment on lines of code, report issues, and plan the future of your project with discussion tools.</p>
+    </div>
+
+    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
+      <span class="text-info">
+        <i class="fa fa-group fa-4x icon-circle"></i>
+      </span>
+      <h3>Friction-less development across teams.</h3>
+      <p>Work with project collaborators or teams of people in organization accounts to communicate with ease.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
+      <span class="text-info">
+        <i class="fa fa-cloud-upload fa-4x icon-circle"></i>
+      </span>
+      <h3>World’s largest open source community.</h3>
+      <p>Share your projects with the world, get feedback, and contribute to millions of repositories hosted on GitHub.</p>
+    </div>
+
+    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
+      <span class="text-info">
+        <i class="fa fa-bolt fa-4x icon-circle"></i>
+      </span>
+      <h3>Do more with powerful integrations.</h3>
+      <p>Discover applications and tools that integrate with GitHub to help you and your team build software better, together.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+
+    </div>
+  </div>
+}(css = css)
+
+@carousel = {
+  <div id="myCarousel" class="carousel slide" data-ride="carousel">
+
+    <ol class="carousel-indicators">
+      <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+      <li data-target="#myCarousel" data-slide-to="1"></li>
+      <li data-target="#myCarousel" data-slide-to="2"></li>
+    </ol>
+
+    <div class="carousel-inner" role="listbox">
+
+      <div class="item item1 active">
+        <img src="" alt="">
+        <div class="container">
+          <div class="carousel-caption">
+            <h1>Example headline.</h1>
+            <p class="lead">
+              <i class="fa fa-github fa-5x pull-left"></i>
+              Note: If you're viewing this page via a
+              <code>git://</code>
+              URL, the "next" and "previous" Glyphicon buttons on the left and right might not load/display properly due to web browser security policy.
+            </p>
+            <p>
+              <a class="btn btn-lg btn-success" href="@routes.Users.nnew()">
+                <i class="icon-shield icon"></i>
+                Sign up for App.io
+              </a>
+            </p>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="item item2">
+        <img src="" alt="">
+        <div class="container">
+          <div class="carousel-caption">
+            <h1>Another example headline.</h1>
+            <p class="lead">
+              <i class="fa fa-apple fa-5x pull-left"></i>
+              Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+            </p>
+            <p>
+              <a class="btn btn-lg btn-default" href="#"><i class="icon-coffee"></i> Learn More</a>
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="item item3">
+        <img src="" alt="">
+        <div class="container">
+          <div class="carousel-caption">
+            <h1>One more for good measure!</h1>
+            <p class="lead">
+              <i class="fa fa-dropbox fa-5x pull-left" style="color:#1c73d2;"></i>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+            </p>
+            <p>
+              <a class="btn btn-lg btn-primary" href="#">
+                <i class="icon-thumbs-up"></i>
+                Browse gallery
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+    </a>
+
+    <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a>
+
+  </div>
+}
+
+@css = {
+  <style>
+    body {
+      padding-top: 0px;
+    }
+    /* CUSTOMIZE THE CAROUSEL
+    -------------------------------------------------- */
+
+    /* Carousel base class */
+    .carousel {
+      height: 500px;
+      margin-bottom: 60px;
+    }
+    /* Since positioning the image, we need to help out the caption */
+    .carousel-caption {
+      z-index: 10;
+    }
+
+    /* Declare heights because of positioning of img element */
+    .carousel .item {
+      height: 500px;
+    }
+
+    .carousel .item1 {
+      background-color: #758fcb;
+    }
+
+    .carousel .item2 {
+      background-color: #999;
+    }
+
+    .carousel .item3 {
+      background-color: #eee;
+    }
+
+    .item3 h1 {
+      color: #444;
+    }
+
+    .item3 p {
+      color: #555;
+    }
+
+    .icon-circle {
+      width: 120px;
+      height: 120px;
+      line-height: 2.1;
+      border-radius: 60px;
+      border: 1px solid #ccc;
+    }
+
+    .col-sm-6 {
+      padding-bottom: 40px;
+    }
+
+
+    .carousel-inner > .item > img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      min-width: 100%;
+      height: 500px;
+    }
+
+    /* MARKETING CONTENT
+    -------------------------------------------------- */
+
+    /* Center align the text within the three columns below the carousel */
+    .marketing .col-lg-4 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .marketing h2 {
+      font-weight: normal;
+    }
+    .marketing .col-lg-4 p {
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+
+
+    /* Featurettes
+    ------------------------- */
+
+    .featurette-divider {
+      margin: 80px 0;
+    }
+
+    /* Thin out the marketing headings */
+    .featurette-heading {
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    @@media (max-width: 767px){
+      .carousel-caption p {
+        margin-bottom: 40px;
+        font-size: 21px;
+        line-height: 1.4;
+      }
+    }
+
+    @@media (min-width: 768px) and (max-width: 991px) {
+
+      /* Bump up size of carousel content */
+      .carousel-caption p {
+        margin-bottom: 40px;
+        font-size: 21px;
+        line-height: 1.4;
+      }
+
+      .featurette-heading {
+        font-size: 50px;
+      }
+    }
+
+    /* Medium devices */
+    @@media (min-width: 992px) and (max-width: 1199px) {
+
+      .carousel-caption p {
+        margin-bottom: 20px;
+        font-size: 24px;
+        line-height: 1.4;
+      }
+
+      .featurette-heading {
+        margin-top: 120px;
+      }
+    }
+
+    /* Large devices */
+    @@media (min-width: 1200px) {
+
+      .carousel-caption p {
+        margin-bottom: 40px;
+        font-size: 24px;
+        line-height: 1.4;
+      }
+
+      .featurette-heading {
+        margin-top: 120px;
+      }
+    }
+
+  </style>
+}

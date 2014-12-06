@@ -1,0 +1,94 @@
+@(textType: String, name: String, isDev: Boolean = play.api.Play.isDev(play.api.Play.current))
+
+@import routes.Assets._
+
+@textType match {
+  case "css" => {
+    @name match {
+
+      case "bootstrap" => {
+        @css(
+          "lib/bootstrap/css/bootstrap.css",
+          "lib/bootstrap/css/bootstrap.min.css")
+        @*css(
+          "lib/bootstrap/css/bootstrap-responsive.css",
+          "lib/bootstrap/css/bootstrap-responsive.min.css")*@
+      }
+
+      case "font-awesome" => {
+        @css(
+          "lib/font-awesome/css/font-awesome.css",
+          "lib/font-awesome/css/font-awesome.min.css")
+      }
+
+    }
+  }
+  case "js" => {
+    @name match {
+
+      case "bootstrap" => {
+        @js(
+          "lib/jquery/jquery.js",
+          "lib/jquery/jquery.min.js")
+        @js(
+          "lib/bootstrap/js/bootstrap.js",
+          "lib/bootstrap/js/bootstrap.min.js")
+      }
+
+      case "backbone" => {
+        @js(
+          "lib/underscorejs/underscore.js",
+          "lib/underscorejs/underscore.min.js")
+        @js(
+          "lib/backbonejs/backbone.js",
+          "lib/backbonejs/backbone.min.js")
+      }
+
+      case "underscore" => {
+        @js(
+          "underscore.js",
+          "underscore.min.js")
+      }
+
+      case "jquery-ui" => {
+        @js(
+          "ui/jquery.ui.core.js",
+          "minified/jquery.ui.core.min.js")
+        @js(
+          "ui/jquery.ui.widget.js",
+          "minified/jquery.ui.widget.min.js")
+        @js(
+          "ui/jquery.ui.mouse.js",
+          "minified/jquery.ui.mouse.min.js")
+        @js(
+          "ui/jquery.ui.draggable.js",
+          "minified/jquery.ui.draggable.min.js")
+      }
+
+    }
+  }
+}
+
+@css(name: String, minified: String) = {
+  @if(isDev){
+    @stylesheet(name)
+  } else {
+    @stylesheet(minified)
+  }
+}
+
+@js(name: String, minified: String) = {
+  @if(isDev){
+    @javascript(name)
+  } else {
+    @javascript(minified)
+  }
+}
+
+@stylesheet(path: String) = {
+  <link rel='stylesheet' href='@at(path)'>
+}
+
+@javascript(path: String) = {
+  <script type='text/javascript' src='@at(path)'></script>
+}

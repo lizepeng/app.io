@@ -1,0 +1,78 @@
+products.list.title={0,choice,0#no|1#one|1<{0,number,integer} products} Found
+ds.list.title=Daily Summary
+
+app.name=App.io
+sign.in=Sign In
+sign.out=Sign Out
+sign.in.head=Sign In
+sign.in.msg.error=TODO
+
+home=Home
+contact=Contact
+com.profile=Corporate Profile
+id=Id
+password=Password
+
+action=Action
+slip.num=Slip Num
+slip.date=Slip Date
+
+file=Files
+
+desc=Description
+qty=Quantity
+price=Price
+
+next=Next
+
+save=Save
+cancel=Cancel
+delete=Delete
+detail=Detail
+edit=Edit
+
+date=Date
+
+date.format.long=yyyy-MM-dd
+month.format.long=yyyy-MM
+
+management=Management
+
+user.name=User Name
+user=User
+email=Email address
+remember.me=Remember me
+
+customer.name=Customer Name
+
+user.code.forgot=Forgot your username?
+user.pwd.forgot=Forgot your password?
+setting=Setting
+preference=Preference
+
+help=Help
+
+schedule=Schedule
+
+alert.success.title=Success!
+alert.info.title=Info!
+alert.warning.title=Warning!
+alert.danger.title=Error!
+
+address=Address
+address.postcode=Postcode
+address.country=Country
+address.state=State
+address.city=City
+address.street=Street
+address.building=Building
+
+msg.info.not.found.com=Wrong Username/Email and password combination.
+msg.info.not.found.user=Wrong Username/Email and password combination.
+msg.confirm.delete=TODO
+msg.master.created={0} has been created.
+msg.master.updated={0} has been updated.
+msg.master.deleted={0} has been deleted.
+
+log.info.notfound.com=Company {0} not found
+log.info.notfound.user=User {0}, {1} not found
