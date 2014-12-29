@@ -7,8 +7,8 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import common.Logging
 import common.syntax._
-import models.CassandraConnector
 import models.cfs.Block.BLK
+import models.{CassandraConnector, TimeBased}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -27,7 +27,7 @@ case class INode(
   ind_block_length: Int = 1024 * 32,
   block_size: Int = 1024 * 8,
   attributes: Map[String, String] = Map()
-)
+) extends TimeBased
 
 /**
  *

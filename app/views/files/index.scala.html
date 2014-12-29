@@ -20,8 +20,11 @@
         <thead>
           <tr>
             <th class="col-xs-1"></th>
-            <th class="col-xs-7">Name</th>
-            <th class="col-xs-2">Size</th>
+            <th class="col-xs-5">Name</th>
+            <th class="col-xs-3 text-right hidden-xs hidden-sm">
+              Created On
+            </th>
+            <th class="col-xs-2 text-right">Size</th>
             <th class="col-xs-2" colspan="2">Action</th>
           </tr>
         </thead>
@@ -32,7 +35,12 @@
                 <i class="fa fa-lg @FileIcon(f.name)"></i>
               </td>
               <td>@f.name</td>
-              <td class="text-right">@FileSize(f.size)</td>
+              <td class="text-right hidden-xs hidden-sm">
+                @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
+              </td>
+              <td class="text-right">
+                @FileSize(f.size)
+              </td>
               <td>
                 <a href="@routes.Files.download(f.id)">
                   <i class="fa fa-download fa-lg"></i>

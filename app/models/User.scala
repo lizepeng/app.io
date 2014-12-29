@@ -25,7 +25,7 @@ case class User(
   email: String = "",
   password: String = "",
   remember_me: Boolean = false
-) {
+) extends TimeBased {
 
   def hasPassword(submittedPasswd: String) = {
     if (encrypted_password == "") false
