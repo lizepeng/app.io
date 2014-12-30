@@ -42,6 +42,7 @@ body {
 
 .navbar-brand {
   color: #fff !important;
+  font-size: 24px;
 }
 
 .user-nav li {
@@ -101,17 +102,35 @@ body {
 
 /* RESPONSIVE CSS
 -------------------------------------------------- */
-
-/* Extra small devices */
-@media (max-width: 767px) {
-
+/* Extra small mobile devices */
+@media (max-width: 539px) {
+  .site-footer {
+    font-size: 10px;
+  }
+}
+/* Small mobile devices */
+@media (min-width: 540px) and (max-width: 767px) {
   body {
     padding-top: 60px;
   }
+}
 
-  .navbar-wrapper .navbar {
-    padding-right: 0;
-    padding-left: 0;
+/* Mobile devices */
+@media(max-width: 767px){
+ .navbar-wrapper {
+    & .navbar {
+      padding-right: 0;
+      padding-left: 0;
+    }
+    & .navbar-header {
+      text-align: center;
+      .navbar-brand {
+        display: inline-block;
+        float: none;
+        position: relative;
+        left: 30px;
+      }
+    }
   }
 }
 

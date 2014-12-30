@@ -46,10 +46,10 @@
   <div class="site-footer">
     <div class="container">
       <div class="row">
-        <div class="col-xs-6">
+        <div class="col-xs-7">
           <p class="text-muted">© 2013 zepeng.li@@gmail.com</p>
         </div>
-        <div class="col-xs-6">
+        <div class="col-xs-5">
           <ul class="list-inline">
             <li><a href="#contact"> @MSG("contact")</a></li>
             <li><a href="@routes.Application.about()">@MSG("About")</a></li>
@@ -143,19 +143,22 @@
     }
     case Some(u) => {
       <ul class="nav navbar-nav user-nav navbar-right">
-        <li><a href="@routes.Users.show(u.id)" title="">@u.email
-        </a></li>
-        <li><a href="#">
+        <li>
+          <a href="@routes.Users.show(u.id)" title="">
+            <span class="hidden-xs">
+              @u.email
+            </span>
+            <span class="visible-xs">
+              <i class="fa fa-user fa-lg"></i>
+              Profile
+            </span>
+          </a>
+        </li>
+        <li class="hidden-xs"><a href="#">
           <i class="fa fa-plus fa-lg"></i>
-          <span class="hidden-sm hidden-md hidden-lg">
-            Create new...
-          </span>
         </a></li>
-        <li><a href="#" >
+        <li class="hidden-xs"><a href="#" >
           <i class="fa fa-inbox fa-lg"></i>
-          <span class="hidden-sm hidden-md hidden-lg">
-            Notifications
-          </span>
         </a></li>
         <li><a href="#">
           <i class="fa fa-cog fa-lg"></i>
