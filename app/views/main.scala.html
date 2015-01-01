@@ -63,32 +63,31 @@
 
 @navbar = {
   <div class="navbar-wrapper">
-    <div class="container">
-      <div class="navbar navbar-inverse navbar-static-top" role="navigation">
-        <div class="container">
 
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle collaped" data-toggle="collapse" data-target="#navbar">
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="@routes.Application.index">
-              <i class="fa fa-foursquare fa-lg"></i> @MSG("app.name")
-            </a>
-          </div>
+    <div class="navbar navbar-inverse navbar-static-top" role="navigation">
+      <div class="container">
 
-          <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-              @mainMenu
-              <li><a href="@routes.Application.wiki()">
-                @MSG("Wiki")
-              </a></li>
-            </ul>
-            @userSubMenu
-          </div>
-
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collaped" data-toggle="collapse" data-target="#navbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="@routes.Application.index">
+            <i class="fa fa-foursquare fa-lg"></i> @MSG("app.name")
+          </a>
         </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            @mainMenu
+            <li><a href="@routes.Application.wiki()">
+              @MSG("Wiki")
+            </a></li>
+          </ul>
+          @userSubMenu
+        </div>
+
       </div>
     </div>
   </div>

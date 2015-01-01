@@ -79,4 +79,7 @@ package object syntax {
     def years: Period = Period.years(i)
   }
 
+  trait PolarQuestion {
+    def ? : Boolean
+  }
 }

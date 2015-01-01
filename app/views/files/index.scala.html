@@ -5,7 +5,7 @@
 @main(MSG("Files")) {
 
   <div class="row">
-    <div class="col-xs-9 col-xs-offset-3">
+    <div class="col-xs-10 col-xs-offset-2">
       @_upload("html", "picture")
     </div>
   </div>
@@ -32,20 +32,21 @@
           @files.map { f =>
             <tr>
               <td>
-                <i class="fa fa-lg @FileIcon(f.name)"></i>
+                <i class="fa fa-lg @f.icon"></i>
               </td>
               <td>@f.name</td>
               <td class="text-right hidden-xs hidden-sm">
                 @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
               </td>
               <td class="text-right">
-                @FileSize(f.size)
+                @f.size_pp
               </td>
               <td>
                 <a href="@routes.Files.download(f.id)">
                   <i class="fa fa-download fa-lg"></i>
                 </a>
               </td>
+
               <td>
                 @form(routes.Files.remove(f.id), 'class -> "form-inline") {
                   <button type="submit" class="btn form-inline-btn">
