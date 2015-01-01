@@ -27,7 +27,11 @@ case class INode(
   ind_block_length: Int = 1024 * 32,
   block_size: Int = 1024 * 8,
   attributes: Map[String, String] = Map()
-) extends TimeBased
+) extends TimeBased {
+
+  lazy val ind_block_size = ind_block_length * block_size
+
+}
 
 /**
  *
@@ -68,11 +72,33 @@ object INode extends INodes with Logging with CassandraConnector {
     select.where(_.inode_id eqs id).one()
   }
 
-  def streamReader(id: UUID): Enumerator[BLK] = {
-    select(_.ind_block_id).where(_.inode_id eqs id)
-      .fetchEnumerator() &> Enumeratee.mapFlatten[UUID](Block.read)
+  def read(inode: INode): Enumerator[BLK] = {
+    select(_.ind_block_id).where(_.inode_id eqs inode.id)
+      .setFetchSize(CFS.fetchSize)
+      .fetchEnumerator() &>
+      Enumeratee.mapFlatten[UUID](Block.read)
   }
 
+  def read(inode: INode, from: Int): Enumerator[BLK] =
+    Enumerator.flatten(
+      select(_.ind_block_id).where(_.inode_id eqs inode.id)
+        .setFetchSize(CFS.fetchSize)
+        .fetchEnumerator() &>
+        Enumeratee.drop[UUID](from / inode.ind_block_size) |>>>
+
+        Iteratee.head.map {
+          case None             => Enumerator.empty
+          case Some(ind_blk_id) => {
+            Block.read(ind_blk_id, from % inode.ind_block_size, inode.block_size)
+          } >>> {
+            select(_.ind_block_id)
+              .where(_.inode_id eqs inode.id)
+              .and(_.ind_block_id gt ind_blk_id)
+              .fetchEnumerator() &>
+              Enumeratee.mapFlatten[UUID](Block.read)
+          }
+        }
+    )
 
   def write(inode: INode): Future[ResultSet] = {
     insert.value(_.inode_id, inode.id)
@@ -89,7 +115,6 @@ object INode extends INodes with Logging with CassandraConnector {
   }
 
   def streamWriter(inode: INode): Iteratee[BLK, INode] = {
-    File(inode).is_directory
     Enumeratee.grouped[BLK] {
       Traversable.take[BLK](inode.block_size) &>>
         Iteratee.consume[BLK]()

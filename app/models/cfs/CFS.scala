@@ -4,9 +4,11 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
+import common.AppConfig
 import models.cfs.Block.BLK
-import models.sys.Config
+import models.sys.SysConfig
 import org.joda.time.DateTime
+import play.api.Play.current
 import play.api.libs.iteratee.{Enumerator, Iteratee}
 
 import scala.concurrent.Future
@@ -15,7 +17,7 @@ import scala.language.implicitConversions
 /**
  * @author zepeng.li@gmail.com
  */
-object CFS {
+object CFS extends AppConfig {
 
   import scala.concurrent.Await
   import scala.concurrent.duration._
@@ -29,14 +31,14 @@ object CFS {
       Directory(INode(id = id, name = "/", parent = id, is_directory = true))
     }
 
-    Config.get(cfg_key, _.cfs_root).flatMap {
+    SysConfig.get(cfg_key, _.cfs_root).flatMap {
       case Some(id) => dir.find(id).flatMap {
         case None      => dir.save(newRoot(id))
         case d@Some(_) => Future.successful(d)
       }
       case None     => {
         val id: UUID = UUIDs.timeBased()
-        Config.put(cfg_key, DateTime.now(), (_.cfs_root setTo id))
+        SysConfig.put(cfg_key, DateTime.now(), (_.cfs_root setTo id))
         dir.save(newRoot(id))
       }
     }
@@ -44,14 +46,19 @@ object CFS {
   }, 10 seconds
   ).get
 
+  val fetchSize = config.getInt(s"$cfg_key.fetch-size").getOrElse(2000)
 
   object file {
     def find(id: UUID): Future[Option[File]] = {
       INode.find(id).map(_.map(File(_)))
     }
 
-    def read(id: UUID): Enumerator[BLK] = {
-      INode.streamReader(id)
+    def read(file: File): Enumerator[BLK] = {
+      INode.read(file)
+    }
+
+    def read(file: File, from: Int): Enumerator[BLK] = {
+      INode.read(file, from)
     }
 
     def save(file: File): Iteratee[BLK, File] = {

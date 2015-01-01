@@ -10,7 +10,7 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.column.TimeUUIDColumn
 import common.Logging
 import models.CassandraConnector
-import play.api.libs.iteratee.{Enumeratee, Enumerator}
+import play.api.libs.iteratee._
 
 import scala.concurrent.Future
 
@@ -54,11 +54,38 @@ object Block extends Blocks with Logging with CassandraConnector {
 
   type BLK = Array[Byte]
 
-  def read(ind_block_id: UUID): Enumerator[BLK] = {
+  def read(ind_blk_id: UUID): Enumerator[BLK] = {
     select(_.data)
-      .where(_.ind_block_id eqs ind_block_id)
-      .fetchEnumerator() &> Enumeratee.map(Bytes.getArray)
+      .where(_.ind_block_id eqs ind_blk_id)
+      .setFetchSize(CFS.fetchSize)
+      .fetchEnumerator().map(Bytes.getArray)
   }
+
+  def read(ind_blk_id: UUID, from: Int, blk_sz: Int): Enumerator[BLK] =
+    Enumerator.flatten(
+      select(_.block_id)
+        .where(_.ind_block_id eqs ind_blk_id)
+        .setFetchSize(CFS.fetchSize)
+        .fetchEnumerator() &>
+        Enumeratee.drop(from / blk_sz) |>>>
+
+        Iteratee.head.map {
+          case None         => Enumerator.empty
+          case Some(blk_id) => {
+            select(_.data)
+              .where(_.ind_block_id eqs ind_blk_id)
+              .and(_.block_id eqs blk_id)
+              .fetchEnumerator().map(Bytes.getArray)
+              .map(_.drop(from % blk_sz))
+          } >>> {
+            select(_.data)
+              .where(_.ind_block_id eqs ind_blk_id)
+              .and(_.block_id gt blk_id)
+              .fetchEnumerator().map(Bytes.getArray)
+          }
+        }
+    )
+
 
   def write(ind_blk_id: UUID, blk: BLK): Future[ResultSet] = {
     insert.value(_.ind_block_id, ind_blk_id)
@@ -66,7 +93,7 @@ object Block extends Blocks with Logging with CassandraConnector {
       .value(_.data, ByteBuffer.wrap(blk)).future()
   }
 
-  def remove(ind_block_id: UUID): Future[ResultSet] = {
-    delete.where(_.ind_block_id eqs ind_block_id).future()
+  def remove(ind_blk_id: UUID): Future[ResultSet] = {
+    delete.where(_.ind_block_id eqs ind_blk_id).future()
   }
 }

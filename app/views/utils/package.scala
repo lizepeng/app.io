@@ -1,6 +1,8 @@
 package views
 
 import _root_.common.syntax.PolarQuestion
+import play.api.http.ContentTypes
+import play.api.libs.MimeTypes
 
 /**
  * @author zepeng.li@gmail.com
@@ -18,12 +20,16 @@ package object utils {
         case "doc" | "docx"                => "fa-file-word-o"
         case "ppt"                         => "fa-file-powerpoint-o"
         case "xls" | "xlsx"                => "fa-file-excel-o"
-        case "mp4" | "mkv"                 => "fa-file-video-o"
+        case ext if video.?                => "fa-file-video-o"
         case "zip" | "rar" | "7z"          => "fa-file-archive-o"
         case "tar" | "gz" | "bz"           => "fa-file-archive-o"
         case "html" | "css" | "js" | "xml" => "fa-file-code-o"
         case _                             => "fa-file-o"
       }.get
+    }
+
+    def mimeType: String = {
+      MimeTypes.forFileName(f.name).getOrElse(ContentTypes.BINARY)
     }
 
     def ext: Option[String] = {
@@ -34,6 +40,13 @@ package object utils {
       def ? : Boolean = ext.exists {
         case "mp3" | "wma" | "m4a" => true
         case _                     => false
+      }
+    }
+
+    def video = new PolarQuestion {
+      def ? : Boolean = ext.exists {
+        case "mp4" | "mkv" => true
+        case _             => false
       }
     }
 

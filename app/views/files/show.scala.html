@@ -1,0 +1,24 @@
+@(f: cfs.File)(implicit request: UserRequest[_])
+
+@main_auth(f.name){
+
+  <div class="row">
+    <div class="col-xs-12">
+      <p>@f.name</p>
+      <p>@f.size_pp</p>
+    </div>
+    @if(f.video.?) {
+      <video src="@routes.Files.stream(f.id)"
+      type="@f.mimeType"
+      class="col-xs-12"
+      autobuffer autoloop loop controls>
+      </video>
+    }
+    @if(f.audio.?) {
+      <audio src="@routes.Files.stream(f.id)"
+      class="col-xs-12"
+      autobuffer autoloop loop controls></audio>
+    }
+  </div>
+
+}()

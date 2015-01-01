@@ -15,13 +15,13 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-case class Config(
+case class SysConfig(
   module_name: String,
   timestamp: DateTime,
   cfs_root: UUID
 )
 
-sealed class Configs extends CassandraTable[Configs, Config] {
+sealed class SysConfigs extends CassandraTable[SysConfigs, SysConfig] {
 
   override val tableName = "system_config"
 
@@ -35,13 +35,13 @@ sealed class Configs extends CassandraTable[Configs, Config] {
 
   object cfs_root extends UUIDColumn(this)
 
-  override def fromRow(r: Row): Config = {
-    Config(module(r), timestamp(r), cfs_root(r))
+  override def fromRow(r: Row): SysConfig = {
+    SysConfig(module(r), timestamp(r), cfs_root(r))
   }
 }
 
 
-object Config extends Configs with Logging with CassandraConnector {
+object SysConfig extends SysConfigs with Logging with CassandraConnector {
 
   import scala.concurrent.Await
   import scala.concurrent.duration._
@@ -51,7 +51,7 @@ object Config extends Configs with Logging with CassandraConnector {
 
   def get[T](
     module: String,
-    cfs_root: (Configs) => SelectColumnRequired[Configs, Config, T]
+    cfs_root: (SysConfigs) => SelectColumnRequired[SysConfigs, SysConfig, T]
   ): Future[Option[T]] = {
     select(cfs_root)
       .where(_.module eqs module)
@@ -61,7 +61,7 @@ object Config extends Configs with Logging with CassandraConnector {
   def put(
     module: String,
     timestamp: DateTime,
-    updates: ((Configs) => Assignment)*
+    updates: ((SysConfigs) => Assignment)*
   ): Future[Option[ResultSet]] = {
     val stmt = update
       .where(_.module eqs module)

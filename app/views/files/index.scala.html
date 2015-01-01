@@ -34,7 +34,11 @@
               <td>
                 <i class="fa fa-lg @f.icon"></i>
               </td>
-              <td>@f.name</td>
+              <td>
+                <a href="@routes.Files.show(f.id)">
+                  @f.name
+                </a>
+              </td>
               <td class="text-right hidden-xs hidden-sm">
                 @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
               </td>
