@@ -24,7 +24,7 @@ case class INode(
   children: Map[String, UUID] = Map(),
   size: Int = 0,
   block_count: Int = 0,
-  ind_block_length: Int = 1024 * 32,
+  ind_block_length: Int = 1024 * 2,
   block_size: Int = 1024 * 8,
   attributes: Map[String, String] = Map()
 ) extends TimeBased {
@@ -165,7 +165,7 @@ object INode extends INodes with Logging with CassandraConnector {
   }
 
   def all(): Future[Seq[INode]] = {
-    val fetchSize: Int = 100
+    val fetchSize: Int = 6000
     //TODO changed to Distinct
     select(_.inode_id)
       .setFetchSize(fetchSize)

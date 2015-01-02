@@ -70,7 +70,7 @@ object Block extends Blocks with Logging with CassandraConnector {
         Enumeratee.drop(from / blk_sz) |>>>
 
         Iteratee.head.map {
-          case None         => Enumerator.empty
+          case None         => Enumerator.empty[BLK]
           case Some(blk_id) => {
             select(_.data)
               .where(_.ind_block_id eqs ind_blk_id)
@@ -85,7 +85,6 @@ object Block extends Blocks with Logging with CassandraConnector {
           }
         }
     )
-
 
   def write(ind_blk_id: UUID, blk: BLK): Future[ResultSet] = {
     insert.value(_.ind_block_id, ind_blk_id)
