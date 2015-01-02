@@ -1,7 +1,5 @@
 package common
 
-import org.joda.time.DateTime
-
 import scala.collection.mutable
 
 /**
@@ -33,7 +31,7 @@ trait TimeLogging extends Logging {
 
   def timeSinceStart = {
     if (!Logger.isDebugEnabled)
-      s"spent ${DateTime.now.getMillis - start} ms"
+      s"spent ${System.currentTimeMillis - start} ms"
   }
 
   def logTime[A](msg: => String = "", metric: String = "")(op: => A): A = {

@@ -12,7 +12,7 @@ application.secret="XH33fTcx3S/lE`xweDgA5[BZTMR=JmesvVQVw=UH`@yCHyyW14:NED`^r7K>
 
 # The application languages
 # ~~~~~
-application.langs="en,zh"
+application.langs="en,zh,ja"
 
 # Global object class
 # ~~~~~
@@ -50,15 +50,15 @@ application.langs="en,zh"
 # ~~~~~
 # You can also configure logback (http://logback.qos.ch/),
 # by providing an application-logger.xml file in the conf directory.
+# logger.root=ERROR
+# logger.play=INFO
+# logger.application=DEBUG
+# logger.models=DEBUG
 
-# Root logger:
-logger.root=ERROR
+akka.loglevel=INFO
 
-# Logger used by the framework:
-logger.play=INFO
-
-# Logger provided to your application:
-logger.application=DEBUG
+play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
+play.akka.actor.default-dispatcher.fork-join-executor.parallelism-min=8
 
 fact.models.cfs.fetch-size=5000
 
