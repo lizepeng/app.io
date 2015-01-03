@@ -20,9 +20,8 @@ object Global extends GlobalSettings {
       val endTime = System.currentTimeMillis
       val requestTime = endTime - startTime
       if (!header.uri.contains("assets")) {
-        Logger.info(
-          s"${header.method} ${header.uri} took ${requestTime}ms " +
-            s"and returned ${result.header.status}"
+        Logger.trace(
+          f"${result.header.status} took ${requestTime}%4d ms -${header.method} ${header.uri}"
         )
       }
       result.withHeaders("Request-Time" -> requestTime.toString)
