@@ -144,7 +144,7 @@ object Files extends Controller {
   private def saveToCFS[A]: PartHandler[FilePart[File]] = {
     handleFilePart {
       case FileInfo(partName, filename, contentType) =>
-        CFS.file.save(File(filename, CFS.root))
+        LimitTo(2 MBps) &>> CFS.file.save(File(filename, CFS.root))
     }
   }
 }
