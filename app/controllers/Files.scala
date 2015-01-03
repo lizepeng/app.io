@@ -24,80 +24,33 @@ import scala.language.postfixOps
  */
 object Files extends Controller {
 
-  def download(id: UUID, inline: Boolean = false) = UserAction.async {
-    implicit request => serveFile(id) {file =>
-      println(file.name)
-      Result(
-        ResponseHeader(
-          OK, Map(
-            CONTENT_LENGTH -> s"${file.size}",
-            CONTENT_TYPE -> contentTypeOf(file)
-          ) ++ (if (inline) Map.empty
-          else Map(
-            CONTENT_DISPOSITION ->
-              s"""attachment; filename="${URLEncoder.encode(file.name, "UTF-8")}" """
-          ))
-        ),
-        CFS.file.read(file) &> LimitTo(2 MBps)
-      )
-    }
-  }
-
-  def stream(id: UUID) = UserAction.async {
-    implicit request => serveFile(id) {file =>
-      request.headers.get(RANGE).flatMap {
-        case byte_range_spec(strStart, strEnd) =>
-          Some(strStart.toInt, Some(strEnd).filter(_.nonEmpty).map(_.toInt))
-        case _                                 => None
-      }.filter {
-        //invalid
-        case (start, endOpt) => endOpt.isEmpty || endOpt.get >= start
-      }.map {
-        case (start, endOpt) => {
-          if (start < file.size) {
-            val end = endOpt.filter(_ < file.size).getOrElse(file.size - 1)
-            println()
-            println(s"Range ($start, $end)")
-            println()
-
-            Result(
-              ResponseHeader(
-                PARTIAL_CONTENT,
-                Map(
-                  ACCEPT_RANGES -> "bytes",
-                  CONTENT_TYPE -> contentTypeOf(file),
-                  CONTENT_RANGE -> s"bytes $start-$end/${file.size}",
-                  CONTENT_LENGTH -> s"${end - start + 1}"
-                )
-              ),
-              CFS.file.read(file, start) &>
-                Traversable.take(end - start + 1) &> LimitTo(1 MBps)
-            )
-          } else {
-            Result(
-              ResponseHeader(
-                REQUESTED_RANGE_NOT_SATISFIABLE,
-                Map(
-                  CONTENT_RANGE -> s"*/${file.size}",
-                  CONTENT_TYPE -> contentTypeOf(file)
-                )
-              ),
-              Enumerator.empty
-            )
-          }
-        }
-      }.getOrElse {
-        Result(
-          ResponseHeader(
-            OK,
-            Map(
-              ACCEPT_RANGES -> "bytes",
-              CONTENT_TYPE -> contentTypeOf(file),
-              CONTENT_LENGTH -> s"${file.size}"
-            )
-          ),
-          CFS.file.read(file) &> LimitTo(1 MBps)
+  def download(id: UUID, inline: Boolean = false) =
+    UserAction.async {
+      implicit request => serveFile(id) {file =>
+        val stm = streamWhole(file)
+        if (inline) stm
+        else stm.withHeaders(
+          CONTENT_DISPOSITION ->
+            s"""attachment; filename="${URLEncoder.encode(file.name, "UTF-8")}" """
         )
+      }
+    }
+
+  def stream(id: UUID, inline: Boolean = false) = UserAction.async {
+    implicit request => serveFile(id) {file =>
+      val size = file.size
+      val byte_range_spec = """bytes=(\d+)-(\d*)""".r
+
+      request.headers.get(RANGE).flatMap {
+        case byte_range_spec(first, last) => Some(first.toInt, Some(last).filter(_.nonEmpty).map(_.toInt))
+        case _                            => None
+      }.filter {
+        case (first, lastOpt) => lastOpt.isEmpty || lastOpt.get >= first
+      }.map {
+        case (first, lastOpt) if first < size  => streamRange(file, first, lastOpt)
+        case (first, lastOpt) if first >= size => hintValidRange(file)
+      }.getOrElse {
+        streamWhole(file).withHeaders(ACCEPT_RANGES -> "bytes")
       }
     }
   }
@@ -134,7 +87,47 @@ object Files extends Controller {
       }
   }
 
-  private val byte_range_spec = """bytes=(\d+)-(\d*)""".r
+
+  private def hintValidRange(file: File): Result = {
+    Result(
+      ResponseHeader(
+        REQUESTED_RANGE_NOT_SATISFIABLE,
+        Map(
+          CONTENT_RANGE -> s"*/${file.size}",
+          CONTENT_TYPE -> contentTypeOf(file)
+        )
+      ),
+      Enumerator.empty
+    )
+  }
+
+  private def streamRange(file: File, first: Int, lastOpt: Option[Int]): Result = {
+    val end: Int = lastOpt.filter(_ < file.size).getOrElse(file.size - 1)
+    Result(
+      ResponseHeader(
+        PARTIAL_CONTENT,
+        Map(
+          ACCEPT_RANGES -> "bytes",
+          CONTENT_TYPE -> contentTypeOf(file),
+          CONTENT_RANGE -> s"bytes $first-$end/${file.size}",
+          CONTENT_LENGTH -> s"${end - first + 1}"
+        )
+      ),
+      CFS.file.read(file, first) &>
+        Traversable.take(end - first + 1) &> LimitTo(1 MBps)
+    )
+  }
+
+  private def streamWhole(file: File): Result = Result(
+    ResponseHeader(
+      OK,
+      Map(
+        CONTENT_TYPE -> contentTypeOf(file),
+        CONTENT_LENGTH -> s"${file.size}"
+      )
+    ),
+    CFS.file.read(file) &> LimitTo(1 MBps)
+  )
 
   private def serveFile(id: UUID)(
     whenFound: File => Result
