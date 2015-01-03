@@ -6,16 +6,20 @@ import play.api.libs.iteratee.{Enumeratee, Iteratee}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.math._
 
 /**
  * @author zepeng.li@gmail.com
  */
 object TrafficControl {
 
+  val MAX_RATE = 10 * 1024
+
   object LimitTo {
-    def apply(rate: Int = 0)(implicit ec: ExecutionContext): Enumeratee[BLK, BLK] = {
+    def apply(rate: Int = 1 MBps)(implicit ec: ExecutionContext): Enumeratee[BLK, BLK] = {
       Enumeratee.grouped {
-        Enumeratee.take(Math.max(1, rate / 33)) &>> Iteratee.getChunks[BLK]
+        Enumeratee.take(max(1, min(MAX_RATE, rate) / 33)) &>>
+          Iteratee.getChunks[BLK]
       } ><> Enumeratee.mapM[List[BLK]] {
         Promise.timeout(_, 200, MILLISECONDS)(ec)
       } ><> Enumeratee.mapConcat[List[BLK]](_.toSeq)

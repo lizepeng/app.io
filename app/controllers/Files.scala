@@ -125,7 +125,7 @@ object Files extends Controller {
         CONTENT_LENGTH -> s"${file.size}"
       )
     ),
-    CFS.file.read(file) &> LimitTo(1 MBps)
+    CFS.file.read(file) &> LimitTo(1.5 MBps)
   )
 
   private def serveFile(id: UUID)(
