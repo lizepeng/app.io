@@ -8,6 +8,7 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.Iteratee
 import common._
 import common.syntax._
+import models.cassandra.Cassandra
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
@@ -84,7 +85,7 @@ sealed class Users extends CassandraTable[Users, User] {
   }
 }
 
-object User extends Users with Logging with CassandraConnector {
+object User extends Users with Logging with Cassandra {
 
   Await.result(create.future(), 500 millis)
   Await.result(UserByEmail.create.future(), 500 millis)
@@ -187,7 +188,7 @@ sealed class UserByEmail extends CassandraTable[UserByEmail, (String, UUID)] {
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
 }
 
-object UserByEmail extends UserByEmail with Logging with CassandraConnector {
+object UserByEmail extends UserByEmail with Logging with Cassandra {
 
   def find(email: String): Future[Option[(String, UUID)]] = {
     select.where(_.email eqs email).one()

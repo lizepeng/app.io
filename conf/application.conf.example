@@ -60,7 +60,7 @@ akka.loglevel=INFO
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-min=8
 
-fact.models.cfs.fetch-size=5000
+fact.models.cfs.stream-fetch-size=5000
 
 mimetype {
   mkv:video/x-matroska

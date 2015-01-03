@@ -7,7 +7,7 @@ import com.datastax.driver.core.querybuilder.Assignment
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import common.Logging
-import models.CassandraConnector
+import models.cassandra.Cassandra
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
@@ -40,7 +40,7 @@ sealed class SysConfigs extends CassandraTable[SysConfigs, SysConfig] {
   }
 }
 
-object SysConfig extends SysConfigs with Logging with CassandraConnector {
+object SysConfig extends SysConfigs with Logging with Cassandra {
 
   import scala.concurrent.Await
   import scala.concurrent.duration._

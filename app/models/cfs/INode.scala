@@ -7,8 +7,9 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import common.Logging
 import common.syntax._
+import models.TimeBased
+import models.cassandra.{Cassandra, DistinctPatch}
 import models.cfs.Block.BLK
-import models.{CassandraConnector, TimeBased}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -40,7 +41,8 @@ sealed class INodes
   extends CassandraTable[INodes, INode]
   with INodesKey[INodes, INode]
   with INodesStatic[INodes, INode]
-  with INodesDynamic[INodes, INode] {
+  with INodesDynamic[INodes, INode]
+  with DistinctPatch[INodes, INode] {
 
   override def fromRow(r: Row): INode = {
     INode(
@@ -58,7 +60,7 @@ sealed class INodes
   }
 }
 
-object INode extends INodes with Logging with CassandraConnector {
+object INode extends INodes with Logging with Cassandra {
 
   import scala.concurrent.Await
   import scala.concurrent.duration._
@@ -72,7 +74,7 @@ object INode extends INodes with Logging with CassandraConnector {
 
   def read(inode: INode): Enumerator[BLK] = {
     select(_.ind_block_id).where(_.inode_id eqs inode.id)
-      .setFetchSize(CFS.fetchSize)
+      .setFetchSize(CFS.streamFetchSize)
       .fetchEnumerator() &>
       Enumeratee.mapFlatten[UUID](Block.read)
   }
@@ -80,7 +82,7 @@ object INode extends INodes with Logging with CassandraConnector {
   def read(inode: INode, from: Int): Enumerator[BLK] =
     Enumerator.flatten(
       select(_.ind_block_id).where(_.inode_id eqs inode.id)
-        .setFetchSize(CFS.fetchSize)
+        .setFetchSize(CFS.streamFetchSize)
         .fetchEnumerator() &>
         Enumeratee.drop[UUID](from / inode.ind_block_size) |>>>
 
@@ -163,18 +165,14 @@ object INode extends INodes with Logging with CassandraConnector {
   }
 
   def all(): Future[Seq[INode]] = {
-    val fetchSize: Int = 6000
-    //TODO changed to Distinct
-    select(_.inode_id)
-      .setFetchSize(fetchSize)
+    distinct(_.inode_id)
+      .setFetchSize(CFS.listFetchSize)
       .fetchEnumerator() &>
-      Enumeratee.grouped[UUID] {
-        Enumeratee.take[UUID](fetchSize) &>> Iteratee.getChunks[UUID]
-      } &> Enumeratee.mapFlatten {
-      ids =>
-        select.where(_.inode_id in ids)
-          .setFetchSize(fetchSize)
-          .fetchEnumerator()
-    } |>>> Iteratee.getChunks[INode].map(_.distinct)
+      Enumeratee.mapM {id =>
+        select.where(_.inode_id eqs id).one()
+      } |>>>
+      Iteratee.getChunks[Option[INode]].map {
+        _.filter(_.isDefined).map(_.get)
+      }
   }
 }

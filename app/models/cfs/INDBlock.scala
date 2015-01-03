@@ -7,7 +7,7 @@ import com.datastax.driver.core.querybuilder.Assignment
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
 import common.Logging
-import models.CassandraConnector
+import models.cassandra.Cassandra
 
 import scala.concurrent.Future
 
@@ -33,7 +33,7 @@ sealed class INDBlocks
   }
 }
 
-object INDBlock extends INDBlocks with Logging with CassandraConnector {
+object INDBlock extends INDBlocks with Logging with Cassandra {
 
   def find(inode_id: UUID, id: UUID): Future[Option[INDBlock]] = {
     select

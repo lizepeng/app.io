@@ -1,11 +1,11 @@
-package models
+package models.cassandra
 
 import com.websudos.phantom.zookeeper.SimpleCassandraConnector
 
 /**
  * @author zepeng.li@gmail.com
  */
-trait CassandraConnector extends SimpleCassandraConnector {
+trait Cassandra extends SimpleCassandraConnector {
   val keySpace = "fact"
 }
 

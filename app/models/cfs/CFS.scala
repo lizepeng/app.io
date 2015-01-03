@@ -23,7 +23,9 @@ object CFS extends AppConfig {
   import scala.concurrent.duration._
   import scala.language.postfixOps
 
-  val cfg_key = "fact.models.cfs"
+  val config_key      = "fact.models.cfs"
+  val streamFetchSize = config.getInt("stream-fetch-size").getOrElse(2000)
+  val listFetchSize   = config.getInt("list-fetch-size").getOrElse(2000)
 
   lazy val root: Directory = Await.result(
   {
@@ -31,22 +33,20 @@ object CFS extends AppConfig {
       Directory(INode(id = id, name = "/", parent = id, is_directory = true))
     }
 
-    SysConfig.get(cfg_key, _.cfs_root).flatMap {
+    SysConfig.get(config_key, _.cfs_root).flatMap {
       case Some(id) => dir.find(id).flatMap {
         case None      => dir.save(newRoot(id))
         case d@Some(_) => Future.successful(d)
       }
       case None     => {
         val id: UUID = UUIDs.timeBased()
-        SysConfig.put(cfg_key, DateTime.now(), (_.cfs_root setTo id))
+        SysConfig.put(config_key, DateTime.now(), (_.cfs_root setTo id))
         dir.save(newRoot(id))
       }
     }
 
   }, 10 seconds
   ).get
-
-  val fetchSize = config.getInt(s"$cfg_key.fetch-size").getOrElse(2000)
 
   object file {
     def find(id: UUID): Future[Option[File]] = {

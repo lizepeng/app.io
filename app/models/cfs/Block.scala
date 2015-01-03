@@ -9,7 +9,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.column.TimeUUIDColumn
 import common.Logging
-import models.CassandraConnector
+import models.cassandra.Cassandra
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -42,7 +42,7 @@ sealed class Blocks extends CassandraTable[Blocks, Block] {
   }
 }
 
-object Block extends Blocks with Logging with CassandraConnector {
+object Block extends Blocks with Logging with Cassandra {
 
   import scala.concurrent.Await
   import scala.concurrent.duration._
@@ -55,7 +55,7 @@ object Block extends Blocks with Logging with CassandraConnector {
   def read(ind_blk_id: UUID): Enumerator[BLK] = {
     select(_.data)
       .where(_.ind_block_id eqs ind_blk_id)
-      .setFetchSize(CFS.fetchSize)
+      .setFetchSize(CFS.streamFetchSize)
       .fetchEnumerator().map(Bytes.getArray)
   }
 
@@ -63,7 +63,7 @@ object Block extends Blocks with Logging with CassandraConnector {
     Enumerator.flatten(
       select(_.block_id)
         .where(_.ind_block_id eqs ind_blk_id)
-        .setFetchSize(CFS.fetchSize)
+        .setFetchSize(CFS.streamFetchSize)
         .fetchEnumerator() &>
         Enumeratee.drop(from / blk_sz) |>>>
 
