@@ -1,126 +1,87 @@
-@()(implicit request: UserRequest[_])
+@(videoOpt: Option[cfs.File])(implicit request: UserRequest[_])
 
-@main(MSG("Wiki")){
-
-  <h1>Technologies</h1>
+@main(MSG("Wiki"), above_content = movie){
 
   <div class="row">
-    <div class="span4">
-      <a href="http://www.playframework.com">
-        <img width="300" src="http://www.playframework.com/assets/images/logos/normal.png">
-      </a>
-    </div>
-    <div class="span4">
-      <a href="http://twitter.github.io/bootstrap/index.html">
-        <img width="250" src="http://twitter.github.io/bootstrap/assets/img/bs-docs-twitter-github.png">
-      </a>
-    </div>
-
-  </div>
-
-  <div class="row">
-    <div class="span4">
+    <div class="col-xs-12 col-sm-6">
       <a href="http://jquery.com">
         <img width="300" src="http://upload.wikimedia.org/wikipedia/en/thumb/9/9e/JQuery_logo.svg/524px-JQuery_logo.svg.png">
       </a>
     </div>
 
-    <div class="span4">
+    <div class="col-xs-12 col-sm-6">
       <a href="http://backbonejs.org">
         <img width="300" src="http://backbonejs.org/docs/images/backbone.png">
       </a>
     </div>
-
-    <div class="span4">
-      <a href="http://kineticjs.com">
-        <img class="img-polaroid" src="@routes.Assets.at("images/kineticjs-logo.png")">
-      </a>
-    </div>
   </div>
 
   <div class="row sectionend">
-    <div class="span4">
+    <div class="col-xs-12 col-sm-6">
       <a href="https://developers.google.com/chart">
         <img src="https://developers.google.com/_static/images/developers-logo.svg">
       </a>
     </div>
-    <div class="span4">
-      <a href="http://fortawesome.github.io/Font-Awesome">
-        <img class="img-polaroid" width="300" src="@routes.Assets.at("images/font-awesome-logo.png")">
-      </a>
-    </div>
-  </div>
-
-  <h1>Programming Language</h1>
-
-  <div class="row">
-    <div class="span4">
-      <a href="http://www.scala-lang.org">
-        <img src="http://upload.wikimedia.org/wikipedia/en/8/85/Scala_logo.png">
-      </a>
-    </div>
-    <div class="span4">
-      <a href="http://www.w3.org/html/logo">
-        <img src="http://www.w3.org/html/logo/downloads/HTML5_Logo_128.png">
-      </a>
-    </div>
-    <div class="span4">
-      <a href="http://lesscss.org">
-        <img src="http://lesscss.org/images/logo.png">
-      </a>
-    </div>
-  </div>
-
-  <div class="row sectionend">
-    <div class="span4">
-      <a href="http://coffeescript.org">
-        <img src="http://coffeescript.org/documentation/images/logo.png">
-      </a>
-    </div>
-  </div>
-
-  <h1>Data Store</h1>
-  <div class="row sectionend">
-    <div class="span4">
-      <a href="http://hbase.apache.org">
-        <img src="http://hbase.apache.org/images/hbase_logo.png">
-      </a>
-    </div>
-    <div class="span4">
-      <a href="http://www.postgresql.org">
-        <img src="http://wiki.postgresql.org/images/3/30/PostgreSQL_logo.3colors.120x120.png">
-      </a>
-    </div>
-  </div>
-
-  <h1>OS</h1>
-  <div class="row sectionend">
-    <div class="span4">
+    <div class="col-xs-12 col-sm-6">
       <a href="http://www.debian.org">
         <img src="http://www.debian.org/logos/openlogo-100.jpg">
       </a>
     </div>
   </div>
 
-  <h1>Development Tools</h1>
-  <div class="row sectionend">
-    <div class="span4">
-      <a href="http://www.jetbrains.com/editors/javascript_editor.jsp?ide=idea">
-        <img src="http://www.jetbrains.com/img/logos/recommend_idea2.gif">
+  <div class="row">
+    <div class="col-xs-12 col-sm-6">
+      <a href="http://www.scala-lang.org">
+        <img src="http://upload.wikimedia.org/wikipedia/en/8/85/Scala_logo.png">
       </a>
     </div>
+    <div class="col-xs-12 col-sm-6">
+      <a href="http://www.w3.org/html/logo">
+        <img src="http://www.w3.org/html/logo/downloads/HTML5_Logo_128.png">
+      </a>
+    </div>
+  </div>
 
-    <div class="span4">
+  <div class="row sectionend">
+    <div class="col-xs-12 col-sm-6">
+      <a href="http://coffeescript.org">
+        <img src="http://coffeescript.org/documentation/images/logo.png">
+      </a>
+    </div>
+    <div class="col-xs-12 col-sm-6">
       <a href="http://www.sublimetext.com/2">
         <img width="100" src="http://upload.wikimedia.org/wikipedia/en/4/4c/Sublime_Text_Logo.png">
       </a>
     </div>
   </div>
+
+  <div class="row sectionend">
+    <div class="col-xs-12 col-sm-6">
+      <a href="http://hbase.apache.org">
+        <img src="http://hbase.apache.org/images/hbase_logo.png">
+      </a>
+    </div>
+    <div class="col-xs-12 col-sm-6">
+      <a href="http://www.postgresql.org">
+        <img src="http://wiki.postgresql.org/images/3/30/PostgreSQL_logo.3colors.120x120.png">
+      </a>
+    </div>
+  </div>
 }(css=css)
+
+@movie = {
+  @videoOpt.map {video =>
+    <div class="row-fluid">
+      <video class="col-xs-12"
+        src="@routes.Files.stream(video.id)" autoplay autobuffer>
+      </video>
+    </div>
+  }
+}
 
 @css = {
   <style>
-    .span4 {
+    .col-xs-12 {
       margin-bottom: 30px;
     }
     h1 {

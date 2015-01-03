@@ -25,6 +25,7 @@ resolvers ++= Seq(
 )
 
 TwirlKeys.templateImports ++= Seq(
+  "java.util._",
   "org.joda.time._",
   "play.api.i18n.{Messages => MSG}",
   "views.utils._"

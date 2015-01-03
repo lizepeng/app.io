@@ -1,6 +1,7 @@
 @()(implicit request: UserRequest[_])
 
 @main("Welcome to App.io", above_content = carousel){
+
   <div class="page-header text-center">
     <h1>Why you'll love App.io<br>
       <small>Powerful features to make software development more collaborative</small>
@@ -77,7 +78,6 @@
                 Sign up for App.io
               </a>
             </p>
-
           </div>
       </div>
 
@@ -91,7 +91,7 @@
               Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
             </p>
             <p>
-              <a class="btn btn-lg btn-primary" style="background:none;border-color:#fff" href="#"><i class="icon-coffee"></i> Learn More</a>
+              <a class="btn btn-lg btn-primary" style="background:none;border-color:#fff" href="@routes.Application.wiki"><i class="icon-coffee"></i> Learn More</a>
             </p>
           </div>
         </div>
@@ -141,7 +141,7 @@
     /* Carousel base class */
     .carousel {
       height: 500px;
-      margin-bottom: 60px;
+      margin-bottom: 10px;
     }
     /* Since positioning the image, we need to help out the caption */
     .carousel-caption {
