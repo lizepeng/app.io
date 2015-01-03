@@ -58,7 +58,6 @@ sealed class INodes
   }
 }
 
-
 object INode extends INodes with Logging with CassandraConnector {
 
   import scala.concurrent.Await
@@ -66,7 +65,6 @@ object INode extends INodes with Logging with CassandraConnector {
   import scala.language.postfixOps
 
   Await.result(create.future(), 500 millis)
-
 
   def find(id: UUID): Future[Option[INode]] = {
     select.where(_.inode_id eqs id).one()

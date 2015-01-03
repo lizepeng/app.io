@@ -87,7 +87,6 @@ object Files extends Controller {
       }
   }
 
-
   private def hintValidRange(file: File): Result = {
     Result(
       ResponseHeader(

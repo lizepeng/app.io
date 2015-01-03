@@ -82,4 +82,5 @@ package object syntax {
   trait PolarQuestion {
     def ? : Boolean
   }
+
 }

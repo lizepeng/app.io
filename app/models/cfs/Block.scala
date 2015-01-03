@@ -14,7 +14,6 @@ import play.api.libs.iteratee._
 
 import scala.concurrent.Future
 
-
 /**
  * @author zepeng.li@gmail.com
  */
@@ -23,7 +22,6 @@ case class Block(
   block_id: UUID,
   data: ByteBuffer
 )
-
 
 sealed class Blocks extends CassandraTable[Blocks, Block] {
 

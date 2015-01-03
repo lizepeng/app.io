@@ -89,7 +89,6 @@ object User extends Users with Logging with CassandraConnector {
   Await.result(create.future(), 500 millis)
   Await.result(UserByEmail.create.future(), 500 millis)
 
-
   def findBy(id: UUID): Future[Option[User]] = {
     select.where(_.id eqs id).one()
   }
@@ -174,7 +173,6 @@ object User extends Users with Logging with CassandraConnector {
     }
   }
 }
-
 
 sealed class UserByEmail extends CassandraTable[UserByEmail, (String, UUID)] {
 

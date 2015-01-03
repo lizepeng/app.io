@@ -40,7 +40,6 @@ sealed class SysConfigs extends CassandraTable[SysConfigs, SysConfig] {
   }
 }
 
-
 object SysConfig extends SysConfigs with Logging with CassandraConnector {
 
   import scala.concurrent.Await
