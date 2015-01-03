@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import controllers.Sessions._
-import controllers.checkers.AuthCheck
+import controllers.helpers.AuthCheck
 import controllers.session._
 import models.User
 import play.api.data.Form

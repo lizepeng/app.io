@@ -1,6 +1,6 @@
 package controllers
 
-import controllers.checkers.AuthCheck
+import controllers.helpers.AuthCheck
 import controllers.session._
 import play.api.mvc._
 import views._

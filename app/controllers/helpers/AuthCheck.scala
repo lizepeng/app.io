@@ -1,4 +1,4 @@
-package controllers.checkers
+package controllers.helpers
 
 import controllers._
 import play.api.mvc._

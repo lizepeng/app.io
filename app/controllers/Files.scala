@@ -3,6 +3,7 @@ package controllers
 import java.net.URLEncoder
 import java.util.UUID
 
+import controllers.helpers.TrafficControl._
 import controllers.session.UserAction
 import models.cfs._
 import play.api.http.ContentTypes
@@ -16,6 +17,7 @@ import play.api.mvc._
 import views._
 
 import scala.concurrent.Future
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
@@ -36,7 +38,7 @@ object Files extends Controller {
               s"""attachment; filename="${URLEncoder.encode(file.name, "UTF-8")}" """
           ))
         ),
-        CFS.file.read(file)
+        CFS.file.read(file) &> LimitTo(2 MBps)
       )
     }
   }
@@ -54,6 +56,10 @@ object Files extends Controller {
         case (start, endOpt) => {
           if (start < file.size) {
             val end = endOpt.filter(_ < file.size).getOrElse(file.size - 1)
+            println()
+            println(s"Range ($start, $end)")
+            println()
+
             Result(
               ResponseHeader(
                 PARTIAL_CONTENT,
@@ -65,7 +71,7 @@ object Files extends Controller {
                 )
               ),
               CFS.file.read(file, start) &>
-                Traversable.take(end - start + 1)
+                Traversable.take(end - start + 1) &> LimitTo(1 MBps)
             )
           } else {
             Result(
@@ -90,7 +96,7 @@ object Files extends Controller {
               CONTENT_LENGTH -> s"${file.size}"
             )
           ),
-          CFS.file.read(file)
+          CFS.file.read(file) &> LimitTo(1 MBps)
         )
       }
     }
