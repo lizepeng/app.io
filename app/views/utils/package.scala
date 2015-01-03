@@ -16,7 +16,7 @@ package object utils {
         case "png" | "jpg" | "gif"         => "fa-file-image-o"
         case ext if audio.?                => "fa-file-audio-o"
         case "txt"                         => "fa-file-text-o"
-        case "pdf" | "ps"                  => "fa-file-pdf-o"
+        case ext if pdf.?                  => "fa-file-pdf-o"
         case "doc" | "docx"                => "fa-file-word-o"
         case "ppt"                         => "fa-file-powerpoint-o"
         case "xls" | "xlsx"                => "fa-file-excel-o"
@@ -34,6 +34,13 @@ package object utils {
 
     def ext: Option[String] = {
       f.name.split('.').takeRight(1).headOption
+    }
+
+    def pdf = new PolarQuestion {
+      def ? : Boolean = ext.exists {
+        case "pdf" | "ps" => true
+        case _            => false
+      }
     }
 
     def audio = new PolarQuestion {

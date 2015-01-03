@@ -35,9 +35,15 @@
                 <i class="fa fa-lg @f.icon"></i>
               </td>
               <td>
-                <a href="@routes.Files.show(f.id)">
-                  @f.name
-                </a>
+                @if(f.pdf.?) {
+                  <a href="@routes.Files.download(f.id, true)">
+                    @f.name
+                  </a>
+                } else {
+                  <a href="@routes.Files.show(f.id)">
+                    @f.name
+                  </a>
+                }
               </td>
               <td class="text-right hidden-xs hidden-sm">
                 @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
