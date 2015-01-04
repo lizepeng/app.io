@@ -98,7 +98,7 @@ object Users extends Controller {
       case _               => Valid
     }
 
-    val emailRegex = """\w+@\w+.\w+$""".r
+    val emailRegex = """[\w.-]+@[\w.-]+.\w+$""".r
 
     def email = Constraint[String]("constraint.email.check") {
       case s if isEmpty(s) => Invalid(VE("login.email.empty"))

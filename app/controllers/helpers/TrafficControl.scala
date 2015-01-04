@@ -6,6 +6,7 @@ import play.api.libs.iteratee.{Enumeratee, Iteratee}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.math._
 
 /**

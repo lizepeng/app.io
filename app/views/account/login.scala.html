@@ -6,7 +6,9 @@
 @layouts.base(MSG("sign.in.head")){
 
   @fm.globalErrors.map { gerr =>
-    @{_alert("danger", gerr.message)}
+    @common._alert("danger"){
+      @MSG(gerr.message)
+    }
   }
 
   @form(action = routes.Sessions.create(), 'class -> "form-signin") {
