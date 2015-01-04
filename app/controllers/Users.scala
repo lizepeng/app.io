@@ -26,17 +26,16 @@ object Users extends Controller {
       "password" -> text.verifying(Rules.password),
       "password_confirmation" -> text
     )(SignUpFD.apply)(SignUpFD.unapply)
-      .verifying(
-        "password.not.confirmed",
-        fd => fd.password == fd.password_confirmation
-      )
+      .verifying("password.not.confirmed", _.isConfirmed)
   )
 
   case class SignUpFD(
     email: String,
     password: String,
     password_confirmation: String
-  )
+  ) {
+    def isConfirmed = password == password_confirmation
+  }
 
   def show(id: UUID) =
     (UserAction andThen AuthCheck) {
@@ -55,18 +54,28 @@ object Users extends Controller {
   def create = UserAction.async {implicit request =>
     val fm = signUpFM.bindFromRequest
     fm.fold(
-      formWithErrors => Future.successful {
-        BadRequest(html.users.signup(formWithErrors))
-      },
-      fd => {
-        User.findBy(fd.email).flatMap {
-          case Some(_) => Future.successful {
-            BadRequest(html.users.signup(fm.withGlobalError("login.email.taken")))
+      fm => Future.successful {
+        BadRequest {
+          html.users.signup {
+            fm.withGlobalError("signup.failed")
           }
-          case None    => {
-            User.save(User(email = fd.email, password = fd.password)).map {implicit u =>
-              Redirect(routes.Users.show(u.id)).createSession(rememberMe = false)
+        }
+      },
+      fd => User.findBy(fd.email).flatMap {
+        case Some(_) => Future.successful {
+          BadRequest {
+            html.users.signup {
+              fm.withGlobalError("signup.failed")
+                .withError("email", "login.email.taken")
             }
+          }
+        }
+        case None    => {
+          User.save(User(email = fd.email, password = fd.password)).map {
+            implicit u =>
+              Redirect {
+                routes.Users.show(u.id)
+              }.createSession(rememberMe = false)
           }
         }
       }

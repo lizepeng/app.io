@@ -1,9 +1,16 @@
-@(key: String = "success", msg: String = "")
+@(key:String, msg:String, emphasis:Boolean=false, dismissible:Boolean=false)
 
-<div class="alert alert-@key">
-  <button type="button" class="close" data-dismiss="alert">&times;</button>
-  @key match {
-    case "danger" | "warning" => {<i class="fa fa-warning"></i>}
+<div class="alert alert-@key @if(dismissible){alert-dismissible}" role="alert">
+  @if(dismissible) {
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
   }
-  <strong style="margin-right: 20px;">@MSG(s"alert.$key.title")</strong>@MSG(msg)
+  @if(emphasis) {
+    @key match {
+      case "danger" | "warning" => {<i class="fa fa-warning"></i>}
+      case "" => {}
+    }
+    <strong>@MSG(s"alert.$key.title")</strong>
+  } @MSG(msg)
 </div>

@@ -19,7 +19,7 @@
                 signup-form">
       <h4>@MSG("Create your personal account")</h4>
       @fm.globalErrors.map { gerr =>
-        @{_alert("danger", gerr.message)}
+        @{_alert("danger", gerr.message, true)}
       }
 
       @form(action = routes.Users.create(), 'class -> "form-signup") {

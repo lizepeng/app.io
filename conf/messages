@@ -69,6 +69,7 @@ address.city=City
 address.street=Street
 address.building=Building
 
+signup.failed=There were problems creating your account.
 login.email.empty=Email can't be blank
 login.email.invalid=Valid email is required
 login.email.taken=Email is invalid or already taken
