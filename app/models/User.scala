@@ -106,16 +106,20 @@ object User extends Users with Logging with Cassandra {
    * @param user
    * @return
    */
-  def save(user: User): Future[ResultSet] = {
+  def save(user: User): Future[User] = {
     val u = user.encryptPassword
+    BatchStatement()
+      .add(UserByEmail.cql_save(u.email, u.id))
+      .add(User.cql_save(u))
+      .future().map {_ => u}
+  }
 
-    UserByEmail.save(u.email, u.id)
+  private def cql_save(u: User) = {
     insert.value(_.id, u.id)
       .value(_.name, u.name)
       .value(_.salt, u.salt)
       .value(_.encrypted_password, u.encrypted_password)
       .value(_.email, u.email)
-      .future()
   }
 
   def updateName(id: UUID, name: String): Future[ResultSet] = {
@@ -190,13 +194,13 @@ sealed class UserByEmail extends CassandraTable[UserByEmail, (String, UUID)] {
 
 object UserByEmail extends UserByEmail with Logging with Cassandra {
 
+  def cql_save(email: String, id: UUID) = {
+    update.where(_.email eqs email).modify(_.id setTo id)
+  }
+
   def find(email: String): Future[Option[(String, UUID)]] = {
     if (email.isEmpty) Future.successful(None)
     else select.where(_.email eqs email).one()
-  }
-
-  def save(email: String, id: UUID): Future[ResultSet] = {
-    update.where(_.email eqs email).modify(_.id setTo id).future()
   }
 
   def remove(email: String): Future[ResultSet] = {

@@ -64,12 +64,8 @@ object Users extends Controller {
             BadRequest(html.users.signup(fm.withGlobalError("login.email.taken")))
           }
           case None    => {
-            val user = User(email = fd.email, password = fd.password)
-            User.save(user).flatMap {_ =>
-              User.findBy(user.id).map {
-                case None    => ServiceUnavailable("")
-                case Some(u) => Redirect(routes.Users.show(u.id)).createSession(rememberMe = false)(u)
-              }
+            User.save(User(email = fd.email, password = fd.password)).map {implicit u =>
+              Redirect(routes.Users.show(u.id)).createSession(rememberMe = false)
             }
           }
         }
