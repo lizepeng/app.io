@@ -6,12 +6,14 @@ sign.in=Sign In
 sign.out=Sign Out
 sign.in.head=Sign In
 sign.in.msg.error=TODO
+sign.up.head=Join App.io
 
 home=Home
 contact=Contact
 com.profile=Corporate Profile
 id=Id
 password=Password
+password_confirmation=Confirm your password
 
 action=Action
 slip.num=Slip Num

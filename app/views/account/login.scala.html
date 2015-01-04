@@ -1,11 +1,12 @@
 @(fm: Form[_])(implicit request: UserRequest[_])
 
+@import common._
 @import helper._
 
-@main(MSG("sign.in.head")){
+@layouts.base(MSG("sign.in.head")){
 
   @fm.globalErrors.map { gerr =>
-    @common._alert("danger", gerr.message)
+    @{_alert("danger", gerr.message)}
   }
 
   <div class="container" >
@@ -13,26 +14,25 @@
 
       <h2 class="form-signin-heading">@MSG("sign.in.head")</h2>
 
-      @inputText(fm("email"),
+      @{_input_email(fm("email"),
         'placeholder -> MSG("email"),
-        'class       -> "form-control",
-        'type        -> "email",
         'tabindex    -> 1,
         '_icons      -> "fa fa-envelope-o fa-fw"
-        )(_fe_input_login, request.lang)
+        )(_fc_input, request.lang)
+      }
 
-      @inputPassword(fm("password"),
+      @{_input_password(fm("password"),
         'placeholder -> MSG("password"),
-        'class       -> "form-control",
         'tabindex    -> 2,
         '_icons      -> "fa fa-key fa-fw"
-        )(_fe_input_login, request.lang)
+        )(_fc_input, request.lang)
+      }
 
       <div style="margin-top: 20px;">
         @checkbox(fm("remember_me"),
         'tabindex -> 3,
         '_text -> MSG("remember.me")
-        )(common._fe_input, request.lang)
+        )(common._fc_raw, request.lang)
       </div>
 
       <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="5">

@@ -1,0 +1,15 @@
+@(elements: helper.FieldElements)
+
+<div class="form-group @if(elements.hasErrors){has-error}">
+
+  <label class="control-label" for="@elements.id">
+    @elements.label(elements.lang)
+  </label>
+
+  @elements.input
+
+  @elements.errors(elements.lang).map { error =>
+    <p class="help-block">@error</p>
+  }
+
+</div>

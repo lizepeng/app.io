@@ -1,6 +1,6 @@
 @()(implicit request: UserRequest[_])
 
-@main(MSG("com.profile")) {
+@layouts.base(MSG("com.profile")) {
   <div class="row">
     <div id="divCanvas" class="span12" >
       <canvas id="myCanvas"></canvas>

@@ -11,16 +11,16 @@ import views._
 object Application extends Controller {
 
   def index = UserAction {implicit request =>
-    Ok(views.html.index())
+    Ok(html.welcome.index())
   }
 
   def about = UserAction {implicit request =>
-    Ok(html.homepages.about())
+    Ok(html.static_pages.about())
   }
 
   def wiki = UserAction.async {implicit request =>
     CFS.file.find(UUID.fromString("e5280530-9366-11e4-967d-d3c54ab016d4")).map {
-      video => Ok(html.homepages.wiki(video))
+      video => Ok(html.static_pages.wiki(video))
     }
   }
 }

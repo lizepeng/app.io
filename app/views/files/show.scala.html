@@ -1,6 +1,6 @@
 @(f: cfs.File)(implicit request: UserRequest[_])
 
-@main_auth(f.name){
+@layouts.base(f.name){
 
   <div class="row">
     <div class="col-xs-12">

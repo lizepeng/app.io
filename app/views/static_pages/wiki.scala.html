@@ -1,6 +1,6 @@
 @(videoOpt: Option[cfs.File])(implicit request: UserRequest[_])
 
-@main(MSG("Wiki"), above_content = movie){
+@layouts.base(MSG("Wiki"), above_content = movie){
 
   <div class="row">
     <div class="col-xs-12 col-sm-6">

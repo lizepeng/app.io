@@ -1,8 +1,9 @@
 @(fm: Form[_])(implicit request: UserRequest[_])
 
+@import common._
 @import helper._
 
-@main(MSG("sign.up.head")){
+@layouts.base(MSG("sign.up.head")){
 
   <div class="page-header">
     <h1>Join App.io <br>
@@ -18,28 +19,26 @@
                 signup-form">
       <h4>@MSG("Create your personal account")</h4>
       @fm.globalErrors.map { gerr =>
-        @common._alert("danger", gerr.message)
+        @{_alert("danger", gerr.message)}
       }
 
       @form(action = routes.Users.create(), 'class -> "form-signup") {
 
-        @inputText(fm("email"),
-          'placeholder -> MSG("email"),
-          'class       -> "form-control",
-          'type        -> "email",
-          'tabindex    -> 1)
+        @{_input_email(fm("email"),
+          'tabindex    -> 1
+          )(_fc_text, request.lang)
+        }
 
-        @inputPassword(fm("password"),
-          'placeholder -> MSG("password"),
-          'class       -> "form-control",
-          'type        -> "password",
-          'tabindex    -> 2)
+        @{_input_password(fm("password"),
+          'tabindex    -> 2
+          )(_fc_text, request.lang)
+        }
 
-        @inputPassword(fm("password_confirmation"),
-          'placeholder -> MSG("confirm your password"),
-          'class       -> "form-control",
-          'type        -> "password",
-          'tabindex    -> 3)
+        @{_input_password(fm("password_confirmation"),
+          'tabindex    -> 3
+          )(_fc_text, request.lang)
+        }
+
         <p class="tos-info">
           <small>
             By clicking on "Create an account" below, you are agreeing to the

@@ -1,0 +1,10 @@
+@(field: play.api.data.Field, args: (Symbol,Any)*)(
+  implicit handler: helper.FieldConstructor, lang: play.api.i18n.Lang)
+
+@helper.inputText(
+  field,
+  args ++ Seq(
+    'class -> "form-control",
+    'type  -> "email"
+    ): _*
+  )(handler, lang)

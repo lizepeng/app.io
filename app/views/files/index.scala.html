@@ -2,11 +2,11 @@
 
 @import helper._
 
-@main(MSG("Files")) {
+@layouts.base(MSG("Files")) {
 
   <div class="row">
     <div class="col-xs-10 col-xs-offset-2">
-      @_upload("html", "picture")
+      @{_upload("html", "picture")}
     </div>
   </div>
   <div class="row" style="margin-top:10px">
@@ -73,7 +73,7 @@
 }(css, _upload("js"))
 
 @css = {
-  @_upload("css")
+  @{_upload("css")}
   <style>
     .table {
       table-layout:fixed;
