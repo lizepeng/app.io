@@ -27,6 +27,7 @@
       @form(action = routes.Users.create(), 'class -> "form-signup") {
 
         @{_input_email(fm("email"),
+          Symbol("data-autocheck-url") -> routes.Users.checkEmail,
           'tabindex    -> 1
           )(_fc_text, request.lang)
         }
@@ -82,7 +83,7 @@
       </ul>
     </div>
   </div>
-}(css)
+}(css, js)
 
 @css = {
   <style>
@@ -101,4 +102,35 @@
       padding-bottom: 20px;
     }
   </style>
+}
+
+@js = {
+  <script>
+    $(document).on("keyup", "input[data-autocheck-url]", function() {
+      var elem = $(this);
+      var data = { url: elem.data("autocheck-url"), value: elem.val() };
+
+      clearTimeout(elem.data("timer"));
+
+      var fg = $("#email").closest('.form-group');
+
+      elem.data("timer", setTimeout(function() {
+        $.ajax({
+          type: "POST",
+          url: data.url,
+          data: { value: data.value },
+          statusCode : {
+            403: function() {
+              fg.removeClass('has-success').addClass('has-error');
+              fg.find('.fa').removeClass('fa-check').addClass('fa-warning');
+            },
+            200: function() {
+              fg.removeClass('has-error').addClass('has-success');
+              fg.find('.fa').removeClass('fa-warning').addClass('fa-check');
+            }
+          }
+        })
+      }, 400));
+    });
+  </script>
 }

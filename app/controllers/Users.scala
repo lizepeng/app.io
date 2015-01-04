@@ -9,6 +9,7 @@ import models.User
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation._
+import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import views._
@@ -57,7 +58,8 @@ object Users extends Controller {
       fm => Future.successful {
         BadRequest {
           html.users.signup {
-            fm.withGlobalError("signup.failed")
+            if (fm.hasGlobalErrors) fm
+            else fm.withGlobalError("signup.failed")
           }
         }
       },
@@ -82,6 +84,22 @@ object Users extends Controller {
     )
   }
 
+  def checkEmail = Action.async {request =>
+    val email = request.body.asFormUrlEncoded
+      .flatMap(_.get("value"))
+      .flatMap(_.headOption).getOrElse("")
+
+    Rules.email.apply(email) match {
+      case invalid: Invalid => Future.successful {
+        Forbidden(invalid.errors.map(_.message).map(MSG(_)).mkString("\n"))
+      }
+      case Valid            => User.findBy(email).map {
+        case None    => Ok("")
+        case Some(_) => Forbidden(MSG("login.email.taken"))
+      }
+    }
+  }
+
   object Rules {
 
     import play.api.data.validation.{ValidationError => VE}
@@ -91,19 +109,22 @@ object Users extends Controller {
     val noLower = """[^a-z]*""".r
 
     def password = Constraint[String]("constraint.password.check") {
-      case p if isEmpty(p) => Invalid(VE("password.empty"))
-      case noDigit()       => Invalid(VE("password.all_number"))
-      case noLower()       => Invalid(VE("password.all_upper"))
-      case noUpper()       => Invalid(VE("password.all_lower"))
-      case _               => Valid
+      case o if isEmpty(o)   => Invalid(VE("password.too.short", 7))
+      case o if o.size <= 7  => Invalid(VE("password.too.short", 7))
+      case o if o.size >= 39 => Invalid(VE("password.too.long", 39))
+      case noDigit()         => Invalid(VE("password.all_number"))
+      case noLower()         => Invalid(VE("password.all_upper"))
+      case noUpper()         => Invalid(VE("password.all_lower"))
+      case _                 => Valid
     }
 
-    val emailRegex = """[\w.-]+@[\w.-]+.\w+$""".r
+    val emailRegex = """[\w\.-]+@[\w\.-]+\.\w+$""".r
 
     def email = Constraint[String]("constraint.email.check") {
-      case s if isEmpty(s) => Invalid(VE("login.email.empty"))
-      case emailRegex()    => Valid
-      case _               => Invalid(VE("login.email.invalid"))
+      case o if isEmpty(o)  => Invalid(VE("login.email.empty"))
+      case o if o.size > 39 => Invalid(VE("login.email.invalid"))
+      case emailRegex()     => Valid
+      case _                => Invalid(VE("login.email.invalid"))
     }
 
     private def isEmpty(s: String) = {

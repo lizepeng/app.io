@@ -3,25 +3,26 @@
 # ~~~~
 
 # Home page
-GET  /             controllers.Application.index
-GET  /wiki         controllers.Application.wiki
-GET  /about        controllers.Application.about
+GET  /                        controllers.Application.index
+GET  /wiki                    controllers.Application.wiki
+GET  /about                   controllers.Application.about
 
 # Map static resources from the /public folder to the /assets URL path
-GET  /assets/*file controllers.Assets.at(path="/public", file)
+GET  /assets/*file            controllers.Assets.at(path="/public", file)
 
-GET  /files        controllers.Files.index
-POST /files        controllers.Files.upload
-GET  /files/:id    controllers.Files.show(id:UUID)
-POST /files/:id.rm controllers.Files.remove(id:UUID)
-GET  /stream/:id   controllers.Files.stream(id:UUID)
-GET  /download/:id controllers.Files.download(id:UUID,inline:Boolean?=false)
+GET  /files                   controllers.Files.index
+POST /files                   controllers.Files.upload
+GET  /files/:id               controllers.Files.show(id:UUID)
+POST /files/:id.rm            controllers.Files.remove(id:UUID)
+GET  /stream/:id              controllers.Files.stream(id:UUID)
+GET  /download/:id            controllers.Files.download(id:UUID,inline:Boolean?=false)
 
-GET  /login        controllers.Sessions.nnew
-POST /login        controllers.Sessions.create
-POST /logout       controllers.Sessions.destroy
+GET  /login                   controllers.Sessions.nnew
+POST /login                   controllers.Sessions.create
+POST /logout                  controllers.Sessions.destroy
 
-GET  /users/:id    controllers.Users.show(id:UUID)
-GET  /users/       controllers.Users.index
-GET  /join         controllers.Users.nnew
-POST /join         controllers.Users.create
+GET  /users/:id               controllers.Users.show(id:UUID)
+GET  /users/                  controllers.Users.index
+GET  /join                    controllers.Users.nnew
+POST /join                    controllers.Users.create
+POST /signup_check/username   controllers.Users.checkEmail
