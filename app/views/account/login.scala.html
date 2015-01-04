@@ -9,39 +9,38 @@
     @{_alert("danger", gerr.message)}
   }
 
-  <div class="container" >
-    @form(action = routes.Sessions.create(), 'class -> "form-signin") {
+  @form(action = routes.Sessions.create(), 'class -> "form-signin") {
 
-      <h2 class="form-signin-heading">@MSG("sign.in.head")</h2>
+    <h3 class="form-signin-heading">@MSG("sign.in.head")</h3>
 
-      @{_input_email(fm("email"),
-        'placeholder -> MSG("email"),
-        'tabindex    -> 1,
-        '_icons      -> "fa fa-envelope-o fa-fw"
-        )(_fc_input, request.lang)
-      }
-
-      @{_input_password(fm("password"),
-        'placeholder -> MSG("password"),
-        'tabindex    -> 2,
-        '_icons      -> "fa fa-key fa-fw"
-        )(_fc_input, request.lang)
-      }
-
-      <div style="margin-top: 20px;">
-        @checkbox(fm("remember_me"),
-        'tabindex -> 3,
-        '_text -> MSG("remember.me")
-        )(common._fc_raw, request.lang)
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="5">
-        @MSG("sign.in")
-      </button>
-
-      <span class="help-inline">@MSG("user.pwd.forgot")</span>
+    @{_input_email(fm("email"),
+      'placeholder -> MSG("email"),
+      'tabindex    -> 1,
+      '_icons      -> "fa fa-envelope-o fa-fw"
+      )(_fc_login_text, request.lang)
     }
-  </div>
+
+    @{_input_password(fm("password"),
+      'placeholder -> MSG("password"),
+      'tabindex    -> 2,
+      '_icons      -> "fa fa-key fa-fw"
+      )(_fc_login_text, request.lang)
+    }
+
+    <div style="margin-top: 20px;">
+      @checkbox(fm("remember_me"),
+      'tabindex -> 3,
+      '_text -> MSG("remember.me")
+      )(common._fc_raw, request.lang)
+    </div>
+
+    <button type="submit" class="btn btn-default btn-lg btn-block" tabindex="5">
+      @MSG("sign.in")
+    </button>
+
+    <span class="help-inline">@MSG("user.pwd.forgot")</span>
+  }
+
 }(css = css)
 
 @css = {

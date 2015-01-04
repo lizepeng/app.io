@@ -1,12 +1,18 @@
 @(elements: helper.FieldElements)
 
-<div class="form-group @if(elements.hasErrors){has-error}">
+<div class="form-group @if(elements.hasErrors){has-error} has-feedback">
 
   <label class="control-label" for="@elements.id">
     @elements.label(elements.lang)
   </label>
 
   @elements.input
+
+  <span class="form-control-feedback">
+    @if(elements.hasErrors) {
+      <i class="fa fa-warning fa-lg"></i>
+    }
+  </span>
 
   @elements.errors(elements.lang).map { error =>
     <p class="help-block">@error</p>

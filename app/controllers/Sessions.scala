@@ -4,7 +4,6 @@ import controllers.session._
 import models._
 import play.api.data.Forms._
 import play.api.data._
-import play.api.data.validation.Constraints._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import views._
@@ -19,8 +18,8 @@ object Sessions extends Controller with session.Session {
 
   val loginFM = Form[LoginFD](
     mapping(
-      "email" -> email,
-      "password" -> text.verifying(nonEmpty),
+      "email" -> text,
+      "password" -> text,
       "remember_me" -> boolean
     )(LoginFD.apply)(LoginFD.unapply)
   )
@@ -40,22 +39,19 @@ object Sessions extends Controller with session.Session {
 
   def create = UserAction.async {implicit request =>
     val fm = loginFM.bindFromRequest
+
     fm.fold(
-      formWithErrors => Future {
-        BadRequest(html.account.login(formWithErrors))
-      },
-      fd =>
-        User.auth(fd.email, fd.password).flatMap {eitherUser =>
-          eitherUser.fold(
-            ex => Future {
-              BadRequest(html.account.login(fm.withGlobalError(ex.code.msg())))
-            }
-            ,
-            implicit user => Future {
-              Redirect(routes.Users.show(user.id)).createSession(fd.remember_me)
-            }
-          )
-        }
+      fm => Future.successful(BadRequest(html.account.login(fm))),
+      fd => User.auth(fd.email, fd.password).flatMap {eitherUser =>
+        eitherUser.fold(
+          ex => Future {
+            BadRequest(html.account.login(fm.withGlobalError(ex.code.msg())))
+          },
+          implicit user => Future {
+            Redirect(routes.Users.show(user.id)).createSession(fd.remember_me)
+          }
+        )
+      }
     )
   }
 

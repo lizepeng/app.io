@@ -163,8 +163,8 @@ object User extends Users with Logging with Cassandra {
   def auth(email: String, passwd: String): Future[Either[BaseException, User]] = {
     import common.ErrorCodes._
 
-    findBy(email).map {maybeUser =>
-      maybeUser.toRight {
+    findBy(email).map {userOpt =>
+      userOpt.toRight {
         NotFoundException(UserNotFound.log(email))
       }.right.flatMap {user =>
         user.hasPassword(passwd).option(user).toRight {
@@ -191,7 +191,8 @@ sealed class UserByEmail extends CassandraTable[UserByEmail, (String, UUID)] {
 object UserByEmail extends UserByEmail with Logging with Cassandra {
 
   def find(email: String): Future[Option[(String, UUID)]] = {
-    select.where(_.email eqs email).one()
+    if (email.isEmpty) Future.successful(None)
+    else select.where(_.email eqs email).one()
   }
 
   def save(email: String, id: UUID): Future[ResultSet] = {

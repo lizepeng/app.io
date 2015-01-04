@@ -47,9 +47,6 @@ object ErrorCodes {
 
   import common.Level._
 
-  val CompanyNotFound   = ErrorCode("not.found.com", Info)
   val UserNotFound      = ErrorCode("not.found.user", Info)
-  val WarehouseNotFound = ErrorCode("not.found.whs", Info)
-  val ProductNotFound   = ErrorCode("not.found.prod", Info)
-  val WrongPassword     = ErrorCode("not.found.pwd.wrong", Info)
+  val WrongPassword     = ErrorCode("password.wrong", Info)
 }

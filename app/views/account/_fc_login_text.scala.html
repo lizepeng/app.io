@@ -1,6 +1,6 @@
 @(elements: helper.FieldElements)
 
-<div class="input-group @if(elements.hasErrors) { has-error }">
+<div class="input-group">
   @elements.args.find(_._1 == '_icons).map { icons =>
     <span class="input-group-addon">
       <i class="@icons._2.toString"></i>
@@ -9,7 +9,3 @@
 
   @elements.input
 </div>
-
-@if(elements.hasErrors) {
-  <p class="text-danger">@elements.errors</p>
-}

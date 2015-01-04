@@ -4,7 +4,7 @@ ds.list.title=Daily Summary
 app.name=App.io
 sign.in=Sign In
 sign.out=Sign Out
-sign.in.head=Sign In
+sign.in.head=Sign in to App.io
 sign.in.msg.error=TODO
 sign.up.head=Join App.io
 
@@ -69,8 +69,9 @@ address.city=City
 address.street=Street
 address.building=Building
 
-msg.info.not.found.com=Wrong Username/Email and password combination.
 msg.info.not.found.user=Wrong Username/Email and password combination.
+msg.info.password.wrong=Wrong Username/Email and password combination.
+
 msg.confirm.delete=TODO
 msg.master.created={0} has been created.
 msg.master.updated={0} has been updated.
