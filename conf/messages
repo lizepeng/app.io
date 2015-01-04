@@ -69,13 +69,23 @@ address.city=City
 address.street=Street
 address.building=Building
 
-msg.info.not.found.user=Wrong Username/Email and password combination.
-msg.info.password.wrong=Wrong Username/Email and password combination.
+login.email.empty=Email can't be blank
+login.email.invalid=Valid email is required
+login.email.taken=Email is invalid or already taken
+
+password.empty=Password is too short (minimum is 7 characters)
+password.all_number=Password need at least one number
+password.all_upper=Password need at least one lowercase letter
+password.all_lower=Password need at least one uppercase letter
+password.not.confirmed=Password doesn't match the confirmation
+
+msg.info.not.found.user=Wrong Username/Email and password combination
+msg.info.password.wrong=Wrong Username/Email and password combination
 
 msg.confirm.delete=TODO
-msg.master.created={0} has been created.
-msg.master.updated={0} has been updated.
-msg.master.deleted={0} has been deleted.
+msg.master.created={0} has been created
+msg.master.updated={0} has been updated
+msg.master.deleted={0} has been deleted
 
 log.info.notfound.com=Company {0} not found
 log.info.notfound.user=User {0}, {1} not found

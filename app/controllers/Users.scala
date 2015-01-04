@@ -22,12 +22,12 @@ object Users extends Controller {
 
   val signUpFM = Form[SignUpFD](
     mapping(
-      "email" -> email,
-      "password" -> nonEmptyText(minLength = 7).verifying(pwdRule),
+      "email" -> text.verifying(Rules.email),
+      "password" -> text.verifying(Rules.password),
       "password_confirmation" -> text
     )(SignUpFD.apply)(SignUpFD.unapply)
       .verifying(
-        "Password doesn't match the confirmation",
+        "password.not.confirmed",
         fd => fd.password == fd.password_confirmation
       )
   )
@@ -61,7 +61,7 @@ object Users extends Controller {
       fd => {
         User.findBy(fd.email).flatMap {
           case Some(_) => Future.successful {
-            BadRequest(html.users.signup(fm.withGlobalError("Email is invalid or already taken")))
+            BadRequest(html.users.signup(fm.withGlobalError("login.email.taken")))
           }
           case None    => {
             val user = User(email = fd.email, password = fd.password)
@@ -77,18 +77,33 @@ object Users extends Controller {
     )
   }
 
-  val noDigit = """[^0-9]*""".r
-  val noUpper = """[^A-Z]*""".r
-  val noLower = """[^a-z]*""".r
+  object Rules {
 
-  def pwdRule = Constraint[String]("constraint.password.check") {
-    password =>
-      val errors = password match {
-        case noDigit() => Seq(ValidationError("Password need at least one number"))
-        case noLower() => Seq(ValidationError("Password need at least one lowercase letter"))
-        case noUpper() => Seq(ValidationError("Password need at least one uppercase letter"))
-        case _         => Nil
-      }
-      if (errors.isEmpty) Valid else Invalid(errors)
+    import play.api.data.validation.{ValidationError => VE}
+
+    val noDigit = """[^0-9]*""".r
+    val noUpper = """[^A-Z]*""".r
+    val noLower = """[^a-z]*""".r
+
+    def password = Constraint[String]("constraint.password.check") {
+      case p if isEmpty(p) => Invalid(VE("password.empty"))
+      case noDigit()       => Invalid(VE("password.all_number"))
+      case noLower()       => Invalid(VE("password.all_upper"))
+      case noUpper()       => Invalid(VE("password.all_lower"))
+      case _               => Valid
+    }
+
+    val emailRegex = """\w+@\w+.\w+$""".r
+
+    def email = Constraint[String]("constraint.email.check") {
+      case s if isEmpty(s) => Invalid(VE("login.email.empty"))
+      case emailRegex()    => Valid
+      case _               => Invalid(VE("login.email.invalid"))
+    }
+
+    private def isEmpty(s: String) = {
+      s == null || s.trim.isEmpty
+    }
   }
+
 }
