@@ -19,9 +19,9 @@ trait INodesKey[T <: CassandraTable[T, R], R] {
     extends TimeUUIDColumn(this)
     with PartitionKey[UUID]
 
-  object ind_block_id
-    extends TimeUUIDColumn(self)
-    with ClusteringOrder[UUID] with Ascending
+  object offset
+    extends LongColumn(this)
+    with ClusteringOrder[Long] with Ascending
 
 }
 
@@ -40,19 +40,11 @@ trait INodesStatic[T <: CassandraTable[T, R], R] {
     extends BooleanColumn(self)
     with StaticColumn[Boolean]
 
-  object children
-    extends MapColumn[T, R, String, UUID](self)
-    with StaticColumn[Map[String, UUID]]
-
   object size
-    extends IntColumn(self)
-    with StaticColumn[Int]
+    extends LongColumn(self)
+    with StaticColumn[Long]
 
-  object block_count
-    extends IntColumn(self)
-    with StaticColumn[Int]
-
-  object ind_block_length
+  object indirect_block_size
     extends IntColumn(self)
     with StaticColumn[Int]
 
@@ -69,8 +61,7 @@ trait INodesStatic[T <: CassandraTable[T, R], R] {
 trait INodesDynamic[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
-  object offset extends IntColumn(self)
+  object length extends LongColumn(self)
 
-  object length extends IntColumn(self)
-
+  object indirect_block_id extends TimeUUIDColumn(self)
 }

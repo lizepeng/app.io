@@ -48,20 +48,17 @@ object SysConfig extends SysConfigs with Logging with Cassandra {
 
   Await.result(create.future(), 500 millis)
 
-  def get[T](
-    module: String,
-    cfs_root: (SysConfigs) => SelectColumnRequired[SysConfigs, SysConfig, T]
-  ): Future[Option[T]] = {
-    select(cfs_root)
-      .where(_.module eqs module)
-      .one()
+  type COL[T] = (SysConfigs) => SelectColumnRequired[SysConfigs, SysConfig, T]
+
+  def get[T](module: String, column: COL[T]): Future[Option[T]] = {
+    select(column).where(_.module eqs module).one()
   }
 
   def put(
     module: String,
     timestamp: DateTime,
     updates: ((SysConfigs) => Assignment)*
-  ): Future[Option[ResultSet]] = {
+  ) = {
     val stmt = update
       .where(_.module eqs module)
       .and(_.timestamp eqs timestamp)

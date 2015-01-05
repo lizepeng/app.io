@@ -34,11 +34,11 @@ object CFS extends AppConfig {
     }
 
     SysConfig.get(config_key, _.cfs_root).flatMap {
-      case Some(id) => dir.find(id).flatMap {
-        case None      => dir.save(newRoot(id))
-        case d@Some(_) => Future.successful(d)
+      case Some(id) => dir.find(id).map {
+        case None    => dir.save(newRoot(id))
+        case Some(d) => d
       }
-      case None     => {
+      case None     => Future.successful {
         val id: UUID = UUIDs.timeBased()
         SysConfig.put(config_key, DateTime.now(), (_.cfs_root setTo id))
         dir.save(newRoot(id))
@@ -46,7 +46,7 @@ object CFS extends AppConfig {
     }
 
   }, 10 seconds
-  ).get
+  )
 
   object file {
     def find(id: UUID): Future[Option[File]] = {
@@ -57,16 +57,16 @@ object CFS extends AppConfig {
       INode.read(file)
     }
 
-    def read(file: File, from: Int): Enumerator[BLK] = {
-      INode.read(file, from)
+    def read(file: File, offset: Long): Enumerator[BLK] = {
+      INode.read(file, offset)
     }
 
     def save(file: File): Iteratee[BLK, File] = {
       INode.streamWriter(file.inode).map(File(_))
     }
 
-    def remove(id: UUID): Future[ResultSet] = {
-      INode.remove(id)
+    def purge(id: UUID) {
+      INode.purge(id)
     }
 
     def list(): Future[Seq[File]] = {
@@ -80,8 +80,8 @@ object CFS extends AppConfig {
       INode.find(id).map(_.map(Directory(_)))
     }
 
-    def save(dir: Directory): Future[Option[Directory]] = {
-      INode.write(dir.inode).flatMap(_ => find(dir.id))
+    def save(dir: Directory): Directory = {
+      Directory(INode.write(dir.inode))
     }
   }
 

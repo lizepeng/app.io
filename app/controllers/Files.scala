@@ -42,13 +42,13 @@ object Files extends Controller {
       val byte_range_spec = """bytes=(\d+)-(\d*)""".r
 
       request.headers.get(RANGE).flatMap {
-        case byte_range_spec(first, last) => Some(first.toInt, Some(last).filter(_.nonEmpty).map(_.toInt))
+        case byte_range_spec(first, last) => Some(first.toLong, Some(last).filter(_.nonEmpty).map(_.toLong))
         case _                            => None
       }.filter {
         case (first, lastOpt) => lastOpt.isEmpty || lastOpt.get >= first
       }.map {
         case (first, lastOpt) if first < size  => streamRange(file, first, lastOpt)
-        case (first, lastOpt) if first >= size => hintValidRange(file)
+        case (first, lastOpt) if first >= size => InvalidRange(file)
       }.getOrElse {
         streamWhole(file).withHeaders(ACCEPT_RANGES -> "bytes")
       }
@@ -67,7 +67,7 @@ object Files extends Controller {
   }
 
   def remove(id: UUID) = UserAction {implicit request =>
-    INode.remove(id)
+    INode.purge(id)
     Redirect(routes.Files.index).flashing(
       "success" -> s"${id} deleted"
     )
@@ -87,7 +87,7 @@ object Files extends Controller {
       }
   }
 
-  private def hintValidRange(file: File): Result = {
+  private def InvalidRange(file: File): Result = {
     Result(
       ResponseHeader(
         REQUESTED_RANGE_NOT_SATISFIABLE,
@@ -100,8 +100,8 @@ object Files extends Controller {
     )
   }
 
-  private def streamRange(file: File, first: Int, lastOpt: Option[Int]): Result = {
-    val end: Int = lastOpt.filter(_ < file.size).getOrElse(file.size - 1)
+  private def streamRange(file: File, first: Long, lastOpt: Option[Long]): Result = {
+    val end: Long = lastOpt.filter(_ < file.size).getOrElse(file.size - 1)
     Result(
       ResponseHeader(
         PARTIAL_CONTENT,
@@ -113,7 +113,7 @@ object Files extends Controller {
         )
       ),
       CFS.file.read(file, first) &>
-        Traversable.take(end - first + 1) &> LimitTo(1 MBps)
+        Enumeratee.take((end - first + 1).toInt) &> LimitTo(1 MBps)
     )
   }
 
@@ -125,7 +125,7 @@ object Files extends Controller {
         CONTENT_LENGTH -> s"${file.size}"
       )
     ),
-    CFS.file.read(file) &> LimitTo(1.5 MBps)
+    CFS.file.read(file) &> LimitTo(2 MBps)
   )
 
   private def serveFile(id: UUID)(
@@ -144,7 +144,7 @@ object Files extends Controller {
   private def saveToCFS[A]: PartHandler[FilePart[File]] = {
     handleFilePart {
       case FileInfo(partName, filename, contentType) =>
-        LimitTo(2 MBps) &>> CFS.file.save(File(filename, CFS.root))
+        LimitTo(1.5 MBps) &>> CFS.file.save(File(filename, CFS.root))
     }
   }
 }

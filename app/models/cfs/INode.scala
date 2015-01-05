@@ -22,17 +22,11 @@ case class INode(
   name: String,
   parent: UUID,
   is_directory: Boolean = false,
-  children: Map[String, UUID] = Map(),
-  size: Int = 0,
-  block_count: Int = 0,
-  ind_block_length: Int = 1024 * 2,
+  size: Long = 0,
+  indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
   attributes: Map[String, String] = Map()
-) extends TimeBased {
-
-  lazy val ind_block_size = ind_block_length * block_size
-
-}
+) extends TimeBased
 
 /**
  *
@@ -50,10 +44,8 @@ sealed class INodes
       name(r),
       parent(r),
       is_directory(r),
-      children(r),
       size(r),
-      block_count(r),
-      ind_block_length(r),
+      indirect_block_size(r),
       block_size(r),
       attributes(r)
     )
@@ -73,94 +65,72 @@ object INode extends INodes with Logging with Cassandra {
   }
 
   def read(inode: INode): Enumerator[BLK] = {
-    select(_.ind_block_id).where(_.inode_id eqs inode.id)
+    select(_.indirect_block_id)
+      .where(_.inode_id eqs inode.id)
       .setFetchSize(CFS.streamFetchSize)
       .fetchEnumerator() &>
       Enumeratee.mapFlatten[UUID](Block.read)
   }
 
-  def read(inode: INode, from: Int): Enumerator[BLK] =
-    Enumerator.flatten(
-      select(_.ind_block_id).where(_.inode_id eqs inode.id)
+  def read(inode: INode, offset: Long): Enumerator[BLK] = Enumerator.flatten {
+    select(_.indirect_block_id)
+      .where(_.inode_id eqs inode.id)
+      .and(_.offset eqs offset - offset % inode.indirect_block_size)
+      .one().map {
+      case None     => Enumerator.empty[BLK]
+      case Some(id) => {
+        Block.read(id, offset % inode.indirect_block_size, inode.block_size)
+      }
+    }.map {
+      _ >>> (select(_.indirect_block_id)
+        .where(_.inode_id eqs inode.id)
+        .and(_.offset gt offset - offset % inode.indirect_block_size)
         .setFetchSize(CFS.streamFetchSize)
         .fetchEnumerator() &>
-        Enumeratee.drop[UUID](from / inode.ind_block_size) |>>>
+        Enumeratee.mapFlatten[UUID](Block.read))
+    }
+  }
 
-        Iteratee.head.map {
-          case None             => Enumerator.empty
-          case Some(ind_blk_id) => {
-            Block.read(ind_blk_id, from % inode.ind_block_size, inode.block_size)
-          } >>> {
-            select(_.ind_block_id)
-              .where(_.inode_id eqs inode.id)
-              .and(_.ind_block_id gt ind_blk_id)
-              .fetchEnumerator() &>
-              Enumeratee.mapFlatten[UUID](Block.read)
-          }
-        }
-    )
-
-  def write(inode: INode): Future[ResultSet] = {
+  def write(inode: INode): INode = {
     insert.value(_.inode_id, inode.id)
       .value(_.name, inode.name)
       .value(_.parent, inode.parent)
       .value(_.is_directory, inode.is_directory)
-      .value(_.children, inode.children)
       .value(_.size, inode.size)
-      .value(_.block_count, inode.block_count)
-      .value(_.ind_block_length, inode.ind_block_length)
+      .value(_.indirect_block_size, inode.indirect_block_size)
       .value(_.block_size, inode.block_size)
       .value(_.attributes, inode.attributes)
       .future()
+    inode
   }
 
   def streamWriter(inode: INode): Iteratee[BLK, INode] = {
+
     Enumeratee.grouped[BLK] {
       Traversable.take[BLK](inode.block_size) &>>
         Iteratee.consume[BLK]()
-    } &>> iteratee(inode)
-  }
+    } &>>
+      Iteratee.fold[BLK, IndirectBlock](IndirectBlock(inode.id)) {
+        (curr, blk) =>
+          Block.write(curr.id, curr.length, blk)
+          val next = curr + blk.size
 
-  def iteratee(inode: INode): Iteratee[BLK, INode] = {
-    case class State(
-      blk_cnt: Int = 0,
-      offset: Int = 0,
-      size: Int = 0,
-      ind_blk: Option[INDBlock] = None
-    )
-
-    Iteratee.fold[BLK, State](State()) {(curr, blk) =>
-      val full = curr.blk_cnt % inode.ind_block_length == 0
-      curr.ind_blk.foreach(INDBlock.write) iff full
-
-      val next = curr.copy(
-        blk_cnt = curr.blk_cnt + 1,
-        size = curr.size + blk.size,
-        ind_blk =
-          if (full) {
-            curr.ind_blk match {
-              case None    => Some(INDBlock(inode.id))
-              case Some(b) => Some(b.next)
-            }
-          }
-          else curr.ind_blk.map {b =>
-            b.copy(length = b.length + blk.size)
-          }
-      )
-
-      next.ind_blk.map {ind_blk =>
-        Block.write(ind_blk.id, blk)
+          if (next.length < inode.indirect_block_size) next
+          else IndirectBlock.write(next).next
+      }.map {last =>
+        IndirectBlock.write(last) iff (last.length != 0)
+        INode.write(inode.copy(size = last.offset + last.length))
       }
-      next
-    }.map {finished =>
-      finished.ind_blk.foreach(INDBlock.write)
-      inode.copy(size = finished.size, block_count = finished.blk_cnt)
-    }.map {n => INode.write(n); n}
+
   }
 
-  def remove(id: UUID): Future[ResultSet] = {
-    select(_.ind_block_id).where(_.inode_id eqs id)
-      .fetchEnumerator() |>>> Iteratee.foreach(Block.remove(_))
+  def purge(id: UUID) {
+    select(_.indirect_block_id)
+      .where(_.inode_id eqs id)
+      .setFetchSize(CFS.listFetchSize)
+      .fetchEnumerator() |>>>
+      Iteratee.foreach(Block.purge(_))
+
     delete.where(_.inode_id eqs id).future()
   }
 
