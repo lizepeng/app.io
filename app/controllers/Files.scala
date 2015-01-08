@@ -3,7 +3,7 @@ package controllers
 import java.net.URLEncoder
 import java.util.UUID
 
-import controllers.helpers.TrafficControl._
+import controllers.helpers.Bandwidth._
 import controllers.session.UserAction
 import models.cfs._
 import play.api.http.ContentTypes
