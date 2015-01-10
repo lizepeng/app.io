@@ -3,6 +3,7 @@ package controllers
 import java.net.URLEncoder
 import java.util.UUID
 
+import controllers.helpers.AuthCheck
 import controllers.helpers.Bandwidth._
 import controllers.session.UserAction
 import models.cfs._
@@ -25,8 +26,8 @@ import scala.language.postfixOps
 object Files extends Controller {
 
   def download(id: UUID, inline: Boolean = false) =
-    UserAction.async {
-      implicit request => serveFile(id) {file =>
+    (UserAction >> AuthCheck).async {implicit request =>
+      serveFile(id) {file =>
         val stm = streamWhole(file)
         if (inline) stm
         else stm.withHeaders(
@@ -36,45 +37,48 @@ object Files extends Controller {
       }
     }
 
-  def stream(id: UUID, inline: Boolean = false) = UserAction.async {
-    implicit request => serveFile(id) {file =>
-      val size = file.size
-      val byte_range_spec = """bytes=(\d+)-(\d*)""".r
+  def stream(id: UUID, inline: Boolean = false) =
+    (UserAction >> AuthCheck).async {implicit request =>
+      serveFile(id) {file =>
+        val size = file.size
+        val byte_range_spec = """bytes=(\d+)-(\d*)""".r
 
-      request.headers.get(RANGE).flatMap {
-        case byte_range_spec(first, last) => Some(first.toLong, Some(last).filter(_.nonEmpty).map(_.toLong))
-        case _                            => None
-      }.filter {
-        case (first, lastOpt) => lastOpt.isEmpty || lastOpt.get >= first
-      }.map {
-        case (first, lastOpt) if first < size  => streamRange(file, first, lastOpt)
-        case (first, lastOpt) if first >= size => InvalidRange(file)
-      }.getOrElse {
-        streamWhole(file).withHeaders(ACCEPT_RANGES -> "bytes")
+        request.headers.get(RANGE).flatMap {
+          case byte_range_spec(first, last) => Some(first.toLong, Some(last).filter(_.nonEmpty).map(_.toLong))
+          case _                            => None
+        }.filter {
+          case (first, lastOpt) => lastOpt.isEmpty || lastOpt.get >= first
+        }.map {
+          case (first, lastOpt) if first < size  => streamRange(file, first, lastOpt)
+          case (first, lastOpt) if first >= size => InvalidRange(file)
+        }.getOrElse {
+          streamWhole(file).withHeaders(ACCEPT_RANGES -> "bytes")
+        }
       }
     }
-  }
 
-  def index() = UserAction.async {
+  def index() = (UserAction >> AuthCheck).async {
     implicit request =>
       CFS.file.list().map {all =>
         Ok(html.files.index(all))
       }
   }
 
-  def show(id: UUID) = UserAction.async {implicit request =>
-    serveFile(id) {file => Ok(html.files.show(file))}
-  }
+  def show(id: UUID) =
+    (UserAction >> AuthCheck).async {implicit request =>
+      serveFile(id) {file => Ok(html.files.show(file))}
+    }
 
-  def remove(id: UUID) = UserAction {implicit request =>
-    INode.purge(id)
-    Redirect(routes.Files.index).flashing(
-      "success" -> s"${id} deleted"
-    )
-  }
+  def remove(id: UUID) =
+    (UserAction >> AuthCheck) {implicit request =>
+      INode.purge(id)
+      Redirect(routes.Files.index).flashing(
+        "success" -> s"${id} deleted"
+      )
+    }
 
-  def upload() = UserAction(multipartFormData(saveToCFS)) {
-    implicit request =>
+  def upload() =
+    (UserAction >> AuthCheck)(multipartFormData(saveToCFS)) {implicit request =>
       request.body.file("picture").map {picture =>
         val ref: File = picture.ref
         Redirect(routes.Files.index).flashing(
@@ -85,7 +89,7 @@ object Files extends Controller {
           "error" -> "Missing file"
         )
       }
-  }
+    }
 
   private def InvalidRange(file: File): Result = {
     Result(
