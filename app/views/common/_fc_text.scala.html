@@ -9,9 +9,7 @@
   @elements.input
 
   <span class="form-control-feedback">
-    @if(elements.hasErrors) {
-      <i class="fa fa-warning fa-lg"></i>
-    }
+    <i class="fa @if(elements.hasErrors){fa-warning} fa-lg"></i>
   </span>
 
   @elements.errors(elements.lang).map { error =>

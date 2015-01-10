@@ -11,6 +11,7 @@ import play.api.data.Forms._
 import play.api.data.validation._
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.Json
 import play.api.mvc._
 import views._
 
@@ -84,29 +85,34 @@ object Users extends Controller {
     )
   }
 
-  def checkEmail = Action.async {request =>
-    val email = request.body.asFormUrlEncoded
-      .flatMap(_.get("value"))
-      .flatMap(_.headOption).getOrElse("")
+  def checkEmail = Action.async {implicit request =>
+    val fm = Form(single("value" -> text.verifying(Rules.email)))
 
-    Rules.email.apply(email) match {
-      case invalid: Invalid => Future.successful {
-        Forbidden(invalid.errors.map(_.message).map(MSG(_)).mkString("\n"))
-      }
-      case Valid            => User.findBy(email).map {
+    fm.bindFromRequest().fold(
+      form => Future.successful(Forbidden(form.errorsAsJson)),
+      email => User.findBy(email).map {
         case None    => Ok("")
-        case Some(_) => Forbidden(MSG("login.email.taken"))
+        case Some(_) => Forbidden(Json.obj("value" -> MSG("login.email.taken")))
       }
-    }
+    )
+  }
+
+  def checkPassword = Action {implicit request =>
+    val fm = Form(single("value" -> text.verifying(Rules.password)))
+
+    fm.bindFromRequest().fold(
+      form => Forbidden(form.errorsAsJson),
+      password => Ok("")
+    )
   }
 
   object Rules {
 
     import play.api.data.validation.{ValidationError => VE}
 
-    val noDigit = """[^0-9]*""".r
-    val noUpper = """[^A-Z]*""".r
-    val noLower = """[^a-z]*""".r
+    private val noDigit = """[^0-9]*""".r
+    private val noUpper = """[^A-Z]*""".r
+    private val noLower = """[^a-z]*""".r
 
     def password = Constraint[String]("constraint.password.check") {
       case o if isEmpty(o)   => Invalid(VE("password.too.short", 7))
@@ -118,7 +124,7 @@ object Users extends Controller {
       case _                 => Valid
     }
 
-    val emailRegex = """[\w\.-]+@[\w\.-]+\.\w+$""".r
+    private val emailRegex = """[\w\.-]+@[\w\.-]+\.\w+$""".r
 
     def email = Constraint[String]("constraint.email.check") {
       case o if isEmpty(o)  => Invalid(VE("login.email.empty"))
@@ -127,9 +133,7 @@ object Users extends Controller {
       case _                => Invalid(VE("login.email.invalid"))
     }
 
-    private def isEmpty(s: String) = {
-      s == null || s.trim.isEmpty
-    }
+    private def isEmpty(s: String) = s == null || s.trim.isEmpty
   }
 
 }

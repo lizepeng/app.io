@@ -26,3 +26,4 @@ GET  /users/                  controllers.Users.index
 GET  /join                    controllers.Users.nnew
 POST /join                    controllers.Users.create
 POST /signup_check/username   controllers.Users.checkEmail
+POST /signup_check/password   controllers.Users.checkPassword
