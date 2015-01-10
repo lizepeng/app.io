@@ -1,0 +1,17 @@
+@()(implicit request: UserRequest[_])
+
+@request.flash.data.map {
+  case ("info", v) => {
+    @common._alert("info",dismissible=true){@v}
+  }
+  case ("success", v) => {
+    @common._alert("success",dismissible=true){@v}
+  }
+  case ("warning", v) => {
+    @common._alert("warning",dismissible=true){@v}
+  }
+  case ("error", v) => {
+    @common._alert("danger",dismissible=true){@v}
+  }
+  case _ => {}
+}

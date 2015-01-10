@@ -23,30 +23,31 @@ case class ErrorCode(key: String, level: Level) {
     import common.Level._
     val msg = logMsg(args: _*)
     level match {
-      case Debug  => logger.debug(msg)
-      case Info   => logger.info(msg)
-      case Warn   => logger.warn(msg)
-      case Error  => logger.error(msg)
-      case Severe => logger.error(msg)
+      case Debug   => logger.debug(msg)
+      case Info    => logger.info(msg)
+      case Warn    => logger.warn(msg)
+      case Error   => logger.error(msg)
+      case Severe  => logger.error(msg)
+      case _       => logger.warn(msg)
     }
     this
   }
 }
 
-class Level(val key: String) extends AnyVal
+case class Level(key: String)
 
 object Level {
-  val Debug  = new Level("debug")
-  val Info   = new Level("info")
-  val Warn   = new Level("warn")
-  val Error  = new Level("error")
-  val Severe = new Level("severe")
+  val Debug   = new Level("debug")
+  val Info    = new Level("info")
+  val Warn    = new Level("warn")
+  val Error   = new Level("error")
+  val Severe  = new Level("severe")
 }
 
 object ErrorCodes {
 
   import common.Level._
 
-  val UserNotFound      = ErrorCode("not.found.user", Info)
-  val WrongPassword     = ErrorCode("password.wrong", Info)
+  val UserNotFound  = ErrorCode("not.found.user", Info)
+  val WrongPassword = ErrorCode("password.wrong", Info)
 }

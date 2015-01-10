@@ -3,11 +3,12 @@ package controllers
 import java.net.URLEncoder
 import java.util.UUID
 
-import controllers.helpers.AuthCheck
 import controllers.helpers.Bandwidth._
+import controllers.helpers.{AuthCheck, Level}
 import controllers.session.UserAction
 import models.cfs._
 import play.api.http.ContentTypes
+import play.api.i18n.{Messages => MSG}
 import play.api.libs.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.iteratee._
@@ -50,7 +51,7 @@ object Files extends Controller {
           case (first, lastOpt) => lastOpt.isEmpty || lastOpt.get >= first
         }.map {
           case (first, lastOpt) if first < size  => streamRange(file, first, lastOpt)
-          case (first, lastOpt) if first >= size => InvalidRange(file)
+          case (first, lastOpt) if first >= size => invalidRange(file)
         }.getOrElse {
           streamWhole(file).withHeaders(ACCEPT_RANGES -> "bytes")
         }
@@ -70,28 +71,31 @@ object Files extends Controller {
     }
 
   def remove(id: UUID) =
-    (UserAction >> AuthCheck) {implicit request =>
-      INode.purge(id)
-      Redirect(routes.Files.index).flashing(
-        "success" -> s"${id} deleted"
-      )
+    (UserAction >> AuthCheck).async {implicit request =>
+      INode.find(id).map {
+        case None        => NotFound(MSG("file.not.found", id))
+        case Some(inode) => INode.purge(id)
+          Redirect(routes.Files.index).flashing(
+            Level.Success -> MSG("file.deleted", inode.name)
+          )
+      }
     }
 
   def upload() =
     (UserAction >> AuthCheck)(multipartFormData(saveToCFS)) {implicit request =>
-      request.body.file("picture").map {picture =>
-        val ref: File = picture.ref
+      request.body.file("files").map {files =>
+        val ref: File = files.ref
         Redirect(routes.Files.index).flashing(
-          "success" -> s"${ref.name} Uploaded"
+          Level.Success -> MSG("file.uploaded", ref.name)
         )
       }.getOrElse {
         Redirect(routes.Files.index).flashing(
-          "error" -> "Missing file"
+          Level.Info -> MSG("file.missing")
         )
       }
     }
 
-  private def InvalidRange(file: File): Result = {
+  private def invalidRange(file: File): Result = {
     Result(
       ResponseHeader(
         REQUESTED_RANGE_NOT_SATISFIABLE,

@@ -4,9 +4,11 @@
 
 @layouts.base(MSG("Files")) {
 
+  @common._flashing()
+
   <div class="row">
     <div class="col-xs-10 col-xs-offset-2">
-      @{_upload("html", "picture")}
+      @{_upload("html", "files")}
     </div>
   </div>
   <div class="row" style="margin-top:10px">

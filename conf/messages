@@ -20,6 +20,10 @@ slip.num=Slip Num
 slip.date=Slip Date
 
 file=Files
+file.uploaded={0} Uploaded
+file.missing=Missing File
+file.deleted={0} Deleted
+file.not.found={0} Not Found
 
 desc=Description
 qty=Quantity
@@ -88,6 +92,3 @@ msg.confirm.delete=TODO
 msg.master.created={0} has been created
 msg.master.updated={0} has been updated
 msg.master.deleted={0} has been deleted
-
-log.info.notfound.com=Company {0} not found
-log.info.notfound.user=User {0}, {1} not found
