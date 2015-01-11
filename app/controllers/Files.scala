@@ -70,7 +70,7 @@ object Files extends Controller {
       serveFile(id) {file => Ok(html.files.show(file))}
     }
 
-  def remove(id: UUID) =
+  def destroy(id: UUID) =
     (UserAction >> AuthCheck).async {implicit request =>
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
@@ -81,7 +81,7 @@ object Files extends Controller {
       }
     }
 
-  def upload() =
+  def create() =
     (UserAction >> AuthCheck)(multipartFormData(saveToCFS)) {implicit request =>
       request.body.file("files").map {files =>
         val ref: File = files.ref
