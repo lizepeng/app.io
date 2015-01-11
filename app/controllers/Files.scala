@@ -39,7 +39,7 @@ object Files extends Controller {
     }
 
   def stream(id: UUID, inline: Boolean = false) =
-    (UserAction >> AuthCheck).async {implicit request =>
+    (UserAction).async {implicit request =>
       serveFile(id) {file =>
         val size = file.size
         val byte_range_spec = """bytes=(\d+)-(\d*)""".r

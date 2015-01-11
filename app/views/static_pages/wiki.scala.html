@@ -3,67 +3,75 @@
 @layouts.base(MSG("Wiki"), above_content = movie){
 
   <div class="row">
-    <div class="col-xs-12 col-sm-6">
+    <div class="col-xs-10 col-sm-6">
       <a href="http://jquery.com">
-        <img width="300" src="http://upload.wikimedia.org/wikipedia/en/thumb/9/9e/JQuery_logo.svg/524px-JQuery_logo.svg.png">
+        <img class="img-responsive" src="http://upload.wikimedia.org/wikipedia/en/thumb/9/9e/JQuery_logo.svg/524px-JQuery_logo.svg.png">
       </a>
     </div>
 
-    <div class="col-xs-12 col-sm-6">
+    <div class="col-xs-10 col-sm-6">
       <a href="http://backbonejs.org">
-        <img width="300" src="http://backbonejs.org/docs/images/backbone.png">
-      </a>
-    </div>
-  </div>
-
-  <div class="row sectionend">
-    <div class="col-xs-12 col-sm-6">
-      <a href="https://developers.google.com/chart">
-        <img src="https://developers.google.com/_static/images/developers-logo.svg">
-      </a>
-    </div>
-    <div class="col-xs-12 col-sm-6">
-      <a href="http://www.debian.org">
-        <img src="http://www.debian.org/logos/openlogo-100.jpg">
+        <img class="img-responsive" src="http://backbonejs.org/docs/images/backbone.png">
       </a>
     </div>
   </div>
 
   <div class="row">
-    <div class="col-xs-12 col-sm-6">
-      <a href="http://www.scala-lang.org">
-        <img src="http://upload.wikimedia.org/wikipedia/en/8/85/Scala_logo.png">
+    <div class="col-xs-10 col-sm-4 bootstrap3">
+      <a href="http://getbootstrap.com" title="">
+        <h1>B</h1>
       </a>
     </div>
-    <div class="col-xs-12 col-sm-6">
-      <a href="http://www.w3.org/html/logo">
-        <img src="http://www.w3.org/html/logo/downloads/HTML5_Logo_128.png">
+    <div class="col-xs-10 col-sm-8 font-awesome">
+      <a href="http://fortawesome.github.io/Font-Awesome/" title="">
+        <h1>Font Awesome</h1>
       </a>
     </div>
   </div>
 
-  <div class="row sectionend">
-    <div class="col-xs-12 col-sm-6">
+  <div class="row">
+    <div class="col-xs-10">
       <a href="http://coffeescript.org">
-        <img src="http://coffeescript.org/documentation/images/logo.png">
-      </a>
-    </div>
-    <div class="col-xs-12 col-sm-6">
-      <a href="http://www.sublimetext.com/2">
-        <img width="100" src="http://upload.wikimedia.org/wikipedia/en/4/4c/Sublime_Text_Logo.png">
+        <img class="img-responsive" src="http://coffeescript.org/documentation/images/logo.png">
       </a>
     </div>
   </div>
 
-  <div class="row sectionend">
-    <div class="col-xs-12 col-sm-6">
-      <a href="http://hbase.apache.org">
-        <img src="http://hbase.apache.org/images/hbase_logo.png">
+  <div class="row">
+    <div class="col-xs-6 col-sm-6">
+      <a href="http://www.scala-lang.org">
+        <img class="img-responsive" src="http://upload.wikimedia.org/wikipedia/en/8/85/Scala_logo.png">
       </a>
     </div>
-    <div class="col-xs-12 col-sm-6">
-      <a href="http://www.postgresql.org">
-        <img src="http://wiki.postgresql.org/images/3/30/PostgreSQL_logo.3colors.120x120.png">
+    <div class="col-xs-3 col-sm-3">
+      <a href="http://www.w3.org/html/logo">
+        <img class="img-responsive" src="http://www.w3.org/html/logo/downloads/HTML5_Logo_128.png">
+      </a>
+    </div>
+    <div class="col-xs-3 col-sm-3">
+      <a href="http://www.debian.org">
+        <img class="img-responsive" src="http://www.debian.org/logos/openlogo-100.jpg">
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-6 col-sm-4">
+      <a href="https://www.playframework.com" title="">
+      <img class="img-responsive" src="https://www.playframework.com/assets/images/logos/play_full_color.png" alt="">
+      </a>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-sm-offset-2">
+      <a href="http://akka.io" title="">
+      <img class="img-responsive" src="http://akka.io/resources/images/akka_full_color.svg" alt="">
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-10 col-sm-7">
+      <a href="http://cassandra.apache.org">
+        <img class="img-responsive" src="http://cassandra.apache.org/media/img/cassandra_logo.png">
       </a>
     </div>
   </div>
@@ -71,28 +79,54 @@
 
 @movie = {
   @videoOpt.map {video =>
-    <div class="row-fluid">
-      <video class="col-xs-12"
-        src="@routes.Files.stream(video.id)" autoplay autobuffer>
-      </video>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12 aws-col">
+          <video class="aws"
+            src="@routes.Files.stream(video.id)" autoplay autobuffer>
+          </video>
+        </div>
+      </div>
     </div>
   }
 }
 
 @css = {
   <style>
-    .col-xs-12 {
-      margin-bottom: 30px;
+    .col-xs-10, .col-xs-6, .col-xs-3 {
+      margin-bottom: 20px;
     }
-    h1 {
+    .aws-col {
+      padding: 0px;
+    }
+
+    .aws {
+      width: 100%;
       margin-bottom: 40px;
-      padding-bottom: 15px;
-      border-style: solid;
-      border-color:#dddddd;
-      border-width: 0px 0px 2px 0px;
     }
-    .sectionend {
-      margin-bottom: 80px;
+
+    .bootstrap3 h1 {
+      display: block;
+      font-weight: 500;
+      color: #fff;
+      background-color: #563d7c;
+      width: 144px;
+      height: 144px;
+      line-height: 140px;
+      text-align: center;
+      font-size: 108px;
+      border: 1px solid #cdbfe3;
+      border-radius: 15%;
+      margin: 5px;
+    }
+
+    .font-awesome h1 {
+      text-shadow: 4px 3px 0px #1d9d74, 9px 8px 0px rgba(0, 0, 0, 0.15);
+      background-color: #1d9d74;
+      color: #ffffff;
+      padding: 20px 40px;
+      display: inline-block;
+      font-size: 36px;
     }
   </style>
 }
