@@ -69,8 +69,8 @@ object CFS extends AppConfig {
       INode.purge(id)
     }
 
-    def list(): Future[Seq[File]] = {
-      INode.all().map(_.filter(!_.is_directory).map(File(_)))
+    def page(start: Int, limit: Int): Future[Iterator[File]] = {
+      INode.page(start, limit).map(_.filter(!_.is_directory).map(File(_)))
     }
   }
 

@@ -1,4 +1,4 @@
-@(files: Seq[cfs.File])(implicit request: UserRequest[_])
+@(files: Page[File])(implicit request: UserRequest[_])
 
 @import helper._
 
@@ -71,6 +71,17 @@
           }
         </tbody>
       </table>
+
+      <nav>
+        <ul class="pager">
+          <li class="previous @if(!files.hasPrev){disabled}">
+            <a href="@routes.Files.index(files.prev, files.limit)">Previous</a>
+          </li>
+          <li class="next">
+            <a href="@routes.Files.index(files.next, files.limit)">Next</a>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 }{

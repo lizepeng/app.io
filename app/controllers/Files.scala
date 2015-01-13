@@ -4,7 +4,7 @@ import java.net.URLEncoder
 import java.util.UUID
 
 import controllers.helpers.Bandwidth._
-import controllers.helpers.{AuthCheck, Level}
+import controllers.helpers._
 import controllers.session.UserAction
 import models.cfs._
 import play.api.http.ContentTypes
@@ -58,12 +58,12 @@ object Files extends Controller {
       }
     }
 
-  def index() = (UserAction >> AuthCheck).async {
-    implicit request =>
-      CFS.file.list().map {all =>
-        Ok(html.files.index(all))
+  def index(start: Int, limit: Int) =
+    (UserAction >> AuthCheck).async {implicit request =>
+      CFS.file.page(start, limit).map {files =>
+        Ok(html.files.index(Page(start, limit, files)))
       }
-  }
+    }
 
   def show(id: UUID) =
     (UserAction >> AuthCheck).async {implicit request =>
@@ -75,7 +75,7 @@ object Files extends Controller {
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
         case Some(inode) => INode.purge(id)
-          RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index))
+          RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index()))
             .flashing(
               Level.Success -> MSG("file.deleted", inode.name)
             )
@@ -86,11 +86,11 @@ object Files extends Controller {
     (UserAction >> AuthCheck)(multipartFormData(saveToCFS)) {implicit request =>
       request.body.file("files").map {files =>
         val ref: File = files.ref
-        Redirect(routes.Files.index).flashing(
+        Redirect(routes.Files.index()).flashing(
           Level.Success -> MSG("file.uploaded", ref.name)
         )
       }.getOrElse {
-        Redirect(routes.Files.index).flashing(
+        Redirect(routes.Files.index()).flashing(
           Level.Info -> MSG("file.missing")
         )
       }

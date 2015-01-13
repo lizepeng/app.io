@@ -5,6 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
+import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import common.Logging
 import common.syntax._
 import models.TimeBased
@@ -134,15 +135,15 @@ object INode extends INodes with Logging with Cassandra {
     delete.where(_.inode_id eqs id).future()
   }
 
-  def all(): Future[Seq[INode]] = {
+  def page(start: Int, limit: Int): Future[Iterator[INode]] = {
     distinct(_.inode_id)
       .setFetchSize(CFS.listFetchSize)
       .fetchEnumerator() &>
       Enumeratee.mapM {id =>
         select.where(_.inode_id eqs id).one()
-      } |>>>
-      Iteratee.getChunks[Option[INode]].map {
-        _.filter(_.isDefined).map(_.get)
-      }
+      } &>
+      Enumeratee.filter(_.isDefined) &>
+      Enumeratee.map(_.get) |>>>
+      PIteratee.slice(start, limit)
   }
 }
