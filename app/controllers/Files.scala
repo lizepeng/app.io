@@ -75,9 +75,10 @@ object Files extends Controller {
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
         case Some(inode) => INode.purge(id)
-          Redirect(routes.Files.index).flashing(
-            Level.Success -> MSG("file.deleted", inode.name)
-          )
+          RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index))
+            .flashing(
+              Level.Success -> MSG("file.deleted", inode.name)
+            )
       }
     }
 

@@ -61,6 +61,7 @@
 
               <td>
                 @form(routes.Files.destroy(f.id), 'class -> "form-inline") {
+                  @common._previous_uri()
                   <button type="submit" class="btn form-inline-btn">
                     <i class="fa fa-trash-o fa-lg text-danger"></i>
                   </button>
