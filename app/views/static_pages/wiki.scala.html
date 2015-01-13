@@ -75,23 +75,7 @@
       </a>
     </div>
   </div>
-}(css=css)
-
-@movie = {
-  @videoOpt.map {video =>
-    <div class="container">
-      <div class="row">
-        <div class="col-xs-12 aws-col">
-          <video class="aws"
-            src="@routes.Files.stream(video.id)" autoplay autobuffer>
-          </video>
-        </div>
-      </div>
-    </div>
-  }
-}
-
-@css = {
+}{
   <style>
     .col-xs-10, .col-xs-6, .col-xs-3 {
       margin-bottom: 20px;
@@ -129,4 +113,18 @@
       font-size: 36px;
     }
   </style>
+}()
+
+@movie = {
+  @videoOpt.map {video =>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12 aws-col">
+          <video class="aws"
+            src="@routes.Files.stream(video.id)" autoplay autobuffer>
+          </video>
+        </div>
+      </div>
+    </div>
+  }
 }
