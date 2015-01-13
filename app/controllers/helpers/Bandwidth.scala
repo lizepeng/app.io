@@ -20,7 +20,7 @@ object Bandwidth extends Logging {
     def apply(rate: Int = 1 MBps)(
       implicit ec: ExecutionContext
     ): Enumeratee[BLK, BLK] =
-      limitTo(math.max(200 KBps, math.min(rate, 5 MBps)))
+      limitTo(rate.max(200 KBps).min(5 MBps))
   }
 
   object UnLimited {
