@@ -74,11 +74,11 @@
 
       <nav>
         <ul class="pager">
-          <li class="previous @if(!files.hasPrev){disabled}">
-            <a href="@routes.Files.index(files.prev, files.limit)">Previous</a>
+          <li class="previous @if(!files.pager.hasPrev){disabled}">
+            <a href="@routes.Files.index(files.pager.prev)">Previous</a>
           </li>
           <li class="next">
-            <a href="@routes.Files.index(files.next, files.limit)">Next</a>
+            <a href="@routes.Files.index(files.pager.next)">Next</a>
           </li>
         </ul>
       </nav>

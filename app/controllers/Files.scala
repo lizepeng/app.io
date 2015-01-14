@@ -26,7 +26,7 @@ import scala.language.postfixOps
  */
 object Files extends Controller {
 
-  def download(id: UUID, inline: Boolean = false) =
+  def download(id: UUID, inline: Boolean) =
     (UserAction >> AuthCheck).async {implicit request =>
       serveFile(id) {file =>
         val stm = streamWhole(file)
@@ -38,8 +38,8 @@ object Files extends Controller {
       }
     }
 
-  def stream(id: UUID, inline: Boolean = false) =
-    (UserAction).async {implicit request =>
+  def stream(id: UUID) =
+    UserAction.async {implicit request =>
       serveFile(id) {file =>
         val size = file.size
         val byte_range_spec = """bytes=(\d+)-(\d*)""".r
@@ -58,10 +58,10 @@ object Files extends Controller {
       }
     }
 
-  def index(start: Int, limit: Int) =
+  def index(p: Pager) =
     (UserAction >> AuthCheck).async {implicit request =>
-      CFS.file.page(start, limit).map {files =>
-        Ok(html.files.index(Page(start, limit, files)))
+      CFS.file.page(p.start, p.limit).map {files =>
+        Ok(html.files.index(Page(p, files)))
       }
     }
 
