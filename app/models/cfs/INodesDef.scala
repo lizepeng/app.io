@@ -16,11 +16,11 @@ trait INodesKey[T <: CassandraTable[T, R], R] {
   override val tableName = "inodes"
 
   object inode_id
-    extends TimeUUIDColumn(this)
+    extends TimeUUIDColumn(self)
     with PartitionKey[UUID]
 
   object offset
-    extends LongColumn(this)
+    extends LongColumn(self)
     with ClusteringOrder[Long] with Ascending
 
 }
