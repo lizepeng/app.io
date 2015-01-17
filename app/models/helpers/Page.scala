@@ -1,4 +1,4 @@
-package controllers.helpers
+package models.helpers
 
 import play.api.mvc.QueryStringBindable
 
@@ -10,6 +10,7 @@ import scala.language.implicitConversions
 case class Page[E](pager: Pager, elements: Iterator[E])
 
 object Page {
+
   implicit def PageToIterator[E](p: Page[E]): Iterator[E] = p.elements
 }
 
@@ -23,7 +24,6 @@ case class Pager(start: Int, limit: Int) {
 }
 
 object Pager {
-
   def first = Pager(0, 20)
 
   implicit def queryStringBinder(
