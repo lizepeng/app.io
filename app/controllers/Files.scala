@@ -60,7 +60,7 @@ object Files extends Controller {
 
   def index(p: Pager) =
     (UserAction >> AuthCheck).async {implicit request =>
-      CFS.file.page(p.start, p.limit).map {files =>
+      CFS.root.listFiles(p).map {files =>
         Ok(html.files.index(Page(p, files)))
       }
     }
@@ -74,7 +74,7 @@ object Files extends Controller {
     (UserAction >> AuthCheck).async {implicit request =>
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
-        case Some(inode) => INode.purge(id)
+        case Some(inode) => CFS.file.purge(id)
           RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index()))
             .flashing(
               Level.Success -> MSG("file.deleted", inode.name)
@@ -153,7 +153,7 @@ object Files extends Controller {
   private def saveToCFS[A]: PartHandler[FilePart[File]] = {
     handleFilePart {
       case FileInfo(partName, filename, contentType) =>
-        LimitTo(1.5 MBps) &>> CFS.file.save(File(filename, CFS.root))
+        LimitTo(1.5 MBps) &>> CFS.root.save(filename)
     }
   }
 }

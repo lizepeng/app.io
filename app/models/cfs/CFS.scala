@@ -5,7 +5,8 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
 import common.AppConfig
-import models.cfs.Block.BLK
+import models.cassandra.Cassandra
+import models.cfs.Block._
 import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.Play.current
@@ -17,7 +18,7 @@ import scala.language.implicitConversions
 /**
  * @author zepeng.li@gmail.com
  */
-object CFS extends AppConfig {
+object CFS extends AppConfig with Cassandra {
 
   import scala.concurrent.Await
   import scala.concurrent.duration._
@@ -27,11 +28,13 @@ object CFS extends AppConfig {
   val streamFetchSize = config.getInt("stream-fetch-size").getOrElse(2000)
   val listFetchSize   = config.getInt("list-fetch-size").getOrElse(2000)
 
+  Await.result(INode.create.future(), 500 millis)
+  Await.result(IndirectBlock.create.future(), 500 millis)
+  Await.result(Block.create.future(), 500 millis)
+
   lazy val root: Directory = Await.result(
   {
-    def newRoot(id: UUID): Directory = {
-      Directory(INode(id = id, name = "/", parent = id, is_directory = true))
-    }
+    def newRoot(id: UUID): Directory = Directory(id, "/", id)
 
     SysConfig.get(config_key, _.cfs_root).flatMap {
       case Some(id) => dir.find(id).map {
@@ -40,7 +43,7 @@ object CFS extends AppConfig {
       }
       case None     => Future.successful {
         val id: UUID = UUIDs.timeBased()
-        SysConfig.put(config_key, DateTime.now(), (_.cfs_root setTo id))
+        SysConfig.put(config_key, DateTime.now(), _.cfs_root setTo id)
         dir.save(newRoot(id))
       }
     }
@@ -49,64 +52,23 @@ object CFS extends AppConfig {
   )
 
   object file {
-    def find(id: UUID): Future[Option[File]] = {
-      INode.find(id).map(_.map(File(_)))
-    }
+    def find(id: UUID): Future[Option[File]] = File.find(id)
 
-    def read(file: File): Enumerator[BLK] = {
-      INode.read(file)
-    }
+    def read(file: File): Enumerator[BLK] = IndirectBlock.read(file)
 
     def read(file: File, offset: Long): Enumerator[BLK] = {
-      INode.read(file, offset)
+      IndirectBlock.read(file, offset)
     }
 
-    def save(file: File): Iteratee[BLK, File] = {
-      INode.streamWriter(file.inode).map(File(_))
-    }
+    def save(file: File): Iteratee[BLK, File] = File.streamWriter(file)
 
-    def purge(id: UUID) {
-      INode.purge(id)
-    }
-
-    def page(start: Int, limit: Int): Future[Iterator[File]] = {
-      INode.page(start, limit).map(_.filter(!_.is_directory).map(File(_)))
-    }
+    def purge(id: UUID): Future[ResultSet] = File.purge(id)
   }
 
   object dir {
+    def find(id: UUID): Future[Option[Directory]] = Directory.find(id)
 
-    def find(id: UUID) = {
-      INode.find(id).map(_.map(Directory(_)))
-    }
-
-    def save(dir: Directory): Directory = {
-      Directory(INode.write(dir.inode))
-    }
+    def save(dir: Directory): Directory = Directory.write(dir: Directory)
   }
 
-}
-
-case class File(inode: INode)
-
-object File {
-  implicit def fileToINode(f: File): INode = f.inode
-
-  def apply(name: String, parent: Directory): File = {
-    File(INode(name = name, parent = parent.id))
-  }
-}
-
-case class Directory(inode: INode) {
-  def isRoot = this == CFS.root
-
-  val is_directory: Boolean = true
-}
-
-object Directory {
-  implicit def directoryToINode(d: Directory): INode = d.inode
-
-  def apply(name: String, parent: UUID): Directory = {
-    Directory(INode(name = name, parent = parent))
-  }
 }

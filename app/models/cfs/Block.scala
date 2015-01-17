@@ -43,12 +43,6 @@ sealed class Blocks extends CassandraTable[Blocks, Block] {
 
 object Block extends Blocks with Cassandra {
 
-  import scala.concurrent.Await
-  import scala.concurrent.duration._
-  import scala.language.postfixOps
-
-  Await.result(create.future(), 500 millis)
-
   type BLK = Array[Byte]
 
   def read(ind_blk_id: UUID): Enumerator[BLK] = {
