@@ -19,12 +19,12 @@ import scala.concurrent.Future
  */
 case class File(
   id: UUID = UUIDs.timeBased(),
-  name: String,
   parent: UUID,
   size: Long = 0,
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
-  attributes: Map[String, String] = Map()
+  attributes: Map[String, String] = Map(),
+  name: String = ""
 ) extends INode with TimeBased {
   def is_directory: Boolean = false
 }
@@ -42,7 +42,6 @@ sealed class Files
   override def fromRow(r: Row): File = {
     File(
       inode_id(r),
-      name(r),
       parent(r),
       size(r),
       indirect_block_size(r),
@@ -54,8 +53,13 @@ sealed class Files
 
 object File extends Files with Logging with Cassandra {
 
-  def find(id: UUID): Future[Option[File]] = {
-    select.where(_.inode_id eqs id).one()
+  def findBy(id: UUID)(
+    implicit onFound: File => File
+  ): Future[Option[File]] = {
+    select
+      .where(_.inode_id eqs id)
+      .one()
+      .map(_.map(onFound))
   }
 
   def streamWriter(inode: File): Iteratee[BLK, File] = {
@@ -85,7 +89,7 @@ object File extends Files with Logging with Cassandra {
 
   private def write(inode: File): File = {
     insert.value(_.inode_id, inode.id)
-      .value(_.name, inode.name)
+      //      .value(_.name, inode.name)
       .value(_.parent, inode.parent)
       .value(_.is_directory, false)
       .value(_.size, inode.size)

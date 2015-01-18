@@ -34,7 +34,7 @@ object CFS extends AppConfig with Cassandra {
 
   lazy val root: Directory = Await.result(
   {
-    def newRoot(id: UUID): Directory = Directory(id, "/", id)
+    def newRoot(id: UUID): Directory = Directory(id, id, name = "/")
 
     SysConfig.get(config_key, _.cfs_root).flatMap {
       case Some(id) => dir.find(id).map {
@@ -51,8 +51,24 @@ object CFS extends AppConfig with Cassandra {
   }, 10 seconds
   )
 
+  def find(path: Path): Future[Option[Either[Directory, File]]] =
+    (Enumerator(path.dirs: _*) |>>>
+      Iteratee.foldM[String, Option[Directory]](Some(CFS.root)) {
+        (directory, sub) => directory match {
+          case None      => Future.successful(None)
+          case Some(dir) => dir.find(sub)
+        }
+      }).flatMap {
+      case None      => Future.successful(None)
+      case Some(dir) => path.filename match {
+        case Some(filename) => dir.findFile(filename).map(_.map(Right(_)))
+        case None           => Future.successful(Some(Left(dir)))
+      }
+    }
+
   object file {
-    def find(id: UUID): Future[Option[File]] = File.find(id)
+
+    def find(id: UUID): Future[Option[File]] = File.findBy(id)
 
     def read(file: File): Enumerator[BLK] = IndirectBlock.read(file)
 
@@ -66,7 +82,7 @@ object CFS extends AppConfig with Cassandra {
   }
 
   object dir {
-    def find(id: UUID): Future[Option[Directory]] = Directory.find(id)
+    def find(id: UUID): Future[Option[Directory]] = Directory.findBy(id)
 
     def save(dir: Directory): Directory = Directory.write(dir: Directory)
   }

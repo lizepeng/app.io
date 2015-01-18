@@ -24,7 +24,6 @@ trait INode extends TimeBased {
   def attributes: Map[String, String]
 }
 
-
 trait INodeKey[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
@@ -38,10 +37,6 @@ trait INodeColumns[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
   override val tableName = "inodes"
-
-  object name
-    extends StringColumn(self)
-    with StaticColumn[String]
 
   object parent
     extends UUIDColumn(self)
@@ -77,9 +72,12 @@ trait FileColumns[T <: CassandraTable[T, R], R] {
 trait DirectoryColumns[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
+  object name
+    extends StringColumn(self)
+    with ClusteringOrder[String] with Ascending
+
   object child_id
-    extends OptionalUUIDColumn(self)
-    with ClusteringOrder[Option[UUID]] with Ascending
+    extends UUIDColumn(self)
 
 }
 
