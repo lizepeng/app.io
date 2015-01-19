@@ -51,22 +51,34 @@ object CFS extends AppConfig with Cassandra {
   }, 10 seconds
   )
 
-  def find(path: Path): Future[Option[Either[Directory, File]]] =
-    (Enumerator(path.dirs: _*) |>>>
-      Iteratee.foldM[String, Option[Directory]](Some(CFS.root)) {
-        (directory, sub) => directory match {
-          case None      => Future.successful(None)
-          case Some(dir) => dir.find(sub)
+  object file {
+
+    def findBy(
+      parent: Directory, path: Path
+    ): Future[Option[File]] = {
+      path.filename match {
+        case None           => Future.successful(None)
+        case Some(filename) => Directory.findChildBy(parent, path).flatMap {
+          case None          => Future.successful(None)
+          case Some((_, id)) => findBy(id, filename)
         }
-      }).flatMap {
-      case None      => Future.successful(None)
-      case Some(dir) => path.filename match {
-        case Some(filename) => dir.findFile(filename).map(_.map(Right(_)))
-        case None           => Future.successful(Some(Left(dir)))
       }
     }
 
-  object file {
+    def findBy(
+      parent: Directory, name: String
+    ): Future[Option[File]] = {
+      findBy(parent.id, name)
+    }
+
+    def findBy(
+      parent_id: UUID, name: String
+    ): Future[Option[File]] = {
+      Directory.findChildBy(parent_id, name).flatMap {
+        case Some((_, id)) => File.findBy(id)(_.copy(name = name))
+        case None          => Future.successful(None)
+      }
+    }
 
     def find(id: UUID): Future[Option[File]] = File.findBy(id)
 
@@ -82,6 +94,31 @@ object CFS extends AppConfig with Cassandra {
   }
 
   object dir {
+
+    def findBy(
+      parent: Directory, path: Path
+    ): Future[Option[Directory]] = {
+      Directory.findChildBy(parent, path).flatMap {
+        case None             => Future.successful(None)
+        case Some((name, id)) => Directory.findBy(id)(_.copy(name = name))
+      }
+    }
+
+    def findBy(
+      parent: Directory, name: String
+    ): Future[Option[Directory]] = {
+      findBy(parent.id, name)
+    }
+
+    def findBy(
+      parent_id: UUID, name: String
+    ): Future[Option[Directory]] = {
+      Directory.findChildBy(parent_id, name).flatMap {
+        case Some((_, id)) => Directory.findBy(id)(_.copy(name = name))
+        case None          => Future.successful(None)
+      }
+    }
+
     def find(id: UUID): Future[Option[Directory]] = Directory.findBy(id)
 
     def save(dir: Directory): Directory = Directory.write(dir: Directory)

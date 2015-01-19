@@ -42,12 +42,12 @@ case class Directory(
     Directory.addChild(this, inode)
   }
 
-  def find(name: String): Future[Option[Directory]] = {
-    Directory.findBy(this, name)
+  def dir(name: String): Future[Option[Directory]] = {
+    CFS.dir.findBy(this, name)
   }
 
-  def findFile(name: String): Future[Option[File]] = {
-    Directory.findFileBy(this, name)
+  def file(name: String): Future[Option[File]] = {
+    CFS.file.findBy(this, name)
   }
 }
 
@@ -72,34 +72,7 @@ sealed class Directories
 
 object Directory extends Directories with Logging with Cassandra {
 
-  def findFileBy(
-    parent: Directory, path: Path
-  ): Future[Option[File]] = {
-    path.filename match {
-      case None           => Future.successful(None)
-      case Some(filename) => findChildBy(parent, path).flatMap {
-        case None          => Future.successful(None)
-        case Some((_, id)) => findFileBy(id, filename)
-      }
-    }
-  }
-
-  def findFileBy(
-    parent_id: UUID, name: String
-  ): Future[Option[File]] = {
-    findChildBy(parent_id, name).flatMap {
-      case Some((_, id)) => File.findBy(id)(_.copy(name = name))
-      case None          => Future.successful(None)
-    }
-  }
-
-  def findFileBy(
-    parent: Directory, name: String
-  ): Future[Option[File]] = {
-    findFileBy(parent.id, name)
-  }
-
-  private def findChildBy(
+  def findChildBy(
     parent: Directory, path: Path
   ): Future[Option[(String, UUID)]] = {
     Enumerator(path.dirs: _*) |>>>
@@ -113,22 +86,14 @@ object Directory extends Directories with Logging with Cassandra {
       }
   }
 
-  def findBy(
-    parent: Directory, path: Path
-  ): Future[Option[Directory]] = {
-    findChildBy(parent, path).flatMap {
-      case None             => Future.successful(None)
-      case Some((name, id)) => findBy(id)(_.copy(name = name))
-    }
-  }
-
-  def findBy(
-    parent: Directory, name: String
-  ): Future[Option[Directory]] = {
-    findChildBy(parent.id, name).flatMap {
-      case Some((_, id)) => Directory.findBy(id)(_.copy(name = name))
-      case None          => Future.successful(None)
-    }
+  def findChildBy(
+    parent: UUID, name: String
+  ): Future[Option[(String, UUID)]] = {
+    select(_.child_id)
+      .where(_.inode_id eqs parent)
+      .and(_.name eqs name)
+      .one()
+      .map(_.map((name, _)))
   }
 
   def findBy(id: UUID)(
@@ -138,16 +103,6 @@ object Directory extends Directories with Logging with Cassandra {
       .where(_.inode_id eqs id)
       .one()
       .map(_.map(onFound))
-  }
-
-  private def findChildBy(
-    parent: UUID, name: String
-  ): Future[Option[(String, UUID)]] = {
-    select(_.child_id)
-      .where(_.inode_id eqs parent)
-      .and(_.name eqs name)
-      .one()
-      .map(_.map((name, _)))
   }
 
   def addChild(
