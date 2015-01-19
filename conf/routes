@@ -10,8 +10,8 @@ GET  /about                   controllers.Application.about
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file            controllers.Assets.at(path="/public", file)
 
-GET  /files                   controllers.Files.index(p:Pager?=Pager.first)
-POST /files                   controllers.Files.create
+GET  /files/$path<.*>         controllers.Files.index(path:Path,p:Pager?=Pager.first)
+POST /files/$path<.*>         controllers.Files.create(path:Path)
 GET  /files/:id               controllers.Files.show(id:UUID)
 POST /files/:id/destroy       controllers.Files.destroy(id:UUID)
 GET  /files/:id/stream        controllers.Files.stream(id:UUID)

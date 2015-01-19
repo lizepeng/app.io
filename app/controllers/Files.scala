@@ -1,13 +1,12 @@
 package controllers
 
-import java.net.URLEncoder
 import java.util.UUID
 
 import controllers.helpers.Bandwidth._
 import controllers.helpers._
 import controllers.session.UserAction
-import models.helpers._
 import models.cfs._
+import models.helpers._
 import play.api.http.ContentTypes
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.MimeTypes
@@ -34,7 +33,7 @@ object Files extends Controller {
         if (inline) stm
         else stm.withHeaders(
           CONTENT_DISPOSITION ->
-            s"""attachment; filename="${URLEncoder.encode(file.name, "UTF-8")}" """
+            s"""attachment; filename="${file.encodedName}" """
         )
       }
     }
@@ -59,10 +58,13 @@ object Files extends Controller {
       }
     }
 
-  def index(p: Pager) =
+  def index(path: Path, pager: Pager) =
     (UserAction >> AuthCheck).async {implicit request =>
-      CFS.root.listFiles(p).map {files =>
-        Ok(html.files.index(Page(p, files)))
+      CFS.root.dir(path).flatMap {
+        case None    => Future.successful(NotFound)
+        case Some(d) => d.listFiles(pager).map {files =>
+          Ok(html.files.index(path, Page(pager, files)))
+        }
       }
     }
 
@@ -71,30 +73,31 @@ object Files extends Controller {
       serveFile(id) {file => Ok(html.files.show(file))}
     }
 
-  def destroy(id: UUID) =
+  def destroy(id: UUID): Action[AnyContent] =
     (UserAction >> AuthCheck).async {implicit request =>
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
         case Some(inode) => CFS.file.purge(id)
-          RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index()))
+          RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index(Path())))
             .flashing(
               Level.Success -> MSG("file.deleted", inode.name)
             )
       }
     }
 
-  def create() =
-    (UserAction >> AuthCheck)(multipartFormData(saveToCFS)) {implicit request =>
-      request.body.file("files").map {files =>
-        val ref: File = files.ref
-        Redirect(routes.Files.index()).flashing(
-          Level.Success -> MSG("file.uploaded", ref.name)
-        )
-      }.getOrElse {
-        Redirect(routes.Files.index()).flashing(
-          Level.Info -> MSG("file.missing")
-        )
-      }
+  def create(path: Path) =
+    (UserAction >> AuthCheck)(CFSBodyParser(path)) {
+      implicit request =>
+        request.body.file("files").map {files =>
+          val ref: File = files.ref
+          Redirect(routes.Files.index(Path())).flashing(
+            Level.Success -> MSG("file.uploaded", ref.name)
+          )
+        }.getOrElse {
+          Redirect(routes.Files.index(Path())).flashing(
+            Level.Info -> MSG("file.missing")
+          )
+        }
     }
 
   private def invalidRange(file: File): Result = {
@@ -141,7 +144,7 @@ object Files extends Controller {
   private def serveFile(id: UUID)(
     whenFound: File => Result
   ): Future[Result] = {
-    CFS.file.find(id).map {
+    CFS.file.findBy(id).map {
       case None       => NotFound
       case Some(file) => whenFound(file)
     }
@@ -151,10 +154,19 @@ object Files extends Controller {
     MimeTypes.forFileName(inode.name).getOrElse(ContentTypes.BINARY)
   }
 
-  private def saveToCFS[A]: PartHandler[FilePart[File]] = {
+  private def CFSBodyParser(path: Path) = new BodyParser[MultipartFormData[File]] {
+    override def apply(request: RequestHeader) = Iteratee.flatten {
+      CFS.root.dir(path).map {
+        case None      => parse.error(Future.successful(BadRequest))
+        case Some(dir) => multipartFormData(saveTo(dir))
+      }.map(_.apply(request))
+    }
+  }
+
+  private def saveTo(dir: Directory): PartHandler[FilePart[File]] = {
     handleFilePart {
       case FileInfo(partName, filename, contentType) =>
-        LimitTo(1.5 MBps) &>> CFS.root.save(filename)
+        LimitTo(1.5 MBps) &>> dir.save(filename)
     }
   }
 }

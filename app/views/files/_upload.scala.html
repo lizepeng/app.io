@@ -1,9 +1,9 @@
-@(textType: String = "html", name: String = "")
+@(path: Path, textType: String = "html", name: String = "")
 
 @import helper._
 
 @common._part(textType){
-  @form(action = routes.Files.create,
+  @form(action = routes.Files.create(path),
     'enctype -> "multipart/form-data") {
     <div class="input-group">
 

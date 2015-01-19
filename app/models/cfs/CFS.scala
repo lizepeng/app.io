@@ -80,7 +80,7 @@ object CFS extends AppConfig with Cassandra {
       }
     }
 
-    def find(id: UUID): Future[Option[File]] = File.findBy(id)
+    def findBy(id: UUID): Future[Option[File]] = File.findBy(id)
 
     def read(file: File): Enumerator[BLK] = IndirectBlock.read(file)
 

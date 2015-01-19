@@ -36,8 +36,8 @@ object Pager {
         params: Map[String, Seq[String]]
       ): Option[Either[String, Pager]] = {
         for {
-          start <- intBinder.bind(s"$key.start", params)
-          limit <- intBinder.bind(s"$key.limit", params)
+          start <- intBinder.bind(s"page", params)
+          limit <- intBinder.bind(s"per_page", params)
         } yield {
           (start, limit) match {
             case (Right(s), Right(l)) => Right(Pager(s, l))
@@ -47,8 +47,8 @@ object Pager {
       }
 
       override def unbind(key: String, p: Pager): String = {
-        val start = intBinder.unbind(s"$key.start", p.start)
-        val limit = intBinder.unbind(s"$key.limit", p.limit)
+        val start = intBinder.unbind(s"page", p.start)
+        val limit = intBinder.unbind(s"per_page", p.limit)
         s"$start&$limit"
       }
     }

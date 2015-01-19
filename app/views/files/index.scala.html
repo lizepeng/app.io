@@ -1,4 +1,4 @@
-@(files: Page[File])(implicit request: UserRequest[_])
+@(path:Path, page: Page[File])(implicit request: UserRequest[_])
 
 @import helper._
 
@@ -8,7 +8,7 @@
 
   <div class="row">
     <div class="col-xs-10 col-xs-offset-2">
-      @{_upload("html", "files")}
+      @files._upload(path, "html", "files")
     </div>
   </div>
   <div class="row" style="margin-top:10px">
@@ -31,7 +31,7 @@
           </tr>
         </thead>
         <tbody>
-          @files.map { f =>
+          @page.map { f =>
             <tr>
               <td>
                 <i class="fa fa-lg @f.icon"></i>
@@ -74,18 +74,18 @@
 
       <nav>
         <ul class="pager">
-          <li class="previous @if(!files.pager.hasPrev){disabled}">
-            <a href="@routes.Files.index(files.pager.prev)">Previous</a>
+          <li class="previous @if(!page.pager.hasPrev){disabled}">
+            <a href="@routes.Files.index(Path(),page.pager.prev)">Previous</a>
           </li>
           <li class="next">
-            <a href="@routes.Files.index(files.pager.next)">Next</a>
+            <a href="@routes.Files.index(Path(),page.pager.next)">Next</a>
           </li>
         </ul>
       </nav>
     </div>
   </div>
 }{
-  @{_upload("css")}
+  @{_upload(path, "css")}
   <style>
     .table {
       table-layout:fixed;
@@ -97,4 +97,4 @@
       text-overflow: ellipsis;
     }
   </style>
-}(_upload("js"))
+}(_upload(path, "js"))

@@ -10,7 +10,7 @@ import common.Logging
 import models.TimeBased
 import models.cassandra.{Cassandra, DistinctPatch}
 import models.cfs.Block.BLK
-import models.helpers.Pager
+import models.helpers.{Pager, _}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -33,8 +33,10 @@ case class Directory(
 
   def listFiles(pager: Pager): Future[Iterator[File]] = {
     Directory.list(this) &>
-      Enumeratee.filter(!_.is_directory) &>
-      Enumeratee.map(_.asInstanceOf[File]) |>>>
+      Enumeratee.map {
+        case (name, inode: File) => Some(inode.copy(name = name))
+        case _                   => None
+      } &> Enumeratee.flattenOption |>>>
       PIteratee.slice(pager.start, pager.limit)
   }
 
@@ -44,6 +46,10 @@ case class Directory(
 
   def dir(name: String): Future[Option[Directory]] = {
     CFS.dir.findBy(this, name)
+  }
+
+  def dir(path: Path): Future[Option[Directory]] = {
+    CFS.dir.findBy(this, path)
   }
 
   def file(name: String): Future[Option[File]] = {
@@ -110,6 +116,7 @@ object Directory extends Directories with Logging with Cassandra {
   ): Directory = {
     insert
       .value(_.inode_id, dir.id)
+      .value(_.name, inode.name)
       .value(_.child_id, inode.id)
       .future()
     dir
@@ -121,28 +128,40 @@ object Directory extends Directories with Logging with Cassandra {
    * @return
    */
   def write(dir: Directory): Directory = {
-    insert
-      .value(_.inode_id, dir.id)
-      //      .value(_.name, dir.name)
-      .value(_.parent, dir.parent)
-      .value(_.is_directory, true)
-      .value(_.attributes, dir.attributes)
-      .future()
+    val batch = BatchStatement().add {
+      insert
+        .value(_.inode_id, dir.id)
+        .value(_.name, ".")
+        .value(_.child_id, dir.id)
+        .value(_.parent, dir.parent)
+        .value(_.is_directory, true)
+        .value(_.attributes, dir.attributes)
+    }
+    if (dir.parent != dir.id) batch.add {
+      insert
+        .value(_.inode_id, dir.parent)
+        .value(_.name, dir.name)
+        .value(_.child_id, dir.id)
+    }
+    batch.future()
     dir
   }
 
   /**
-   * TODO Directory may have no findChildBy
+   *
    * @param dir
    * @return
    */
-  def list(dir: Directory): Enumerator[INode] = {
-    select(_.child_id)
+  def list(dir: Directory): Enumerator[(String, INode)] = {
+    select(_.name, _.child_id)
       .where(_.inode_id eqs dir.id)
       .setFetchSize(CFS.listFetchSize)
       .fetchEnumerator() &>
-      Enumeratee.mapM(INode.find) &>
-      Enumeratee.filter(_.isDefined) &>
-      Enumeratee.map(_.get)
+      Enumeratee.mapM {
+        case (name, id) => INode.find(id).map {
+          case None        => None
+          case Some(inode) => Some((name, inode))
+        }
+      } &> Enumeratee.flattenOption
   }
 }

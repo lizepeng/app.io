@@ -24,7 +24,7 @@ object Application extends Controller with AppConfig {
 
   def wiki = UserAction.async {implicit request =>
     val id = config.getString("wiki.video.id").getOrElse("")
-    CFS.file.find(UUID.fromString(id)).map {
+    CFS.file.findBy(UUID.fromString(id)).map {
       video => Ok(html.static_pages.wiki(video))
     }
   }

@@ -35,5 +35,6 @@ TwirlKeys.templateImports ++= Seq(
 
 PlayKeys.routesImport ++= Seq(
   "java.util.UUID",
-  "models.helpers._"
+  "models.cfs.Path",
+  "models.helpers.Pager"
 )

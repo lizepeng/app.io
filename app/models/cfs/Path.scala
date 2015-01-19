@@ -5,12 +5,12 @@ import play.api.mvc.PathBindable
 /**
  * @author zepeng.li@gmail.com
  */
-case class Path(dirs: Seq[String], filename: Option[String]) {
+case class Path(dirs: Seq[String] = Seq(), filename: Option[String] = None) {
   override def toString = ("" /: dirs)(_ + _ + "/") + filename.getOrElse("")
 }
 
 object Path {
-  implicit def bindablePath() = new PathBindable[Path] {
+  implicit def bindablePath: PathBindable[Path] = new PathBindable[Path] {
 
     def bind(key: String, value: String): Either[String, Path] = {
       val path1 = """(.+)/([^/]+)$""".r

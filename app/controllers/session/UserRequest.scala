@@ -11,8 +11,7 @@ import play.api.mvc._
 class UserRequest[A](
   val user: Option[User],
   request: Request[A]
-)
-  extends WrappedRequest[A](request) {
+) extends WrappedRequest[A](request) {
 
   def lang: Lang = {
     Play.maybeApplication.map {implicit app =>
