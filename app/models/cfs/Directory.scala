@@ -6,11 +6,10 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
-import common.Logging
+import helpers._
 import models.TimeBased
 import models.cassandra.{Cassandra, DistinctPatch}
 import models.cfs.Block.BLK
-import models.helpers.{Pager, _}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future

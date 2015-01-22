@@ -1,4 +1,4 @@
-package models.helpers
+package helpers
 
 import play.api.mvc.QueryStringBindable
 

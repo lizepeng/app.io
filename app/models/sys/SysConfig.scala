@@ -6,7 +6,7 @@ import com.datastax.driver.core.Row
 import com.datastax.driver.core.querybuilder.Assignment
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
-import common.Logging
+import helpers.Logging
 import models.cassandra.Cassandra
 import org.joda.time.DateTime
 

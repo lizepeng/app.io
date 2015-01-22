@@ -3,8 +3,8 @@ package controllers
 import java.util.UUID
 
 import controllers.Sessions._
-import controllers.helpers.AuthCheck
 import controllers.session._
+import helpers.AuthCheck
 import models.User
 import play.api.data.Form
 import play.api.data.Forms._

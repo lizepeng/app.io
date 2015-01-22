@@ -1,4 +1,4 @@
-package common
+package helpers
 
 import play.api.{Application, Configuration}
 

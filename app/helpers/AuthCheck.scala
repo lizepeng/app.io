@@ -1,4 +1,4 @@
-package controllers.helpers
+package helpers
 
 import controllers._
 import play.api.mvc._

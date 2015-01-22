@@ -5,8 +5,8 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
-import common.Logging
-import common.syntax._
+import helpers.Logging
+import helpers.syntax._
 import models.TimeBased
 import models.cassandra.{Cassandra, DistinctPatch}
 import models.cfs.Block.BLK

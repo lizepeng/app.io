@@ -5,7 +5,7 @@ import java.util.UUID
 
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
-import common.Logging
+import helpers.Logging
 import models.TimeBased
 import models.cassandra.{Cassandra, DistinctPatch}
 

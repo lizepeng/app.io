@@ -1,6 +1,6 @@
 package controllers.session
 
-import common.syntax._
+import helpers.syntax._
 import controllers.UserRequest
 import models.User.Credentials
 import models._

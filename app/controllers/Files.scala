@@ -2,11 +2,10 @@ package controllers
 
 import java.util.UUID
 
-import controllers.helpers.Bandwidth._
-import controllers.helpers._
 import controllers.session.UserAction
+import helpers.Bandwidth._
+import helpers._
 import models.cfs._
-import models.helpers._
 import play.api.http.ContentTypes
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.MimeTypes
@@ -80,7 +79,7 @@ object Files extends Controller {
         case Some(inode) => CFS.file.purge(id)
           RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index(Path())))
             .flashing(
-              Level.Success -> MSG("file.deleted", inode.name)
+              AlertLevel.Success -> MSG("file.deleted", inode.name)
             )
       }
     }
@@ -91,11 +90,11 @@ object Files extends Controller {
         request.body.file("files").map {files =>
           val ref: File = files.ref
           Redirect(routes.Files.index(Path())).flashing(
-            Level.Success -> MSG("file.uploaded", ref.name)
+            AlertLevel.Success -> MSG("file.uploaded", ref.name)
           )
         }.getOrElse {
           Redirect(routes.Files.index(Path())).flashing(
-            Level.Info -> MSG("file.missing")
+            AlertLevel.Info -> MSG("file.missing")
           )
         }
     }

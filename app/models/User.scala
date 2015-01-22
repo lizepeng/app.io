@@ -6,8 +6,8 @@ import com.datastax.driver.core.utils.UUIDs
 import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.Iteratee
-import common._
-import common.syntax._
+import helpers._
+import helpers.syntax._
 import models.cassandra.Cassandra
 import org.joda.time.DateTime
 
@@ -165,7 +165,7 @@ object User extends Users with Logging with Cassandra {
   }
 
   def auth(email: String, passwd: String): Future[Either[BaseException, User]] = {
-    import common.ErrorCodes._
+    import helpers.ErrorCode._
 
     findBy(email).map {userOpt =>
       userOpt.toRight {

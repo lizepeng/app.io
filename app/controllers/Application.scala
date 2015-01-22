@@ -2,7 +2,7 @@ package controllers
 
 import java.util.UUID
 
-import _root_.common.AppConfig
+import _root_.helpers.AppConfig
 import controllers.session._
 import models.cfs.CFS
 import play.api.Play.current

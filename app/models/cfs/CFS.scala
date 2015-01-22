@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
-import common.AppConfig
+import helpers.AppConfig
 import models.cassandra.Cassandra
 import models.cfs.Block._
 import models.sys.SysConfig

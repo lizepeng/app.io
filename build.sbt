@@ -25,16 +25,15 @@ resolvers ++= Seq(
 )
 
 TwirlKeys.templateImports ++= Seq(
+  "helpers._",
   "java.util._",
-  "org.joda.time._",
-  "play.api.i18n.{Messages => MSG}",
-  "models.helpers._",
   "models.cfs._",
-  "views.utils._"
+  "org.joda.time._",
+  "play.api.i18n.{Messages => MSG}"
 )
 
 PlayKeys.routesImport ++= Seq(
   "java.util.UUID",
-  "models.cfs.Path",
-  "models.helpers.Pager"
+  "helpers._",
+  "models.cfs._"
 )

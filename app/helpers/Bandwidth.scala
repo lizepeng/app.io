@@ -1,6 +1,5 @@
-package controllers.helpers
+package helpers
 
-import common.Logging
 import models.cfs.Block._
 import org.joda.time.DateTime
 import play.api.libs.concurrent.Promise
@@ -31,9 +30,9 @@ object Bandwidth extends Logging {
     implicit ec: ExecutionContext
   ): Enumeratee[BLK, BLK] = new CheckDone[BLK, BLK] {
 
-    def step[A](remaining: Int, start: Long)(
-      k: K[BLK, A]
-    ): K[BLK, Iteratee[BLK, A]] = {
+    def step[B](remaining: Int, start: Long)(
+      k: K[BLK, B]
+    ): K[BLK, Iteratee[BLK, B]] = {
 
       case in@Input.El(_) if remaining <= 1 =>
         new CheckDone[BLK, BLK] {

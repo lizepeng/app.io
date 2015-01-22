@@ -1,13 +1,13 @@
-package views
+package views.html
 
-import _root_.common.syntax.PolarQuestion
+import _root_.helpers.syntax.PolarQuestion
 import play.api.http.ContentTypes
 import play.api.libs.MimeTypes
 
 /**
  * @author zepeng.li@gmail.com
  */
-package object utils {
+package object files {
 
   implicit class RichFile(val f: models.cfs.File) extends AnyVal {
 
@@ -62,8 +62,8 @@ package object utils {
         case s if s > (1L << 40) => f"${s / 1e12}%7.3f TB"
         case s if s > (1L << 30) => f"${s / 1e09}%6.2f GB"
         case s if s > (1L << 20) => f"${s / 1e06}%5.1f MB"
-        case s if s > (1L << 10) => f"${s / 1000}%3d KB"
-        case s if s > 0          => f"${s}%3d bytes"
+        case s if s > (1L << 10) => f"${s / 1e03}%3f KB"
+        case s if s > 0          => f"$s%3d bytes"
         case _                   => "Zero bytes"
       }
     }
