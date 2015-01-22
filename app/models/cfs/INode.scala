@@ -1,6 +1,5 @@
 package models.cfs
 
-import java.net.URLEncoder
 import java.util.UUID
 
 import com.websudos.phantom.CassandraTable
@@ -23,8 +22,6 @@ trait INode extends TimeBased {
   def is_directory: Boolean
 
   def attributes: Map[String, String]
-
-  def encodedName = URLEncoder.encode(name, "UTF-8")
 }
 
 trait INodeKey[T <: CassandraTable[T, R], R] {

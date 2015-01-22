@@ -54,6 +54,10 @@ case class Directory(
   def file(name: String): Future[Option[File]] = {
     CFS.file.findBy(this, name)
   }
+
+  def file(path: Path): Future[Option[File]] = {
+    CFS.file.findBy(this, path)
+  }
 }
 
 /**

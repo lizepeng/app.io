@@ -1,4 +1,4 @@
-@(videoOpt: Option[cfs.File])(implicit request: UserRequest[_])
+@(videoOpt: Option[Path])(implicit request: UserRequest[_])
 
 @layouts.base(MSG("Wiki"), above_content = movie){
 
@@ -116,12 +116,12 @@
 }()
 
 @movie = {
-  @videoOpt.map {video =>
+  @videoOpt.map {path =>
     <div class="container">
       <div class="row">
         <div class="col-xs-12 aws-col">
           <video class="aws"
-            src="@routes.Files.stream(video.id)" autoplay autobuffer>
+            src="@routes.Files.stream(path)" autoplay autobuffer>
           </video>
         </div>
       </div>

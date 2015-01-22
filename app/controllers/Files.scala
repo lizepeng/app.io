@@ -23,23 +23,23 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object Files extends Controller {
+object Files extends Controller with Logging {
 
-  def download(id: UUID, inline: Boolean) =
+  def download(path: Path, inline: Boolean) =
     (UserAction >> AuthCheck).async {implicit request =>
-      serveFile(id) {file =>
+      serveFile(path) {file =>
         val stm = streamWhole(file)
         if (inline) stm
         else stm.withHeaders(
           CONTENT_DISPOSITION ->
-            s"""attachment; filename="${file.encodedName}" """
+            s"""attachment; filename="${Path.encode(file.name)}" """
         )
       }
     }
 
-  def stream(id: UUID) =
+  def stream(path: Path) =
     UserAction.async {implicit request =>
-      serveFile(id) {file =>
+      serveFile(path) {file =>
         val size = file.size
         val byte_range_spec = """bytes=(\d+)-(\d*)""".r
 
@@ -67,9 +67,9 @@ object Files extends Controller {
       }
     }
 
-  def show(id: UUID) =
+  def show(path: Path) =
     (UserAction >> AuthCheck).async {implicit request =>
-      serveFile(id) {file => Ok(html.files.show(file))}
+      serveFile(path) {file => Ok(html.files.show(path, file))}
     }
 
   def destroy(id: UUID): Action[AnyContent] =
@@ -140,10 +140,10 @@ object Files extends Controller {
     CFS.file.read(file) &> LimitTo(2 MBps)
   )
 
-  private def serveFile(id: UUID)(
+  private def serveFile(path: Path)(
     whenFound: File => Result
   ): Future[Result] = {
-    CFS.file.findBy(id).map {
+    CFS.root.file(path).map {
       case None       => NotFound
       case Some(file) => whenFound(file)
     }

@@ -13,7 +13,7 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object Bandwidth extends Logging {
+object Bandwidth {
 
   object LimitTo {
     def apply(rate: Int = 1 MBps)(

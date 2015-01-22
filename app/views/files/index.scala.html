@@ -38,11 +38,11 @@
               </td>
               <td>
                 @if(f.pdf.?) {
-                  <a href="@routes.Files.download(f.id, true)">
+                  <a href="@routes.Files.download(path + f.name, true)">
                     @f.name
                   </a>
                 } else {
-                  <a href="@routes.Files.show(f.id)">
+                  <a href="@routes.Files.show(path + f.name)">
                     @f.name
                   </a>
                 }
@@ -54,7 +54,7 @@
                 @f.size_pp
               </td>
               <td>
-                <a href="@routes.Files.download(f.id)">
+                <a href="@routes.Files.download(path + f.name)">
                   <i class="fa fa-download fa-lg"></i>
                 </a>
               </td>

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import _root_.helpers.AppConfig
 import controllers.session._
-import models.cfs.CFS
+import models.cfs.{Path, CFS}
 import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
@@ -25,7 +25,7 @@ object Application extends Controller with AppConfig {
   def wiki = UserAction.async {implicit request =>
     val id = config.getString("wiki.video.id").getOrElse("")
     CFS.file.findBy(UUID.fromString(id)).map {
-      video => Ok(html.static_pages.wiki(video))
+      video => Ok(html.static_pages.wiki(Some(Path())))
     }
   }
 }
