@@ -65,3 +65,5 @@ fact.models.cfs.stream-fetch-size=5000
 mimetype {
   mkv:video/x-matroska
 }
+
+app.wiki.video=wiki.mp4

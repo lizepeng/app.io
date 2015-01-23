@@ -16,6 +16,8 @@ case class Path(dirs: Seq[String] = Seq(), filename: Option[String] = None) {
 }
 
 object Path {
+  def apply(filename: String): Path = Path(filename = Some(filename))
+
   implicit def bindablePath: PathBindable[Path] = new PathBindable[Path] {
 
     def bind(key: String, value: String): Either[String, Path] = {
