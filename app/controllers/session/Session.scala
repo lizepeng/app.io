@@ -1,5 +1,7 @@
 package controllers.session
 
+import java.util.UUID
+
 import controllers.UserRequest
 import helpers.syntax._
 import models.User.Credentials
@@ -8,6 +10,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
  * @author zepeng.li@gmail.com
@@ -16,23 +19,23 @@ trait Session {
   private val user_id_key   = "usr_id"
   private val user_salt_key = "usr_salt"
 
-  implicit def retrieve(implicit request: RequestHeader): Option[Credentials] = {
-    val cookie = request.cookies
-    Credentials(
-      cookie.get(user_id_key).map(_.value),
-      cookie.get(user_salt_key).map(_.value)
-    ).orElse {
-      val session = request.session
-      Credentials(
-        session.get(user_id_key),
-        session.get(user_salt_key)
-      )
-    }
-  }
-
   def transform[A](request: Request[A]): Future[UserRequest[A]] = {
     request.user.map {new UserRequest[A](_, request)}
   }
+
+  implicit def retrieve(implicit request: RequestHeader) = {
+    val cookie = request.cookies
+    for (u <- cookie.get(user_id_key).map(_.value).flatMap(toUUID);
+         s <- cookie.get(user_salt_key).map(_.value)
+    ) yield Credentials(u, s)
+  } orElse {
+    val session = request.session
+    for (u <- session.get(user_id_key).flatMap(toUUID);
+         s <- session.get(user_salt_key)
+    ) yield Credentials(u, s)
+  }
+
+  private def toUUID(str: String) = Try(UUID.fromString(str)).toOption
 
   implicit class RequestWithUser(request: RequestHeader) {
 

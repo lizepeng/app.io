@@ -89,6 +89,12 @@ object User extends Users with Logging with Cassandra {
   Await.result(create.future(), 500 millis)
   Await.result(UserByEmail.create.future(), 500 millis)
 
+  case class NotFound(email: String)
+    extends BaseException("not.found.user")
+
+  case class WrongPassword(email: String)
+    extends BaseException("password.wrong")
+
   def findBy(id: UUID): Future[Option[User]] = {
     select.where(_.id eqs id).one()
   }
@@ -143,14 +149,7 @@ object User extends Users with Logging with Cassandra {
 
   ////////////////////////////////////////////////////////////////
 
-  case class Credentials(id: String, salt: String)
-
-  object Credentials {
-    def apply(userId: Option[String], salt: Option[String]): Option[Credentials] = {
-      if (userId.isEmpty || salt.isEmpty) None
-      else Some(Credentials(userId.get, salt.get))
-    }
-  }
+  case class Credentials(id: UUID, salt: String)
 
   /**
    *
@@ -158,14 +157,12 @@ object User extends Users with Logging with Cassandra {
    * @return
    */
   def auth(cred: Credentials): Future[Option[User]] = {
-    findBy(UUID.fromString(cred.id)).map {
-      _.filter(_.salt == cred.salt)
-    }
+    findBy(cred.id).map {_.filter(_.salt == cred.salt)}
   }
 
   def auth(email: String, passwd: String): Future[User] = {
     findBy(email).map {
-      case None       => throw UserNotFound(email)
+      case None       => throw NotFound(email)
       case Some(user) => user
     }.map {user =>
       if (user.hasPassword(passwd)) user
@@ -202,9 +199,3 @@ object UserByEmail extends UserByEmail with Logging with Cassandra {
     delete.where(_.email eqs email).future()
   }
 }
-
-case class UserNotFound(email: String)
-  extends BaseException("not.found.user")
-
-case class WrongPassword(email: String)
-  extends BaseException("password.wrong")

@@ -44,12 +44,12 @@ object Sessions extends Controller with session.Session with Logging {
     fm.fold(
       fm => Future.successful(BadRequest(html.account.login(fm))),
       fd => User.auth(fd.email, fd.password).andThen {
-        case Failure(ex: UserNotFound)  => Logger.info(ex.reason)
-        case Failure(ex: WrongPassword) => Logger.info(ex.reason)
+        case Failure(e: User.NotFound)      => Logger.info(e.reason)
+        case Failure(e: User.WrongPassword) => Logger.info(e.reason)
       }.map {implicit user =>
         Redirect(routes.Users.show(user.id)).createSession(fd.remember_me)
-      }.recover {case ex: BaseException =>
-        BadRequest(html.account.login(fm.withGlobalError(ex.message)))
+      }.recover {case e: BaseException =>
+        BadRequest(html.account.login(fm.withGlobalError(e.message)))
       }
     )
   }
