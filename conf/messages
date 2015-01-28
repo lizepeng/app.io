@@ -85,8 +85,11 @@ password.all_upper=Password need at least one lowercase letter
 password.all_lower=Password need at least one uppercase letter
 password.not.confirmed=Password doesn''t match the confirmation
 
-msg.info.not.found.user=Wrong Username/Email and password combination
-msg.info.password.wrong=Wrong Username/Email and password combination
+msg.not.found.user=Wrong Username/Email and password combination
+msg.password.wrong=Wrong Username/Email and password combination
+
+log.not.found.user=no such user: [{0}]
+log.password.wrong=wrong password of user: [{0}]
 
 msg.confirm.delete=TODO
 msg.master.created={0} has been created

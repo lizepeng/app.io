@@ -1,6 +1,7 @@
 package controllers
 
 import controllers.session._
+import helpers.{BaseException, Logging}
 import models._
 import play.api.data.Forms._
 import play.api.data._
@@ -9,12 +10,13 @@ import play.api.mvc._
 import views._
 
 import scala.concurrent.Future
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
  *
  **/
-object Sessions extends Controller with session.Session {
+object Sessions extends Controller with session.Session with Logging {
 
   val loginFM = Form[LoginFD](
     mapping(
@@ -39,18 +41,15 @@ object Sessions extends Controller with session.Session {
 
   def create = UserAction.async {implicit request =>
     val fm = loginFM.bindFromRequest
-
     fm.fold(
       fm => Future.successful(BadRequest(html.account.login(fm))),
-      fd => User.auth(fd.email, fd.password).flatMap {eitherUser =>
-        eitherUser.fold(
-          ex => Future {
-            BadRequest(html.account.login(fm.withGlobalError(ex.code.msg())))
-          },
-          implicit user => Future {
-            Redirect(routes.Users.show(user.id)).createSession(fd.remember_me)
-          }
-        )
+      fd => User.auth(fd.email, fd.password).andThen {
+        case Failure(ex: UserNotFound)  => Logger.info(ex.reason)
+        case Failure(ex: WrongPassword) => Logger.info(ex.reason)
+      }.map {implicit user =>
+        Redirect(routes.Users.show(user.id)).createSession(fd.remember_me)
+      }.recover {case ex: BaseException =>
+        BadRequest(html.account.login(fm.withGlobalError(ex.message)))
       }
     )
   }

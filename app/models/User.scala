@@ -7,7 +7,6 @@ import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.Iteratee
 import helpers._
-import helpers.syntax._
 import models.cassandra.Cassandra
 import org.joda.time.DateTime
 
@@ -164,17 +163,13 @@ object User extends Users with Logging with Cassandra {
     }
   }
 
-  def auth(email: String, passwd: String): Future[Either[BaseException, User]] = {
-    import helpers.ErrorCode._
-
-    findBy(email).map {userOpt =>
-      userOpt.toRight {
-        NotFoundException(UserNotFound.log(email))
-      }.right.flatMap {user =>
-        user.hasPassword(passwd).option(user).toRight {
-          AuthFailedException(WrongPassword.log(email))
-        }
-      }
+  def auth(email: String, passwd: String): Future[User] = {
+    findBy(email).map {
+      case None       => throw UserNotFound(email)
+      case Some(user) => user
+    }.map {user =>
+      if (user.hasPassword(passwd)) user
+      else throw WrongPassword(email)
     }
   }
 }
@@ -207,3 +202,9 @@ object UserByEmail extends UserByEmail with Logging with Cassandra {
     delete.where(_.email eqs email).future()
   }
 }
+
+case class UserNotFound(email: String)
+  extends BaseException("not.found.user")
+
+case class WrongPassword(email: String)
+  extends BaseException("password.wrong")

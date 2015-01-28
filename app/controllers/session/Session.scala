@@ -1,7 +1,7 @@
 package controllers.session
 
-import helpers.syntax._
 import controllers.UserRequest
+import helpers.syntax._
 import models.User.Credentials
 import models._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -38,8 +38,8 @@ trait Session {
 
     def user: Future[Option[User]] = {
       retrieve(request) match {
-        case Some(cred) => User.auth(cred)
         case None       => Future.successful(None)
+        case Some(cred) => User.auth(cred)
       }
     }
   }
