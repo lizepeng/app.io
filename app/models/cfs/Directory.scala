@@ -27,7 +27,7 @@ case class Directory(
 
   def save(filename: String): Iteratee[BLK, File] = {
     val file = File(name = filename, parent = id)
-    Enumeratee.onIterateeDone(() => add(file)) &>> CFS.file.save(file)
+    Enumeratee.onIterateeDone(() => add(file)) &>> file.save()
   }
 
   def listFiles(pager: Pager): Future[Iterator[File]] = {
@@ -39,25 +39,35 @@ case class Directory(
       PIteratee.slice(pager.start, pager.limit)
   }
 
+  private def find(path: Seq[String]): Future[(String, UUID)] = {
+    Enumerator(path: _*) |>>>
+      Iteratee.foldM((name, id)) {
+        case ((_, pi), cn) => Directory.findChild(pi, cn)
+      }
+  }
+
+  def dir(path: Path): Future[Directory] = {
+    find(path.dirs).flatMap {
+      case (n, i) => Directory.findBy(i)(_.copy(name = n))
+    }
+  }
+
+  def file(path: Path): Future[File] = {
+    find(path.dirs ++ path.filename).flatMap {
+      case (n, i) => File.findBy(i)(_.copy(name = n))
+    }
+  }
+
   def add(inode: INode): Directory = {
     Directory.addChild(this, inode)
   }
 
-  def dir(name: String): Future[Option[Directory]] = {
-    CFS.dir.findBy(this, name)
+  def dir(name: String): Future[Directory] = {
+    Directory.findChild(id, name).flatMap {
+      case (_, i) => Directory.findBy(i)(_.copy(name = name))
+    }
   }
 
-  def dir(path: Path): Future[Option[Directory]] = {
-    CFS.dir.findBy(this, path)
-  }
-
-  def file(name: String): Future[Option[File]] = {
-    CFS.file.findBy(this, name)
-  }
-
-  def file(path: Path): Future[Option[File]] = {
-    CFS.file.findBy(this, path)
-  }
 }
 
 /**
@@ -81,37 +91,35 @@ sealed class Directories
 
 object Directory extends Directories with Logging with Cassandra {
 
-  def findChildBy(
-    parent: Directory, path: Path
-  ): Future[Option[(String, UUID)]] = {
-    Enumerator(path.dirs: _*) |>>>
-      Iteratee.foldM[String, Option[(String, UUID)]](
-        Some(parent.name, parent.id)
-      ) {
-        (directory, sub) => directory match {
-          case None           => Future.successful(None)
-          case Some((_, dir)) => findChildBy(dir, sub)
-        }
-      }
-  }
+  case class NotFound(id: UUID)
+    extends BaseException("cfs.dir.not.found")
 
-  def findChildBy(
+  case class ChildNotFound(name: String)
+    extends BaseException("cfs.child.not.found")
+
+  def findChild(
     parent: UUID, name: String
-  ): Future[Option[(String, UUID)]] = {
+  ): Future[(String, UUID)] = {
     select(_.child_id)
       .where(_.inode_id eqs parent)
       .and(_.name eqs name)
       .one()
-      .map(_.map((name, _)))
+      .map {
+      case None     => throw ChildNotFound(name)
+      case Some(id) => (name, id)
+    }
   }
 
   def findBy(id: UUID)(
     implicit onFound: Directory => Directory
-  ): Future[Option[Directory]] = {
+  ): Future[Directory] = {
     select
       .where(_.inode_id eqs id)
       .one()
-      .map(_.map(onFound))
+      .map {
+      case None    => throw NotFound(id)
+      case Some(d) => onFound(d)
+    }
   }
 
   def addChild(

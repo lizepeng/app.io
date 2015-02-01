@@ -2,6 +2,7 @@ package helpers
 
 import org.joda.time._
 
+import scala.concurrent.Future
 import scala.language.implicitConversions
 
 /**
@@ -23,6 +24,10 @@ package object syntax {
 
     def whenDefined(blk: A => Unit) = { if (opt.isDefined) blk(opt.get); opt }
 
+    def flatMapM[B](f: A => Future[Option[B]]): Future[Option[B]] = {
+      if (opt.isEmpty) Future.successful(None)
+      else f(opt.get)
+    }
   }
 
   implicit class SugarBoolean(val b: Boolean) extends AnyVal {

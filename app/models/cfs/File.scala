@@ -5,8 +5,8 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
-import helpers.Logging
 import helpers.syntax._
+import helpers.{BaseException, Logging}
 import models.TimeBased
 import models.cassandra.{Cassandra, DistinctPatch}
 import models.cfs.Block.BLK
@@ -26,7 +26,14 @@ case class File(
   attributes: Map[String, String] = Map(),
   name: String = ""
 ) extends INode with TimeBased {
+
   def is_directory: Boolean = false
+
+  def read(offset: Long = 0): Enumerator[BLK] =
+    if (offset == 0) IndirectBlock.read(id)
+    else IndirectBlock.read(this, offset)
+
+  def save(): Iteratee[BLK, File] = File.streamWriter(this)
 }
 
 /**
@@ -53,13 +60,19 @@ sealed class Files
 
 object File extends Files with Logging with Cassandra {
 
+  case class NotFound(id: UUID)
+    extends BaseException("cfs.file.not.found")
+
   def findBy(id: UUID)(
     implicit onFound: File => File
-  ): Future[Option[File]] = {
+  ): Future[File] = {
     select
       .where(_.inode_id eqs id)
       .one()
-      .map(_.map(onFound))
+      .map {
+      case None    => throw NotFound(id)
+      case Some(f) => onFound(f)
+    }
   }
 
   def streamWriter(inode: File): Iteratee[BLK, File] = {

@@ -28,6 +28,7 @@ object Files extends Controller with Logging {
   def download(path: Path, inline: Boolean) =
     (UserAction >> AuthCheck).async {implicit request =>
       serveFile(path) {file =>
+        //TODO separate logic of header and body
         val stm = streamWhole(file)
         if (inline) stm
         else stm.withHeaders(
@@ -60,10 +61,11 @@ object Files extends Controller with Logging {
   def index(path: Path, pager: Pager) =
     (UserAction >> AuthCheck).async {implicit request =>
       CFS.root.dir(path).flatMap {
-        case None    => Future.successful(NotFound)
-        case Some(d) => d.listFiles(pager).map {files =>
+        d => d.listFiles(pager).map {files =>
           Ok(html.files.index(path, Page(pager, files)))
         }
+      }.recover {
+        case e: BaseException => NotFound
       }
     }
 
@@ -76,7 +78,7 @@ object Files extends Controller with Logging {
     (UserAction >> AuthCheck).async {implicit request =>
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
-        case Some(inode) => CFS.file.purge(id)
+        case Some(inode) => File.purge(id)
           RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index(Path())))
             .flashing(
               AlertLevel.Success -> MSG("file.deleted", inode.name)
@@ -124,7 +126,7 @@ object Files extends Controller with Logging {
           CONTENT_LENGTH -> s"${end - first + 1}"
         )
       ),
-      CFS.file.read(file, first) &>
+      file.read(first) &>
         Enumeratee.take((end - first + 1).toInt) &> LimitTo(1 MBps)
     )
   }
@@ -137,15 +139,14 @@ object Files extends Controller with Logging {
         CONTENT_LENGTH -> s"${file.size}"
       )
     ),
-    CFS.file.read(file) &> LimitTo(2 MBps)
+    file.read() &> LimitTo(2 MBps)
   )
 
   private def serveFile(path: Path)(
     whenFound: File => Result
   ): Future[Result] = {
-    CFS.root.file(path).map {
-      case None       => NotFound
-      case Some(file) => whenFound(file)
+    CFS.root.file(path).map(whenFound).recover {
+      case e: BaseException => NotFound(e.reason)
     }
   }
 
@@ -156,8 +157,9 @@ object Files extends Controller with Logging {
   private def CFSBodyParser(path: Path) = new BodyParser[MultipartFormData[File]] {
     override def apply(request: RequestHeader) = Iteratee.flatten {
       CFS.root.dir(path).map {
-        case None      => parse.error(Future.successful(BadRequest))
-        case Some(dir) => multipartFormData(saveTo(dir))
+        dir => multipartFormData(saveTo(dir))
+      }.recover {
+        case e: BaseException => parse.error(Future.successful(BadRequest))
       }.map(_.apply(request))
     }
   }

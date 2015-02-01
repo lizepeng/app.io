@@ -18,4 +18,6 @@ abstract class BaseException(val code: String)
       productIterator.map(_.toString).toList: _*
     )
   }
+
+  override def getMessage() = reason
 }

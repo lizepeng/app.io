@@ -46,9 +46,9 @@ sealed class IndirectBlocks
 
 object IndirectBlock extends IndirectBlocks with Cassandra {
 
-  def read(file: File): Enumerator[BLK] = {
+  def read(id: UUID): Enumerator[BLK] = {
     select(_.indirect_block_id)
-      .where(_.inode_id eqs file.id)
+      .where(_.inode_id eqs id)
       .setFetchSize(CFS.streamFetchSize)
       .fetchEnumerator() &>
       Enumeratee.mapFlatten[UUID](Block.read)
