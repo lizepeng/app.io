@@ -3,6 +3,7 @@ package controllers.session
 import java.util.UUID
 
 import controllers.UserRequest
+import helpers.BaseException
 import helpers.syntax._
 import models.User.Credentials
 import models._
@@ -20,7 +21,9 @@ trait Session {
   private val user_salt_key = "usr_salt"
 
   def transform[A](request: Request[A]): Future[UserRequest[A]] = {
-    request.user.map {new UserRequest[A](_, request)}
+    request.user.map(Some(_)).recover {
+      case e: BaseException => None
+    }.map {new UserRequest[A](_, request)}
   }
 
   implicit def retrieve(implicit request: RequestHeader) = {
@@ -39,12 +42,11 @@ trait Session {
 
   implicit class RequestWithUser(request: RequestHeader) {
 
-    def user: Future[Option[User]] = {
-      retrieve(request) match {
-        case None       => Future.successful(None)
-        case Some(cred) => User.auth(cred)
-      }
+    def user: Future[User] = retrieve(request) match {
+      case None       => Future.failed(User.NoCredentials())
+      case Some(cred) => User.auth(cred)
     }
+
   }
 
   implicit class ResultWithSession(result: Result) {

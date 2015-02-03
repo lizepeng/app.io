@@ -64,22 +64,19 @@ object Users extends Controller {
           }
         }
       },
-      fd => User.findBy(fd.email).flatMap {
-        case Some(_) => Future.successful {
-          BadRequest {
-            html.users.signup {
-              fm.withGlobalError("signup.failed")
-                .withError("email", "login.email.taken")
-            }
+      fd => User.findBy(fd.email).map {_ =>
+        BadRequest {
+          html.users.signup {
+            fm.withGlobalError("signup.failed")
+              .withError("email", "login.email.taken")
           }
         }
-        case None    => {
-          User.save(User(email = fd.email, password = fd.password)).map {
-            implicit u =>
-              Redirect {
-                routes.Users.show(u.id)
-              }.createSession(rememberMe = false)
-          }
+      }.recoverWith {case e: User.NotFound =>
+        User.save(User(email = fd.email, password = fd.password)).map {
+          implicit u =>
+            Redirect {
+              routes.Users.show(u.id)
+            }.createSession(rememberMe = false)
         }
       }
     )
@@ -90,9 +87,10 @@ object Users extends Controller {
 
     fm.bindFromRequest().fold(
       form => Future.successful(Forbidden(form.errorsAsJson)),
-      email => User.findBy(email).map {
-        case None    => Ok("")
-        case Some(_) => Forbidden(Json.obj("value" -> MSG("login.email.taken")))
+      email => User.findBy(email).map {_ =>
+        Forbidden(Json.obj("value" -> MSG("login.email.taken")))
+      }.recover {
+        case e: User.NotFound => Ok("")
       }
     )
   }

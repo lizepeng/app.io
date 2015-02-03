@@ -80,7 +80,7 @@ sealed class Users extends CassandraTable[Users, User] {
   object email extends StringColumn(this)
 
   override def fromRow(r: Row): User = {
-    User(id(r), name(r), salt(r), encrypted_password(r), email(r), "", false)
+    User(id(r), name(r), salt(r), encrypted_password(r), email(r), "", remember_me = false)
   }
 }
 
@@ -89,26 +89,32 @@ object User extends Users with Logging with Cassandra {
   Await.result(create.future(), 500 millis)
   Await.result(UserByEmail.create.future(), 500 millis)
 
-  case class NotFound(email: String)
+  case class NotFound(user: String)
     extends BaseException("not.found.user")
 
   case class WrongPassword(email: String)
     extends BaseException("password.wrong")
 
-  def findBy(id: UUID): Future[Option[User]] = {
-    select.where(_.id eqs id).one()
+  case class AuthFailed(id: UUID)
+    extends BaseException("auth.failed")
+
+  case class NoCredentials()
+    extends BaseException("no.credentials")
+
+  def findBy(id: UUID): Future[User] = {
+    select.where(_.id eqs id).one().map {
+      case None    => throw NotFound(id.toString)
+      case Some(u) => u
+    }
   }
 
-  def findBy(email: String): Future[Option[User]] = {
-    UserByEmail.find(email).flatMap {
-      case Some((_, id)) => findBy(id)
-      case None          => Future.successful(None)
-    }
+  def findBy(email: String): Future[User] = {
+    UserByEmail.find(email).flatMap {case (_, id) => findBy(id)}
   }
 
   /**
    *
-   * @param user
+   * @param user user
    * @return
    */
   def save(user: User): Future[User] = {
@@ -132,11 +138,11 @@ object User extends Users with Logging with Cassandra {
   }
 
   def remove(id: UUID): Future[ResultSet] = {
-    findBy(id).foreach {
-      case Some(u) => UserByEmail.remove(u.email)
-      case None    =>
+    findBy(id).flatMap {user =>
+      BatchStatement()
+        .add(UserByEmail.cql_del(user.email))
+        .add(delete.where(_.id eqs id)).future()
     }
-    delete.where(_.id eqs id).future()
   }
 
   def page(start: UUID, limit: Int): Future[Seq[User]] = {
@@ -153,18 +159,18 @@ object User extends Users with Logging with Cassandra {
 
   /**
    *
-   * @param cred
+   * @param cred credentials
    * @return
    */
-  def auth(cred: Credentials): Future[Option[User]] = {
-    findBy(cred.id).map {_.filter(_.salt == cred.salt)}
+  def auth(cred: Credentials): Future[User] = {
+    findBy(cred.id).map {u =>
+      if (u.salt == cred.salt) u
+      else throw AuthFailed(cred.id)
+    }
   }
 
   def auth(email: String, passwd: String): Future[User] = {
-    findBy(email).map {
-      case None       => throw NotFound(email)
-      case Some(user) => user
-    }.map {user =>
+    findBy(email).map {user =>
       if (user.hasPassword(passwd)) user
       else throw WrongPassword(email)
     }
@@ -190,12 +196,19 @@ object UserByEmail extends UserByEmail with Logging with Cassandra {
     update.where(_.email eqs email).modify(_.id setTo id)
   }
 
-  def find(email: String): Future[Option[(String, UUID)]] = {
-    if (email.isEmpty) Future.successful(None)
-    else select.where(_.email eqs email).one()
+  def find(email: String): Future[(String, UUID)] = {
+    if (email.isEmpty) throw User.NotFound(email)
+    else select.where(_.email eqs email).one().map {
+      case None      => throw User.NotFound(email)
+      case Some(idx) => idx
+    }
+  }
+
+  def cql_del(email: String) = {
+    delete.where(_.email eqs email)
   }
 
   def remove(email: String): Future[ResultSet] = {
-    delete.where(_.email eqs email).future()
+    cql_del(email).future()
   }
 }
