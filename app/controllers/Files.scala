@@ -5,6 +5,7 @@ import java.util.UUID
 import controllers.session.UserAction
 import helpers.Bandwidth._
 import helpers._
+import models.Home
 import models.cfs._
 import play.api.http.ContentTypes
 import play.api.i18n.{Messages => MSG}
@@ -59,11 +60,13 @@ object Files extends Controller with Logging {
 
   def index(path: Path, pager: Pager) =
     (UserAction >> AuthCheck).async {implicit request =>
-      CFS.root.dir(path).flatMap {
-        _.list(pager).map {inodes =>
-          Ok(html.files.index(path, Page(pager, inodes)))
-        }
-      }.recover {
+      (for {
+        home <- Home(request.user)
+        curr <- home.dir(path)
+        list <- curr.list(pager)
+      } yield {
+        Ok(html.files.index(path, Page(pager, list)))
+      }).recover {
         case e: BaseException => NotFound
       }
     }
@@ -141,10 +144,15 @@ object Files extends Controller with Logging {
     file.read() &> LimitTo(2 MBps)
   )
 
-  private def serveFile(path: Path)(
-    whenFound: File => Result
+  def serveFile(path: Path)(block: File => Result)(
+    implicit request: UserRequest[AnyContent]
   ): Future[Result] = {
-    CFS.root.file(path).map(whenFound).recover {
+    (for {
+      home <- Home(request.user)
+      file <- home.file(path)
+    } yield {
+      block(file)
+    }).recover {
       case e: BaseException => NotFound(e.reason)
     }
   }
@@ -153,15 +161,20 @@ object Files extends Controller with Logging {
     MimeTypes.forFileName(inode.name).getOrElse(ContentTypes.BINARY)
   }
 
-  private def CFSBodyParser(path: Path) = new BodyParser[MultipartFormData[File]] {
-    override def apply(request: RequestHeader) = Iteratee.flatten {
-      CFS.root.dir(path).map {
-        dir => multipartFormData(saveTo(dir))
-      }.recover {
-        case e: BaseException => parse.error(Future.successful(BadRequest))
-      }.map(_.apply(request))
+  private def CFSBodyParser(path: Path) =
+    new BodyParser[MultipartFormData[File]] with session.Session {
+      override def apply(request: RequestHeader) = Iteratee.flatten {
+        (for {
+          user <- request.user
+          home <- Home(user)
+          curr <- home.dir(path)
+        } yield {
+          multipartFormData(saveTo(curr))
+        }).recover {
+          case e: BaseException => parse.error(Future.successful(BadRequest))
+        }.map(_.apply(request))
+      }
     }
-  }
 
   private def saveTo(dir: Directory): PartHandler[FilePart[File]] = {
     handleFilePart {

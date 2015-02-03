@@ -30,6 +30,8 @@ case class Directory(
     Enumeratee.onIterateeDone(() => add(file)) &>> file.save()
   }
 
+  def save(): Future[Directory] = Directory.write(this)
+
   def list(pager: Pager): Future[Iterator[INode]] = {
     Directory.list(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
@@ -134,7 +136,7 @@ object Directory extends Directories with Logging with Cassandra {
    * @param dir
    * @return
    */
-  def write(dir: Directory): Directory = {
+  def write(dir: Directory): Future[Directory] = {
     val batch = BatchStatement().add {
       insert
         .value(_.inode_id, dir.id)
@@ -150,8 +152,7 @@ object Directory extends Directories with Logging with Cassandra {
         .value(_.name, dir.name)
         .value(_.child_id, dir.id)
     }
-    batch.future()
-    dir
+    batch.future().map(_ => dir)
   }
 
   /**

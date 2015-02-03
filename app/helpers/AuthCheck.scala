@@ -11,6 +11,9 @@ import scala.concurrent.Future
 object AuthCheck
   extends ActionFilter[UserRequest] {
 
+  case class Unauthorized()
+    extends BaseException("auth.check.unauthorized")
+
   /**
    * access denied
    *

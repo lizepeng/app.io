@@ -11,6 +11,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 
 import scala.concurrent.Future
+import scala.language.implicitConversions
 import scala.util.Try
 
 /**
@@ -26,7 +27,7 @@ trait Session {
     }.map {new UserRequest[A](_, request)}
   }
 
-  implicit def retrieve(implicit request: RequestHeader) = {
+  implicit def retrieve(implicit request: RequestHeader): Option[Credentials] = {
     val cookie = request.cookies
     for (u <- cookie.get(user_id_key).map(_.value).flatMap(toUUID);
          s <- cookie.get(user_salt_key).map(_.value)

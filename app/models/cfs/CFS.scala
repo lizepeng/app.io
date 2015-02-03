@@ -10,7 +10,6 @@ import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.Play.current
 
-import scala.concurrent.Future
 import scala.language.implicitConversions
 
 /**
@@ -35,13 +34,13 @@ object CFS extends AppConfig with Cassandra {
     def newRoot(id: UUID): Directory = Directory(id, id, name = "/")
 
     SysConfig.get(config_key, _.cfs_root).flatMap {
-      case Some(id) => Directory.findBy(id).recover {
-        case ex: BaseException => Directory.write(newRoot(id))
+      case Some(id) => Directory.findBy(id).recoverWith {
+        case ex: BaseException => newRoot(id).save()
       }
-      case None     => Future.successful {
+      case None     => {
         val id: UUID = UUIDs.timeBased()
         SysConfig.put(config_key, DateTime.now(), _.cfs_root setTo id)
-        Directory.write(newRoot(id))
+        newRoot(id).save()
       }
     }
 
