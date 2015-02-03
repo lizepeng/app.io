@@ -10,7 +10,7 @@ case class Path(dirs: Seq[String] = Seq(), filename: Option[String] = None) {
 
   override def toString = ("" /: dirs)(_ + _ + "/") + filename.getOrElse("")
 
-  def /(dir: String) = copy(dirs ++ Seq(dir))
+  def /(dir: String) = if (dir == ".") this else copy(dirs ++ Seq(dir))
 
   def +(filename: String) = copy(filename = Some(filename))
 }

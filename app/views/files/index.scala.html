@@ -1,4 +1,4 @@
-@(path:Path, page: Page[File])(implicit request: UserRequest[_])
+@(path:Path, page: Page[INode])(implicit request: UserRequest[_])
 
 @import helper._
 
@@ -21,53 +21,65 @@
       <table class="table table-hover">
         <thead>
           <tr>
-            <th class="col-xs-1"></th>
             <th class="col-xs-5">Name</th>
+            <th class="col-xs-2 text-right">Size</th>
             <th class="col-xs-3 text-right hidden-xs hidden-sm">
               Created On
             </th>
-            <th class="col-xs-2 text-right">Size</th>
             <th class="col-xs-2" colspan="2">Action</th>
           </tr>
         </thead>
         <tbody>
-          @page.map { f =>
-            <tr>
-              <td>
-                <i class="fa fa-lg @f.icon"></i>
-              </td>
-              <td>
-                @if(f.pdf.?) {
-                  <a href="@routes.Files.download(path + f.name, true)">
-                    @f.name
+          @page.map {
+            case d: Directory if d.name == "." => {
+            }
+            case d: Directory => {
+              <tr>
+                <td>
+                  <i class="fa fa-lg fa-folder-o"></i>
+                  <a href="@routes.Files.index(path / d.name)">
+                    @d.name
                   </a>
-                } else {
-                  <a href="@routes.Files.show(path + f.name)">
-                    @f.name
-                  </a>
-                }
-              </td>
-              <td class="text-right hidden-xs hidden-sm">
-                @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
-              </td>
-              <td class="text-right">
-                @f.size_pp
-              </td>
-              <td>
-                <a href="@routes.Files.download(path + f.name)">
-                  <i class="fa fa-download fa-lg"></i>
-                </a>
-              </td>
+                </td>
+              </tr>
+            }
 
-              <td>
-                @form(routes.Files.destroy(f.id), 'class -> "form-inline") {
-                  @common._previous_uri()
-                  <button type="submit" class="btn form-inline-btn">
-                    <i class="fa fa-trash-o fa-lg text-danger"></i>
-                  </button>
-                }
-              </td>
-            </tr>
+            case f: File => {
+              <tr>
+                <td>
+                  <i class="fa fa-lg @f.icon"></i>
+                  @if(f.pdf.?) {
+                    <a href="@routes.Files.download(path + f.name, true)">
+                      @f.name
+                    </a>
+                  } else {
+                    <a href="@routes.Files.show(path + f.name)">
+                      @f.name
+                    </a>
+                  }
+                </td>
+                <td class="text-right">
+                  @f.size_pp
+                </td>
+                <td class="text-right hidden-xs hidden-sm">
+                  @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
+                </td>
+                <td>
+                  <a href="@routes.Files.download(path + f.name)">
+                    <i class="fa fa-download fa-lg"></i>
+                  </a>
+                </td>
+
+                <td>
+                  @form(routes.Files.destroy(f.id), 'class -> "form-inline") {
+                    @common._previous_uri()
+                    <button type="submit" class="btn form-inline-btn">
+                      <i class="fa fa-trash-o fa-lg text-danger"></i>
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>
@@ -95,6 +107,10 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .table tr i {
+      padding-right: 10px;
     }
   </style>
 }(_upload(path, "js"))

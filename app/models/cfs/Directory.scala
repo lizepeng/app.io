@@ -30,12 +30,8 @@ case class Directory(
     Enumeratee.onIterateeDone(() => add(file)) &>> file.save()
   }
 
-  def listFiles(pager: Pager): Future[Iterator[File]] = {
-    Directory.list(this) &>
-      Enumeratee.map {
-        case (name, inode: File) => Some(inode.copy(name = name))
-        case _                   => None
-      } &> Enumeratee.flattenOption |>>>
+  def list(pager: Pager): Future[Iterator[INode]] = {
+    Directory.list(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
   }
 
@@ -163,15 +159,16 @@ object Directory extends Directories with Logging with Cassandra {
    * @param dir
    * @return
    */
-  def list(dir: Directory): Enumerator[(String, INode)] = {
+  def list(dir: Directory): Enumerator[INode] = {
     select(_.name, _.child_id)
       .where(_.inode_id eqs dir.id)
       .setFetchSize(CFS.listFetchSize)
       .fetchEnumerator() &>
       Enumeratee.mapM {
-        case (name, id) => INode.find(id).map {
-          case None        => None
-          case Some(inode) => Some((name, inode))
+        case (name, id) => INode.find(id).map[Option[INode]] {
+          case Some(nd: File)      => Some(nd.copy(name = name))
+          case Some(nd: Directory) => Some(nd.copy(name = name))
+          case _                   => None
         }
       } &> Enumeratee.flattenOption
   }

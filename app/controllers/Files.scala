@@ -28,7 +28,6 @@ object Files extends Controller with Logging {
   def download(path: Path, inline: Boolean) =
     (UserAction >> AuthCheck).async {implicit request =>
       serveFile(path) {file =>
-        //TODO separate logic of header and body
         val stm = streamWhole(file)
         if (inline) stm
         else stm.withHeaders(
@@ -61,8 +60,8 @@ object Files extends Controller with Logging {
   def index(path: Path, pager: Pager) =
     (UserAction >> AuthCheck).async {implicit request =>
       CFS.root.dir(path).flatMap {
-        d => d.listFiles(pager).map {files =>
-          Ok(html.files.index(path, Page(pager, files)))
+        _.list(pager).map {inodes =>
+          Ok(html.files.index(path, Page(pager, inodes)))
         }
       }.recover {
         case e: BaseException => NotFound
