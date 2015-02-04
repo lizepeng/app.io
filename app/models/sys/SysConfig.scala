@@ -42,12 +42,6 @@ sealed class SysConfigs extends CassandraTable[SysConfigs, SysConfig] {
 
 object SysConfig extends SysConfigs with Logging with Cassandra {
 
-  import scala.concurrent.Await
-  import scala.concurrent.duration._
-  import scala.language.postfixOps
-
-  Await.result(create.future(), 500 millis)
-
   type COL[T] = (SysConfigs) => SelectColumnRequired[SysConfigs, SysConfig, T]
 
   def get[T](module: String, column: COL[T]): Future[Option[T]] = {

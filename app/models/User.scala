@@ -10,9 +10,7 @@ import helpers._
 import models.cassandra.Cassandra
 import org.joda.time.DateTime
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
-import scala.language.postfixOps
+import scala.concurrent.Future
 
 /**
  * @author zepeng.li@gmail.com
@@ -85,9 +83,6 @@ sealed class Users extends CassandraTable[Users, User] {
 }
 
 object User extends Users with Logging with Cassandra {
-
-  Await.result(create.future(), 500 millis)
-  Await.result(UserByEmail.create.future(), 500 millis)
 
   case class NotFound(user: String)
     extends BaseException("not.found.user")

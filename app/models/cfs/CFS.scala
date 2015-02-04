@@ -25,10 +25,6 @@ object CFS extends AppConfig with Cassandra {
   val streamFetchSize = config.getInt("stream-fetch-size").getOrElse(2000)
   val listFetchSize   = config.getInt("list-fetch-size").getOrElse(2000)
 
-  Await.result(INode.create.future(), 500 millis)
-  Await.result(IndirectBlock.create.future(), 500 millis)
-  Await.result(Block.create.future(), 500 millis)
-
   lazy val root: Directory = Await.result(
   {
     def newRoot(id: UUID): Directory = Directory(id, id, name = "/")
