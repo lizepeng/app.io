@@ -5,7 +5,8 @@ import java.util.UUID
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
-import models.cassandra.Cassandra
+import helpers.Logging
+import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block._
 import play.api.libs.iteratee._
 
@@ -27,7 +28,9 @@ case class IndirectBlock(
 
 sealed class IndirectBlocks
   extends CassandraTable[IndirectBlocks, IndirectBlock]
-  with INodeKey[IndirectBlocks, IndirectBlock] {
+  with INodeKey[IndirectBlocks, IndirectBlock]
+  with ExtCQL[IndirectBlocks, IndirectBlock]
+  with Logging {
 
   override val tableName = "indirect_blocks"
 
@@ -64,32 +67,32 @@ object IndirectBlock extends IndirectBlocks with Cassandra {
         Block.read(id, offset % file.indirect_block_size, file.block_size)
       }
     }.map {
-      _ >>> (select(_.indirect_block_id)
-        .where(_.inode_id eqs file.id)
-        .and(_.offset gt offset - offset % file.indirect_block_size)
-        .setFetchSize(CFS.streamFetchSize)
-        .fetchEnumerator() &>
-        Enumeratee.mapFlatten[UUID](Block.read))
+      _ >>> (
+        select(_.indirect_block_id)
+          .where(_.inode_id eqs file.id)
+          .and(_.offset gt offset - offset % file.indirect_block_size)
+          .setFetchSize(CFS.streamFetchSize)
+          .fetchEnumerator() &>
+          Enumeratee.mapFlatten[UUID](Block.read))
     }
   }
 
-  def write(ind_blk: IndirectBlock): IndirectBlock = {
+  def write(ind_blk: IndirectBlock): Future[IndirectBlock] = {
     update
       .where(_.inode_id eqs ind_blk.inode_id)
       .and(_.offset eqs ind_blk.offset)
       .modify(_.length setTo ind_blk.length)
       .and(_.indirect_block_id setTo ind_blk.id)
-      .future()
-    ind_blk
+      .future().map(_ => ind_blk)
   }
 
-  def purge(id: UUID): Future[ResultSet] = {
+  def purge(id: UUID) = {
     select(_.indirect_block_id)
       .where(_.inode_id eqs id)
       .setFetchSize(CFS.listFetchSize)
-      .fetchEnumerator() |>>>
-      Iteratee.foreach(Block.purge(_))
-
-    delete.where(_.inode_id eqs id).future()
+      .fetchEnumerator() &>
+      Enumeratee.onIterateeDone {() =>
+        CQL {delete.where(_.inode_id eqs id)}.future()
+      } |>>> Iteratee.foreach[UUID](Block.purge(_))
   }
 }

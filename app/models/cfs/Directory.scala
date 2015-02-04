@@ -8,7 +8,7 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.TimeBased
-import models.cassandra.{Cassandra, DistinctPatch}
+import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
 
@@ -56,7 +56,7 @@ case class Directory(
     }
   }
 
-  def add(inode: INode): Directory = {
+  def add(inode: INode): Future[Directory] = {
     Directory.addChild(this, inode)
   }
 
@@ -76,7 +76,8 @@ sealed class Directories
   with INodeKey[Directories, Directory]
   with INodeColumns[Directories, Directory]
   with DirectoryColumns[Directories, Directory]
-  with DistinctPatch[Directories, Directory] {
+  with ExtCQL[Directories, Directory]
+  with Logging {
 
   override def fromRow(r: Row): Directory = {
     Directory(
@@ -87,7 +88,7 @@ sealed class Directories
   }
 }
 
-object Directory extends Directories with Logging with Cassandra {
+object Directory extends Directories with Cassandra {
 
   case class NotFound(id: UUID)
     extends BaseException("cfs.dir.not.found")
@@ -97,39 +98,33 @@ object Directory extends Directories with Logging with Cassandra {
 
   def findChild(
     parent: UUID, name: String
-  ): Future[(String, UUID)] = {
+  ): Future[(String, UUID)] = CQL {
     select(_.child_id)
       .where(_.inode_id eqs parent)
       .and(_.name eqs name)
-      .one()
-      .map {
-      case None     => throw ChildNotFound(name)
-      case Some(id) => (name, id)
-    }
+  }.one().map {
+    case None     => throw ChildNotFound(name)
+    case Some(id) => (name, id)
   }
 
   def find(id: UUID)(
     implicit onFound: Directory => Directory
-  ): Future[Directory] = {
+  ): Future[Directory] = CQL {
     select
       .where(_.inode_id eqs id)
-      .one()
-      .map {
-      case None    => throw NotFound(id)
-      case Some(d) => onFound(d)
-    }
+  }.one().map {
+    case None    => throw NotFound(id)
+    case Some(d) => onFound(d)
   }
 
   def addChild(
     dir: Directory, inode: INode
-  ): Directory = {
+  ): Future[Directory] = CQL {
     insert
       .value(_.inode_id, dir.id)
       .value(_.name, inode.name)
       .value(_.child_id, inode.id)
-      .future()
-    dir
-  }
+  }.future().map(_ => dir)
 
   /**
    * write name in children list of its parent
@@ -138,19 +133,23 @@ object Directory extends Directories with Logging with Cassandra {
    */
   def write(dir: Directory): Future[Directory] = {
     val batch = BatchStatement().add {
-      insert
-        .value(_.inode_id, dir.id)
-        .value(_.name, ".")
-        .value(_.child_id, dir.id)
-        .value(_.parent, dir.parent)
-        .value(_.is_directory, true)
-        .value(_.attributes, dir.attributes)
+      CQL {
+        insert
+          .value(_.inode_id, dir.id)
+          .value(_.name, ".")
+          .value(_.child_id, dir.id)
+          .value(_.parent, dir.parent)
+          .value(_.is_directory, true)
+          .value(_.attributes, dir.attributes)
+      }
     }
     if (dir.parent != dir.id) batch.add {
-      insert
-        .value(_.inode_id, dir.parent)
-        .value(_.name, dir.name)
-        .value(_.child_id, dir.id)
+      CQL {
+        insert
+          .value(_.inode_id, dir.parent)
+          .value(_.name, dir.name)
+          .value(_.child_id, dir.id)
+      }
     }
     batch.future().map(_ => dir)
   }
@@ -160,17 +159,17 @@ object Directory extends Directories with Logging with Cassandra {
    * @param dir
    * @return
    */
-  def list(dir: Directory): Enumerator[INode] = {
+  def list(dir: Directory): Enumerator[INode] = CQL {
     select(_.name, _.child_id)
       .where(_.inode_id eqs dir.id)
       .setFetchSize(CFS.listFetchSize)
-      .fetchEnumerator() &>
-      Enumeratee.mapM {
-        case (name, id) => INode.find(id).map[Option[INode]] {
-          case Some(nd: File)      => Some(nd.copy(name = name))
-          case Some(nd: Directory) => Some(nd.copy(name = name))
-          case _                   => None
-        }
-      } &> Enumeratee.flattenOption
-  }
+  }.fetchEnumerator() &>
+    Enumeratee.mapM {
+      case (name, id) => INode.find(id).map[Option[INode]] {
+        case Some(nd: File)      => Some(nd.copy(name = name))
+        case Some(nd: Directory) => Some(nd.copy(name = name))
+        case _                   => None
+      }
+    } &> Enumeratee.flattenOption
+
 }

@@ -7,7 +7,7 @@ import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.Iteratee
 import helpers._
-import models.cassandra.Cassandra
+import models.cassandra.{Cassandra, ExtCQL}
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
@@ -61,7 +61,10 @@ case class User(
 /**
  *
  */
-sealed class Users extends CassandraTable[Users, User] {
+sealed class Users
+  extends CassandraTable[Users, User]
+  with ExtCQL[Users, User]
+  with Logging {
 
   override val tableName = "users"
 
@@ -96,11 +99,11 @@ object User extends Users with Logging with Cassandra {
   case class NoCredentials()
     extends BaseException("no.credentials")
 
-  def find(id: UUID): Future[User] = {
-    select.where(_.id eqs id).one().map {
-      case None    => throw NotFound(id.toString)
-      case Some(u) => u
-    }
+  def find(id: UUID): Future[User] = CQL {
+    select.where(_.id eqs id)
+  }.one().map {
+    case None    => throw NotFound(id.toString)
+    case Some(u) => u
   }
 
   def find(email: String): Future[User] = {
@@ -120,7 +123,7 @@ object User extends Users with Logging with Cassandra {
       .future().map {_ => u}
   }
 
-  private def cql_save(u: User) = {
+  private def cql_save(u: User) = CQL {
     insert.value(_.id, u.id)
       .value(_.name, u.name)
       .value(_.salt, u.salt)
@@ -128,21 +131,23 @@ object User extends Users with Logging with Cassandra {
       .value(_.email, u.email)
   }
 
-  def updateName(id: UUID, name: String): Future[ResultSet] = {
-    update.where(_.id eqs id).modify(_.name setTo name).future()
-  }
+  def updateName(id: UUID, name: String): Future[ResultSet] = CQL {
+    update
+      .where(_.id eqs id)
+      .modify(_.name setTo name)
+  }.future()
 
   def remove(id: UUID): Future[ResultSet] = {
     find(id).flatMap {user =>
       BatchStatement()
         .add(UserByEmail.cql_del(user.email))
-        .add(delete.where(_.id eqs id)).future()
+        .add(CQL {delete.where(_.id eqs id)}).future()
     }
   }
 
-  def page(start: UUID, limit: Int): Future[Seq[User]] = {
-    select.where(_.id gtToken start).limit(limit).fetch()
-  }
+  def page(start: UUID, limit: Int): Future[Seq[User]] = CQL {
+    select.where(_.id gtToken start).limit(limit)
+  }.fetch()
 
   def all: Future[Seq[User]] = {
     select.fetchEnumerator() run Iteratee.collect()
@@ -172,7 +177,10 @@ object User extends Users with Logging with Cassandra {
   }
 }
 
-sealed class UserByEmail extends CassandraTable[UserByEmail, (String, UUID)] {
+sealed class UserByEmail
+  extends CassandraTable[UserByEmail, (String, UUID)]
+  with ExtCQL[UserByEmail, (String, UUID)]
+  with Logging {
 
   override val tableName = "users_email_index"
 
@@ -185,21 +193,23 @@ sealed class UserByEmail extends CassandraTable[UserByEmail, (String, UUID)] {
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
 }
 
-object UserByEmail extends UserByEmail with Logging with Cassandra {
+object UserByEmail extends UserByEmail with Cassandra {
 
-  def cql_save(email: String, id: UUID) = {
+  def cql_save(email: String, id: UUID) = CQL {
     update.where(_.email eqs email).modify(_.id setTo id)
   }
 
   def find(email: String): Future[(String, UUID)] = {
     if (email.isEmpty) throw User.NotFound(email)
-    else select.where(_.email eqs email).one().map {
+    else CQL {
+      select.where(_.email eqs email)
+    }.one().map {
       case None      => throw User.NotFound(email)
       case Some(idx) => idx
     }
   }
 
-  def cql_del(email: String) = {
+  def cql_del(email: String) = CQL {
     delete.where(_.email eqs email)
   }
 

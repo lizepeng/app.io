@@ -6,7 +6,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.Logging
 import models.TimeBased
-import models.cassandra.{Cassandra, DistinctPatch}
+import models.cassandra.{Cassandra, ExtCQL}
 
 import scala.concurrent.Future
 
@@ -90,7 +90,8 @@ sealed class INodes
   with INodeColumns[INodes, INode]
   with FileColumns[INodes, INode]
   with DirectoryColumns[INodes, INode]
-  with DistinctPatch[INodes, INode] {
+  with ExtCQL[INodes, INode]
+  with Logging {
 
   override def fromRow(r: Row): INode = {
     if (!is_directory(r)) File.fromRow(r)
@@ -98,9 +99,9 @@ sealed class INodes
   }
 }
 
-object INode extends INodes with Logging with Cassandra {
+object INode extends INodes with Cassandra {
 
   def find(id: UUID): Future[Option[INode]] = {
-    select.where(_.inode_id eqs id).one()
+    CQL {select.where(_.inode_id eqs id)}.one()
   }
 }
