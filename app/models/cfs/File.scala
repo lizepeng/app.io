@@ -63,7 +63,7 @@ object File extends Files with Logging with Cassandra {
   case class NotFound(id: UUID)
     extends BaseException("cfs.file.not.found")
 
-  def findBy(id: UUID)(
+  def find(id: UUID)(
     implicit onFound: File => File
   ): Future[File] = {
     select

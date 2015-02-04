@@ -64,7 +64,7 @@ object Users extends Controller {
           }
         }
       },
-      fd => User.findBy(fd.email).map {_ =>
+      fd => User.find(fd.email).map {_ =>
         BadRequest {
           html.users.signup {
             fm.withGlobalError("signup.failed")
@@ -87,7 +87,7 @@ object Users extends Controller {
 
     fm.bindFromRequest().fold(
       form => Future.successful(Forbidden(form.errorsAsJson)),
-      email => User.findBy(email).map {_ =>
+      email => User.find(email).map {_ =>
         Forbidden(Json.obj("value" -> MSG("login.email.taken")))
       }.recover {
         case e: User.NotFound => Ok("")

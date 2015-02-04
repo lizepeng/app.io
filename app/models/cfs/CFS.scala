@@ -34,7 +34,7 @@ object CFS extends AppConfig with Cassandra {
     def newRoot(id: UUID): Directory = Directory(id, id, name = "/")
 
     SysConfig.get(config_key, _.cfs_root).flatMap {
-      case Some(id) => Directory.findBy(id).recoverWith {
+      case Some(id) => Directory.find(id).recoverWith {
         case ex: BaseException => newRoot(id).save()
       }
       case None     => {

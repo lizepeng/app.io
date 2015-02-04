@@ -46,13 +46,13 @@ case class Directory(
 
   def dir(path: Path): Future[Directory] = {
     find(path.dirs).flatMap {
-      case (n, i) => Directory.findBy(i)(_.copy(name = n))
+      case (n, i) => Directory.find(i)(_.copy(name = n))
     }
   }
 
   def file(path: Path): Future[File] = {
     find(path.dirs ++ path.filename).flatMap {
-      case (n, i) => File.findBy(i)(_.copy(name = n))
+      case (n, i) => File.find(i)(_.copy(name = n))
     }
   }
 
@@ -62,7 +62,7 @@ case class Directory(
 
   def dir(name: String): Future[Directory] = {
     Directory.findChild(id, name).flatMap {
-      case (_, i) => Directory.findBy(i)(_.copy(name = name))
+      case (_, i) => Directory.find(i)(_.copy(name = name))
     }
   }
 
@@ -108,7 +108,7 @@ object Directory extends Directories with Logging with Cassandra {
     }
   }
 
-  def findBy(id: UUID)(
+  def find(id: UUID)(
     implicit onFound: Directory => Directory
   ): Future[Directory] = {
     select
