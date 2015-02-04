@@ -74,7 +74,7 @@ object File extends Files with Cassandra {
   }
 
   def streamWriter(inode: File): Iteratee[BLK, File] = {
-
+    import scala.Predef._
     Enumeratee.grouped[BLK] {
       Traversable.take[BLK](inode.block_size) &>>
         Iteratee.consume[BLK]()

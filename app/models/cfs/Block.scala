@@ -53,6 +53,7 @@ object Block extends Blocks with Cassandra {
   }
 
   def read(ind_blk_id: UUID, offset: Long, blk_sz: Int): Enumerator[BLK] = {
+    import scala.Predef._
     Enumerator.flatten(
       select(_.data)
         .where(_.indirect_block_id eqs ind_blk_id)

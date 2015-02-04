@@ -4,14 +4,14 @@ version := "0.1-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.2"
 
 scalacOptions += "-feature"
 
 libraryDependencies ++= Seq(
   filters,
-  "com.websudos" %%  "phantom-dsl"       % "1.4.0",
-  "com.websudos" %%  "phantom-zookeeper" % "1.4.0",
+  "com.websudos" %%  "phantom-dsl"       % "1.5.0",
+  "com.websudos" %%  "phantom-zookeeper" % "1.5.0",
   "org.webjars"  %   "bootstrap"         % "3.3.1",
   "org.webjars"  %   "font-awesome"      % "4.2.0",
   "org.webjars"  %   "underscorejs"      % "1.4.4",

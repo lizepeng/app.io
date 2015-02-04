@@ -1,5 +1,6 @@
 package models
 
+import java.security.MessageDigest
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
@@ -11,6 +12,7 @@ import models.cassandra.{Cassandra, ExtCQL}
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
@@ -45,11 +47,8 @@ case class User(
 
   private def makeSalt(passwd: String) = sha2(s"${DateTime.now}--$passwd")
 
-  import scala.language.postfixOps
-
   def sha2(text: String): String = {
-    import java.security.MessageDigest
-
+    import scala.Predef._
     val digest = MessageDigest.getInstance("SHA-256")
     digest.reset()
     digest.update(text.getBytes)
