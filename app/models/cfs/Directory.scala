@@ -45,13 +45,13 @@ case class Directory(
   }
 
   def dir(path: Path): Future[Directory] = {
-    find(path.dirs).flatMap {
+    find(path.parts).flatMap {
       case (n, i) => Directory.find(i)(_.copy(name = n))
     }
   }
 
   def file(path: Path): Future[File] = {
-    find(path.dirs ++ path.filename).flatMap {
+    find(path.parts ++ path.filename).flatMap {
       case (n, i) => File.find(i)(_.copy(name = n))
     }
   }
