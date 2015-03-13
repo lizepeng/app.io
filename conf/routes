@@ -6,6 +6,7 @@
 GET  /                        controllers.Application.index
 GET  /wiki                    controllers.Application.wiki
 GET  /about                   controllers.Application.about
+POST /schemas/recreate        controllers.Application.recreate
 
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file            controllers.Assets.at(path="/public", file)
