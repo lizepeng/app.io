@@ -1,45 +1,34 @@
 package models.cfs
 
-import java.util.UUID
-
-import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
-import helpers.{AppConfig, BaseException}
+import helpers.AppConfig
 import models.cassandra.Cassandra
+import models.cfs.Directory.NotFound
+import models.security.Permission
 import models.sys.SysConfig
-import org.joda.time.DateTime
+import models.{Group, User}
 import play.api.Play.current
 
-import scala.language.implicitConversions
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
  */
-object CFS extends AppConfig with Cassandra {
+object CFS extends Cassandra with SysConfig with AppConfig {
 
-  import scala.concurrent.Await
-  import scala.concurrent.duration._
-  import scala.language.postfixOps
-
-  val config_key      = "fact.models.cfs"
   val streamFetchSize = config.getInt("stream-fetch-size").getOrElse(2000)
   val listFetchSize   = config.getInt("list-fetch-size").getOrElse(2000)
 
   lazy val root: Directory = Await.result(
-  {
-    def newRoot(id: UUID): Directory = Directory(id, id, name = "/")
-
-    SysConfig.get(config_key, _.cfs_root).flatMap {
-      case Some(id) => Directory.find(id).recoverWith {
-        case ex: BaseException => newRoot(id).save()
-      }
-      case None     => {
-        val id: UUID = UUIDs.timeBased()
-        SysConfig.put(config_key, DateTime.now(), _.cfs_root setTo id)
-        newRoot(id).save()
+    getUUID("root").flatMap {
+      id => Directory.find(id).recoverWith {
+        case ex: NotFound => Directory(id, id, User.root, name = "/").save()
       }
     }
-
-  }, 10 seconds
+    , 10 seconds
   )
+
+  trait FilePerms extends Permission[Group, String, INode]
 }

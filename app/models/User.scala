@@ -9,9 +9,11 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.Iteratee
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
+import models.sys.SysConfig
 import org.joda.time.DateTime
 
-import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
 /**
@@ -23,6 +25,7 @@ case class User(
   salt: String = "",
   encrypted_password: String = "",
   email: String = "",
+  group_id: Int = 0,
   password: String = "",
   remember_me: Boolean = false
 ) extends TimeBased {
@@ -79,12 +82,25 @@ sealed class Users
 
   object email extends StringColumn(this)
 
+  object group_id extends IntColumn(this)
+
+  object ext_group_ids extends SetColumn[Users, User, UUID](this)
+
   override def fromRow(r: Row): User = {
-    User(id(r), name(r), salt(r), encrypted_password(r), email(r), "", remember_me = false)
+    User(
+      id(r),
+      name(r),
+      salt(r),
+      encrypted_password(r),
+      email(r),
+      group_id(r),
+      "",
+      remember_me = false
+    )
   }
 }
 
-object User extends Users with Logging with Cassandra {
+object User extends Users with SysConfig with Logging with Cassandra {
 
   case class NotFound(user: String)
     extends BaseException("not.found.user")
@@ -97,6 +113,8 @@ object User extends Users with Logging with Cassandra {
 
   case class NoCredentials()
     extends BaseException("no.credentials")
+
+  lazy val root: UUID = Await.result(getUUID("root_id"), 10 seconds)
 
   def find(id: UUID): Future[User] = CQL {
     select.where(_.id eqs id)
@@ -128,6 +146,7 @@ object User extends Users with Logging with Cassandra {
       .value(_.salt, u.salt)
       .value(_.encrypted_password, u.encrypted_password)
       .value(_.email, u.email)
+      .value(_.group_id, u.group_id)
   }
 
   def updateName(id: UUID, name: String): Future[ResultSet] = CQL {

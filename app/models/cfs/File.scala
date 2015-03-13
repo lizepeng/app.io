@@ -23,6 +23,8 @@ case class File(
   size: Long = 0,
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
+  owner_id: UUID,
+  permission: Long = 0L,
   attributes: Map[String, String] = Map(),
   name: String = ""
 ) extends INode with TimeBased {
@@ -54,6 +56,8 @@ sealed class Files
       size(r),
       indirect_block_size(r),
       block_size(r),
+      owner_id(r),
+      permission(r),
       attributes(r)
     )
   }
@@ -100,13 +104,15 @@ object File extends Files with Cassandra {
     u <- CQL {delete.where(_.inode_id eqs id)}.future()
   } yield u
 
-  private def write(inode: File): Future[File] = CQL {
-    insert.value(_.inode_id, inode.id)
-      .value(_.parent, inode.parent)
+  private def write(f: File): Future[File] = CQL {
+    insert.value(_.inode_id, f.id)
+      .value(_.parent, f.parent)
       .value(_.is_directory, false)
-      .value(_.size, inode.size)
-      .value(_.indirect_block_size, inode.indirect_block_size)
-      .value(_.block_size, inode.block_size)
-      .value(_.attributes, inode.attributes)
-  }.future().map(_ => inode)
+      .value(_.size, f.size)
+      .value(_.indirect_block_size, f.indirect_block_size)
+      .value(_.block_size, f.block_size)
+      .value(_.owner_id, f.owner_id)
+      .value(_.permission, f.permission)
+      .value(_.attributes, f.attributes)
+  }.future().map(_ => f)
 }

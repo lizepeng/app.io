@@ -7,9 +7,9 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
-import models.TimeBased
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
+import models.{TimeBased, User}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -20,14 +20,16 @@ import scala.concurrent.Future
 case class Directory(
   id: UUID = UUIDs.timeBased(),
   parent: UUID,
+  owner_id: UUID,
+  permission: Long = 0L,
   attributes: Map[String, String] = Map(),
   name: String = ""
 ) extends INode with TimeBased {
   def is_directory: Boolean = true
 
-  def save(filename: String): Iteratee[BLK, File] = {
-    val file = File(name = filename, parent = id)
-    Enumeratee.onIterateeDone(() => add(file)) &>> file.save()
+  def save(filename: String)(implicit user: User): Iteratee[BLK, File] = {
+    val f = File(parent = id, name = filename, owner_id = user.id)
+    Enumeratee.onIterateeDone(() => add(f)) &>> f.save()
   }
 
   def save(): Future[Directory] = Directory.write(this)
@@ -83,6 +85,8 @@ sealed class Directories
     Directory(
       inode_id(r),
       parent(r),
+      owner_id(r),
+      permission(r),
       attributes(r)
     )
   }
@@ -139,6 +143,8 @@ object Directory extends Directories with Cassandra {
           .value(_.name, ".")
           .value(_.child_id, dir.id)
           .value(_.parent, dir.parent)
+          .value(_.owner_id, dir.owner_id)
+          .value(_.permission, dir.permission)
           .value(_.is_directory, true)
           .value(_.attributes, dir.attributes)
       }

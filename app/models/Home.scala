@@ -12,7 +12,8 @@ import scala.concurrent.Future
 object Home {
   def apply(user: User): Future[Directory] = {
     Directory.find(user.id).recoverWith {
-      case Directory.NotFound(id) => Directory(id, CFS.root.id).save()
+      case Directory.NotFound(id) =>
+        Directory(id, CFS.root.id, user.id).save()
     }
   }
 

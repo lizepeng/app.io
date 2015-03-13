@@ -21,6 +21,10 @@ trait INode extends TimeBased {
 
   def is_directory: Boolean
 
+  def owner_id: UUID
+
+  def permission: Long
+
   def attributes: Map[String, String]
 }
 
@@ -45,6 +49,18 @@ trait INodeColumns[T <: CassandraTable[T, R], R] {
   object is_directory
     extends BooleanColumn(self)
     with StaticColumn[Boolean]
+
+  object owner_id
+    extends UUIDColumn(self)
+    with StaticColumn[UUID]
+
+  object permission
+    extends LongColumn(self)
+    with StaticColumn[Long]
+
+  object ext_permission
+    extends MapColumn[T, R, UUID, Int](self)
+    with StaticColumn[Map[UUID, Int]]
 
   object attributes
     extends MapColumn[T, R, String, String](self)

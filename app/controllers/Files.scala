@@ -5,8 +5,8 @@ import java.util.UUID
 import controllers.session.UserAction
 import helpers.Bandwidth._
 import helpers._
-import models.Home
 import models.cfs._
+import models.{Home, User}
 import play.api.http.ContentTypes
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.MimeTypes
@@ -14,7 +14,6 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.iteratee._
 import play.api.mvc.BodyParsers.parse.Multipart._
 import play.api.mvc.BodyParsers.parse._
-import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import views._
 
@@ -169,14 +168,14 @@ object Files extends Controller with Logging {
           home <- Home(user)
           curr <- home.dir(path)
         } yield {
-          multipartFormData(saveTo(curr))
+          multipartFormData(saveTo(curr)(user))
         }).recover {
           case e: BaseException => parse.error(Future.successful(BadRequest))
         }.map(_.apply(request))
       }
     }
 
-  private def saveTo(dir: Directory): PartHandler[FilePart[File]] = {
+  private def saveTo(dir: Directory)(implicit user: User) = {
     handleFilePart {
       case FileInfo(partName, filename, contentType) =>
         LimitTo(1.5 MBps) &>> dir.save(filename)

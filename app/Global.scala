@@ -1,3 +1,4 @@
+import models.Schemas
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import play.api.{Logger, _}
@@ -8,6 +9,7 @@ import play.api.{Logger, _}
 object Global extends GlobalSettings {
 
   override def onStart(app: Application) = {
+    Schemas.create
   }
 
   override def doFilter(next: EssentialAction): EssentialAction = {
