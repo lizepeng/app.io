@@ -148,21 +148,29 @@
       color: #666;
     }
 
+    .vcard-details li i {
+      margin-right: 10px;
+    }
+
     @@media (max-width: 540px){
       .vcard-details {
         font-size: 10px;
       }
+
       .avatar {
         padding-right: 0px;
       }
     }
 
-    @@media (min-width: 768px){
-      .vcard-details {
-        margin-top: 10px;
+    @@media (min-width: 768px) and (max-width: 991px) {
+      .vcard-details .list-group-item {
+        font-size: 11px;
+        padding-left: 8px;
+        padding-right: 8px;
       }
+
       .vcard-details li i {
-        margin-right: 10px;
+        margin-right: 5px;
       }
     }
 
