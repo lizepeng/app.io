@@ -6,8 +6,15 @@ import scala.collection.mutable
  * @author zepeng.li@gmail.com
  */
 trait Logging {
-  //be careful, this can not be used with inner class above two level
-  implicit val Logger = play.api.Logger(s"${this.getClass.getCanonicalName}")
+
+  implicit lazy val Logger =
+    play.api.Logger(
+      if (module_name.nonEmpty) module_name
+      //be careful, this can not be used with inner class above two level
+      else this.getClass.getCanonicalName
+    )
+
+  def module_name: String = ""
 }
 
 trait TimeLogging extends Logging {

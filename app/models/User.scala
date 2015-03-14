@@ -100,7 +100,9 @@ sealed class Users
   }
 }
 
-object User extends Users with SysConfig with Logging with Cassandra {
+object User extends Users with Logging with SysConfig with Cassandra {
+
+  override val module_name: String = "fact.module.user"
 
   case class NotFound(user: String)
     extends BaseException("not.found.user")

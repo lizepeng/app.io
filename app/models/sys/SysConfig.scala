@@ -81,9 +81,9 @@ object SysConfig extends SysConfigs with Logging with Cassandra {
 }
 
 trait SysConfig {
-  lazy val config_key = this.getClass.getCanonicalName
+  self: Logging =>
 
   def getUUID(key: String) = {
-    SysConfig.getOrElseUpdate(config_key, key, UUIDs.timeBased())
+    SysConfig.getOrElseUpdate(module_name, key, UUIDs.timeBased())
   }
 }

@@ -1,7 +1,7 @@
 package controllers
 
-import _root_.helpers.AppConfig
 import controllers.session._
+import helpers.{AppConfig, Logging}
 import models.Schemas
 import models.cfs.Path
 import play.api.Play.current
@@ -9,9 +9,9 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import views._
 
-object Application extends Controller with AppConfig {
+object Application extends Controller with Logging with AppConfig {
 
-  override def config_key: String = "app"
+  override def module_name: String = "app"
 
   def index = UserAction {implicit request =>
     Ok(html.welcome.index())

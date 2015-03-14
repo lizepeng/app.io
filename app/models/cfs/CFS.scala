@@ -1,7 +1,7 @@
 package models.cfs
 
 import com.websudos.phantom.Implicits._
-import helpers.AppConfig
+import helpers.{AppConfig, Logging}
 import models.cassandra.Cassandra
 import models.cfs.Directory.NotFound
 import models.security.Permission
@@ -16,8 +16,9 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object CFS extends Cassandra with SysConfig with AppConfig {
+object CFS extends Cassandra with Logging with SysConfig with AppConfig {
 
+  override val module_name: String = "fact.module.cfs"
   val streamFetchSize = config.getInt("stream-fetch-size").getOrElse(2000)
   val listFetchSize   = config.getInt("list-fetch-size").getOrElse(2000)
 
@@ -31,4 +32,5 @@ object CFS extends Cassandra with SysConfig with AppConfig {
   )
 
   trait FilePerms extends Permission[Group, String, INode]
+
 }
