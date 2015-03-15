@@ -24,7 +24,7 @@ case class File(
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
   owner_id: UUID,
-  permission: Long = 0L,
+  permission: Long = 7L << 60,
   attributes: Map[String, String] = Map(),
   name: String = ""
 ) extends INode with TimeBased {

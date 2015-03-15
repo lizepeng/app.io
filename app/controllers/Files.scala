@@ -6,6 +6,7 @@ import controllers.session.UserAction
 import helpers.Bandwidth._
 import helpers._
 import models.cfs._
+import models.security.FilePerms
 import models.{Home, User}
 import play.api.http.ContentTypes
 import play.api.i18n.{Messages => MSG}
@@ -19,6 +20,7 @@ import views._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -61,12 +63,15 @@ object Files extends Controller with Logging {
     (UserAction >> AuthCheck).async {implicit request =>
       (for {
         home <- Home(request.user)
-        curr <- home.dir(path)
+        curr <- home.dir(path) if FilePerms(curr).rx.?
         list <- curr.list(pager)
       } yield {
         Ok(html.files.index(path, Page(pager, list)))
-      }).recover {
-        case e: BaseException => NotFound
+      }).andThen {
+        case Failure(e: FilePerms.Denied) => Logger.trace(e.reason)
+      }.recover {
+        case e: FilePerms.Denied => Forbidden
+        case e: BaseException    => NotFound
       }
     }
 

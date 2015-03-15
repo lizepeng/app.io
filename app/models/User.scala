@@ -25,7 +25,7 @@ case class User(
   salt: String = "",
   encrypted_password: String = "",
   email: String = "",
-  group_id: Int = 0,
+  internal_groups: InternalGroups = InternalGroups(0),
   password: String = "",
   remember_me: Boolean = false
 ) extends TimeBased {
@@ -82,7 +82,7 @@ sealed class Users
 
   object email extends StringColumn(this)
 
-  object group_id extends IntColumn(this)
+  object internal_groups extends IntColumn(this)
 
   object ext_group_ids extends SetColumn[Users, User, UUID](this)
 
@@ -93,7 +93,7 @@ sealed class Users
       salt(r),
       encrypted_password(r),
       email(r),
-      group_id(r),
+      InternalGroups(internal_groups(r)),
       "",
       remember_me = false
     )
@@ -115,6 +115,12 @@ object User extends Users with Logging with SysConfig with Cassandra {
 
   case class NoCredentials()
     extends BaseException("no.credentials")
+
+  case class Unauthorized(user_id: UUID)
+    extends BaseException("unauthorized.user")
+
+  case class IsNotLoggedIn()
+    extends BaseException("is.not.logged.in.user")
 
   lazy val root: UUID = Await.result(getUUID("root_id"), 10 seconds)
 
@@ -148,7 +154,7 @@ object User extends Users with Logging with SysConfig with Cassandra {
       .value(_.salt, u.salt)
       .value(_.encrypted_password, u.encrypted_password)
       .value(_.email, u.email)
-      .value(_.group_id, u.group_id)
+      .value(_.internal_groups, u.internal_groups.code)
   }
 
   def updateName(id: UUID, name: String): Future[ResultSet] = CQL {

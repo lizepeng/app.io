@@ -19,5 +19,5 @@ abstract class BaseException(val code: String)
     )
   }
 
-  override def getMessage() = reason
+  override def getMessage = reason
 }

@@ -38,5 +38,39 @@ sealed class Groups
 }
 
 object Group extends Groups with Cassandra {
+}
 
+case class InternalGroups(code: Int) {
+
+  def all = for (gid <- InternalGroups.all if contains(gid)) yield gid
+
+  def contains(gid: Int) =
+    gid >= 0 && gid <= 18 &&
+      ((code & 1 << (19 - 1 - gid)) > 0)
+
+  def pprintLine1 = {
+    import scala.Predef._
+    (for (i <- InternalGroups.all) yield {
+      "%3s".format("G" + i)
+    }).mkString("|   |", "|", "|   |")
+  }
+
+  def pprintLine2: String = {
+    import scala.Predef._
+    "%21s".format((code << 1).toBinaryString)
+      .grouped(1).map {
+      case "1" => " Y "
+      case _   => "   "
+    }.mkString("|", "|", "|")
+  }
+
+  override def toString =
+    s"""
+      $pprintLine1
+      $pprintLine2
+     """
+}
+
+object InternalGroups {
+  val all = for (gid <- 0 to 18) yield gid
 }

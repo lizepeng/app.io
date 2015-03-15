@@ -21,7 +21,7 @@ case class Directory(
   id: UUID = UUIDs.timeBased(),
   parent: UUID,
   owner_id: UUID,
-  permission: Long = 0L,
+  permission: Long = 7L << 60,
   attributes: Map[String, String] = Map(),
   name: String = ""
 ) extends INode with TimeBased {
