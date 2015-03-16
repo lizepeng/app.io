@@ -42,15 +42,13 @@ object Group extends Groups with Cassandra {
 
 case class InternalGroups(code: Int) {
 
-  def all = for (gid <- InternalGroups.all if contains(gid)) yield gid
-
   def contains(gid: Int) =
     gid >= 0 && gid <= 18 &&
       ((code & 1 << (19 - 1 - gid)) > 0)
 
   def pprintLine1 = {
     import scala.Predef._
-    (for (i <- InternalGroups.all) yield {
+    (for (i <- InternalGroups.ALL) yield {
       "%3s".format("G" + i)
     }).mkString("|   |", "|", "|   |")
   }
@@ -72,5 +70,12 @@ case class InternalGroups(code: Int) {
 }
 
 object InternalGroups {
-  val all = for (gid <- 0 to 18) yield gid
+
+  import scala.language.implicitConversions
+
+  val ALL = for (gid <- 0 to 18) yield gid
+
+  implicit def toTraversable(igs: InternalGroups): TraversableOnce[Int] = {
+    for (gid <- InternalGroups.ALL if igs.contains(gid)) yield gid
+  }
 }

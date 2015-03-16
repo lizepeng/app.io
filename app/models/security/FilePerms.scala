@@ -22,7 +22,7 @@ case class FilePerms(
       if ((resource.permission & mask) == mask) return true
     }
     //check internal group permission
-    for (gid <- principal.internal_groups.all) {
+    for (gid <- principal.internal_groups) {
       val mask = action.toLong << (19 - gid) * 3
       if ((resource.permission & mask) == mask) return true
     }
