@@ -30,6 +30,8 @@ case class User(
   remember_me: Boolean = false
 ) extends TimeBased {
 
+  def external_groups: Future[List[UUID]] = User.findGroupIds(id)
+
   def hasPassword(submittedPasswd: String) = {
     if (encrypted_password == "") false
     else encrypted_password == encrypt(salt, submittedPasswd)
@@ -55,7 +57,7 @@ case class User(
     val digest = MessageDigest.getInstance("SHA-256")
     digest.reset()
     digest.update(text.getBytes)
-    digest.digest().map(0xFF &)
+    digest.digest().map(0xFF &) //convert to unsigned int
       .map {"%02x".format(_)}.foldLeft("") {_ + _}
   }
 }
@@ -84,7 +86,7 @@ sealed class Users
 
   object internal_groups extends IntColumn(this)
 
-  object ext_group_ids extends SetColumn[Users, User, UUID](this)
+  object ext_group_ids extends ListColumn[Users, User, UUID](this)
 
   override def fromRow(r: Row): User = {
     User(
@@ -133,6 +135,13 @@ object User extends Users with Logging with SysConfig with Cassandra {
 
   def find(email: String): Future[User] = {
     UserByEmail.find(email).flatMap {case (_, id) => find(id)}
+  }
+
+  private def findGroupIds(id: UUID): Future[List[UUID]] = CQL {
+    select(_.ext_group_ids).where(_.id eqs id)
+  }.one().map {
+    case None      => List.empty
+    case Some(ids) => ids
   }
 
   /**

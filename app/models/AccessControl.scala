@@ -7,15 +7,19 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.Logging
 import models.cassandra.{Cassandra, ExtCQL}
-import models.security.Permission
+import security.Permission
+
+import scala.concurrent.Future
 
 /**
  * @author zepeng.li@gmail.com
  */
 case class AccessControl(
-  principal: UUID,
+  resource: String,
   action: String,
-  resource: String
+  principal: UUID,
+  is_group: Boolean,
+  granted: Boolean
 ) extends Permission[UUID, String, String]
 
 sealed class AccessControls
@@ -25,29 +29,84 @@ sealed class AccessControls
 
   override val tableName = "access_controls"
 
+  object principal_id
+    extends UUIDColumn(this)
+    with PartitionKey[UUID]
+
   object resource
     extends StringColumn(this)
-    with PartitionKey[String]
+    with PrimaryKey[String]
 
   object action
     extends StringColumn(this)
-    with PartitionKey[String]
-
-  object principal_id
-    extends UUIDColumn(this)
-    with ClusteringOrder[UUID]
+    with PrimaryKey[String]
 
   object is_group
     extends BooleanColumn(this)
+    with PrimaryKey[Boolean]
 
   object granted
     extends BooleanColumn(this)
 
   override def fromRow(r: Row): AccessControl = {
-    AccessControl(principal_id(r), action(r), resource(r))
+    AccessControl(
+      resource(r),
+      action(r),
+      principal_id(r),
+      is_group(r),
+      granted(r)
+    )
   }
 }
 
-object AccessControls extends AccessControls with Cassandra {
+object AccessControl extends AccessControls with Cassandra {
 
+  case class Denied(
+    ids: List[UUID],
+    action: String,
+    resource: String
+  ) extends Permission.Denied("access.control")
+
+  def find(
+    resource: String,
+    action: String,
+    user_id: UUID
+  ): Future[Boolean] = CQL {
+    select(_.granted)
+      .where(_.principal_id eqs user_id)
+      .and(_.resource eqs resource)
+      .and(_.action eqs action)
+      .and(_.is_group eqs false)
+  }.one().map {ret =>
+    if (ret.getOrElse(false)) true
+    else throw Denied(List(user_id), action, resource)
+  }
+
+  def find(
+    resource: String,
+    action: String,
+    group_ids: List[UUID]
+  ): Future[Boolean] = {
+    if (group_ids.isEmpty) Future.successful(Seq(false))
+    else CQL {
+      select(_.granted)
+        .where(_.principal_id in group_ids)
+        .and(_.resource eqs resource)
+        .and(_.action eqs action)
+        .and(_.is_group eqs true)
+    }.fetch()
+  }.map {ret =>
+    if (ret.size == group_ids.size && !ret.contains(false)) true
+    else throw Denied(group_ids, action, resource)
+  }
+
+  def find(
+    resource: String,
+    action: String,
+    group_ids: Future[List[UUID]]
+  ): Future[Boolean] =
+    for {
+      ids <- group_ids
+      ret <- find(resource, action, ids)
+    } yield ret
 }

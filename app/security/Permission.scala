@@ -1,4 +1,4 @@
-package models.security
+package security
 
 import helpers.BaseException
 

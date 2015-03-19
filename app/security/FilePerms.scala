@@ -1,4 +1,4 @@
-package models.security
+package security
 
 import controllers.UserRequest
 import helpers.syntax.PolarQuestion
@@ -22,7 +22,7 @@ case class FilePerms(
       if ((resource.permission & mask) == mask) return true
     }
     //check internal group permission
-    for (gid <- principal.internal_groups) {
+    for (gid <- principal.internal_groups.numbers) {
       val mask = action.toLong << (19 - gid) * 3
       if ((resource.permission & mask) == mask) return true
     }

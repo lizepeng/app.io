@@ -6,7 +6,6 @@ import controllers.session.UserAction
 import helpers.Bandwidth._
 import helpers._
 import models.cfs._
-import models.security.FilePerms
 import models.{Home, User}
 import play.api.http.ContentTypes
 import play.api.i18n.{Messages => MSG}
@@ -16,6 +15,7 @@ import play.api.libs.iteratee._
 import play.api.mvc.BodyParsers.parse.Multipart._
 import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
+import security._
 import views._
 
 import scala.concurrent.Future
@@ -60,7 +60,10 @@ object Files extends Controller with Logging {
     }
 
   def index(path: Path, pager: Pager) =
-    (UserAction >> AuthCheck).async {implicit request =>
+    (UserAction >> PermCheck(
+      "Files", "list",
+      onDenied = request => Forbidden
+    )).async {implicit request =>
       (for {
         home <- Home(request.user)
         curr <- home.dir(path) if FilePerms(curr).rx.?

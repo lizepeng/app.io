@@ -94,6 +94,7 @@ log.password.wrong=wrong password of user: [{0}]
 log.cfs.child.not.found=No such inode [{0}]
 log.cfs.file.not.found=No such file [{0}]
 log.cfs.permission.denied=Permission Denied [{0}]
+log.access.control.permission.denied={0} are not allowed to {1} {2}
 
 msg.confirm.delete=TODO
 msg.master.created={0} has been created

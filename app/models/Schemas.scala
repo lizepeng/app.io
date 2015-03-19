@@ -21,7 +21,8 @@ object Schemas extends Cassandra {
       UserByEmail.create.future(),
       INode.create.future(),
       IndirectBlock.create.future(),
-      Block.create.future()
+      Block.create.future(),
+      AccessControl.create.future()
     )
   )
 }

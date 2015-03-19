@@ -7,6 +7,11 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.Logging
 import models.cassandra.{Cassandra, ExtCQL}
+import models.sys.SysConfig
+
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
@@ -42,9 +47,11 @@ object Group extends Groups with Cassandra {
 
 case class InternalGroups(code: Int) {
 
-  def contains(gid: Int) =
-    gid >= 0 && gid <= 18 &&
-      ((code & 1 << (19 - 1 - gid)) > 0)
+  def contains(gid: Int) = gid >= 0 && gid <= 18 && exists(gid)
+
+  def numbers = for (gid <- InternalGroups.ALL if exists(gid)) yield gid
+
+  private def exists(gid: Int) = (code & 1 << (19 - 1 - gid)) > 0
 
   def pprintLine1 = {
     import scala.Predef._
@@ -69,13 +76,23 @@ case class InternalGroups(code: Int) {
      """
 }
 
-object InternalGroups {
+object InternalGroups extends Logging with SysConfig {
 
+  import scala.Predef._
   import scala.language.implicitConversions
+
+  override val module_name: String = "fact.module.group"
 
   val ALL = for (gid <- 0 to 18) yield gid
 
-  implicit def toTraversable(igs: InternalGroups): TraversableOnce[Int] = {
-    for (gid <- InternalGroups.ALL if igs.contains(gid)) yield gid
+  private lazy val numToId = Await.result(
+
+    Future.sequence(
+      ALL.map(n => getUUID(s"internal_group_${"%02d".format(n)}"))
+    ), 10 seconds
+  )
+
+  implicit def toGroupIdList(igs: InternalGroups): List[UUID] = {
+    igs.numbers.map(numToId).toList
   }
 }

@@ -4,7 +4,6 @@ import java.util.UUID
 
 import controllers.Sessions._
 import controllers.session._
-import helpers.AuthCheck
 import models.User
 import play.api.data.Form
 import play.api.data.Forms._
@@ -13,6 +12,7 @@ import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
+import security.AuthCheck
 import views._
 
 import scala.concurrent.Future

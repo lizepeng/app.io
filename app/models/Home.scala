@@ -1,8 +1,8 @@
 package models
 
-import helpers.AuthCheck
 import models.cfs.{CFS, Directory}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import security.AuthCheck
 
 import scala.concurrent.Future
 

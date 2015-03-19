@@ -1,6 +1,7 @@
-package helpers
+package security
 
 import controllers._
+import helpers.BaseException
 import play.api.mvc._
 
 import scala.concurrent.Future
