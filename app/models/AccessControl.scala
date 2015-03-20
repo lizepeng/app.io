@@ -61,50 +61,44 @@ sealed class AccessControls
 
 object AccessControl extends AccessControls with Cassandra {
 
-  case class Denied(
+  case class Undefined(
     ids: List[UUID],
     action: String,
     resource: String
-  ) extends Permission.Denied("access.control")
+  ) extends Permission.Undefined("access.control")
 
   def find(
     resource: String,
     action: String,
     user_id: UUID
-  ): Future[Boolean] = CQL {
+  ): Future[Option[Boolean]] = CQL {
     select(_.granted)
       .where(_.principal_id eqs user_id)
       .and(_.resource eqs resource)
       .and(_.action eqs action)
       .and(_.is_group eqs false)
-  }.one().map {ret =>
-    if (ret.getOrElse(false)) true
-    else throw Denied(List(user_id), action, resource)
-  }
+  }.one()
 
   def find(
     resource: String,
     action: String,
     group_ids: List[UUID]
-  ): Future[Boolean] = {
-    if (group_ids.isEmpty) Future.successful(Seq(false))
-    else CQL {
-      select(_.granted)
-        .where(_.principal_id in group_ids)
-        .and(_.resource eqs resource)
-        .and(_.action eqs action)
-        .and(_.is_group eqs true)
-    }.fetch()
-  }.map {ret =>
-    if (ret.size == group_ids.size && !ret.contains(false)) true
-    else throw Denied(group_ids, action, resource)
+  ): Future[Option[Boolean]] = CQL {
+    select(_.granted)
+      .where(_.principal_id in group_ids)
+      .and(_.resource eqs resource)
+      .and(_.action eqs action)
+      .and(_.is_group eqs true)
+  }.fetch().map {r =>
+    if (r.isEmpty || r.size != group_ids.size) None
+    else Some(!r.contains(false))
   }
 
   def find(
     resource: String,
     action: String,
     group_ids: Future[List[UUID]]
-  ): Future[Boolean] =
+  ): Future[Option[Boolean]] =
     for {
       ids <- group_ids
       ret <- find(resource, action, ids)

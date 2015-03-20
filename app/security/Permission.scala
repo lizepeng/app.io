@@ -20,4 +20,7 @@ object Permission {
   abstract class Denied(module_name: String)
     extends BaseException(s"$module_name.permission.denied")
 
+  abstract class Undefined(module_name: String)
+    extends BaseException(s"$module_name.permission.undefined")
+
 }

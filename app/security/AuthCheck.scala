@@ -23,7 +23,9 @@ object AuthCheck
    */
   def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Sessions.nnew())
 
-  override protected def filter[A](request: UserRequest[A]): Future[Option[Result]] = {
+  override protected def filter[A](
+    request: UserRequest[A]
+  ): Future[Option[Result]] = {
     Future.successful(
       request.user match {
         case Some(u) => None
