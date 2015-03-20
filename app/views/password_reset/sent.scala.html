@@ -1,0 +1,20 @@
+@()(implicit request: UserRequest[_])
+
+@layouts.base(MSG("password.reset.head")){
+
+  <div class="panel panel-primary auth-form">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        @MSG("password.reset.title")
+      </h3>
+    </div>
+    <div class="panel-body">
+      <p>@MSG("password.reset.sent.msg1")</p>
+      <p>@MSG("password.reset.sent.msg2")</p>
+      <a href="@routes.Sessions.nnew" class="btn btn-default" tabindex="2">
+        @MSG("return.to.sign.in")
+        <i class="fa fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+}()()

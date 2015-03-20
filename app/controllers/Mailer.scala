@@ -1,29 +1,31 @@
 package controllers
 
-import java.io.File
-
-import org.apache.commons.mail.EmailAttachment
+import helpers.Contexts.mailerContext
+import helpers.Logging
 import play.api.Play.current
+import play.api.libs.concurrent.Akka
 import play.api.libs.mailer._
-import play.api.mvc.{Action, Controller}
+
+import scala.concurrent.duration._
 
 /**
  * @author zepeng.li@gmail.com
  */
-object Mailer extends Controller {
-  def send = Action {
-    val email = Email(
-      "Simple email",
-      "Mister FROM <from@email.com>",
-      Seq("Miss TO <zepeng.li@gmail.com>"),
-      attachments = Seq(
-        AttachmentFile("favicon.png", new File(current.classloader.getResource("public/javascripts/hello.js").getPath)),
-        AttachmentData("data.txt", "data".getBytes, "text/plain", Some("Simple data"), Some(EmailAttachment.INLINE))
-      ),
-      bodyText = Some("A text message"),
-      bodyHtml = Some("<html><body><p>An <b>html</b> message</p></body></html>")
-    )
-    val id = MailerPlugin.send(email)
-    Ok(s"Email $id sent!")
+object Mailer extends Logging {
+
+  private lazy val smtp_user = current.configuration.getString("smtp.user")
+
+  def schedule(email: Email) = {
+    Akka.system.scheduler.scheduleOnce(1.second) {
+      smtp_user match {
+        case Some(su) =>
+          val id = MailerPlugin.send {
+            email.copy(from = s"App.io <$su>")
+          }
+          Logger.trace(s"$id has been sent")
+        case None     =>
+          Logger.error("smtp server is not configured yet")
+      }
+    }
   }
 }

@@ -1,0 +1,42 @@
+@(id: String)(fm: Form[_])(implicit req: UserRequest[_])
+
+@import common._
+@import helper._
+
+@layouts.base(MSG("password.change.head")){
+
+  @fm.globalErrors.map { gerr =>
+    @common._alert("danger"){
+      @MSG(gerr.message)
+    }
+  }
+
+  <div class="panel panel-primary auth-form">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        @MSG("password.change.title")
+      </h3>
+    </div>
+    <div class="panel-body">
+      @form(action = routes.PasswordReset.save(id)) {
+
+        @{_input_password(fm("password.original"),
+          'tabindex    -> 1
+          )(_fc_text, req.lang)
+        }
+
+        <p>@MSG("password.hint")</p>
+
+        @{_input_password(fm("password.confirmation"),
+          'tabindex    -> 2
+          )(_fc_text, req.lang)
+        }
+
+        <button type="submit" class="btn btn-default" tabindex="3">
+          @MSG("password.change")
+        </button>
+      }
+    </div>
+  </div>
+
+}()()

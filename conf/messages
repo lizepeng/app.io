@@ -12,8 +12,9 @@ home=Home
 contact=Contact
 com.profile=Corporate Profile
 id=Id
-password=Password
-password_confirmation=Confirm your password
+password.original=Password
+password.confirmation=Confirm your password
+submit=Submit
 
 action=Action
 slip.num=Slip Num
@@ -55,6 +56,26 @@ user.code.forgot=Forgot your username?
 user.pwd.forgot=Forgot your password?
 setting=Setting
 preference=Preference
+
+# password_reset
+password.reset.head=Forgot your password? - App.io
+password.reset.title=Forgot password
+email.not.found=Can't find that email, sorry.
+email.enter=Enter your email address
+return.to.sign.in=Return to sign in
+password.reset.sent.msg1=We’ve sent you an email containing a link that will allow you to reset your password for the next 24 hours.
+password.reset.sent.msg2=Please check your spam folder if the email doesn’t appear within a few minutes.
+
+password.change.head=Sign in - App.io
+password.change.title=Change your password
+password.hint=Must contain one lowercase letter, one number, and be at least 7 characters long
+password.change=Change password
+password.invalid.reset.link=It looks like you clicked on an invalid password reset link. Please try again.
+password.reset.failed=There were problems reseting your password.
+password.changed=New password set successfully.
+
+
+# ---------------------------------------------- #
 
 help=Help
 

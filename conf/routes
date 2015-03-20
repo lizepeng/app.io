@@ -6,8 +6,10 @@
 GET  /                        controllers.Application.index
 GET  /wiki                    controllers.Application.wiki
 GET  /about                   controllers.Application.about
+
+#TODO BEIGIN remove this line
 POST /schemas/recreate        controllers.Application.recreate
-GET  /email/send              controllers.Mailer.send
+#TODO END
 
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file            controllers.Assets.at(path="/public", file)
@@ -29,3 +31,8 @@ GET  /join                    controllers.Users.nnew
 POST /join                    controllers.Users.create
 POST /signup_check/username   controllers.Users.checkEmail
 POST /signup_check/password   controllers.Users.checkPassword
+
+GET  /password_reset          controllers.PasswordReset.nnew
+POST /password_reset          controllers.PasswordReset.create
+GET  /password_reset/:id      controllers.PasswordReset.show(id:String)
+POST /password_reset/:id      controllers.PasswordReset.save(id:String)

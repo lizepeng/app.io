@@ -81,7 +81,7 @@ object InternalGroups extends Logging with SysConfig {
   import scala.Predef._
   import scala.language.implicitConversions
 
-  override val module_name: String = "fact.module.group"
+  override val module_name: String = "app.module.group"
 
   val ALL = for (gid <- 0 to 18) yield gid
 

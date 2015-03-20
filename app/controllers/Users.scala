@@ -25,18 +25,24 @@ object Users extends Controller {
   val signUpFM = Form[SignUpFD](
     mapping(
       "email" -> text.verifying(Rules.email),
-      "password" -> text.verifying(Rules.password),
-      "password_confirmation" -> text
+      "password" -> mapping(
+        "original" -> text.verifying(Rules.password),
+        "confirmation" -> text
+      )(Password.apply)(Password.unapply)
+        .verifying("password.not.confirmed", _.isConfirmed)
     )(SignUpFD.apply)(SignUpFD.unapply)
-      .verifying("password.not.confirmed", _.isConfirmed)
   )
 
   case class SignUpFD(
     email: String,
-    password: String,
-    password_confirmation: String
+    password: Password
+  )
+
+  case class Password(
+    original: String,
+    confirmation: String
   ) {
-    def isConfirmed = password == password_confirmation
+    def isConfirmed = original == confirmation
   }
 
   def show(id: UUID) =
@@ -46,14 +52,14 @@ object Users extends Controller {
 
   def index = TODO
 
-  def nnew = UserAction {implicit request =>
+  def nnew = UserAction { implicit request =>
     request.user match {
       case None    => Ok(views.html.users.signup(signUpFM))
       case Some(u) => Redirect(routes.Users.show(u.id))
     }
   }
 
-  def create = UserAction.async {implicit request =>
+  def create = UserAction.async { implicit request =>
     val fm = signUpFM.bindFromRequest
     fm.fold(
       fm => Future.successful {
@@ -64,15 +70,20 @@ object Users extends Controller {
           }
         }
       },
-      fd => User.find(fd.email).map {_ =>
+      fd => User.find(fd.email).map { _ =>
         BadRequest {
           html.users.signup {
             fm.withGlobalError("signup.failed")
               .withError("email", "login.email.taken")
           }
         }
-      }.recoverWith {case e: User.NotFound =>
-        User.save(User(email = fd.email, password = fd.password)).map {
+      }.recoverWith { case e: User.NotFound =>
+        User.save(
+          User(
+            email = fd.email,
+            password = fd.password.original
+          )
+        ).map {
           implicit u =>
             Redirect {
               routes.Users.show(u.id)
@@ -82,12 +93,12 @@ object Users extends Controller {
     )
   }
 
-  def checkEmail = Action.async {implicit request =>
+  def checkEmail = Action.async { implicit request =>
     val fm = Form(single("value" -> text.verifying(Rules.email)))
 
     fm.bindFromRequest().fold(
       form => Future.successful(Forbidden(form.errorsAsJson)),
-      email => User.find(email).map {_ =>
+      email => User.find(email).map { _ =>
         Forbidden(Json.obj("value" -> MSG("login.email.taken")))
       }.recover {
         case e: User.NotFound => Ok("")
@@ -95,7 +106,7 @@ object Users extends Controller {
     )
   }
 
-  def checkPassword = Action {implicit request =>
+  def checkPassword = Action { implicit request =>
     val fm = Form(single("value" -> text.verifying(Rules.password)))
 
     fm.bindFromRequest().fold(
@@ -113,22 +124,22 @@ object Users extends Controller {
     private val noLower = """[^a-z]*""".r
 
     def password = Constraint[String]("constraint.password.check") {
-      case o if isEmpty(o)   => Invalid(VE("password.too.short", 7))
-      case o if o.size <= 7  => Invalid(VE("password.too.short", 7))
-      case o if o.size >= 39 => Invalid(VE("password.too.long", 39))
-      case noDigit()         => Invalid(VE("password.all_number"))
-      case noLower()         => Invalid(VE("password.all_upper"))
-      case noUpper()         => Invalid(VE("password.all_lower"))
-      case _                 => Valid
+      case o if isEmpty(o)     => Invalid(VE("password.too.short", 7))
+      case o if o.length <= 7  => Invalid(VE("password.too.short", 7))
+      case o if o.length >= 39 => Invalid(VE("password.too.long", 39))
+      case noDigit()           => Invalid(VE("password.all_number"))
+      case noLower()           => Invalid(VE("password.all_upper"))
+      case noUpper()           => Invalid(VE("password.all_lower"))
+      case _                   => Valid
     }
 
     private val emailRegex = """[\w\.-]+@[\w\.-]+\.\w+$""".r
 
     def email = Constraint[String]("constraint.email.check") {
-      case o if isEmpty(o)  => Invalid(VE("login.email.empty"))
-      case o if o.size > 39 => Invalid(VE("login.email.invalid"))
-      case emailRegex()     => Valid
-      case _                => Invalid(VE("login.email.invalid"))
+      case o if isEmpty(o)    => Invalid(VE("login.email.empty"))
+      case o if o.length > 39 => Invalid(VE("login.email.invalid"))
+      case emailRegex()       => Valid
+      case _                  => Invalid(VE("login.email.invalid"))
     }
 
     private def isEmpty(s: String) = s == null || s.trim.isEmpty

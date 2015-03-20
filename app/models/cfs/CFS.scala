@@ -16,7 +16,7 @@ import scala.language.postfixOps
  */
 object CFS extends Logging with SysConfig with AppConfig {
 
-  override val module_name: String = "fact.module.cfs"
+  override val module_name: String = "app.module.cfs"
   val streamFetchSize = config.getInt("stream-fetch-size").getOrElse(2000)
   val listFetchSize   = config.getInt("list-fetch-size").getOrElse(2000)
 

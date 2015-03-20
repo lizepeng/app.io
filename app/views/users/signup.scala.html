@@ -32,13 +32,13 @@
           )(_fc_text, request.lang)
         }
 
-        @{_input_password(fm("password"),
+        @{_input_password(fm("password.original"),
           Symbol("data-autocheck-url") -> routes.Users.checkPassword,
           'tabindex    -> 2
           )(_fc_text, request.lang)
         }
 
-        @{_input_password(fm("password_confirmation"),
+        @{_input_password(fm("password.confirmation"),
           'tabindex    -> 3
           )(_fc_text, request.lang)
         }

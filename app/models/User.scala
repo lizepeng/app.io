@@ -1,6 +1,5 @@
 package models
 
-import java.security.MessageDigest
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
@@ -11,6 +10,7 @@ import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig
 import org.joda.time.DateTime
+import play.api.libs.Crypto
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -48,18 +48,11 @@ case class User(
     )
   }
 
-  private def encrypt(salt: String, passwd: String) = sha2(s"$salt--$passwd")
+  private def encrypt(salt: String, passwd: String) =
+    Crypto.sha2(s"$salt--$passwd")
 
-  private def makeSalt(passwd: String) = sha2(s"${DateTime.now}--$passwd")
-
-  def sha2(text: String): String = {
-    import scala.Predef._
-    val digest = MessageDigest.getInstance("SHA-256")
-    digest.reset()
-    digest.update(text.getBytes)
-    digest.digest().map(0xFF &) //convert to unsigned int
-      .map {"%02x".format(_)}.foldLeft("") {_ + _}
-  }
+  private def makeSalt(passwd: String) =
+    Crypto.sha2(s"${DateTime.now}--$passwd")
 }
 
 /**
@@ -104,7 +97,7 @@ sealed class Users
 
 object User extends Users with Logging with SysConfig with Cassandra {
 
-  override val module_name: String = "fact.module.user"
+  override val module_name: String = "app.module.user"
 
   case class NotFound(user: String)
     extends BaseException("not.found.user")
@@ -129,18 +122,18 @@ object User extends Users with Logging with SysConfig with Cassandra {
   def find(id: UUID): Future[User] = CQL {
     select.where(_.id eqs id)
   }.one().map {
-    case None    => throw NotFound(id.toString)
+    case None => throw NotFound(id.toString)
     case Some(u) => u
   }
 
   def find(email: String): Future[User] = {
-    UserByEmail.find(email).flatMap {case (_, id) => find(id)}
+    UserByEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
   private def findGroupIds(id: UUID): Future[List[UUID]] = CQL {
     select(_.ext_group_ids).where(_.id eqs id)
   }.one().map {
-    case None      => List.empty
+    case None => List.empty
     case Some(ids) => ids
   }
 
@@ -154,16 +147,16 @@ object User extends Users with Logging with SysConfig with Cassandra {
     BatchStatement()
       .add(UserByEmail.cql_save(u.email, u.id))
       .add(User.cql_save(u))
-      .future().map {_ => u}
+      .future().map { _ => u }
   }
 
   private def cql_save(u: User) = CQL {
-    insert.value(_.id, u.id)
-      .value(_.name, u.name)
-      .value(_.salt, u.salt)
-      .value(_.encrypted_password, u.encrypted_password)
-      .value(_.email, u.email)
-      .value(_.internal_groups, u.internal_groups.code)
+    update.where(_.id eqs u.id)
+      .modify(_.name setTo u.name)
+      .and(_.salt setTo u.salt)
+      .and(_.encrypted_password setTo u.encrypted_password)
+      .and(_.email setTo u.email)
+      .and(_.internal_groups setTo u.internal_groups.code)
   }
 
   def updateName(id: UUID, name: String): Future[ResultSet] = CQL {
@@ -173,7 +166,7 @@ object User extends Users with Logging with SysConfig with Cassandra {
   }.future()
 
   def remove(id: UUID): Future[ResultSet] = {
-    find(id).flatMap {user =>
+    find(id).flatMap { user =>
       BatchStatement()
         .add(UserByEmail.cql_del(user.email))
         .add(CQL {delete.where(_.id eqs id)}).future()
@@ -198,14 +191,14 @@ object User extends Users with Logging with SysConfig with Cassandra {
    * @return
    */
   def auth(cred: Credentials): Future[User] = {
-    find(cred.id).map {u =>
+    find(cred.id).map { u =>
       if (u.salt == cred.salt) u
       else throw AuthFailed(cred.id)
     }
   }
 
   def auth(email: String, passwd: String): Future[User] = {
-    find(email).map {user =>
+    find(email).map { user =>
       if (user.hasPassword(passwd)) user
       else throw WrongPassword(email)
     }
@@ -239,7 +232,7 @@ object UserByEmail extends UserByEmail with Cassandra {
     else CQL {
       select.where(_.email eqs email)
     }.one().map {
-      case None      => throw User.NotFound(email)
+      case None => throw User.NotFound(email)
       case Some(idx) => idx
     }
   }
