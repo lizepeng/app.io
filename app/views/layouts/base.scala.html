@@ -2,7 +2,7 @@
   content: Html)(
   css: Html = Html(""))(
   js: Html = Html(""))(
-  implicit request: UserRequest[_])
+  implicit req: UserRequest[_])
 
 @import helper._
 
@@ -95,7 +95,7 @@
 }
 
 @mainMenu = {
-  @request.user.map { u =>
+  @req.user.map { u =>
     <li class="dropdown ">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
         aria-expanded="false">
@@ -135,7 +135,7 @@
 
 
 @userSubMenu = {
-  @request.user match {
+  @req.user match {
     case None => {
       <ul class="nav navbar-nav navbar-right">
         <li><a href="@routes.Sessions.nnew">@MSG("sign.in")</a></li>

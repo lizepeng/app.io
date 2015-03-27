@@ -6,14 +6,14 @@ import play.api.mvc._
  */
 package object controllers {
 
-  implicit class RequestWithPreviousURI(request: RequestHeader) {
+  implicit class RequestWithPreviousURI(req: RequestHeader) {
 
-    def previousURI(implicit request: Request[AnyContent]): Option[String] = {
-      request.body.asFormUrlEncoded.flatMap(_.get("previous_uri").flatMap(_.headOption))
+    def previousURI(implicit req: Request[AnyContent]): Option[String] = {
+      req.body.asFormUrlEncoded.flatMap(_.get("previous_uri").flatMap(_.headOption))
     }
   }
 
-  def RedirectToPreviousURI(implicit request: Request[AnyContent]): Option[Result] = {
-    request.previousURI.map(Redirect(_))
+  def RedirectToPreviousURI(implicit req: Request[AnyContent]): Option[Result] = {
+    req.previousURI.map(Redirect(_))
   }
 }

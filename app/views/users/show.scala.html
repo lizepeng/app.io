@@ -1,4 +1,4 @@
-@()(implicit request: UserRequest[_])
+@()(implicit req: UserRequest[_])
 
 @layouts.base(MSG("user")){
 
@@ -18,14 +18,14 @@
           </li>
           <li class="list-group-item">
             <i class="fa fa-envelope-o"></i>
-            <a href="mailto:@request.user.get.email">@request.user.get.email</a>
+            <a href="mailto:@req.user.get.email">@req.user.get.email</a>
           </li>
           <li class="list-group-item hidden-xs">
             <i class="fa fa-clock-o"></i>
-            Joined on @request.user.get.created_on.toString("MMM dd, yyyy")
+            Joined on @req.user.get.created_on.toString("MMM dd, yyyy")
           </li>
           <li class="list-group-item">
-            UserName @request.user.get.name
+            UserName @req.user.get.name
           </li>
         </ul>
       </div>

@@ -18,18 +18,18 @@ object AuthCheck
   /**
    * access denied
    *
-   * @param request
+   * @param req
    * @return
    */
-  def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Sessions.nnew())
+  def onUnauthorized(req: RequestHeader) = Results.Redirect(routes.Sessions.nnew())
 
   override protected def filter[A](
-    request: UserRequest[A]
+    req: UserRequest[A]
   ): Future[Option[Result]] = {
     Future.successful(
-      request.user match {
+      req.user match {
         case Some(u) => None
-        case None    => Some(onUnauthorized(request))
+        case None    => Some(onUnauthorized(req))
       }
     )
   }

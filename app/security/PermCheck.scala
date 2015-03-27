@@ -29,9 +29,9 @@ object PermCheck extends Logging {
     AuthCheck andThen new ActionFilter[UserRequest] {
 
       override protected def filter[A](
-        request: UserRequest[A]
+        req: UserRequest[A]
       ): Future[Option[Result]] = {
-        val u = request.user.get
+        val u = req.user.get
 
         val checked = for {
           b1 <- check(
@@ -50,7 +50,7 @@ object PermCheck extends Logging {
 
         checked.map {
           case Some(true) => None
-          case _          => Some(onDenied(request))
+          case _          => Some(onDenied(req))
         }
       }
     }

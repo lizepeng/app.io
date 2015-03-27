@@ -1,6 +1,6 @@
-@()(implicit request: UserRequest[_])
+@()(implicit req: UserRequest[_])
 
-@request.flash.data.map {
+@req.flash.data.map {
   case ("info", v) => {
     @common._alert("info",dismissible=true){@v}
   }

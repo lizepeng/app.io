@@ -1,4 +1,4 @@
-@()(implicit request: UserRequest[_])
+@()(implicit req: UserRequest[_])
 
 @layouts.base(MSG("com.profile")) {
   <div class="row">
@@ -240,7 +240,7 @@
         context.fill();
       }
 
-      // request new frame
+      // req new frame
       requestAnimFrame(function() {
         animate(canvas, balls, lastTime, mousePos);
       });

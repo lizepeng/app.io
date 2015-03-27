@@ -32,24 +32,24 @@ object Sessions extends Controller with session.Session with Logging {
     remember_me: Boolean
   )
 
-  def nnew = UserAction {implicit request =>
-    request.user match {
+  def nnew = UserAction { implicit req =>
+    req.user match {
       case Some(u) => Redirect(routes.Application.index())
       case None    => Ok(html.account.login(loginFM))
     }
   }
 
-  def create = UserAction.async {implicit request =>
-    val fm = loginFM.bindFromRequest
-    fm.fold(
-      fm => Future.successful(BadRequest(html.account.login(fm))),
-      fd => User.auth(fd.email, fd.password).andThen {
+  def create = UserAction.async { implicit req =>
+    val form = loginFM.bindFromRequest
+    form.fold(
+      failure => Future.successful(BadRequest(html.account.login(failure))),
+      success => User.auth(success.email, success.password).andThen {
         case Failure(e: User.NotFound)      => Logger.info(e.reason)
         case Failure(e: User.WrongPassword) => Logger.info(e.reason)
-      }.map {implicit user =>
-        Redirect(routes.Users.show(user.id)).createSession(fd.remember_me)
-      }.recover {case e: BaseException =>
-        BadRequest(html.account.login(fm.withGlobalError(e.message)))
+      }.map { implicit user =>
+        Redirect(routes.Users.show(user.id)).createSession(success.remember_me)
+      }.recover { case e: BaseException =>
+        BadRequest(html.account.login(form.withGlobalError(e.message)))
       }
     )
   }

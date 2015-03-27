@@ -13,21 +13,21 @@ object Application extends Controller with Logging with AppConfig {
 
   override def module_name: String = "app"
 
-  def index = UserAction {implicit request =>
+  def index = UserAction { implicit req =>
     Ok(html.welcome.index())
   }
 
-  def about = UserAction {implicit request =>
+  def about = UserAction { implicit req =>
     Ok(html.static_pages.about())
   }
 
-  def wiki = UserAction {implicit request =>
+  def wiki = UserAction { implicit req =>
     val videoPath = config.getString("wiki.video").map(Path(_))
     Ok(html.static_pages.wiki(videoPath))
   }
 
   def recreate = UserAction.async {
-    Schemas.create.map {_ => Ok("Schema Created")}
+    Schemas.create.map { _ => Ok("Schema Created") }
   }
 
 }

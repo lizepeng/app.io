@@ -82,11 +82,11 @@ object FilePerms {
   val rwx = r | w | x
 
   def apply(inode: INode)(
-    implicit request: UserRequest[AnyContent]
-  ) = FilePermsBuilder(inode, request)
+    implicit req: UserRequest[AnyContent]
+  ) = FilePermsBuilder(inode, req)
 
   case class FilePermsBuilder(
-    inode: INode, request: UserRequest[AnyContent]
+    inode: INode, req: UserRequest[AnyContent]
   ) {
     val r   = new PolarQuestion {def ? = check(FilePerms.r)}
     val w   = new PolarQuestion {def ? = check(FilePerms.w)}
@@ -103,7 +103,7 @@ object FilePerms {
     }
 
     private def build(action: Int): FilePerms = {
-      request.user match {
+      req.user match {
         case None    => throw User.IsNotLoggedIn()
         case Some(u) => FilePerms(u, action, inode)
       }

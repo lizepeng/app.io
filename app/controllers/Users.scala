@@ -46,59 +46,60 @@ object Users extends Controller {
   }
 
   def show(id: UUID) =
-    (UserAction andThen AuthCheck) {
-      implicit request => Ok(html.users.show())
+    (UserAction >> AuthCheck) { implicit req =>
+      Ok(html.users.show())
     }
 
   def index = TODO
 
-  def nnew = UserAction { implicit request =>
-    request.user match {
+  def nnew = UserAction { implicit req =>
+    req.user match {
       case None    => Ok(views.html.users.signup(signUpFM))
       case Some(u) => Redirect(routes.Users.show(u.id))
     }
   }
 
-  def create = UserAction.async { implicit request =>
-    val fm = signUpFM.bindFromRequest
-    fm.fold(
-      fm => Future.successful {
+  def create = UserAction.async { implicit req =>
+    val bound = signUpFM.bindFromRequest
+    bound.fold(
+      failure => Future.successful {
         BadRequest {
           html.users.signup {
-            if (fm.hasGlobalErrors) fm
-            else fm.withGlobalError("signup.failed")
+            if (failure.hasGlobalErrors) failure
+            else failure.withGlobalError("signup.failed")
           }
         }
       },
-      fd => User.find(fd.email).map { _ =>
+      success => User.find(success.email).map { _ =>
         BadRequest {
           html.users.signup {
-            fm.withGlobalError("signup.failed")
+            bound.withGlobalError("signup.failed")
               .withError("email", "login.email.taken")
           }
         }
-      }.recoverWith { case e: User.NotFound =>
-        User.save(
-          User(
-            email = fd.email,
-            password = fd.password.original
-          )
-        ).map {
-          implicit u =>
-            Redirect {
-              routes.Users.show(u.id)
-            }.createSession(rememberMe = false)
-        }
+      }.recoverWith {
+        case e: User.NotFound =>
+          User.save(
+            User(
+              email = success.email,
+              password = success.password.original
+            )
+          ).map {
+            implicit u =>
+              Redirect {
+                routes.Users.show(u.id)
+              }.createSession(rememberMe = false)
+          }
       }
     )
   }
 
-  def checkEmail = Action.async { implicit request =>
-    val fm = Form(single("value" -> text.verifying(Rules.email)))
+  def checkEmail = Action.async { implicit req =>
+    val form = Form(single("value" -> text.verifying(Rules.email)))
 
-    fm.bindFromRequest().fold(
-      form => Future.successful(Forbidden(form.errorsAsJson)),
-      email => User.find(email).map { _ =>
+    form.bindFromRequest().fold(
+      failure => Future.successful(Forbidden(failure.errorsAsJson)),
+      success => User.find(success).map { _ =>
         Forbidden(Json.obj("value" -> MSG("login.email.taken")))
       }.recover {
         case e: User.NotFound => Ok("")
@@ -106,12 +107,12 @@ object Users extends Controller {
     )
   }
 
-  def checkPassword = Action { implicit request =>
-    val fm = Form(single("value" -> text.verifying(Rules.password)))
+  def checkPassword = Action { implicit req =>
+    val form = Form(single("value" -> text.verifying(Rules.password)))
 
-    fm.bindFromRequest().fold(
-      form => Forbidden(form.errorsAsJson),
-      password => Ok("")
+    form.bindFromRequest().fold(
+      failure => Forbidden(failure.errorsAsJson),
+      success => Ok("")
     )
   }
 

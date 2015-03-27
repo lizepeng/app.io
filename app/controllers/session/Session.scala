@@ -21,19 +21,19 @@ trait Session {
   private val user_id_key   = "usr_id"
   private val user_salt_key = "usr_salt"
 
-  def transform[A](request: Request[A]): Future[UserRequest[A]] = {
-    request.user.map(Some(_)).recover {
+  def transform[A](req: Request[A]): Future[UserRequest[A]] = {
+    req.user.map(Some(_)).recover {
       case e: BaseException => None
-    }.map {new UserRequest[A](_, request)}
+    }.map {new UserRequest[A](_, req)}
   }
 
-  implicit def retrieve(implicit request: RequestHeader): Option[Credentials] = {
-    val cookie = request.cookies
+  implicit def retrieve(implicit req: RequestHeader): Option[Credentials] = {
+    val cookie = req.cookies
     for (u <- cookie.get(user_id_key).map(_.value).flatMap(toUUID);
          s <- cookie.get(user_salt_key).map(_.value)
     ) yield Credentials(u, s)
   } orElse {
-    val session = request.session
+    val session = req.session
     for (u <- session.get(user_id_key).flatMap(toUUID);
          s <- session.get(user_salt_key)
     ) yield Credentials(u, s)
@@ -41,9 +41,9 @@ trait Session {
 
   private def toUUID(str: String) = Try(UUID.fromString(str)).toOption
 
-  implicit class RequestWithUser(request: RequestHeader) {
+  implicit class RequestWithUser(req: RequestHeader) {
 
-    def user: Future[User] = retrieve(request) match {
+    def user: Future[User] = retrieve(req) match {
       case None       => Future.failed(User.NoCredentials())
       case Some(cred) => User.auth(cred)
     }

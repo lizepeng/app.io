@@ -10,17 +10,17 @@ import play.api.mvc._
  */
 class UserRequest[A](
   val user: Option[User],
-  request: Request[A]
-) extends WrappedRequest[A](request) {
+  req: Request[A]
+) extends WrappedRequest[A](req) {
 
   def lang: Lang = {
     Play.maybeApplication.map {implicit app =>
-      val maybeLangFromCookie = request.cookies.get(Play.langCookieName).flatMap(
+      val maybeLangFromCookie = req.cookies.get(Play.langCookieName).flatMap(
         c => Lang.get(c.value)
       )
-      maybeLangFromCookie.getOrElse(Lang.preferred(request.acceptLanguages))
+      maybeLangFromCookie.getOrElse(Lang.preferred(req.acceptLanguages))
     }.getOrElse {
-      request.acceptLanguages.headOption.getOrElse(Lang.defaultLang)
+      req.acceptLanguages.headOption.getOrElse(Lang.defaultLang)
     }
   }
 

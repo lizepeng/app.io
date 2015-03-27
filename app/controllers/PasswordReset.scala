@@ -90,10 +90,11 @@ object PasswordReset extends Controller with Logging {
             else bound.withGlobalError("password.reset.failed")
           }
         }
-      }, password => (for {
+      },
+      success => (for {
         l <- ExpirableLink.find(id)
         u <- User.find(l.user_id)
-        s <- User.save(u.copy(password = password.original))
+        s <- User.save(u.copy(password = success.original))
         r <- ExpirableLink.remove(id)
       } yield s).map { u =>
         Mailer.schedule(email2(u))

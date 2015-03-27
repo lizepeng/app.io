@@ -28,7 +28,7 @@ import scala.util.Failure
 object Files extends Controller with Logging {
 
   def download(path: Path, inline: Boolean) =
-    (UserAction >> AuthCheck).async {implicit request =>
+    (UserAction >> AuthCheck).async {implicit req =>
       serveFile(path) {file =>
         val stm = streamWhole(file)
         if (inline) stm
@@ -40,12 +40,12 @@ object Files extends Controller with Logging {
     }
 
   def stream(path: Path) =
-    UserAction.async {implicit request =>
+    UserAction.async {implicit req =>
       serveFile(path) {file =>
         val size = file.size
         val byte_range_spec = """bytes=(\d+)-(\d*)""".r
 
-        request.headers.get(RANGE).flatMap {
+        req.headers.get(RANGE).flatMap {
           case byte_range_spec(first, last) => Some(first.toLong, Some(last).filter(_.nonEmpty).map(_.toLong))
           case _                            => None
         }.filter {
@@ -62,10 +62,10 @@ object Files extends Controller with Logging {
   def index(path: Path, pager: Pager) =
     (UserAction >> PermCheck(
       "Files", "list",
-      onDenied = request => Forbidden
-    )).async {implicit request =>
+      onDenied = req => Forbidden
+    )).async {implicit req =>
       (for {
-        home <- Home(request.user)
+        home <- Home(req.user)
         curr <- home.dir(path) if FilePerms(curr).rx.?
         list <- curr.list(pager)
       } yield {
@@ -79,12 +79,12 @@ object Files extends Controller with Logging {
     }
 
   def show(path: Path) =
-    (UserAction >> AuthCheck).async {implicit request =>
+    (UserAction >> AuthCheck).async {implicit req =>
       serveFile(path) {file => Ok(html.files.show(path, file))}
     }
 
   def destroy(id: UUID): Action[AnyContent] =
-    (UserAction >> AuthCheck).async {implicit request =>
+    (UserAction >> AuthCheck).async {implicit req =>
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
         case Some(inode) => File.purge(id)
@@ -97,8 +97,8 @@ object Files extends Controller with Logging {
 
   def create(path: Path) =
     (UserAction >> AuthCheck)(CFSBodyParser(path)) {
-      implicit request =>
-        request.body.file("files").map {files =>
+      implicit req =>
+        req.body.file("files").map {files =>
           val ref: File = files.ref
           Redirect(routes.Files.index(Path())).flashing(
             AlertLevel.Success -> MSG("file.uploaded", ref.name)
@@ -152,10 +152,10 @@ object Files extends Controller with Logging {
   )
 
   def serveFile(path: Path)(block: File => Result)(
-    implicit request: UserRequest[AnyContent]
+    implicit req: UserRequest[AnyContent]
   ): Future[Result] = {
     (for {
-      home <- Home(request.user)
+      home <- Home(req.user)
       file <- home.file(path)
     } yield {
       block(file)
@@ -170,16 +170,16 @@ object Files extends Controller with Logging {
 
   private def CFSBodyParser(path: Path) =
     new BodyParser[MultipartFormData[File]] with session.Session {
-      override def apply(request: RequestHeader) = Iteratee.flatten {
+      override def apply(req: RequestHeader) = Iteratee.flatten {
         (for {
-          user <- request.user
+          user <- req.user
           home <- Home(user)
           curr <- home.dir(path)
         } yield {
           multipartFormData(saveTo(curr)(user))
         }).recover {
           case e: BaseException => parse.error(Future.successful(BadRequest))
-        }.map(_.apply(request))
+        }.map(_.apply(req))
       }
     }
 
