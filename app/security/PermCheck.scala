@@ -35,7 +35,7 @@ object PermCheck extends Logging {
         val checked = for {
           b1 <- check(
             previous = None, action,
-            ac => AccessControl.find(resource, ac, u.id)
+            ac => AccessControl.find(resource, ac, u.external_groups)
           )
           b2 <- check(
             previous = b1, action,
@@ -43,7 +43,7 @@ object PermCheck extends Logging {
           )
           b3 <- check(
             previous = b2, action,
-            ac => AccessControl.find(resource, ac, u.external_groups)
+            ac => AccessControl.find(resource, ac, u.id)
           )
         } yield b3
 
@@ -58,13 +58,17 @@ object PermCheck extends Logging {
     previous: Option[Boolean],
     action: String,
     tryToCheck: String => Future[AccessControl.Granted[_]]
-  ): Future[Option[Boolean]] = {
-    if (previous.isDefined) Future.successful(previous)
-    else for {
-      b1 <- toOption(tryToCheck(action))
+  ): Future[Option[Boolean]] = previous match {
+    case Some(false) => Future.successful(previous)
+    case b@_         => for {
+      b1 <- toOption(tryToCheck("*")).map(_.orElse(b))
       b2 <-
-      if (b1.isEmpty && action != "*") toOption(tryToCheck("*"))
-      else Future.successful(b1)
+      if (action == "*") Future.successful(b1)
+      else b1 match {
+        case b@Some(false) => Future.successful(b)
+        case None          => toOption(tryToCheck(action))
+        case b@Some(true)  => toOption(tryToCheck(action)).map {_.orElse(b)}
+      }
     } yield b2
   }
 
