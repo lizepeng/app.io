@@ -43,6 +43,33 @@ sealed class Groups
 }
 
 object Group extends Groups with Cassandra {
+
+  object AccessControl {
+
+    import models.{AccessControl => AC}
+
+    val key = "groups"
+
+    case class Undefined(
+      principal: List[UUID],
+      action: String,
+      resource: String
+    ) extends AC.Undefined[List[UUID]](action, resource, key)
+
+    case class Denied(
+      principal: List[UUID],
+      action: String,
+      resource: String
+    ) extends AC.Denied[List[UUID]](action, resource, key)
+
+    case class Granted(
+      principal: List[UUID],
+      action: String,
+      resource: String
+    ) extends AC.Granted[List[UUID]](action, resource, key)
+
+  }
+
 }
 
 case class InternalGroups(code: Int) {

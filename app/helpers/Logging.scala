@@ -1,5 +1,7 @@
 package helpers
 
+import play.api.i18n.{Lang, Messages}
+
 import scala.collection.mutable
 
 /**
@@ -15,6 +17,21 @@ trait Logging {
     )
 
   def module_name: String = ""
+}
+
+trait Loggable extends Product {
+  def code: String
+
+  def message(implicit lang: Lang): String = message("msg")
+
+  def reason(implicit lang: Lang): String = message("log")
+
+  def message(key: String)(implicit lang: Lang): String = {
+    Messages(
+      s"$key.$code",
+      productIterator.map(_.toString).toList: _*
+    )
+  }
 }
 
 trait TimeLogging extends Logging {

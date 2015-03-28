@@ -114,8 +114,13 @@ log.password.wrong=wrong password of user: [{0}]
 
 log.cfs.child.not.found=No such inode [{0}]
 log.cfs.file.not.found=No such file [{0}]
-log.cfs.permission.denied=Permission Denied [{0}]
-log.access.control.permission.denied={0} are not allowed to {1} {2}
+log.cfs.perm.denied=Permission Denied [{0}]
+log.ac.user.perm.undefined   = Undefined: [User,   {0}, {1}, {2}]
+log.ac.groups.perm.undefined = Undefined: [Groups, {0}, {1}, {2}]
+log.ac.user.perm.granted     = Granted:   [User,   {0}, {1}, {2}]
+log.ac.groups.perm.granted   = Granted:   [Groups, {0}, {1}, {2}]
+log.ac.user.perm.denied      = Denied:    [User,   {0}, {1}, {2}]
+log.ac.groups.perm.denied    = Denied:    [Groups, {0}, {1}, {2}]
 
 msg.confirm.delete=TODO
 msg.master.created={0} has been created

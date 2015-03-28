@@ -71,7 +71,11 @@ case class FilePerms(
 
 object FilePerms {
 
-  case class Denied(perm: FilePerms) extends Permission.Denied("cfs")
+  case class Denied(
+    principal: User,
+    action: Int,
+    resource: INode
+  ) extends Permission.Denied[User, Int, INode]("cfs")
 
   val r   = 4
   val w   = 2
@@ -99,7 +103,7 @@ object FilePerms {
     private def check(action: Int): Boolean = {
       val perm: FilePerms = build(action)
       if (perm.canAccess) true
-      else throw Denied(perm)
+      else throw Denied(perm.principal, perm.action, perm.resource)
     }
 
     private def build(action: Int): FilePerms = {

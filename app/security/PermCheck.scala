@@ -1,13 +1,12 @@
 package security
 
 import controllers._
-import helpers.{BaseException, Logging}
+import helpers.Logging
 import models.AccessControl
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 
 import scala.concurrent.Future
-import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -58,18 +57,22 @@ object PermCheck extends Logging {
   private def check[A](
     previous: Option[Boolean],
     action: String,
-    tryToCheck: String => Future[Option[Boolean]]
+    tryToCheck: String => Future[AccessControl.Granted[_]]
   ): Future[Option[Boolean]] = {
     if (previous.isDefined) Future.successful(previous)
     else for {
-      b1 <- trace(tryToCheck(action))
+      b1 <- toOption(tryToCheck(action))
       b2 <-
-      if (b1.isEmpty && action != "*") trace(tryToCheck("*"))
+      if (b1.isEmpty && action != "*") toOption(tryToCheck("*"))
       else Future.successful(b1)
     } yield b2
   }
 
-  private def trace[A](f: => Future[A]): Future[A] = f.andThen {
-    case Failure(e: BaseException) => Logger.trace(e.reason)
-  }
+  private def toOption(f: => Future[AccessControl.Granted[_]]): Future[Option[Boolean]] =
+    f.map {
+      granted => Logger.debug(granted.reason); Some(granted.canAccess)
+    }.recover {
+      case e: AccessControl.Undefined[_] => Logger.trace(e.reason); None
+      case e: AccessControl.Denied[_]    => Logger.trace(e.reason); Some(false)
+    }
 }

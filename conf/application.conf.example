@@ -63,6 +63,8 @@ mailer-context.fork-join-executor.parallelism-max=4
 
 app.models.cfs.stream-fetch-size=5000
 
+cassandra.cql.log=[select,insert,update,delete]
+
 mimetype {
   mkv:video/x-matroska
 }

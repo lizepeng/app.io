@@ -117,12 +117,38 @@ object User extends Users with Logging with SysConfig with Cassandra {
   case class IsNotLoggedIn()
     extends BaseException("is.not.logged.in.user")
 
+  object AccessControl {
+
+    import models.{AccessControl => AC}
+
+    val key = "user"
+
+    case class Undefined(
+      principal: UUID,
+      action: String,
+      resource: String
+    ) extends AC.Undefined[UUID](action, resource, key)
+
+    case class Denied(
+      principal: UUID,
+      action: String,
+      resource: String
+    ) extends AC.Denied[UUID](action, resource, key)
+
+    case class Granted(
+      principal: UUID,
+      action: String,
+      resource: String
+    ) extends AC.Granted[UUID](action, resource, key)
+
+  }
+
   lazy val root: UUID = Await.result(getUUID("root_id"), 10 seconds)
 
   def find(id: UUID): Future[User] = CQL {
     select.where(_.id eqs id)
   }.one().map {
-    case None => throw NotFound(id.toString)
+    case None    => throw NotFound(id.toString)
     case Some(u) => u
   }
 
@@ -133,7 +159,7 @@ object User extends Users with Logging with SysConfig with Cassandra {
   private def findGroupIds(id: UUID): Future[List[UUID]] = CQL {
     select(_.ext_group_ids).where(_.id eqs id)
   }.one().map {
-    case None => List.empty
+    case None      => List.empty
     case Some(ids) => ids
   }
 
@@ -232,7 +258,7 @@ object UserByEmail extends UserByEmail with Cassandra {
     else CQL {
       select.where(_.email eqs email)
     }.one().map {
-      case None => throw User.NotFound(email)
+      case None      => throw User.NotFound(email)
       case Some(idx) => idx
     }
   }

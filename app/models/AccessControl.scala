@@ -61,44 +61,76 @@ sealed class AccessControls
 
 object AccessControl extends AccessControls with Cassandra {
 
-  case class Undefined(
-    ids: List[UUID],
+  abstract class Undefined[P](
     action: String,
-    resource: String
-  ) extends Permission.Undefined("access.control")
+    resource: String,
+    module_name: String
+  ) extends Permission.Undefined[P, String, String](
+    s"ac.$module_name"
+  )
+
+  abstract class Denied[P](
+    action: String,
+    resource: String,
+    module_name: String
+  ) extends Permission.Denied[P, String, String](
+    s"ac.$module_name"
+  )
+
+  abstract class Granted[P](
+    action: String,
+    resource: String,
+    module_name: String
+  ) extends Permission.Granted[P, String, String](
+    s"ac.$module_name"
+  )
 
   def find(
     resource: String,
     action: String,
     user_id: UUID
-  ): Future[Option[Boolean]] = CQL {
+  ): Future[Granted[UUID]] = CQL {
     select(_.granted)
       .where(_.principal_id eqs user_id)
       .and(_.resource eqs resource)
       .and(_.action eqs action)
       .and(_.is_group eqs false)
-  }.one()
+  }.one().map { r =>
+    import User.AccessControl._
+    r match {
+      case None        =>
+        throw Undefined(user_id, action, resource)
+      case Some(false) =>
+        throw Denied(user_id, action, resource)
+      case Some(true)  =>
+        Granted(user_id, action, resource)
+    }
+  }
 
   def find(
     resource: String,
     action: String,
     group_ids: List[UUID]
-  ): Future[Option[Boolean]] = CQL {
+  ): Future[Granted[List[UUID]]] = CQL {
     select(_.granted)
       .where(_.principal_id in group_ids)
       .and(_.resource eqs resource)
       .and(_.action eqs action)
       .and(_.is_group eqs true)
-  }.fetch().map {r =>
-    if (r.isEmpty || r.size != group_ids.size) None
-    else Some(!r.contains(false))
+  }.fetch().map { r =>
+    import Group.AccessControl._
+    if (r.isEmpty || r.size != group_ids.size)
+      throw Undefined(group_ids, action, resource)
+    else if (r.contains(false))
+      throw Denied(group_ids, action, resource)
+    else Granted(group_ids, action, resource)
   }
 
   def find(
     resource: String,
     action: String,
     group_ids: Future[List[UUID]]
-  ): Future[Option[Boolean]] =
+  ): Future[Granted[List[UUID]]] =
     for {
       ids <- group_ids
       ret <- find(resource, action, ids)
