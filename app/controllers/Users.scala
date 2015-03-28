@@ -4,7 +4,7 @@ import java.util.UUID
 
 import controllers.Sessions._
 import controllers.session._
-import models.User
+import models.{InternalGroups, User}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation._
@@ -82,7 +82,8 @@ object Users extends Controller {
           User.save(
             User(
               email = success.email,
-              password = success.password.original
+              password = success.password.original,
+              internal_groups = InternalGroups(1)
             )
           ).map {
             implicit u =>

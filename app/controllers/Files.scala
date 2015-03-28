@@ -74,7 +74,7 @@ object Files extends Controller with Logging with AppConfig {
 
   def index(path: Path, pager: Pager) =
     (UserAction >> PermCheck(
-      "Files", "list",
+      module_name, "list",
       onDenied = req => Forbidden
     )).async { implicit req =>
       (for {

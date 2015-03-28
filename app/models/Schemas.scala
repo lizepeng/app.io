@@ -19,6 +19,7 @@ object Schemas extends Cassandra {
       SysConfig.create.future(),
       User.create.future(),
       UserByEmail.create.future(),
+      Group.create.future(),
       INode.create.future(),
       IndirectBlock.create.future(),
       Block.create.future(),
