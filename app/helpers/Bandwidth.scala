@@ -1,7 +1,9 @@
 package helpers
 
+import helpers.Contexts.trafficShaperContext
 import models.cfs.Block._
 import org.joda.time.DateTime
+import play.api.Play.current
 import play.api.libs.concurrent.Promise
 import play.api.libs.iteratee.Enumeratee.CheckDone
 import play.api.libs.iteratee._
@@ -13,13 +15,19 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object Bandwidth {
+object Bandwidth extends AppConfig with Logging {
+  override val module_name = "app.bandwidth"
+
+  lazy val max = config.getBytes("max").map(_.toInt).getOrElse(5 MBps)
+  lazy val min = config.getBytes("min").map(_.toInt).getOrElse(200 KBps)
 
   object LimitTo {
-    def apply(rate: Int = 1 MBps)(
-      implicit ec: ExecutionContext
-    ): Enumeratee[BLK, BLK] =
-      limitTo(rate.max(200 KBps).min(5 MBps))
+    def apply(rate: Int = 1 MBps): Enumeratee[BLK, BLK] = limitTo(
+      if (rate < min) min
+      else if (rate > max) max
+      else rate
+    )
+
   }
 
   object UnLimited {

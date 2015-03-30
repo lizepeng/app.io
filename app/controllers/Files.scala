@@ -7,6 +7,7 @@ import helpers.Bandwidth._
 import helpers._
 import models.cfs._
 import models.{Home, User}
+import play.api.Play.current
 import play.api.http.ContentTypes
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.MimeTypes
@@ -25,11 +26,23 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-object Files extends Controller with Logging {
+object Files extends Controller with Logging with AppConfig {
+
+  override val module_name: String = "controllers.files"
+
+  lazy val bandwidth_upload  : Int =
+    getBandwidth("upload").getOrElse(1.5 MBps)
+  lazy val bandwidth_download: Int =
+    getBandwidth("download").getOrElse(2 MBps)
+  lazy val bandwidth_stream  : Int =
+    getBandwidth("stream").getOrElse(1 MBps)
+
+  def getBandwidth(key: String): Option[Int] =
+    config.getBytes(s"bandwidth.$key").map(_.toInt)
 
   def download(path: Path, inline: Boolean) =
-    (UserAction >> AuthCheck).async {implicit req =>
-      serveFile(path) {file =>
+    (UserAction >> AuthCheck).async { implicit req =>
+      serveFile(path) { file =>
         val stm = streamWhole(file)
         if (inline) stm
         else stm.withHeaders(
@@ -40,8 +53,8 @@ object Files extends Controller with Logging {
     }
 
   def stream(path: Path) =
-    UserAction.async {implicit req =>
-      serveFile(path) {file =>
+    UserAction.async { implicit req =>
+      serveFile(path) { file =>
         val size = file.size
         val byte_range_spec = """bytes=(\d+)-(\d*)""".r
 
@@ -63,14 +76,14 @@ object Files extends Controller with Logging {
     (UserAction >> PermCheck(
       "Files", "list",
       onDenied = req => Forbidden
-    )).async {implicit req =>
+    )).async { implicit req =>
       (for {
         home <- Home(req.user)
         curr <- home.dir(path) if FilePerms(curr).rx.?
         list <- curr.list(pager)
-      } yield {
+      } yield list).map { list =>
         Ok(html.files.index(path, Page(pager, list)))
-      }).andThen {
+      }.andThen {
         case Failure(e: FilePerms.Denied) => Logger.trace(e.reason)
       }.recover {
         case e: FilePerms.Denied => Forbidden
@@ -79,17 +92,19 @@ object Files extends Controller with Logging {
     }
 
   def show(path: Path) =
-    (UserAction >> AuthCheck).async {implicit req =>
-      serveFile(path) {file => Ok(html.files.show(path, file))}
+    (UserAction >> AuthCheck).async { implicit req =>
+      serveFile(path) { file => Ok(html.files.show(path, file)) }
     }
 
   def destroy(id: UUID): Action[AnyContent] =
-    (UserAction >> AuthCheck).async {implicit req =>
+    (UserAction >> AuthCheck).async { implicit req =>
       INode.find(id).map {
         case None        => NotFound(MSG("file.not.found", id))
         case Some(inode) => File.purge(id)
-          RedirectToPreviousURI.getOrElse(Redirect(routes.Files.index(Path())))
-            .flashing(
+          RedirectToPreviousURI
+            .getOrElse(
+              Redirect(routes.Files.index(Path()))
+            ).flashing(
               AlertLevel.Success -> MSG("file.deleted", inode.name)
             )
       }
@@ -98,7 +113,7 @@ object Files extends Controller with Logging {
   def create(path: Path) =
     (UserAction >> AuthCheck)(CFSBodyParser(path)) {
       implicit req =>
-        req.body.file("files").map {files =>
+        req.body.file("files").map { files =>
           val ref: File = files.ref
           Redirect(routes.Files.index(Path())).flashing(
             AlertLevel.Success -> MSG("file.uploaded", ref.name)
@@ -124,7 +139,7 @@ object Files extends Controller with Logging {
   }
 
   private def streamRange(file: File, first: Long, lastOpt: Option[Long]): Result = {
-    val end: Long = lastOpt.filter(_ < file.size).getOrElse(file.size - 1)
+    val end = lastOpt.filter(_ < file.size).getOrElse(file.size - 1)
     Result(
       ResponseHeader(
         PARTIAL_CONTENT,
@@ -136,7 +151,9 @@ object Files extends Controller with Logging {
         )
       ),
       file.read(first) &>
-        Enumeratee.take((end - first + 1).toInt) &> LimitTo(1 MBps)
+        Enumeratee.take((end - first + 1).toInt) &>
+        LimitTo(bandwidth_stream)
+
     )
   }
 
@@ -148,7 +165,7 @@ object Files extends Controller with Logging {
         CONTENT_LENGTH -> s"${file.size}"
       )
     ),
-    file.read() &> LimitTo(2 MBps)
+    file.read() &> LimitTo(bandwidth_download)
   )
 
   def serveFile(path: Path)(block: File => Result)(
@@ -157,9 +174,9 @@ object Files extends Controller with Logging {
     (for {
       home <- Home(req.user)
       file <- home.file(path)
-    } yield {
-      block(file)
-    }).recover {
+    } yield file).map {
+      block(_)
+    }.recover {
       case e: BaseException => NotFound(e.reason)
     }
   }
@@ -175,9 +192,9 @@ object Files extends Controller with Logging {
           user <- req.user
           home <- Home(user)
           curr <- home.dir(path)
-        } yield {
+        } yield (user, curr)).map { case (user, curr) =>
           multipartFormData(saveTo(curr)(user))
-        }).recover {
+        }.recover {
           case e: BaseException => parse.error(Future.successful(BadRequest))
         }.map(_.apply(req))
       }
@@ -186,7 +203,7 @@ object Files extends Controller with Logging {
   private def saveTo(dir: Directory)(implicit user: User) = {
     handleFilePart {
       case FileInfo(partName, filename, contentType) =>
-        LimitTo(1.5 MBps) &>> dir.save(filename)
+        LimitTo(bandwidth_upload) &>> dir.save(filename)
     }
   }
 }

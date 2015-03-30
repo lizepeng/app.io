@@ -11,7 +11,7 @@ import views._
 
 object Application extends Controller with Logging with AppConfig {
 
-  override def module_name: String = "app"
+  override val module_name: String = "app"
 
   def index = UserAction { implicit req =>
     Ok(html.welcome.index())

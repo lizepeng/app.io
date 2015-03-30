@@ -60,10 +60,18 @@ akka.loglevel=INFO
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-min=8
 mailer-context.fork-join-executor.parallelism-max=4
+traffic-shaper-context.fork-join-executor.parallelism-max=4
 
-app.models.cfs.stream-fetch-size=5000
+cassandra.cql.log=[batch,insert,update,delete]
 
-cassandra.cql.log=[select,insert,update,delete]
+app.bandwidth.max=5M
+app.bandwidth.min=200K
+
+controllers.files.bandwidth.upload=1.5M
+controllers.files.bandwidth.download=2M
+controllers.files.bandwidth.stream=1M
+
+models.cfs.stream-fetch-size=5000
 
 mimetype {
   mkv:video/x-matroska

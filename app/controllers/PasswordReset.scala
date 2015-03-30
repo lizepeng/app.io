@@ -19,7 +19,7 @@ import scala.concurrent.Future
  */
 object PasswordReset extends Controller with Logging {
 
-  override val module_name = "password_reset"
+  override val module_name = "controllers.password_reset"
 
   val emailFM = Form(
     single("email" -> text.verifying(Rules.email))
