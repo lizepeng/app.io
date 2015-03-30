@@ -45,7 +45,7 @@ object PasswordReset extends Controller with Logging {
   def create = UserAction.async { implicit req =>
     emailFM.bindFromRequest().fold(
       failure => Future.successful {
-        onError(emailFM, "email.not.found")
+        onError(emailFM, "password.reset.email.not.found")
       },
       success => (for {
         u <- User.find(success)
@@ -55,7 +55,7 @@ object PasswordReset extends Controller with Logging {
         Ok(html.password_reset.sent())
       }.recover {
         case e: User.NotFound =>
-          onError(emailFM, "email.not.found")
+          onError(emailFM, "password.reset.email.not.found")
       }
 
     )
@@ -109,40 +109,40 @@ object PasswordReset extends Controller with Logging {
   }
 
   def email1(to: User, link: String) = Email(
-    subject = "[App.io] Please reset your password",
+    subject = s"[${MSG("app.name")}] Please reset your password",
     from = "",
-    to = Seq(s"Miss TO <${to.email}>"),
+    to = Seq(s"${to.name} <${to.email}>"),
     bodyText = Some(
       s"""
-We heard that you lost your App.io password.Sorry about that!
+We heard that you lost your ${MSG("app.name")} password. Sorry about that!
 
 But don't worry!You can use the following link within the next day to reset your password:
-http://127.0.0.1:9000/password_reset/$link
+${MSG("app.url")}/password_reset/$link
 
 If you don't use this link within 24 hours, it will expire. To get a new password reset link, visit
-http://127.0.0.1:9000/password_reset
+${MSG("app.url")}/password_reset
 
 Thanks,
-Your friends at App.io
+Your friends at ${MSG("app.name")}
       """
     )
   )
 
   def email2(to: User) = Email(
-    subject = "[App.io] Your password has changed",
+    subject = s"[${MSG("app.name")}] Your password has changed",
     from = "",
-    to = Seq(s"Miss TO <${to.email}>"),
+    to = Seq(s"${to.name} <${to.email}>"),
     bodyText = Some(
       s"""
 Hello ${to.name},
 
-We wanted to let you know that your App.io password was changed.
+We wanted to let you know that your ${MSG("app.name")} password was changed.
 
-If you did not perform this action, you can recover access by entering ${to.email} into the form at http://127.0.0.1:9000/password_reset.
+If you did not perform this action, you can recover access by entering ${to.email} into the form at ${MSG("app.url")}/password_reset.
 
-To see this and other security events for your account, visit http://127.0.0.1:9000/settings/security.
+To see this and other security events for your account, visit ${MSG("app.url")}/settings/security.
 
-If you run into problems, please contact support by visiting http://127.0.0.1:9000/contact or replying to this email.
+If you run into problems, please contact support by visiting ${MSG("app.url")}/contact or replying to this email.
       """
     )
   )

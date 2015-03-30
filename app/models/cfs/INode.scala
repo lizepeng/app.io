@@ -39,7 +39,7 @@ trait INodeKey[T <: CassandraTable[T, R], R] {
 
 trait INodeColumns[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
-
+  
   override val tableName = "inodes"
 
   object parent

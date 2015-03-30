@@ -3,7 +3,6 @@ package models.cfs
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.syntax._
 import helpers.{BaseException, Logging}
@@ -92,7 +91,7 @@ object File extends Files with Cassandra {
             case true  => Future.successful(next)
             case false => IndirectBlock.write(next).map(_.next)
           }
-      }.mapM {last =>
+      }.mapM { last =>
         IndirectBlock.write(last) iff (last.length != 0)
         File.write(inode.copy(size = last.offset + last.length))
       }

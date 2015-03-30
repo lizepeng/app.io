@@ -24,7 +24,8 @@ object Schemas extends Cassandra {
       IndirectBlock.create.future(),
       Block.create.future(),
       AccessControl.create.future(),
-      ExpirableLink.create.future()
+      ExpirableLink.create.future(),
+      EmailTemplate.create.future()
     )
   )
 }

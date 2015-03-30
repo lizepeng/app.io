@@ -2,6 +2,8 @@ products.list.title={0,choice,0#no|1#one|1<{0,number,integer} products} Found
 ds.list.title=Daily Summary
 
 app.name=App.io
+app.url=http://127.0.0.1:9000
+
 sign.in=Sign In
 sign.out=Sign Out
 sign.in.head=Sign in to App.io
@@ -60,7 +62,7 @@ preference=Preference
 # password_reset
 password.reset.head=Forgot your password? - App.io
 password.reset.title=Forgot password
-email.not.found=Can't find that email, sorry.
+password.reset.email.not.found=Can't find that email, sorry.
 email.enter=Enter your email address
 return.to.sign.in=Return to sign in
 password.reset.sent.msg1=We’ve sent you an email containing a link that will allow you to reset your password for the next 24 hours.

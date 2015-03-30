@@ -3,7 +3,6 @@ package models.cfs
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
