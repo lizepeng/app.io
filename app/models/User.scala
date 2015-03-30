@@ -7,7 +7,7 @@ import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.Iteratee
 import helpers._
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra._
 import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.libs.Crypto
@@ -114,6 +114,9 @@ object User extends Users with Logging with SysConfig with Cassandra {
   case class Unauthorized(user_id: UUID)
     extends BaseException("unauthorized.user")
 
+  case class EmailTaken(email: String)
+    extends BaseException("login.email.taken")
+
   case class IsNotLoggedIn()
     extends BaseException("is.not.logged.in.user")
 
@@ -170,22 +173,32 @@ object User extends Users with Logging with SysConfig with Cassandra {
    */
   def save(user: User): Future[User] = {
     val u = user.encryptPassword
-    BatchStatement()
-      .add(UserByEmail.cql_save(u.email, u.id))
-      .add(User.cql_save(u))
-      .future().map { _ => u }
+    for {
+      done <- UserByEmail.save(u.email, u.id)
+      user <- if (done) CQL {
+        insert
+          .value(_.id, u.id)
+          .value(_.name, u.name)
+          .value(_.salt, u.salt)
+          .value(_.encrypted_password, u.encrypted_password)
+          .value(_.email, u.email)
+          .value(_.internal_groups, u.internal_groups.code)
+      }.future().map(_ => u)
+      else throw EmailTaken(u.email)
+    } yield user
   }
 
-  private def cql_save(u: User) = CQL {
-    update.where(_.id eqs u.id)
-      .modify(_.name setTo u.name)
-      .and(_.salt setTo u.salt)
-      .and(_.encrypted_password setTo u.encrypted_password)
-      .and(_.email setTo u.email)
-      .and(_.internal_groups setTo u.internal_groups.code)
+  def savePassword(user: User, newPassword: String): Future[User] = {
+    val u = user.copy(password = newPassword).encryptPassword
+    CQL {
+      update
+        .where(_.id eqs u.id)
+        .modify(_.salt setTo u.salt)
+        .and(_.encrypted_password setTo u.encrypted_password)
+    }.future().map(_ => u)
   }
 
-  def updateName(id: UUID, name: String): Future[ResultSet] = CQL {
+  def saveName(id: UUID, name: String): Future[ResultSet] = CQL {
     update
       .where(_.id eqs id)
       .modify(_.name setTo name)
@@ -249,9 +262,12 @@ sealed class UserByEmail
 
 object UserByEmail extends UserByEmail with Cassandra {
 
-  def cql_save(email: String, id: UUID) = CQL {
-    update.where(_.email eqs email).modify(_.id setTo id)
-  }
+  def save(email: String, id: UUID): Future[Boolean] = CQL {
+    insert
+      .value(_.email, email)
+      .value(_.id, id)
+      .ifNotExists()
+  }.future().map(_.one.applied)
 
   def find(email: String): Future[(String, UUID)] = {
     if (email.isEmpty) throw User.NotFound(email)

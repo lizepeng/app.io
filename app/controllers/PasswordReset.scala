@@ -94,7 +94,7 @@ object PasswordReset extends Controller with Logging {
       success => (for {
         l <- ExpirableLink.find(id)
         u <- User.find(l.user_id)
-        s <- User.save(u.copy(password = success.original))
+        s <- User.savePassword(u, success.original)
         r <- ExpirableLink.remove(id)
       } yield s).map { u =>
         Mailer.schedule(email2(u))
