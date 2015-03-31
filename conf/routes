@@ -36,3 +36,5 @@ GET  /password_reset          controllers.PasswordReset.nnew
 POST /password_reset          controllers.PasswordReset.create
 GET  /password_reset/:id      controllers.PasswordReset.show(id:String)
 POST /password_reset/:id      controllers.PasswordReset.save(id:String)
+
+GET  /email_templates         controllers.EmailTemplates.index(p:Pager?=Pager.first)

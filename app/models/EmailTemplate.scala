@@ -4,6 +4,7 @@ import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
+import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers.{Logging, _}
 import models.cassandra._
 import org.joda.time.DateTime
@@ -175,6 +176,11 @@ object EmailTemplate extends EmailTemplates with Cassandra {
       else throw UpdatedByOther()
     }
   } yield tmpl
+
+  def list(pager: Pager): Future[Iterator[ET]] = CQL {
+    select.setFetchSize(2000)
+  }.fetchEnumerator |>>>
+    PIteratee.slice(pager.start, pager.limit)
 }
 
 object EmailTemplateHistory extends EmailTemplateHistories with Cassandra {
