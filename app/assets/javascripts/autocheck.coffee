@@ -1,14 +1,23 @@
 $('input[data-autocheck-url]').on 'input', ->
-  formGroup    = $(@).parents '.form-group'
+  formGroup = $(@).parents '.form-group'
+
+  formGroup
+    .addClass "has-feedback"
+    .append(
+      """
+        <span class="form-control-feedback">
+          <i class="fa fa-lg"></i>
+        </span>
+      """) if formGroup.find('.form-control-feedback').length is 0
 
   formGroup.removeHelp = ->
     $(@).find('.help-block').remove()
 
   formGroup.addHelp = (msg) ->
     @.removeHelp()
-    $(@).append """<p class="help-block"> #{msg} </p>"""
+    $(@).append """<span class="help-block"> #{msg} </span>"""
 
-  icon = $(@).siblings('.form-control-feedback').find 'i'
+  icon = $(@).siblings('.form-control-feedback').find('i')
 
   icon.refresh = ->
     if not $(@).hasClass 'fa-refresh'

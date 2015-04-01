@@ -18,19 +18,29 @@ object Global extends GlobalSettings {
   override def onStop(app: Application) = {
     Logger.info("Shutting down cassandra...")
 
-    SysConfig.shutdown()
-    AccessControl.shutdown()
     Schemas.shutdown()
 
+    //System
+    SysConfig.shutdown()
+    AccessControl.shutdown()
+    SessionData.shutdown()
+
+    //User
     User.shutdown()
     UserByEmail.shutdown()
     Group.shutdown()
 
+    //CFS
     INode.shutdown()
     IndirectBlock.shutdown()
+    Block.shutdown()
+
+    ExpirableLink.shutdown()
+    EmailTemplate.shutdown()
+
+    //CFS View
     File.shutdown()
     Directory.shutdown()
-    Block.shutdown()
 
     Logger.info("System shutdown...")
   }
@@ -39,9 +49,9 @@ object Global extends GlobalSettings {
     Filters(super.doFilter(next), loggingFilter)
   }
 
-  val loggingFilter = Filter {(nextFilter, header) =>
+  val loggingFilter = Filter { (nextFilter, header) =>
     val startTime = System.currentTimeMillis
-    nextFilter(header).map {result =>
+    nextFilter(header).map { result =>
       val endTime = System.currentTimeMillis
       val requestTime = endTime - startTime
       if (!header.uri.contains("assets")) {

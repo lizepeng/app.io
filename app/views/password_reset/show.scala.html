@@ -22,14 +22,14 @@
 
         @{_input_password(fm("password.original"),
           'tabindex    -> 1
-          )(_fc_text, req.lang)
+          )(_fc_form_group, req.lang)
         }
 
         <p>@MSG("password.hint")</p>
 
         @{_input_password(fm("password.confirmation"),
           'tabindex    -> 2
-          )(_fc_text, req.lang)
+          )(_fc_form_group, req.lang)
         }
 
         <button type="submit" class="btn btn-default" tabindex="3">

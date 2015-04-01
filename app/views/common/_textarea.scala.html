@@ -1,0 +1,9 @@
+@(field: play.api.data.Field, args: (Symbol,Any)*)(
+  implicit handler: helper.FieldConstructor, lang: play.api.i18n.Lang)
+
+@helper.textarea(
+  field,
+  args ++ Seq(
+    'class -> "form-control"
+    ): _*
+  )(handler, lang)

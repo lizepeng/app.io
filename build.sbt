@@ -34,7 +34,8 @@ TwirlKeys.templateImports ++= Seq(
 )
 
 PlayKeys.routesImport ++= Seq(
-  "java.util.UUID",
   "helpers._",
-  "models.cfs._"
+  "java.util.UUID",
+  "models.cfs._",
+  "play.api.i18n.Lang"
 )

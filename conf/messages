@@ -41,6 +41,7 @@ detail=Detail
 edit=Edit
 
 date=Date
+lang=Language
 
 date.format.long=yyyy-MM-dd
 month.format.long=yyyy-MM
@@ -59,6 +60,11 @@ user.pwd.forgot=Forgot your password?
 setting=Setting
 preference=Preference
 
+updated_by=Committer
+updated_on=Date Modified
+created_by=Author
+created_on=Date Created
+
 # password_reset
 password.reset.head=Forgot your password? - App.io
 password.reset.title=Forgot password
@@ -76,6 +82,18 @@ password.invalid.reset.link=It looks like you clicked on an invalid password res
 password.reset.failed=There were problems reseting your password.
 password.changed=New password set successfully.
 
+email_templates.title=Email Templates
+email_templates.head=Email Templates
+email_templates.name=Name
+email_templates.name.place_holder=Enter name of your new email template
+email_templates.text=Text
+email_templates.text.sample=Text sample.
+email_templates.create=Create
+email_templates.save=Save
+
+lang.en=English
+lang.zh=Chinese
+lang.ja=Japanese
 
 # ---------------------------------------------- #
 

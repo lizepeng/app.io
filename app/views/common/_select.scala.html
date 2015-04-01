@@ -1,0 +1,40 @@
+@(field: play.api.data.Field, options: Seq[(String,String)], args: (Symbol,Any)*)(implicit handler: helper.FieldConstructor, lang: play.api.i18n.Lang)
+
+@helper.input(
+  field,
+  args.filter {
+    case ('disabled, _) => false
+    case _              => true
+  }:_*) { (id, name, value, htmlArgs) =>
+
+  @defining(
+    if( !htmlArgs.contains('multiple) ) name
+    else "%s[]".format(name)
+  ){ selectName =>
+
+  @defining( ( !field.indexes.isEmpty && htmlArgs.contains('multiple) ) match {
+    case true => field.indexes.map( i => field("[%s]".format(i)).value ).flatten.toSet
+    case _    => field.value.toSet
+  }){ values =>
+
+  @defining( args.find {
+    case ('disabled, _) => true
+    case _              => false
+  } match {
+    case Some((_, b:Boolean)) => b
+    case _ => false
+  }) { disabled =>
+
+    <select id="@id" name="@selectName" class="form-control"
+      @toHtmlArgs(htmlArgs)
+      @if(disabled){disabled} >
+
+      @args.toMap.get('_default).map { defaultValue =>
+        <option class="blank" value="">@defaultValue</option>
+      }
+      @options.map { v =>
+        <option value="@v._1" @if(values.contains(v._1)){selected="selected"}>@v._2</option>
+      }
+    </select>
+  }}}
+}

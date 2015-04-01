@@ -1,0 +1,100 @@
+@(fm:Form[_],tmpl:EmailTemplate,updated_by:User,created_by:User)(
+implicit req: UserRequest[_])
+
+@import common._
+@import helper._
+@import java.lang.String; val pkg = enclosingName(this)
+@import play.api.Play.current
+
+@layouts.base(MSG(s"$pkg.head")){
+
+  @fm.globalErrors.map { gerr =>
+    @common._alert("danger"){
+      @MSG(gerr.message)
+    }
+  }
+
+  <div class="row">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          @MSG(s"$pkg.title")
+        </h3>
+      </div>
+      <div class="panel-body">
+        @form(action = routes.EmailTemplates.save(tmpl.id, tmpl.lang)) {
+
+          @common._form_group_static("id"){
+            @tmpl.id
+          }
+
+          <div class="row">
+            <div class="col-xs-12 col-sm-9">
+              @common._form_group_static("updated_by") {
+                <a href="@routes.Users.show(updated_by.id)" title="">
+                  @updated_by.email
+                </a>
+              }
+            </div>
+            <div class="col-xs-12 col-sm-3">
+              @common._form_group_static("updated_on") {
+                @tmpl.updated_on.toString("yyyy-MM-dd hh:mm:ss")
+              }
+            </div>
+
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12 col-sm-9">
+              @common._form_group_static("created_by") {
+                @created_by.email
+              }
+            </div>
+
+            <div class="col-xs-12 col-sm-3">
+              @common._form_group_static("created_on") {
+                @tmpl.created_on.toString("yyyy-MM-dd hh:mm:ss")
+              }
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12 col-sm-9">
+              @{_input_text(fm("name"),
+                '_label      -> MSG(s"$pkg.name"),
+                'placeholder -> MSG(s"$pkg.name.place_holder"),
+                'tabindex    -> 1
+                )(_fc_form_group, req.lang)
+              }
+            </div>
+
+            <div class="col-xs-12 col-sm-3">
+              @{_select(fm("lang"),
+                Lang.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
+                'tabindex    -> 2,
+                'disabled    -> true
+                )(_fc_form_group, req.lang)
+              }
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12">
+              @{_textarea(fm("text"),
+                '_label      -> MSG(s"$pkg.text"),
+                'placeholder -> MSG(s"$pkg.text.sample"),
+                'rows        -> 24,
+                'tabindex    -> 3
+                )(_fc_form_group, req.lang)
+              }
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success" tabindex="4">
+            @MSG(s"$pkg.save")
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}()()

@@ -1,7 +1,6 @@
 package models
 
 import com.datastax.driver.core.Row
-import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
@@ -20,11 +19,13 @@ case class EmailTemplate(
   lang: Lang,
   name: String,
   text: String,
-  updated_on: DateTime = DateTime.now,
+  updated_on: DateTime,
   updated_by: UUID,
   created_on: DateTime,
   created_by: UUID
-)
+) {
+  def save = EmailTemplate.save(this)
+}
 
 case class EmailTemplateHistory(
   id: UUID,
@@ -132,48 +133,53 @@ object EmailTemplate extends EmailTemplates with Cassandra {
   case class UpdatedByOther()
     extends BaseException("email.template.updated.by.others")
 
-  def apply(): ET = {
-    val now = DateTime.now
-    EmailTemplate(
-      id = UUIDs.timeBased(),
-      lang = Lang.defaultLang,
-      name = "",
-      text = "",
-      created_on = now,
-      updated_on = now,
-      created_by = UUIDs.timeBased(),
-      updated_by = UUIDs.timeBased()
-    )
-  }
+  def find(id: UUID, lang: Lang): Future[ET] =
+    CQL {
+      select
+        .where(_.id eqs id)
+        .and(_.lang eqs lang.code)
+    }.one().map {
+      case None       => throw NotFound(id)
+      case Some(tmpl) => tmpl
+    }
 
-  def find(id: UUID): Future[ET] = CQL {
-    select.where(_.id eqs id)
-  }.one().map {
-    case None       => throw NotFound(id)
-    case Some(tmpl) => tmpl
-  }
+  def find(id: UUID, lang: Lang, updated_on: DateTime): Future[ET] =
+    CQL {
+      select
+        .where(_.id eqs id)
+        .and(_.lang eqs lang.code)
+        .and(_.updated_on eqs updated_on)
+    }.one().map {
+      case None       => throw NotFound(id)
+      case Some(tmpl) => tmpl
+    }
 
   def save(tmpl: ET): Future[ET] = for {
     init <- CQL {
       insert
         .value(_.id, tmpl.id)
-        .value(_.last_updated_on, tmpl.updated_on)
+        .value(_.lang, tmpl.lang.code)
+        .value(_.last_updated_on, tmpl.created_on)
         .value(_.created_on, tmpl.created_on)
         .value(_.created_by, tmpl.created_by)
         .ifNotExists()
     }.future().map(_.one.applied)
-    tmpl <- CQL {
-      val now = if (init) tmpl.created_on else DateTime.now()
-      update
-        .where(_.id eqs tmpl.id)
-        .and(_.updated_on eqs now)
-        .modify(_.name setTo tmpl.name)
-        .and(_.text setTo tmpl.text)
-        .and(_.updated_by setTo tmpl.updated_by)
-        .onlyIf(_.last_updated_on eqs tmpl.updated_on)
-    }.future().map(_.one).map { r =>
-      if (r.applied) fromRow(r)
-      else throw UpdatedByOther()
+    tmpl <- {
+      val curr = if (init) tmpl.created_on else DateTime.now
+      CQL {
+        update
+          .where(_.id eqs tmpl.id)
+          .and(_.lang eqs tmpl.lang.code)
+          .and(_.updated_on eqs curr)
+          .modify(_.name setTo tmpl.name)
+          .and(_.text setTo tmpl.text)
+          .and(_.last_updated_on setTo curr)
+          .and(_.updated_by setTo tmpl.updated_by)
+          .onlyIf(_.last_updated_on eqs tmpl.updated_on)
+      }.future().map(_.one).map { r =>
+        if (r.applied) tmpl.copy(updated_on = curr)
+        else throw UpdatedByOther()
+      }
     }
   } yield tmpl
 

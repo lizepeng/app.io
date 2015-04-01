@@ -1,0 +1,64 @@
+@(fm: Form[_])(implicit req: UserRequest[_])
+
+@import common._
+@import helper._
+@import java.lang.String; val pkg = enclosingName(this)
+@import play.api.Play.current
+
+@layouts.base(MSG(s"$pkg.head")){
+
+  @fm.globalErrors.map { gerr =>
+    @common._alert("danger"){
+      @MSG(gerr.message)
+    }
+  }
+
+  <div class="row">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          @MSG(s"$pkg.title")
+        </h3>
+      </div>
+      <div class="panel-body">
+        @form(action = routes.EmailTemplates.create()) {
+
+          <div class="row">
+            <div class="col-xs-12 col-sm-9">
+              @{_input_text(fm("name"),
+                '_label      -> MSG(s"$pkg.name"),
+                'placeholder -> MSG(s"$pkg.name.place_holder"),
+                'tabindex    -> 1
+                )(_fc_form_group, req.lang)
+              }
+            </div>
+
+            <div class="col-xs-12 col-sm-3">
+              @{_select(fm("lang"),
+                Lang.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
+                'tabindex    -> 2
+                )(_fc_form_group, req.lang)
+              }
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12">
+              @{_textarea(fm("text"),
+                '_label      -> MSG(s"$pkg.text"),
+                'placeholder -> MSG(s"$pkg.text.sample"),
+                'rows        -> 24,
+                'tabindex    -> 3
+                )(_fc_form_group, req.lang)
+              }
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success" tabindex="4">
+            @MSG(s"$pkg.create")
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}()()
