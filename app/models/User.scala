@@ -159,6 +159,14 @@ object User extends Users with Logging with SysConfig with Cassandra {
     UserByEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
+  def find[A](ids: List[UUID]): Future[Map[UUID, User]] = {
+    select
+      .where(_.id in ids)
+      .fetch().map(
+      _.map(u => (u.id, u)).toMap
+    )
+  }
+
   private def findGroupIds(id: UUID): Future[List[UUID]] = CQL {
     select(_.ext_group_ids).where(_.id eqs id)
   }.one().map {

@@ -1,10 +1,31 @@
-@(tmpl: EmailTemplate)(implicit req: UserRequest[_])
+@(tmpl: EmailTemplate, updated_by:User, created_by:User)(implicit req: UserRequest[_])
+
+@import common._
+@import helper._
+@import java.lang.String; val pkg = enclosingName(this)
 
 @layouts.base(tmpl.name){
 
+  @{_info(tmpl, updated_by, created_by)}
+
+ <div class="row">
+    <div class="col-xs-12 col-sm-9">
+      @common._form_group_static(s"$pkg.name") {
+        @tmpl.name
+      }
+    </div>
+    <div class="col-xs-12 col-sm-3">
+      @common._form_group_static("lang") {
+        @MSG(s"lang.${tmpl.lang.code}")
+      }
+    </div>
+ </div>
+
   <div class="row">
     <div class="col-xs-12">
-
+      @common._form_group_static(s"$pkg.text") {
+        <pre>@tmpl.text</pre>
+      }
     </div>
   </div>
 

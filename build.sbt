@@ -27,7 +27,7 @@ resolvers ++= Seq(
 
 TwirlKeys.templateImports ++= Seq(
   "helpers._",
-  "java.util._",
+  "java.util.UUID",
   "models.cfs._",
   "org.joda.time._",
   "play.api.i18n.{Messages => MSG}"
@@ -36,6 +36,7 @@ TwirlKeys.templateImports ++= Seq(
 PlayKeys.routesImport ++= Seq(
   "helpers._",
   "java.util.UUID",
+  "org.joda.time.DateTime",
   "models.cfs._",
   "play.api.i18n.Lang"
 )

@@ -1,4 +1,4 @@
-@(fm:Form[_],tmpl:EmailTemplate,updated_by:User,created_by:User)(
+@(id:UUID, lang:Lang, page: Page[EmailTemplateHistory], usrs:Map[UUID,User])(
 implicit req: UserRequest[_])
 
 @import common._
@@ -6,24 +6,18 @@ implicit req: UserRequest[_])
 @import java.lang.String; val pkg = enclosingName(this)
 @import play.api.Play.current
 
-@layouts.base(MSG(s"$pkg.head")){
-
-  @fm.globalErrors.map { gerr =>
-    @common._alert("danger"){
-      @MSG(gerr.message)
-    }
-  }
+@layouts.base(MSG(s"$pkg.history")){
 
   <div class="row">
     <!-- Nav tabs -->
     <ul class="nav nav-tabs">
-      <li role="presentation" class="active">
-        <a href="#edit" aria-controls="edit">
+      <li role="presentation">
+        <a href="@routes.EmailTemplates.edit(id, lang)" aria-controls="edit">
           <i class="fa fa-edit fa-lg"></i>
           @MSG(s"$pkg.title")
         </a>
       </li>
-      <li role="presentation">
+      <li role="presentation" class="active">
         <a href="#" aria-controls="history">
           <i class="fa fa-history fa-lg"></i>
           @MSG(s"$pkg.history")
@@ -34,88 +28,41 @@ implicit req: UserRequest[_])
     <!-- Tab panes -->
     <div class="panel panel-default">
       <div class="panel-body">
-
-        @form(action = routes.EmailTemplates.save(tmpl.id, tmpl.lang)) {
-
-          @common._form_group_static("id"){
-            @tmpl.id
-          }
-
-          <div class="row">
-            <div class="col-xs-12 col-sm-9">
-              @common._form_group_static("updated_by") {
-                <a href="@routes.Users.show(updated_by.id)" title="">
-                  @updated_by.email
-                </a>
+        <div class="table-responsive">
+          <table class="table table-hover table-ellipsis">
+            <thead>
+              <tr>
+                <th class="col-xs-5 col-sm-4">@MSG("updated_on")</th>
+                <th class="col-xs-3 col-sm-3">@MSG(s"$pkg.name")</th>
+                <th class="col-xs-3 col-sm-4">@MSG("updated_by")</th>
+                <th class="col-xs-1 col-sm-1"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @page.map { h =>
+                <tr>
+                  <td>@h.updated_on.toString("yyyy-MM-dd hh:mm:ss")</td>
+                  <td>@h.name</td>
+                  <td>@usrs.get(h.updated_by).map(_.email).getOrElse("")</td>
+                  <td>
+                    <a href="@routes.EmailTemplates.show(id, lang, Some(h.updated_on))">
+                      <i class="fa fa-arrow-circle-right fa-lg"></i>
+                    </a>
+                  </td>
+                </tr>
               }
-            </div>
-            <div class="col-xs-12 col-sm-3">
-              @common._form_group_static("updated_on") {
-                @tmpl.updated_on.toString("yyyy-MM-dd hh:mm:ss")
-              }
-            </div>
-
-          </div>
-
-          <div class="row">
-            <div class="col-xs-12 col-sm-9">
-              @common._form_group_static("created_by") {
-                @created_by.email
-              }
-            </div>
-
-            <div class="col-xs-12 col-sm-3">
-              @common._form_group_static("created_on") {
-                @tmpl.created_on.toString("yyyy-MM-dd hh:mm:ss")
-              }
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-12 col-sm-9">
-              @{_input_text(fm("name"),
-                '_label      -> MSG(s"$pkg.name"),
-                'placeholder -> MSG(s"$pkg.name.place_holder"),
-                'tabindex    -> 1
-                )(_fc_form_group, req.lang)
-              }
-            </div>
-
-            <div class="col-xs-12 col-sm-3">
-              @{_select(fm("lang"),
-                Lang.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
-                'tabindex    -> 2,
-                'disabled    -> true
-                )(_fc_form_group, req.lang)
-              }
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-12">
-              @{_textarea(fm("text"),
-                '_label      -> MSG(s"$pkg.text"),
-                'placeholder -> MSG(s"$pkg.text.sample"),
-                'rows        -> 24,
-                'tabindex    -> 3
-                )(_fc_form_group, req.lang)
-              }
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-success" tabindex="4">
-            <i class ="fa fa-save fa-lg"></i>
-            @MSG(s"$pkg.save")
-          </button>
-        }
+            </tbody>
+          </table>
+          @{_pager(page, p => routes.EmailTemplates.history(id, lang, p))}
+        </div>
       </div>
     </div>
 
   </div>
 }{
-<style type="text/css" media="screen">
-  .panel {
-    border-top: 0px;
-  }
-</style>
-}()
+  <style type="text/css" media="screen">
+    .panel {
+      border-top: 0px;
+    }
+  </style>
+}(libs.assets("js", "pager"))

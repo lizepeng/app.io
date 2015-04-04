@@ -1,7 +1,7 @@
 @(title: String, above_content: Html = Html(""))(
   content: Html)(
-  css: Html = Html(""))(
-  js: Html = Html(""))(
+  css: Html *)(
+  js: Html *)(
   implicit req: UserRequest[_])
 
 @import helper._

@@ -1,5 +1,6 @@
 @(path:Path, page: Page[INode])(implicit req: UserRequest[_])
 
+@import common._
 @import helper._
 
 @layouts.base(MSG("Files")) {
@@ -18,7 +19,7 @@
   </div>
   <div class="row">
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table table-hover table-ellipsis">
         <thead>
           <tr>
             <th class="col-xs-5">Name</th>
@@ -26,7 +27,7 @@
             <th class="col-xs-3 text-right hidden-xs hidden-sm">
               Created On
             </th>
-            <th class="col-xs-2" colspan="2">Action</th>
+            <th class="col-xs-2 text-right">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -64,19 +65,23 @@
                 <td class="text-right hidden-xs hidden-sm">
                   @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
                 </td>
-                <td>
-                  <a href="@routes.Files.download(path + f.name)">
-                    <i class="fa fa-download fa-lg"></i>
-                  </a>
-                </td>
 
                 <td>
-                  @form(routes.Files.destroy(f.id), 'class -> "form-inline") {
-                    @common._previous_uri()
-                    <button type="submit" class="btn form-inline-btn">
-                      <i class="fa fa-trash-o fa-lg text-danger"></i>
-                    </button>
-                  }
+                  <div class="btn-toolbar pull-right">
+                    <div class="btn-group">
+                      <a href="@routes.Files.download(path + f.name)">
+                        <i class="fa fa-download fa-lg"></i>
+                      </a>
+                    </div>
+                    <div class="btn-group">
+                      @form(routes.Files.destroy(f.id), 'class -> "form-inline") {
+                        @common._previous_uri()
+                        <button type="submit" class="btn form-inline-btn">
+                          <i class="fa fa-trash-o fa-lg text-danger"></i>
+                        </button>
+                      }
+                    </div>
+                  </div>
                 </td>
               </tr>
             }
@@ -84,33 +89,12 @@
         </tbody>
       </table>
 
-      <nav>
-        <ul class="pager">
-          <li class="previous @if(!page.pager.hasPrev){disabled}">
-            <a href="@routes.Files.index(Path(),page.pager.prev)">Previous</a>
-          </li>
-          <li class="next">
-            <a href="@routes.Files.index(Path(),page.pager.next)">Next</a>
-          </li>
-        </ul>
-      </nav>
+      @{_pager(page, p => routes.Files.index(path, p))}
     </div>
   </div>
 }{
   @{_upload(path, "css")}
-  <style>
-    .table {
-      table-layout:fixed;
-    }
-
-    .table td {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .table tr i {
-      padding-right: 10px;
-    }
-  </style>
-}(_upload(path, "js"))
+}(
+  _upload(path, "js"),
+  libs.assets("js", "pager")
+)

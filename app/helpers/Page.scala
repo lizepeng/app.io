@@ -7,24 +7,29 @@ import scala.language.implicitConversions
 /**
  * @author zepeng.li@gmail.com
  */
-case class Page[E](pager: Pager, elements: Iterator[E])
+case class Page[E](pager: Pager, elements: List[E]) {
+
+  def hasNext = elements.size > pager.limit - 1
+
+  def hasPrev = pager.start > 0
+}
 
 object Page {
 
-  implicit def PageToIterator[E](p: Page[E]): Iterator[E] = p.elements
+  implicit def PageToIterator[E](p: Page[E]): List[E] =
+    p.elements.take(p.pager.limit - 1)
 }
 
 case class Pager(start: Int, limit: Int) {
 
-  def prev = copy((start - limit) max 0, limit)
+  def prev = copy((start - (limit - 1)) max 0, limit)
 
-  def next = copy(start + limit, limit)
-
-  def hasPrev = start > 0
+  def next = copy(start + (limit - 1), limit)
 }
 
 object Pager {
-  def first = Pager(0, 20)
+
+  def first = Pager(0, 10 + 1)
 
   implicit def queryStringBinder(
     implicit intBinder: QueryStringBindable[Int]
@@ -40,7 +45,7 @@ object Pager {
           limit <- intBinder.bind(s"per_page", params)
         } yield {
           (start, limit) match {
-            case (Right(s), Right(l)) => Right(Pager(s, l))
+            case (Right(s), Right(l)) => Right(Pager(s, l + 1))
             case _                    => Left("Unable to bind a Pager")
           }
         }
@@ -48,7 +53,7 @@ object Pager {
 
       override def unbind(key: String, p: Pager): String = {
         val start = intBinder.unbind(s"page", p.start)
-        val limit = intBinder.unbind(s"per_page", p.limit)
+        val limit = intBinder.unbind(s"per_page", p.limit - 1)
         s"$start&$limit"
       }
     }

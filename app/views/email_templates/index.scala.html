@@ -1,33 +1,36 @@
 @(page: Page[EmailTemplate])(implicit req: UserRequest[_])
 
+@import common._
 @import helper._
+@import java.lang.String; val pkg = enclosingName(this)
 
-@layouts.base(MSG("email.templates")) {
+@layouts.base(MSG(s"$pkg.title")) {
 
   @common._flashing()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
-      <i class="fa fa-hdd-o fa-lg"></i>
-      @MSG("email.templates")
+      <i class="fa fa-envelope-o fa-lg"></i>
+      @MSG(s"$pkg.title")
+      <a href="@routes.EmailTemplates.nnew()" class="btn btn-success pull-right">
+      <i class="fa fa-plus"></i>
+      @MSG("new")
+      </a>
     </h2>
   </div>
 
   <div class="row">
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table table-hover table-ellipsis">
         <thead>
           <tr>
             <th class="col-xs-5">
-              Name
+              @MSG(s"$pkg.name")
             </th>
-            <th class="col-xs-2 text-right">
-              Size
+            <th class="col-xs-3">
+              @MSG("lang")
             </th>
-            <th class="col-xs-3 text-right hidden-xs hidden-sm">
-              Created On
-            </th>
-            <th class="col-xs-2" colspan="2">
+            <th class="col-xs-4 text-right">
               Action
             </th>
           </tr>
@@ -36,38 +39,41 @@
           @page.map { tmpl =>
             <tr>
               <td>
+                <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang)">
+                  @tmpl.name
+                </a>
+              </td>
+              <td>
+                @MSG(s"lang.${tmpl.lang.code}")
+              </td>
+              <td>
+                <div class="btn-toolbar pull-right">
+                  <div class="btn-group">
+                    <a href="@routes.EmailTemplates.edit(tmpl.id, tmpl.lang)">
+                      <i class="fa fa-edit fa-lg text-warning"></i>
+                    </a>
+                  </div>
+                  <div class="btn-group">
+                    <a href="@routes.EmailTemplates.history(tmpl.id, tmpl.lang)">
+                      <i class="fa fa-history fa-lg text-info"></i>
+                    </a>
+                  </div>
+                  <div class="btn-group">
+                    @form(routes.EmailTemplates.destroy(tmpl.id, tmpl.lang), 'class -> "form-inline") {
+                      @common._previous_uri()
+                      <button type="submit" class="btn form-inline-btn">
+                        <i class="fa fa-trash-o fa-lg text-danger"></i>
+                      </button>
+                    }
+                  </div>
+                </div>
               </td>
             </tr>
           }
         </tbody>
       </table>
 
-      <nav>
-        <ul class="pager">
-          <li class="previous @if(!page.pager.hasPrev){disabled}">
-            <a href="@routes.Files.index(Path(),page.pager.prev)">Previous</a>
-          </li>
-          <li class="next">
-            <a href="@routes.Files.index(Path(),page.pager.next)">Next</a>
-          </li>
-        </ul>
-      </nav>
+      @{_pager(page, p => routes.EmailTemplates.index(p))}
     </div>
   </div>
-}{
-  <style>
-    .table {
-      table-layout:fixed;
-    }
-
-    .table td {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .table tr i {
-      padding-right: 10px;
-    }
-  </style>
-}()
+}()(libs.assets("js", "pager"))

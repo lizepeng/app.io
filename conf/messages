@@ -32,8 +32,10 @@ desc=Description
 qty=Quantity
 price=Price
 
+previous=Previous
 next=Next
 
+new=New
 save=Save
 cancel=Cancel
 delete=Delete
@@ -90,6 +92,7 @@ email_templates.text=Text
 email_templates.text.sample=Text sample.
 email_templates.create=Create
 email_templates.save=Save
+email_templates.history=History
 
 lang.en=English
 lang.zh=Chinese

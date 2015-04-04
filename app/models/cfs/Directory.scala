@@ -24,6 +24,7 @@ case class Directory(
   attributes: Map[String, String] = Map(),
   name: String = ""
 ) extends INode with TimeBased {
+
   def is_directory: Boolean = true
 
   def save(filename: String)(implicit user: User): Iteratee[BLK, File] = {
@@ -33,10 +34,10 @@ case class Directory(
 
   def save(): Future[Directory] = Directory.write(this)
 
-  def list(pager: Pager): Future[Iterator[INode]] = {
+  def list(pager: Pager): Future[List[INode]] = {
     Directory.list(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
-  }
+  }.map(_.toList)
 
   private def find(path: Seq[String]): Future[(String, UUID)] = {
     Enumerator(path: _*) |>>>

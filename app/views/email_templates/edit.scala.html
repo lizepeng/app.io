@@ -1,4 +1,4 @@
-@(fm:Form[_],tmpl:EmailTemplate,updated_by:User,created_by:User)(
+@(fm:Form[_], tmpl:EmailTemplate, updated_by:User, created_by:User)(
 implicit req: UserRequest[_])
 
 @import common._
@@ -24,7 +24,7 @@ implicit req: UserRequest[_])
         </a>
       </li>
       <li role="presentation">
-        <a href="" aria-controls="history">
+        <a href="@routes.EmailTemplates.history(tmpl.id, tmpl.lang)" aria-controls="history">
           <i class="fa fa-history fa-lg"></i>
           @MSG(s"$pkg.history")
         </a>
@@ -37,39 +37,7 @@ implicit req: UserRequest[_])
 
         @form(action = routes.EmailTemplates.save(tmpl.id, tmpl.lang)) {
 
-          @common._form_group_static("id"){
-            @tmpl.id
-          }
-
-          <div class="row">
-            <div class="col-xs-12 col-sm-9">
-              @common._form_group_static("updated_by") {
-                <a href="@routes.Users.show(updated_by.id)" title="">
-                  @updated_by.email
-                </a>
-              }
-            </div>
-            <div class="col-xs-12 col-sm-3">
-              @common._form_group_static("updated_on") {
-                @tmpl.updated_on.toString("yyyy-MM-dd hh:mm:ss")
-              }
-            </div>
-
-          </div>
-
-          <div class="row">
-            <div class="col-xs-12 col-sm-9">
-              @common._form_group_static("created_by") {
-                @created_by.email
-              }
-            </div>
-
-            <div class="col-xs-12 col-sm-3">
-              @common._form_group_static("created_on") {
-                @tmpl.created_on.toString("yyyy-MM-dd hh:mm:ss")
-              }
-            </div>
-          </div>
+          @{_info(tmpl, updated_by, created_by)}
 
           <div class="row">
             <div class="col-xs-12 col-sm-9">

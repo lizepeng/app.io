@@ -3,42 +3,45 @@
 # ~~~~
 
 # Home page
-GET  /                         controllers.Application.index
-GET  /wiki                     controllers.Application.wiki
-GET  /about                    controllers.Application.about
+GET  /                              controllers.Application.index
+GET  /wiki                          controllers.Application.wiki
+GET  /about                         controllers.Application.about
 
 #TODO BEIGIN remove this line
-POST /schemas/recreate         controllers.Application.recreate
+POST /schemas/recreate              controllers.Application.recreate
 #TODO END
 
 # Map static resources from the /public folder to the /assets URL path
-GET  /assets/*file             controllers.Assets.at(path="/public", file)
+GET  /assets/*file                  controllers.Assets.at(path="/public", file)
 
-GET  /cfs/show/$path<.*>       controllers.Files.show(path:Path)
-GET  /cfs/stream/$path<.*>     controllers.Files.stream(path:Path)
-GET  /cfs/download/$path<.*>   controllers.Files.download(path:Path,inline:Boolean?=false)
-GET  /cfs/$path<.*>            controllers.Files.index(path:Path,p:Pager?=Pager.first)
-POST /cfs/$path<.*>            controllers.Files.create(path:Path)
-POST /cfs/destroy/:id          controllers.Files.destroy(id:UUID)
+GET  /cfs/show/$path<.*>            controllers.Files.show(path:Path)
+GET  /cfs/stream/$path<.*>          controllers.Files.stream(path:Path)
+GET  /cfs/download/$path<.*>        controllers.Files.download(path:Path,inline:Boolean?=false)
+GET  /cfs/$path<.*>                 controllers.Files.index(path:Path,p:Pager?=Pager.first)
+POST /cfs/$path<.*>                 controllers.Files.create(path:Path)
+POST /cfs/destroy/:id               controllers.Files.destroy(id:UUID)
 
-GET  /login                    controllers.Sessions.nnew
-POST /login                    controllers.Sessions.create
-POST /logout                   controllers.Sessions.destroy
+GET  /login                         controllers.Sessions.nnew
+POST /login                         controllers.Sessions.create
+POST /logout                        controllers.Sessions.destroy
 
-GET  /users/:id                controllers.Users.show(id:UUID)
-GET  /users/                   controllers.Users.index
-GET  /join                     controllers.Users.nnew
-POST /join                     controllers.Users.create
-POST /signup_check/username    controllers.Users.checkEmail
-POST /signup_check/password    controllers.Users.checkPassword
+GET  /users/:id                     controllers.Users.show(id:UUID)
+GET  /users/                        controllers.Users.index
+GET  /join                          controllers.Users.nnew
+POST /join                          controllers.Users.create
+POST /signup_check/username         controllers.Users.checkEmail
+POST /signup_check/password         controllers.Users.checkPassword
 
-GET  /password_reset           controllers.PasswordReset.nnew
-POST /password_reset           controllers.PasswordReset.create
-GET  /password_reset/:id       controllers.PasswordReset.show(id:String)
-POST /password_reset/:id       controllers.PasswordReset.save(id:String)
+GET  /password_reset                controllers.PasswordReset.nnew
+POST /password_reset                controllers.PasswordReset.create
+GET  /password_reset/:id            controllers.PasswordReset.show(id:String)
+POST /password_reset/:id            controllers.PasswordReset.save(id:String)
 
-GET  /email_templates/new      controllers.EmailTemplates.nnew
-POST /email_templates/new      controllers.EmailTemplates.create
-GET  /email_templates/:id/edit controllers.EmailTemplates.edit(id:UUID,lang:Lang?=Lang.defaultLang)
-POST /email_templates/:id      controllers.EmailTemplates.save(id:UUID,lang:Lang?=Lang.defaultLang)
-GET  /email_templates          controllers.EmailTemplates.index(p:Pager?=Pager.first)
+GET  /email_templates               controllers.EmailTemplates.index(p:Pager?=Pager.first)
+GET  /email_templates/new           controllers.EmailTemplates.nnew
+POST /email_templates/new           controllers.EmailTemplates.create
+GET  /email_templates/edit/:id      controllers.EmailTemplates.edit(id:UUID,lang:Lang?=Lang.defaultLang)
+GET  /email_templates/show/:id      controllers.EmailTemplates.show(id:UUID,lang:Lang?=Lang.defaultLang,updated_on:Option[DateTime]?=None)
+POST /email_templates/:id           controllers.EmailTemplates.save(id:UUID,lang:Lang?=Lang.defaultLang)
+GET  /email_templates/hisotry/:id   controllers.EmailTemplates.history(id:UUID,lang:Lang?=Lang.defaultLang,p:Pager?=Pager.first)
+POST /email_templates/destroy/:id   controllers.EmailTemplates.destroy(id:UUID,lang:Lang?=Lang.defaultLang)

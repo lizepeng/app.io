@@ -6,11 +6,11 @@ import com.datastax.driver.core.utils.UUIDs
 import controllers.session._
 import helpers._
 import models.EmailTemplate.{NotFound, UpdatedByOther}
-import models.{EmailTemplate, SessionData, User}
+import models._
 import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.Lang
+import play.api.i18n.{Lang, Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import security._
@@ -48,6 +48,20 @@ object EmailTemplates extends Controller with Logging with AppConfig {
     }
   }
 
+  def show(id: UUID, lang: Lang, updated_on: Option[DateTime] = None) = (UserAction >> PermCheck(
+    module_name, "show",
+    onDenied = req => Forbidden
+  )).async { implicit req =>
+    println(updated_on)
+    for {
+      tmpl <- EmailTemplate.find(id, lang, updated_on)
+      usr1 <- User.find(tmpl.updated_by)
+      usr2 <- User.find(tmpl.created_by)
+    } yield Ok {
+      html.email_templates.show(tmpl, usr1, usr2)
+    }
+  }
+
   def nnew() = (UserAction >> PermCheck(
     module_name, "nnew",
     onDenied = req => Forbidden
@@ -79,7 +93,9 @@ object EmailTemplates extends Controller with Logging with AppConfig {
           updated_by = req.user.get.id
         ).save.map { saved =>
           Redirect {
-            routes.EmailTemplates.edit(saved.id, saved.lang)
+            routes.EmailTemplates.index()
+          }.flashing {
+            AlertLevel.Success -> MSG(s"$module_name.created", saved.name)
           }
         }
       }
@@ -126,7 +142,7 @@ object EmailTemplates extends Controller with Logging with AppConfig {
         SessionData.get[DateTime](key_editing(id)).flatMap {
           case Some(d) =>
             for {
-              tmpl <- EmailTemplate.find(id, lang, d)
+              tmpl <- EmailTemplate.find(id, lang, Some(d))
               done <- tmpl.copy(
                 name = success.name,
                 text = success.text,
@@ -146,6 +162,38 @@ object EmailTemplates extends Controller with Logging with AppConfig {
         }
       }
     )
+  }
+
+  def history(id: UUID, lang: Lang, pager: Pager) = (UserAction >> PermCheck(
+    module_name, "history",
+    onDenied = req => Forbidden
+  )).async { implicit req =>
+    for {
+      list <- EmailTemplateHistory.list(id, lang, pager)
+      usrs <- User.find(list.map(_.updated_by))
+    } yield Ok {
+      html.email_templates.history(
+        id, lang, Page(pager, list), usrs
+      )
+    }
+  }
+
+  def destroy(id: UUID, lang: Lang) = (UserAction >> PermCheck(
+    module_name, "destroy",
+    onDenied = req => Forbidden
+  )).async { implicit req => {
+    for {
+      tmpl <- EmailTemplate.find(id, lang)
+      ___ <- EmailTemplate.destroy(id, lang)
+    } yield RedirectToPreviousURI.getOrElse {
+      Redirect(routes.EmailTemplates.index())
+    }.flashing {
+      AlertLevel.Success -> MSG(s"$module_name.deleted", tmpl.name)
+    }
+  }.recover {
+    case e: NotFound => NotFound(MSG(s"$module_name.not.found", id))
+  }
+
   }
 
   private def key_editing(id: UUID) = s"$module_name - $id - version"

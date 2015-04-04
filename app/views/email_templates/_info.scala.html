@@ -1,0 +1,39 @@
+@(tmpl: EmailTemplate, updated_by:User, created_by:User)
+
+@import common._
+@import helper._
+@import java.lang.String; val pkg = enclosingName(this)
+
+@common._form_group_static("id"){
+  @tmpl.id
+}
+
+<div class="row">
+  <div class="col-xs-12 col-sm-9">
+    @common._form_group_static("updated_by") {
+      <a href="@routes.Users.show(updated_by.id)" title="">
+        @updated_by.email
+      </a>
+    }
+  </div>
+  <div class="col-xs-12 col-sm-3">
+    @common._form_group_static("updated_on") {
+      @tmpl.updated_on.toString("yyyy-MM-dd hh:mm:ss")
+    }
+  </div>
+
+</div>
+
+<div class="row">
+  <div class="col-xs-12 col-sm-9">
+    @common._form_group_static("created_by") {
+      @created_by.email
+    }
+  </div>
+
+  <div class="col-xs-12 col-sm-3">
+    @common._form_group_static("created_on") {
+      @tmpl.created_on.toString("yyyy-MM-dd hh:mm:ss")
+    }
+  </div>
+</div>

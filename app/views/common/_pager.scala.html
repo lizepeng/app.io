@@ -1,13 +1,18 @@
-@(urlOpt: Option[Call], top: Boolean = false)
+@(page: Page[_], link: Pager => Call)
 
-<ul class="pager @{if(top) "hidden-phone" else ""} ">
-  @urlOpt.map { url =>
-    <li class="next">
-      <a href="@url">@MSG("next") <i class="icon-double-angle-right"></i></a>
+<nav>
+  <ul class="pager">
+    <li class="previous@if(!page.hasPrev){ disabled}">
+      <a href="@link(page.pager.prev)">
+        <i class="fa fa-long-arrow-left"></i>
+        @MSG("previous")
+      </a>
     </li>
-  }.getOrElse {
-    <li class="next disabled">
-      <a>@MSG("next") <i class="icon-double-angle-right"></i></a>
+    <li class="next@if(!page.hasNext){ disabled}">
+      <a href="@link(page.pager.next)">
+        @MSG("next")
+        <i class="fa fa-long-arrow-right"></i>
+      </a>
     </li>
-  }
-</ul>
+  </ul>
+</nav>

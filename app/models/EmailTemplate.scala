@@ -4,10 +4,12 @@ import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
+import com.websudos.phantom.query.SelectWhere
 import helpers.{Logging, _}
 import models.cassandra._
 import org.joda.time.DateTime
 import play.api.i18n.Lang
+import play.api.libs.iteratee.Enumeratee
 
 import scala.concurrent.Future
 
@@ -24,6 +26,7 @@ case class EmailTemplate(
   created_on: DateTime,
   created_by: UUID
 ) {
+
   def save = EmailTemplate.save(this)
 }
 
@@ -108,23 +111,6 @@ sealed class EmailTemplates
   )
 }
 
-sealed class EmailTemplateHistories
-  extends CassandraTable[EmailTemplateHistories, ETH]
-  with EmailTemplateKey[EmailTemplateHistories, ETH]
-  with EmailTemplateHistoryColumns[EmailTemplateHistories, ETH]
-  with ExtCQL[EmailTemplateHistories, ETH]
-  with Logging {
-
-  override def fromRow(r: Row): ETH = ETH(
-    id(r),
-    Lang(lang(r)),
-    name(r),
-    text(r),
-    updated_on(r),
-    updated_by(r)
-  )
-}
-
 object EmailTemplate extends EmailTemplates with Cassandra {
 
   case class NotFound(id: UUID)
@@ -133,22 +119,22 @@ object EmailTemplate extends EmailTemplates with Cassandra {
   case class UpdatedByOther()
     extends BaseException("email.template.updated.by.others")
 
-  def find(id: UUID, lang: Lang): Future[ET] =
-    CQL {
-      select
-        .where(_.id eqs id)
-        .and(_.lang eqs lang.code)
-    }.one().map {
-      case None       => throw NotFound(id)
-      case Some(tmpl) => tmpl
-    }
+  def find(
+    id: UUID, lang: Lang,
+    updated_on: Option[DateTime] = None): Future[ET] =
+    find(id, lang.code, updated_on)
 
-  def find(id: UUID, lang: Lang, updated_on: DateTime): Future[ET] =
+  def find(
+    id: UUID, lang: String,
+    updated_on: Option[DateTime]): Future[ET] =
     CQL {
-      select
+      val cql: SelectWhere[EmailTemplates, ET] = select
         .where(_.id eqs id)
-        .and(_.lang eqs lang.code)
-        .and(_.updated_on eqs updated_on)
+        .and(_.lang eqs lang)
+
+      updated_on
+        .map(d => cql.and(_.updated_on eqs d))
+        .getOrElse(cql)
     }.one().map {
       case None       => throw NotFound(id)
       case Some(tmpl) => tmpl
@@ -183,12 +169,46 @@ object EmailTemplate extends EmailTemplates with Cassandra {
     }
   } yield tmpl
 
-  def list(pager: Pager): Future[Iterator[ET]] = CQL {
-    select.setFetchSize(2000)
-  }.fetchEnumerator |>>>
-    PIteratee.slice(pager.start, pager.limit)
+  def list(pager: Pager): Future[List[ET]] = {
+    CQL {
+      distinct(_.id, _.lang).setFetchSize(2000)
+    }.fetchEnumerator &>
+      Enumeratee.mapM { case (id, lang) => find(id, lang, None) } |>>>
+      PIteratee.slice[ET](pager.start, pager.limit)
+  }.map(_.toList)
+
+  def destroy(id: UUID, lang: Lang): Future[ResultSet] = CQL {
+    delete.where(_.id eqs id).and(_.lang eqs lang.code)
+  }.future()
+
+}
+
+sealed class EmailTemplateHistories
+  extends CassandraTable[EmailTemplateHistories, ETH]
+  with EmailTemplateKey[EmailTemplateHistories, ETH]
+  with EmailTemplateHistoryColumns[EmailTemplateHistories, ETH]
+  with ExtCQL[EmailTemplateHistories, ETH]
+  with Logging {
+
+  override def fromRow(r: Row): ETH = ETH(
+    id(r),
+    Lang(lang(r)),
+    name(r),
+    text(r),
+    updated_on(r),
+    updated_by(r)
+  )
 }
 
 object EmailTemplateHistory extends EmailTemplateHistories with Cassandra {
 
+  def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {
+    CQL {
+      select
+        .where(_.id eqs id)
+        .and(_.lang eqs lang.code)
+        .setFetchSize(2000)
+    }.fetchEnumerator |>>>
+      PIteratee.slice(pager.start, pager.limit)
+  }.map(_.toList)
 }
