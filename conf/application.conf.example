@@ -81,13 +81,19 @@ mimetype {
 
 app.wiki.video=wiki.mp4
 
-#smtp.host (mandatory)
-#smtp.port (defaults to 25)
-#smtp.ssl (defaults to no)
-#smtp.tls (defaults to no)
-#smtp.user (optional)
-#smtp.password (optional)
-#smtp.debug (defaults to no, to take effect you also need to set the log level to "DEBUG" for the application logger)
-#smtp.mock (defaults to no, will only log all the email properties instead of sending an email)
-#smtp.timeout (defaults to 60s)
-#smtp.connectiontimeout (defaults to 60s)
+mailer {
+  noreply {
+    smtp.host=smtp.app.io
+    smtp.port=465
+    smtp.ssl=yes
+    smtp.user="noreply@app.io"
+    smtp.password="******"
+  },
+  support {
+    smtp.host=smtp.app.io
+    smtp.port=465
+    smtp.ssl=yes
+    smtp.user="support@app.io"
+    smtp.password="******"
+  }
+}

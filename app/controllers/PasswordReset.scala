@@ -53,7 +53,7 @@ object PasswordReset extends Controller with Logging with SysConfig {
         link <- ExpirableLink.nnew(module_name)(user)
         tmpl <- getEmailTemplate("password_reset.email1", req.lang)
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
-        Mailer.schedule(tmpl, u, "link" -> id)
+        Mailer.schedule("noreply", tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
       }.recover {
         case e: User.NotFound          =>
@@ -101,7 +101,7 @@ object PasswordReset extends Controller with Logging with SysConfig {
         user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
         tmpl <- getEmailTemplate("password_reset.email2", req.lang)
       } yield (user, tmpl)).map { case (user, tmpl) =>
-        Mailer.schedule(tmpl, user)
+        Mailer.schedule("support", tmpl, user)
         Redirect(routes.Sessions.nnew()).flashing(
           AlertLevel.Info -> MSG(s"$module_name.password.changed")
         )
