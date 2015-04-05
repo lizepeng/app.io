@@ -2,7 +2,7 @@ package controllers
 
 import akka.actor.Cancellable
 import helpers.Contexts.mailerContext
-import helpers.Logging
+import helpers.{AppConfig, Logging}
 import models.{EmailTemplate, User}
 import play.api.Play.current
 import play.api.i18n.{Messages => MSG}
@@ -14,19 +14,23 @@ import scala.concurrent.duration._
 /**
  * @author zepeng.li@gmail.com
  */
-object Mailer extends Logging {
+object Mailer extends Logging with AppConfig {
 
-  private lazy val smtp_user = current.configuration.getString("smtp.user")
+  override lazy val module_name = "controllers.mailer"
+  private lazy  val smtp_user   = appConfig.getString("smtp.user")
+  private lazy  val admins      = config
+    .getStringSeq("admin.email-addresses")
+    .getOrElse(Seq.empty)
 
   def schedule(email: Email): Cancellable = {
     Akka.system.scheduler.scheduleOnce(1.second) {
       smtp_user match {
-        case Some(su) =>
+        case Some(su) if admins.nonEmpty =>
           val id = MailerPlugin.send {
             email.copy(from = s"${MSG("app.name")} <$su>")
           }
           Logger.trace(s"Email:[$id] has been sent")
-        case None     =>
+        case _                           =>
           Logger.error("smtp server is not configured yet")
       }
     }
@@ -42,13 +46,29 @@ object Mailer extends Logging {
         "user.email" -> user.email
       )
 
-    Email(
-      subject = substitute(tmpl.subject, args2: _*),
-      from = "",
-      to = Seq(s"${user.name} <${user.email}>"),
-      bodyText = Some(substitute(tmpl.text, args2: _*))
-    )
+    if (tmpl.subject.isEmpty || tmpl.text.isEmpty) {
+      genAlertMail(s"Email Template ${tmpl.id} is empty!!!")
+    }
+    else {
+      Email(
+        subject = substitute(tmpl.subject, args2: _*),
+        from = "",
+        to = Seq(s"${user.name} <${user.email}>"),
+        bodyText = Some(substitute(tmpl.text, args2: _*))
+      )
+    }
   }
+
+  def genAlertMail(text: String) = Email(
+    subject = "Warning",
+    from = "",
+    to = Seq(s"Administrators ${admins.map("<" + _ + ">").mkString(",")}"),
+    bodyText = Some(
+      s"""
+         |$text
+      """.stripMargin
+    )
+  )
 
   val anyPattern = """[\$|#]\{([\.\w]+)\}""".r
   val msgPattern = """\$\{([\.\w]+)\}""".r

@@ -5,9 +5,10 @@ import controllers.session.UserAction
 import helpers.Logging
 import models.sys.SysConfig
 import models.{EmailTemplate, ExpirableLink, User}
+import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{Messages => MSG}
+import play.api.i18n.{Lang, Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.{Controller, Result}
 import views._
@@ -50,7 +51,7 @@ object PasswordReset extends Controller with Logging with SysConfig {
       success => (for {
         user <- User.find(success)
         link <- ExpirableLink.nnew(module_name)(user)
-        tmpl <- getUUID("email1.id").flatMap(id => EmailTemplate.find(id, req.lang))
+        tmpl <- getEmailTemplate("password_reset.email1", req.lang)
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
         Mailer.schedule(tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
@@ -98,7 +99,7 @@ object PasswordReset extends Controller with Logging with SysConfig {
       success => (for {
         link <- ExpirableLink.find(id).andThen { case _ => ExpirableLink.remove(id) }
         user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
-        tmpl <- getUUID("email2.id").flatMap(id => EmailTemplate.find(id, req.lang))
+        tmpl <- getEmailTemplate("password_reset.email2", req.lang)
       } yield (user, tmpl)).map { case (user, tmpl) =>
         Mailer.schedule(tmpl, user)
         Redirect(routes.Sessions.nnew()).flashing(
@@ -111,7 +112,39 @@ object PasswordReset extends Controller with Logging with SysConfig {
     )
   }
 
-  private def onError(bound: Form[String], msg: String)(implicit req: UserRequest[_]): Result = NotFound {
+  private lazy val mailer = for {
+    uid <- getUUID("user.id")
+    usr <- User.find(uid).recoverWith {
+      case e: User.NotFound => User.save(
+        User(
+          id = uid,
+          name = "password_reset",
+          email = s"password_reset@app.io"
+        )
+      )
+    }
+  } yield usr
+
+  private def getEmailTemplate(key: String, lang: Lang): Future[EmailTemplate] =
+    for {
+      uuid <- getUUID(key)
+      user <- mailer
+      tmpl <- EmailTemplate.find(uuid, lang)
+        .recoverWith { case e: EmailTemplate.NotFound =>
+        val now = DateTime.now
+        EmailTemplate.save(
+          EmailTemplate(
+            uuid, Lang.defaultLang,
+            key, "", "",
+            now, user.id,
+            now, user.id
+          )
+        )
+      }
+    } yield tmpl
+
+  private def onError(bound: Form[String], msg: String)(
+    implicit req: UserRequest[_]): Result = NotFound {
     html.password_reset.nnew {
       bound.withGlobalError(msg)
     }

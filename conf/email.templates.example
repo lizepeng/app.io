@@ -1,4 +1,9 @@
-# password reset email 1 Please reset your password
+# password reset email 1
+
+# subject
+[${app.name}] Please reset your password
+
+#
 We heard that you lost your ${app.name} password. Sorry about that!
 
 But don't worry!You can use the following link within the next day to reset your password:
@@ -12,7 +17,12 @@ Your friends at ${app.name}
 
 
 
-# password reset email 2 Your password has changed
+# password reset email 2
+
+# subject
+[${app.name}] Your password has changed
+
+#
 Hello #{user.name},
 
 We wanted to let you know that your ${app.name} password was changed.
