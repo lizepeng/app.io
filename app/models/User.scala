@@ -48,6 +48,10 @@ case class User(
     )
   }
 
+  def savePassword(newPassword: String): Future[User] = {
+    User.savePassword(this, newPassword)
+  }
+
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")
 
@@ -163,8 +167,8 @@ object User extends Users with Logging with SysConfig with Cassandra {
     select
       .where(_.id in ids)
       .fetch().map(
-      _.map(u => (u.id, u)).toMap
-    )
+        _.map(u => (u.id, u)).toMap
+      )
   }
 
   private def findGroupIds(id: UUID): Future[List[UUID]] = CQL {

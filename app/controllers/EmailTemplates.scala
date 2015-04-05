@@ -52,7 +52,6 @@ object EmailTemplates extends Controller with Logging with AppConfig {
     module_name, "show",
     onDenied = req => Forbidden
   )).async { implicit req =>
-    println(updated_on)
     for {
       tmpl <- EmailTemplate.find(id, lang, updated_on)
       usr1 <- User.find(tmpl.updated_by)

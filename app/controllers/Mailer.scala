@@ -1,7 +1,9 @@
 package controllers
 
+import akka.actor.Cancellable
 import helpers.Contexts.mailerContext
 import helpers.Logging
+import models.{EmailTemplate, User}
 import play.api.Play.current
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Akka
@@ -16,7 +18,7 @@ object Mailer extends Logging {
 
   private lazy val smtp_user = current.configuration.getString("smtp.user")
 
-  def schedule(email: Email) = {
+  def schedule(email: Email): Cancellable = {
     Akka.system.scheduler.scheduleOnce(1.second) {
       smtp_user match {
         case Some(su) =>
@@ -28,5 +30,38 @@ object Mailer extends Logging {
           Logger.error("smtp server is not configured yet")
       }
     }
+  }
+
+  def schedule(
+    tmpl: EmailTemplate,
+    user: User,
+    args: (String, Any)*): Cancellable = schedule {
+    Email(
+      subject = s"[${MSG("app.name")}] ${tmpl.name}",
+      from = "",
+      to = Seq(s"${user.name} <${user.email}>"),
+      bodyText = Some(
+        substitute(
+          tmpl.text,
+          args ++ Seq(
+            "user.name" -> user.name,
+            "user.email" -> user.email
+          ): _*
+        )
+      )
+    )
+  }
+
+  val anyPattern = """[\$|#]\{([\.\w]+)\}""".r
+  val msgPattern = """\$\{([\.\w]+)\}""".r
+  val argPattern = """#\{([\.\w]+)\}""".r
+
+  def substitute(text: String, args: (String, Any)*) = {
+    val map = args.toMap
+    anyPattern replaceAllIn(text, _ match {
+      case msgPattern(n)                    => MSG(n)
+      case argPattern(n) if map.contains(n) => map.get(n).get.toString
+      case _                                => "#{???}"
+    })
   }
 }

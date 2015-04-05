@@ -120,12 +120,23 @@
         @MSG("Features")<span class="caret"></span>
       </a>
       <ul class="dropdown-menu" role="menu">
-        <li><a href="@routes.Files.index(Path())">
-          <i class="fa fa-hdd-o"></i>   @MSG("File System")
-        </a></li>
-        <li><a href="#">
+        <li>
+          <a href="@routes.Files.index(Path())">
+            <i class="fa fa-hdd-o"></i>
+            @MSG("File System")
+          </a>
+        </li>
+        <li>
+          <a href="@routes.EmailTemplates.index()">
+            <i class="fa fa-envelope-square"></i>
+            @MSG("Email Templates")
+          </a>
+        </li>
+        <li>
+          <a href="#">
             <i class="icon-picture"></i> @MSG("Nothing")
-        </a></li>
+          </a>
+        </li>
       </ul>
     </li>
   }

@@ -3,12 +3,12 @@ package controllers
 import controllers.Users.{Password, Rules}
 import controllers.session.UserAction
 import helpers.Logging
-import models.{ExpirableLink, User}
+import models.sys.SysConfig
+import models.{EmailTemplate, ExpirableLink, User}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.libs.mailer.Email
 import play.api.mvc.{Controller, Result}
 import views._
 
@@ -17,7 +17,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object PasswordReset extends Controller with Logging {
+object PasswordReset extends Controller with Logging with SysConfig {
 
   override val module_name = "controllers.password_reset"
 
@@ -48,13 +48,17 @@ object PasswordReset extends Controller with Logging {
         onError(emailFM, s"$module_name.email.not.found")
       },
       success => (for {
-        u <- User.find(success)
-        l <- ExpirableLink.nnew(module_name)(u)
-      } yield (u, l.id)).map { case (u, id) =>
-        Mailer.schedule(email1(u, id))
+        user <- User.find(success)
+        link <- ExpirableLink.nnew(module_name)(user)
+        tmpl <- getUUID("email1.id").flatMap(id => EmailTemplate.find(id, req.lang))
+      } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
+        Mailer.schedule(tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
       }.recover {
-        case e: User.NotFound =>
+        case e: User.NotFound          =>
+          onError(emailFM, s"$module_name.email.not.found")
+        case e: EmailTemplate.NotFound =>
+          Logger.warn(e.reason)
           onError(emailFM, s"$module_name.email.not.found")
       }
 
@@ -92,12 +96,11 @@ object PasswordReset extends Controller with Logging {
         }
       },
       success => (for {
-        l <- ExpirableLink.find(id)
-        u <- User.find(l.user_id)
-        s <- User.savePassword(u, success.original)
-        r <- ExpirableLink.remove(id)
-      } yield s).map { u =>
-        Mailer.schedule(email2(u))
+        link <- ExpirableLink.find(id).andThen { case _ => ExpirableLink.remove(id) }
+        user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
+        tmpl <- getUUID("email2.id").flatMap(id => EmailTemplate.find(id, req.lang))
+      } yield (user, tmpl)).map { case (user, tmpl) =>
+        Mailer.schedule(tmpl, user)
         Redirect(routes.Sessions.nnew()).flashing(
           AlertLevel.Info -> MSG(s"$module_name.password.changed")
         )
@@ -107,45 +110,6 @@ object PasswordReset extends Controller with Logging {
       }
     )
   }
-
-  def email1(to: User, link: String) = Email(
-    subject = s"[${MSG("app.name")}] Please reset your password",
-    from = "",
-    to = Seq(s"${to.name} <${to.email}>"),
-    bodyText = Some(
-      s"""
-We heard that you lost your ${MSG("app.name")} password. Sorry about that!
-
-But don't worry!You can use the following link within the next day to reset your password:
-${MSG("app.url")}/password_reset/$link
-
-If you don't use this link within 24 hours, it will expire. To get a new password reset link, visit
-${MSG("app.url")}/password_reset
-
-Thanks,
-Your friends at ${MSG("app.name")}
-      """
-    )
-  )
-
-  def email2(to: User) = Email(
-    subject = s"[${MSG("app.name")}] Your password has changed",
-    from = "",
-    to = Seq(s"${to.name} <${to.email}>"),
-    bodyText = Some(
-      s"""
-Hello ${to.name},
-
-We wanted to let you know that your ${MSG("app.name")} password was changed.
-
-If you did not perform this action, you can recover access by entering ${to.email} into the form at ${MSG("app.url")}/password_reset.
-
-To see this and other security events for your account, visit ${MSG("app.url")}/settings/security.
-
-If you run into problems, please contact support by visiting ${MSG("app.url")}/contact or replying to this email.
-      """
-    )
-  )
 
   private def onError(bound: Form[String], msg: String)(implicit req: UserRequest[_]): Result = NotFound {
     html.password_reset.nnew {

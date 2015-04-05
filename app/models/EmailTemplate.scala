@@ -113,7 +113,7 @@ sealed class EmailTemplates
 
 object EmailTemplate extends EmailTemplates with Cassandra {
 
-  case class NotFound(id: UUID)
+  case class NotFound(id: UUID, lang: String)
     extends BaseException("not.found.email.template")
 
   case class UpdatedByOther()
@@ -136,8 +136,11 @@ object EmailTemplate extends EmailTemplates with Cassandra {
         .map(d => cql.and(_.updated_on eqs d))
         .getOrElse(cql)
     }.one().map {
-      case None       => throw NotFound(id)
+      case None       => throw NotFound(id, lang)
       case Some(tmpl) => tmpl
+    }.recoverWith {
+      case e: NotFound if lang != Lang.defaultLang.code =>
+        EmailTemplate.find(id, Lang.defaultLang, updated_on)
     }
 
   def save(tmpl: ET): Future[ET] = for {

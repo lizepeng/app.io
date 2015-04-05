@@ -1,0 +1,24 @@
+# password reset email 1 Please reset your password
+We heard that you lost your ${app.name} password. Sorry about that!
+
+But don't worry!You can use the following link within the next day to reset your password:
+${app.url}/password_reset/${link}
+
+If you don't use this link within 24 hours, it will expire. To get a new password reset link, visit
+${app.url}/password_reset
+
+Thanks,
+Your friends at ${app.name}
+
+
+
+# password reset email 2 Your password has changed
+Hello #{user.name},
+
+We wanted to let you know that your ${app.name} password was changed.
+
+If you did not perform this action, you can recover access by entering #{user.email} into the form at ${app.url}/password_reset.
+
+To see this and other security events for your account, visit ${app.url}/settings/security.
+
+If you run into problems, please contact support by visiting ${app.url}/contact or replying to this email.
