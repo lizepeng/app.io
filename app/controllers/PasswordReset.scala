@@ -45,7 +45,7 @@ object PasswordReset extends Controller with Logging {
   def create = UserAction.async { implicit req =>
     emailFM.bindFromRequest().fold(
       failure => Future.successful {
-        onError(emailFM, "password.reset.email.not.found")
+        onError(emailFM, s"$module_name.email.not.found")
       },
       success => (for {
         u <- User.find(success)
@@ -55,7 +55,7 @@ object PasswordReset extends Controller with Logging {
         Ok(html.password_reset.sent())
       }.recover {
         case e: User.NotFound =>
-          onError(emailFM, "password.reset.email.not.found")
+          onError(emailFM, s"$module_name.email.not.found")
       }
 
     )
@@ -71,12 +71,12 @@ object PasswordReset extends Controller with Logging {
   def show(id: String) = UserAction.async { implicit req =>
     ExpirableLink.find(id).map { ln =>
       if (ln.module != module_name)
-        onError(emailFM, "password.invalid.reset.link")
+        onError(emailFM, s"$module_name.invalid.reset.link")
       else
         Ok(html.password_reset.show(id)(resetFM))
     }.recover {
       case e: ExpirableLink.NotFound =>
-        onError(emailFM, "password.invalid.reset.link")
+        onError(emailFM, s"$module_name.invalid.reset.link")
     }
   }
 
@@ -87,7 +87,7 @@ object PasswordReset extends Controller with Logging {
         BadRequest {
           html.password_reset.show(id) {
             if (bound.hasGlobalErrors) bound
-            else bound.withGlobalError("password.reset.failed")
+            else bound.withGlobalError(s"$module_name.failed")
           }
         }
       },
@@ -99,11 +99,11 @@ object PasswordReset extends Controller with Logging {
       } yield s).map { u =>
         Mailer.schedule(email2(u))
         Redirect(routes.Sessions.nnew()).flashing(
-          AlertLevel.Info -> MSG("password.changed")
+          AlertLevel.Info -> MSG(s"$module_name.password.changed")
         )
       }.recover {
         case e: ExpirableLink.NotFound =>
-          onError(emailFM, "password.invalid.reset.link")
+          onError(emailFM, s"$module_name.invalid.reset.link")
       }
     )
   }

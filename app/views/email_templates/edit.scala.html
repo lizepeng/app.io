@@ -3,7 +3,7 @@ implicit req: UserRequest[_])
 
 @import common._
 @import helper._
-@import java.lang.String; val pkg = enclosingName(this)
+@import java.lang.String; val pkg = EmailTemplates.module_name
 @import play.api.Play.current
 
 @layouts.base(MSG(s"$pkg.head")){
@@ -26,7 +26,7 @@ implicit req: UserRequest[_])
       <li role="presentation">
         <a href="@routes.EmailTemplates.history(tmpl.id, tmpl.lang)" aria-controls="history">
           <i class="fa fa-history fa-lg"></i>
-          @MSG(s"$pkg.history")
+          @MSG("history")
         </a>
       </li>
     </ul>
@@ -42,7 +42,7 @@ implicit req: UserRequest[_])
           <div class="row">
             <div class="col-xs-12 col-sm-9">
               @{_input_text(fm("name"),
-                '_label      -> MSG(s"$pkg.name"),
+                '_label      -> MSG("name"),
                 'placeholder -> MSG(s"$pkg.name.place_holder"),
                 'tabindex    -> 1
                 )(_fc_form_group, req.lang)
@@ -62,7 +62,7 @@ implicit req: UserRequest[_])
           <div class="row">
             <div class="col-xs-12">
               @{_textarea(fm("text"),
-                '_label      -> MSG(s"$pkg.text"),
+                '_label      -> MSG("text"),
                 'placeholder -> MSG(s"$pkg.text.sample"),
                 'rows        -> 24,
                 'tabindex    -> 3
@@ -73,7 +73,7 @@ implicit req: UserRequest[_])
 
           <button type="submit" class="btn btn-success" tabindex="4">
             <i class ="fa fa-save fa-lg"></i>
-            @MSG(s"$pkg.save")
+            @MSG("save")
           </button>
         }
       </div>

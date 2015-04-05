@@ -1,8 +1,6 @@
 @(tmpl: EmailTemplate, updated_by:User, created_by:User)
 
 @import common._
-@import helper._
-@import java.lang.String; val pkg = enclosingName(this)
 
 @common._form_group_static("id"){
   @tmpl.id

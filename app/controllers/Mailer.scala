@@ -3,6 +3,7 @@ package controllers
 import helpers.Contexts.mailerContext
 import helpers.Logging
 import play.api.Play.current
+import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Akka
 import play.api.libs.mailer._
 
@@ -20,9 +21,9 @@ object Mailer extends Logging {
       smtp_user match {
         case Some(su) =>
           val id = MailerPlugin.send {
-            email.copy(from = s"App.io <$su>")
+            email.copy(from = s"${MSG("app.name")} <$su>")
           }
-          Logger.trace(s"$id has been sent")
+          Logger.trace(s"Email:[$id] has been sent")
         case None     =>
           Logger.error("smtp server is not configured yet")
       }

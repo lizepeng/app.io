@@ -1,18 +1,20 @@
 @()(implicit req: UserRequest[_])
 
-@layouts.base(MSG("password.reset.head")){
+@import java.lang.String; val pkg = PasswordReset.module_name
+
+@layouts.base(MSG(s"$pkg.head") + " - " + MSG("app.name")){
 
   <div class="panel panel-primary auth-form">
     <div class="panel-heading">
       <h3 class="panel-title">
-        @MSG("password.reset.title")
+        @MSG(s"$pkg.title")
       </h3>
     </div>
     <div class="panel-body">
-      <p>@MSG("password.reset.sent.msg1")</p>
-      <p>@MSG("password.reset.sent.msg2")</p>
+      <p>@MSG(s"$pkg.sent.msg1")</p>
+      <p>@MSG(s"$pkg.sent.msg2")</p>
       <a href="@routes.Sessions.nnew" class="btn btn-default" tabindex="2">
-        @MSG("return.to.sign.in")
+        @MSG(s"$pkg.return.to.sign.in")
         <i class="fa fa-arrow-right"></i>
       </a>
     </div>

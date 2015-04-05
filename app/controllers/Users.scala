@@ -66,14 +66,14 @@ object Users extends Controller {
         BadRequest {
           html.users.signup {
             if (failure.hasGlobalErrors) failure
-            else failure.withGlobalError("signup.failed")
+            else failure.withGlobalError("sign.up.failed")
           }
         }
       },
       success => User.find(success.email).map { _ =>
         BadRequest {
           html.users.signup {
-            bound.withGlobalError("signup.failed")
+            bound.withGlobalError("sign.up.failed")
               .withError("email", "login.email.taken")
           }
         }

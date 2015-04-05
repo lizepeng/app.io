@@ -2,8 +2,9 @@
 
 @import common._
 @import helper._
+@import java.lang.String; val pkg = PasswordReset.module_name
 
-@layouts.base(MSG("password.change.head")){
+@layouts.base(MSG(s"$pkg.change.head") + " - " + MSG("app.name")){
 
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
@@ -14,7 +15,7 @@
   <div class="panel panel-primary auth-form">
     <div class="panel-heading">
       <h3 class="panel-title">
-        @MSG("password.change.title")
+        @MSG(s"$pkg.change.title")
       </h3>
     </div>
     <div class="panel-body">
@@ -25,7 +26,7 @@
           )(_fc_form_group, req.lang)
         }
 
-        <p>@MSG("password.hint")</p>
+        <p>@MSG(s"$pkg.password.hint")</p>
 
         @{_input_password(fm("password.confirmation"),
           'tabindex    -> 2
@@ -33,7 +34,7 @@
         }
 
         <button type="submit" class="btn btn-default" tabindex="3">
-          @MSG("password.change")
+          @MSG(s"$pkg.password.change")
         </button>
       }
     </div>

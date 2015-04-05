@@ -2,8 +2,9 @@
 
 @import common._
 @import helper._
+@import java.lang.String; val pkg = PasswordReset.module_name
 
-@layouts.base(MSG("password.reset.head")){
+@layouts.base(MSG(s"$pkg.head") + " - " + MSG("app.name")){
 
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
@@ -14,14 +15,14 @@
   <div class="panel panel-primary auth-form">
     <div class="panel-heading">
       <h3 class="panel-title">
-        @MSG("password.reset.title")
+        @MSG(s"$pkg.title")
       </h3>
     </div>
     <div class="panel-body">
       @form(action = routes.PasswordReset.create()) {
 
         @{_input_email(fm("email"),
-          'placeholder -> MSG("email.enter"),
+          'placeholder -> MSG(s"$pkg.email.enter"),
           'tabindex    -> 1
           )(_fc_form_group, req.lang)
         }

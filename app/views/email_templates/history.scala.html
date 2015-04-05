@@ -3,10 +3,10 @@ implicit req: UserRequest[_])
 
 @import common._
 @import helper._
-@import java.lang.String; val pkg = enclosingName(this)
+@import java.lang.String; val pkg = EmailTemplates.module_name
 @import play.api.Play.current
 
-@layouts.base(MSG(s"$pkg.history")){
+@layouts.base(MSG("history")){
 
   <div class="row">
     <!-- Nav tabs -->
@@ -20,7 +20,7 @@ implicit req: UserRequest[_])
       <li role="presentation" class="active">
         <a href="#" aria-controls="history">
           <i class="fa fa-history fa-lg"></i>
-          @MSG(s"$pkg.history")
+          @MSG("history")
         </a>
       </li>
     </ul>
@@ -33,7 +33,7 @@ implicit req: UserRequest[_])
             <thead>
               <tr>
                 <th class="col-xs-5 col-sm-4">@MSG("updated_on")</th>
-                <th class="col-xs-3 col-sm-3">@MSG(s"$pkg.name")</th>
+                <th class="col-xs-3 col-sm-3">@MSG("name")</th>
                 <th class="col-xs-3 col-sm-4">@MSG("updated_by")</th>
                 <th class="col-xs-1 col-sm-1"></th>
               </tr>
