@@ -24,13 +24,16 @@
       <table class="table table-hover table-ellipsis">
         <thead>
           <tr>
-            <th class="col-xs-5">
+            <th class="col-xs-5  col-sm-4 ">
               @MSG("name")
             </th>
-            <th class="col-xs-3">
+            <th class="col-xs-3  col-sm-2 ">
               @MSG("lang")
             </th>
-            <th class="col-xs-4 text-right">
+            <th class="hidden-xs col-sm-4 ">
+              @MSG("subject")
+            </th>
+            <th class="col-xs-4  col-sm-2 text-right">
               @MSG("action")
             </th>
           </tr>
@@ -45,6 +48,9 @@
               </td>
               <td>
                 @MSG(s"lang.${tmpl.lang.code}")
+              </td>
+              <td class="hidden-xs">
+                @tmpl.subject
               </td>
               <td>
                 <div class="btn-toolbar pull-right">

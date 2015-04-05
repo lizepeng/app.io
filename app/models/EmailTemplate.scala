@@ -20,6 +20,7 @@ case class EmailTemplate(
   id: UUID,
   lang: Lang,
   name: String,
+  subject: String,
   text: String,
   updated_on: DateTime,
   updated_by: UUID,
@@ -34,6 +35,7 @@ case class EmailTemplateHistory(
   id: UUID,
   lang: Lang,
   name: String,
+  subject: String,
   text: String,
   updated_on: DateTime,
   updated_by: UUID
@@ -83,6 +85,9 @@ trait EmailTemplateHistoryColumns[T <: CassandraTable[T, R], R] {
   object name
     extends StringColumn(this)
 
+  object subject
+    extends StringColumn(this)
+
   object text
     extends StringColumn(this)
 
@@ -103,6 +108,7 @@ sealed class EmailTemplates
     id(r),
     Lang(lang(r)),
     name(r),
+    subject(r),
     text(r),
     updated_on(r),
     updated_by(r),
@@ -161,6 +167,7 @@ object EmailTemplate extends EmailTemplates with Cassandra {
           .and(_.lang eqs tmpl.lang.code)
           .and(_.updated_on eqs curr)
           .modify(_.name setTo tmpl.name)
+          .and(_.subject setTo tmpl.subject)
           .and(_.text setTo tmpl.text)
           .and(_.last_updated_on setTo curr)
           .and(_.updated_by setTo tmpl.updated_by)
@@ -197,6 +204,7 @@ sealed class EmailTemplateHistories
     id(r),
     Lang(lang(r)),
     name(r),
+    subject(r),
     text(r),
     updated_on(r),
     updated_by(r)

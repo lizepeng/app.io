@@ -8,7 +8,7 @@
 
   @{_info(tmpl, updated_by, created_by)}
 
- <div class="row">
+  <div class="row">
     <div class="col-xs-12 col-sm-9">
       @common._form_group_static("name") {
         @tmpl.name
@@ -19,7 +19,15 @@
         @MSG(s"lang.${tmpl.lang.code}")
       }
     </div>
- </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12">
+      @common._form_group_static("subject") {
+        @tmpl.subject
+      }
+    </div>
+  </div>
 
   <div class="row">
     <div class="col-xs-12">

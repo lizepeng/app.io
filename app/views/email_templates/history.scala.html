@@ -32,10 +32,19 @@ implicit req: UserRequest[_])
           <table class="table table-hover table-ellipsis">
             <thead>
               <tr>
-                <th class="col-xs-5 col-sm-4">@MSG("updated_on")</th>
-                <th class="col-xs-3 col-sm-3">@MSG("name")</th>
-                <th class="col-xs-3 col-sm-4">@MSG("updated_by")</th>
-                <th class="col-xs-1 col-sm-1"></th>
+                <th class="col-xs-5 col-sm-4 col-md-2">
+                  @MSG("updated_on")
+                </th>
+                <th class="col-xs-3 col-sm-3 col-md-3">
+                  @MSG("name")
+                </th>
+                <th class="hidden-xs hidden-sm col-md-4">
+                  @MSG("subject")
+                </th>
+                <th class="col-xs-3 col-sm-4 col-md-2">
+                  @MSG("updated_by")
+                </th>
+                <th class="col-xs-1 col-sm-1 col-md-1"></th>
               </tr>
             </thead>
             <tbody>
@@ -43,6 +52,7 @@ implicit req: UserRequest[_])
                 <tr>
                   <td>@h.updated_on.toString("yyyy-MM-dd hh:mm:ss")</td>
                   <td>@h.name</td>
+                  <td class="hidden-xs hidden-sm">@h.subject</td>
                   <td>@usrs.get(h.updated_by).map(_.email).getOrElse("")</td>
                   <td>
                     <a href="@routes.EmailTemplates.show(id, lang, Some(h.updated_on))">

@@ -36,19 +36,17 @@ object Mailer extends Logging {
     tmpl: EmailTemplate,
     user: User,
     args: (String, Any)*): Cancellable = schedule {
+    val args2: Seq[(String, Any)] =
+      args ++ Seq(
+        "user.name" -> user.name,
+        "user.email" -> user.email
+      )
+
     Email(
-      subject = s"[${MSG("app.name")}] ${tmpl.name}",
+      subject = substitute(tmpl.subject, args2: _*),
       from = "",
       to = Seq(s"${user.name} <${user.email}>"),
-      bodyText = Some(
-        substitute(
-          tmpl.text,
-          args ++ Seq(
-            "user.name" -> user.name,
-            "user.email" -> user.email
-          ): _*
-        )
-      )
+      bodyText = Some(substitute(tmpl.text, args2: _*))
     )
   }
 

@@ -27,14 +27,20 @@ object EmailTemplates extends Controller with Logging with AppConfig {
     mapping(
       "lang" -> nonEmptyText.verifying(Lang.get(_).isDefined),
       "name" -> nonEmptyText(6, 255),
+      "subject" -> nonEmptyText(6, 255),
       "text" -> text
     )(TemplateFD.apply)(TemplateFD.unapply)
   )
 
-  case class TemplateFD(lang: String, name: String, text: String)
+  case class TemplateFD(
+    lang: String,
+    name: String,
+    subject: String,
+    text: String
+  )
 
   implicit def tmpl2FormData(tmpl: EmailTemplate): TemplateFD = {
-    TemplateFD(tmpl.lang.code, tmpl.name, tmpl.text)
+    TemplateFD(tmpl.lang.code, tmpl.name, tmpl.subject, tmpl.text)
   }
 
   def index(pager: Pager) = (UserAction >> PermCheck(
@@ -85,6 +91,7 @@ object EmailTemplates extends Controller with Logging with AppConfig {
           id = UUIDs.timeBased(),
           lang = Lang(success.lang),
           name = success.name,
+          subject = success.subject,
           text = success.text,
           created_on = now,
           updated_on = now,
@@ -144,6 +151,7 @@ object EmailTemplates extends Controller with Logging with AppConfig {
               tmpl <- EmailTemplate.find(id, lang, Some(d))
               done <- tmpl.copy(
                 name = success.name,
+                subject = success.subject,
                 text = success.text,
                 updated_by = req.user.get.id
               ).save

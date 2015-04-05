@@ -61,6 +61,17 @@ implicit req: UserRequest[_])
 
           <div class="row">
             <div class="col-xs-12">
+              @{_input_text(fm("subject"),
+                '_label      -> MSG("subject"),
+                'placeholder -> MSG(s"$pkg.subject.place_holder"),
+                'tabindex    -> 3
+                )(_fc_form_group, req.lang)
+              }
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12">
               @{_textarea(fm("text"),
                 '_label      -> MSG("text"),
                 'placeholder -> MSG(s"$pkg.text.sample"),
