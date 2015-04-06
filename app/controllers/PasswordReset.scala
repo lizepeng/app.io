@@ -2,10 +2,11 @@ package controllers
 
 import controllers.Users.{Password, Rules}
 import controllers.session.UserAction
-import helpers.Logging
+import helpers.{AppConfig, Logging}
 import models.sys.SysConfig
 import models.{EmailTemplate, ExpirableLink, User}
 import org.joda.time.DateTime
+import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{Lang, Messages => MSG}
@@ -18,7 +19,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object PasswordReset extends Controller with Logging with SysConfig {
+object PasswordReset extends Controller with Logging with SysConfig with AppConfig {
 
   override val module_name = "controllers.password_reset"
 
@@ -119,7 +120,7 @@ object PasswordReset extends Controller with Logging with SysConfig {
         User(
           id = uid,
           name = "password_reset",
-          email = s"password_reset@app.io"
+          email = s"password_reset@$domain"
         )
       )
     }

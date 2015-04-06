@@ -1,9 +1,9 @@
 @()(implicit req: UserRequest[_])
 
-@layouts.base("Welcome to App.io", above_content = carousel){
+@layouts.base("Welcome to " + MSG("app.name"), above_content = carousel){
 
   <div class="page-header text-center">
-    <h1>Why you'll love App.io<br>
+    <h1>Why you'll love @MSG("app.name")<br>
       <small>Powerful features to make software development more collaborative</small>
     </h1>
   </div>
@@ -65,7 +65,7 @@
       <div class="item item1 active">
         <img src="" alt="">
           <div class="carousel-caption">
-            <h1>Welcome To App.io</h1>
+            <h1>Welcome To @MSG("app.name")</h1>
             <p class="lead">
               <i class="fa fa-github fa-5x pull-left"></i>
               Note: If you're viewing this page via a
@@ -75,7 +75,7 @@
             <p>
               <a class="btn btn-lg btn-success" href="@routes.Users.nnew()">
                 <i class="icon-shield icon"></i>
-                Sign up for App.io
+                Sign up for @MSG("app.name")
               </a>
             </p>
           </div>

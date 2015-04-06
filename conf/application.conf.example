@@ -55,6 +55,10 @@ application.langs="en-US,zh,ja"
 # logger.application=DEBUG
 # logger.models=DEBUG
 
+app.domain=app.io
+app.bandwidth.max=5M
+app.bandwidth.min=200K
+
 akka.loglevel=INFO
 
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
@@ -63,9 +67,6 @@ mailer-context.fork-join-executor.parallelism-max=4
 traffic-shaper-context.fork-join-executor.parallelism-max=4
 
 cassandra.cql.log=[batch,insert,update,delete]
-
-app.bandwidth.max=5M
-app.bandwidth.min=200K
 
 controllers.files.bandwidth.upload=1.5M
 controllers.files.bandwidth.download=2M
