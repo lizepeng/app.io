@@ -1,9 +1,10 @@
 @(field: Field, args: (Symbol,Any)*)(
-  implicit handler: helper.FieldConstructor, lang: Lang)
+fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
+implicit lang: Lang)
 
 @helper.inputText(
   field,
   args ++ Seq(
     'class -> "form-control"
     ): _*
-  )(handler, lang)
+)(ChainedFieldConstructor(fc, fcs:_*), lang)

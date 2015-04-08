@@ -2,7 +2,9 @@
 implicit req: UserRequest[_], lang: Lang)
 
 @import common._
-@import helper._; val pkg = AccessControls.module_name
+@import helper._
+
+@pkg = @{AccessControls.module_name}
 
 @layouts.base(MSG(s"$pkg.title")) {
 
@@ -28,7 +30,7 @@ implicit req: UserRequest[_], lang: Lang)
 
         <div class="row">
           <div class="col-xs-9">
-            @{_input_text1(fm("principal"),
+            @{_input_text(fm("principal"),
               '_label      -> MSG("principal"),
               'placeholder -> MSG(s"$pkg.principal.placeholder"),
               'tabindex    -> 1
@@ -52,7 +54,7 @@ implicit req: UserRequest[_], lang: Lang)
 
         <div class="row">
           <div class="col-xs-12 col-sm-6">
-            @{_input_text1(fm("resource"),
+            @{_input_text(fm("resource"),
               '_label      -> MSG("resource"),
               'placeholder -> MSG(s"$pkg.resource.placeholder"),
               'tabindex    -> 3
@@ -61,7 +63,7 @@ implicit req: UserRequest[_], lang: Lang)
           </div>
 
           <div class="col-xs-9 col-sm-3">
-            @{_input_text1(fm("action"),
+            @{_input_text(fm("action"),
               '_label      -> MSG("action"),
               'placeholder -> MSG(s"$pkg.action.placeholder"),
               'tabindex    -> 4

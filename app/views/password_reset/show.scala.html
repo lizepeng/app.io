@@ -2,7 +2,8 @@
 
 @import common._
 @import helper._
-@import java.lang.String; val pkg = PasswordReset.module_name
+
+@pkg = @{AccessControls.module_name}
 
 @layouts.base(MSG(s"$pkg.change.head") + " - " + MSG("app.name")){
 

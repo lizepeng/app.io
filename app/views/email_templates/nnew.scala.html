@@ -2,8 +2,9 @@
 
 @import common._
 @import helper._
-@import java.lang.String; val pkg = EmailTemplates.module_name
 @import play.api.Play.current
+
+@pkg = @{AccessControls.module_name}
 
 @layouts.base(MSG(s"$pkg.head")){
 
@@ -25,7 +26,7 @@
 
           <div class="row">
             <div class="col-xs-12 col-sm-9">
-              @{_input_text1(fm("name"),
+              @{_input_text(fm("name"),
                 '_label      -> MSG("name"),
                 'placeholder -> MSG(s"$pkg.name.place_holder"),
                 'tabindex    -> 1
@@ -44,7 +45,7 @@
 
           <div class="row">
             <div class="col-xs-12">
-              @{_input_text1(fm("subject"),
+              @{_input_text(fm("subject"),
                 '_label      -> MSG("subject"),
                 'placeholder -> MSG(s"$pkg.subject.place_holder"),
                 'tabindex    -> 3

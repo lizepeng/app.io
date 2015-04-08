@@ -3,7 +3,8 @@ implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
-@import java.lang.String; val pkg = EmailTemplates.module_name
+
+@pkg = @{AccessControls.module_name}
 
 @layouts.base(MSG(s"$pkg.title")) {
 
@@ -14,8 +15,8 @@ implicit req: UserRequest[_], lang: Lang)
       <i class="fa fa-envelope-o fa-lg"></i>
       @MSG(s"$pkg.title")
       <a href="@routes.EmailTemplates.nnew()" class="btn btn-success pull-right">
-      <i class="fa fa-plus"></i>
-      @MSG("new")
+        <i class="fa fa-plus"></i>
+        @MSG("new")
       </a>
     </h2>
   </div>

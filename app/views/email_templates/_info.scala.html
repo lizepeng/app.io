@@ -1,8 +1,6 @@
 @(tmpl: EmailTemplate, updated_by:User, created_by:User)(
 implicit lang: Lang)
 
-@import common._
-
 @common._form_group_static("id"){
   @tmpl.id
 }

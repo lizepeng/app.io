@@ -34,6 +34,12 @@ principal=Principal
 resource=Resource
 type=Type
 granted=Granted
+browse=Browse
+size=Size
+explore=Explore
+features=Features
+wiki=Wiki
+about=About
 
 updated_by=Committer
 updated_on=Date Modified
@@ -79,11 +85,12 @@ password.all_lower=Password need at least one uppercase letter
 password.not.confirmed=Password doesn''t match the confirmation
 
 # files
-file=Files
-file.uploaded={0} Uploaded
-file.missing=Missing File
-file.deleted={0} Deleted
-file.not.found={0} Not Found
+controllers.files.missing=Missing File
+controllers.files.uploaded={0} Uploaded
+controllers.files.deleted={0} Deleted
+controllers.files.not.found={0} Not Found
+controllers.files.title=File System
+controllers.files.head=File System
 
 # password_reset
 controllers.password_reset.head=Forgot your password?

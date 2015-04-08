@@ -2,9 +2,8 @@
 implicit req: UserRequest[_], lang: Lang)
 
 @import common._
-@import helper._
-@import java.lang.String; val pkg = EmailTemplates.module_name
-@import play.api.Play.current
+
+@pkg = @{AccessControls.module_name}
 
 @layouts.base(MSG("history")){
 

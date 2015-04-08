@@ -3,8 +3,9 @@ implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
-@import java.lang.String; val pkg = EmailTemplates.module_name
 @import play.api.Play.current
+
+@pkg = @{AccessControls.module_name}
 
 @layouts.base(MSG(s"$pkg.head")){
 
@@ -41,7 +42,7 @@ implicit req: UserRequest[_], lang: Lang)
 
           <div class="row">
             <div class="col-xs-12 col-sm-9">
-              @{_input_text1(fm("name"),
+              @{_input_text(fm("name"),
                 '_label      -> MSG("name"),
                 'placeholder -> MSG(s"$pkg.name.place_holder"),
                 'tabindex    -> 1
@@ -61,7 +62,7 @@ implicit req: UserRequest[_], lang: Lang)
 
           <div class="row">
             <div class="col-xs-12">
-              @{_input_text1(fm("subject"),
+              @{_input_text(fm("subject"),
                 '_label      -> MSG("subject"),
                 'placeholder -> MSG(s"$pkg.subject.place_holder"),
                 'tabindex    -> 3
@@ -76,13 +77,13 @@ implicit req: UserRequest[_], lang: Lang)
                 '_label      -> MSG("text"),
                 'placeholder -> MSG(s"$pkg.text.sample"),
                 'rows        -> 24,
-                'tabindex    -> 3
+                'tabindex    -> 4
                 )(_fc_form_group)
               }
             </div>
           </div>
 
-          <button type="submit" class="btn btn-success" tabindex="4">
+          <button type="submit" class="btn btn-success" tabindex="5">
             <i class ="fa fa-save fa-lg"></i>
             @MSG("save")
           </button>

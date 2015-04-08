@@ -21,25 +21,24 @@
       'placeholder -> MSG("email"),
       'tabindex    -> 1,
       '_icons      -> "fa fa-envelope-o fa-fw"
-      )(_fc_login_text)
+      )(_fc_input_group)
     }
 
     @{_input_password(fm("password"),
       'placeholder -> MSG("password"),
       'tabindex    -> 2,
       '_icons      -> "fa fa-key fa-fw"
-      )(_fc_login_text)
+      )(_fc_input_group)
     }
 
-    <div style="margin-top: 20px;">
-      @{_checkbox(fm("remember_me"),
-        'tabindex -> 3,
-        '_text -> MSG("remember.me")
-        )(_fc_raw)
-      }
-    </div>
+    @{_checkbox(fm("remember_me"),
+      'tabindex -> 4,
+      '_text -> MSG("remember.me")
+      )(_fc_raw)
+    }
 
-    <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="5">
+
+    <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="3">
       @MSG("sign.in")
     </button>
 

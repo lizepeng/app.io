@@ -99,13 +99,13 @@ object Files extends Controller with Logging with AppConfig {
   def destroy(id: UUID): Action[AnyContent] =
     (UserAction >> AuthCheck).async { implicit req =>
       INode.find(id).map {
-        case None        => NotFound(MSG("file.not.found", id))
+        case None        => NotFound(MSG(s"$module_name.not.found", id))
         case Some(inode) => File.purge(id)
           RedirectToPreviousURI
             .getOrElse(
               Redirect(routes.Files.index(Path()))
             ).flashing(
-              AlertLevel.Success -> MSG("file.deleted", inode.name)
+              AlertLevel.Success -> MSG(s"$module_name.deleted", inode.name)
             )
       }
     }
@@ -116,11 +116,11 @@ object Files extends Controller with Logging with AppConfig {
         req.body.file("files").map { files =>
           val ref: File = files.ref
           Redirect(routes.Files.index(Path())).flashing(
-            AlertLevel.Success -> MSG("file.uploaded", ref.name)
+            AlertLevel.Success -> MSG(s"$module_name.uploaded", ref.name)
           )
         }.getOrElse {
           Redirect(routes.Files.index(Path())).flashing(
-            AlertLevel.Info -> MSG("file.missing")
+            AlertLevel.Info -> MSG(s"$module_name.missing")
           )
         }
     }
