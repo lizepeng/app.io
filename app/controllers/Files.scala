@@ -26,7 +26,9 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-object Files extends Controller with Logging with AppConfig {
+object Files
+  extends Controller
+  with Logging with AppConfig with PermCheckable {
 
   override val module_name: String = "controllers.files"
 
@@ -73,10 +75,7 @@ object Files extends Controller with Logging with AppConfig {
     }
 
   def index(path: Path, pager: Pager) =
-    (UserAction >> PermCheck(
-      module_name, "list",
-      onDenied = req => Forbidden
-    )).async { implicit req =>
+    (UserAction >> PermCheck(Index)).async { implicit req =>
       (for {
         home <- Home(req.user)
         curr <- home.dir(path) if FilePerms(curr).rx.?

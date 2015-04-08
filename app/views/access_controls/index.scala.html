@@ -54,18 +54,18 @@ implicit req: UserRequest[_], lang: Lang)
 
         <div class="row">
           <div class="col-xs-12 col-sm-6">
-            @{_input_text(fm("resource"),
+            @{_select(fm("resource"),
+              Secured.Modules.names.map{n => (n, MSG(s"$n.head"))},
               '_label      -> MSG("resource"),
-              'placeholder -> MSG(s"$pkg.resource.placeholder"),
               'tabindex    -> 3
               )(_fc_form_group)
             }
           </div>
 
           <div class="col-xs-9 col-sm-3">
-            @{_input_text(fm("action"),
+            @{_select(fm("action"),
+              Secured.Actions.names.map{n => (n, MSG(s"actions.$n"))},
               '_label      -> MSG("action"),
-              'placeholder -> MSG(s"$pkg.action.placeholder"),
               'tabindex    -> 4
               )(_fc_form_group)
             }
@@ -133,10 +133,10 @@ implicit req: UserRequest[_], lang: Lang)
                 </a>
               </td>
               <td>
-                @ac.resource
+                @MSG(s"${ac.resource}.head")
               </td>
               <td>
-                @ac.action
+                @MSG(s"actions.${ac.action}")
               </td>
               <td>
                 <div class="btn-toolbar">

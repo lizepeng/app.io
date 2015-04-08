@@ -17,13 +17,13 @@ object PermCheck extends Logging {
     resource: String,
     onDenied: RequestHeader => Result
   ): ActionFunction[UserRequest, UserRequest] = {
-    apply(resource, "*", onDenied)
+    apply(Anything, onDenied)(CheckedResource(resource))
   }
 
   def apply(
-    resource: String,
-    action: String,
-    onDenied: RequestHeader => Result
+    action: CheckedAction,
+    onDenied: RequestHeader => Result = req => Results.Forbidden)(
+    implicit resource: CheckedResource
   ): ActionFunction[UserRequest, UserRequest] =
     AuthCheck andThen new ActionFilter[UserRequest] {
 
@@ -35,15 +35,21 @@ object PermCheck extends Logging {
         val checked = for {
           b1 <- check(
             previous = None, action,
-            ac => AccessControl.find(resource, ac, u.external_groups)
+            ac => AccessControl.find(
+              resource.name, ac.name, u.external_groups
+            )
           )
           b2 <- check(
             previous = b1, action,
-            ac => AccessControl.find(resource, ac, u.internal_groups)
+            ac => AccessControl.find(
+              resource.name, ac.name, u.internal_groups
+            )
           )
           b3 <- check(
             previous = b2, action,
-            ac => AccessControl.find(resource, ac, u.id)
+            ac => AccessControl.find(
+              resource.name, ac.name, u.id
+            )
           )
         } yield b3
 
@@ -56,14 +62,14 @@ object PermCheck extends Logging {
 
   private def check[A](
     previous: Option[Boolean],
-    action: String,
-    tryToCheck: String => Future[AccessControl.Granted[_]]
+    action: CheckedAction,
+    tryToCheck: CheckedAction => Future[AccessControl.Granted[_]]
   ): Future[Option[Boolean]] = previous match {
     case Some(false) => Future.successful(previous)
     case b@_         => for {
-      b1 <- toOption(tryToCheck("*")).map(_.orElse(b))
+      b1 <- toOption(tryToCheck(Anything)).map(_.orElse(b))
       b2 <-
-      if (action == "*") Future.successful(b1)
+      if (action == Anything) Future.successful(b1)
       else b1 match {
         case b@Some(false) => Future.successful(b)
         case None          => toOption(tryToCheck(action))

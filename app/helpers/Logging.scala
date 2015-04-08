@@ -20,6 +20,7 @@ trait Logging {
 }
 
 trait Loggable extends Product {
+
   def code: String
 
   def message(implicit lang: Lang): String = message("msg")
@@ -35,6 +36,7 @@ trait Loggable extends Product {
 }
 
 trait TimeLogging extends Logging {
+
   private      val start   = System.currentTimeMillis
   private lazy val metrics = mutable.Map[String, Long]()
 

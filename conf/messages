@@ -46,6 +46,16 @@ updated_on=Date Modified
 created_by=Author
 created_on=Date Created
 
+actions.nnew=New
+actions.create=Create
+actions.edit=Edit
+actions.save=Save
+actions.destroy=Destroy
+actions.index=List All
+actions.show=Show
+actions.history.index=List History
+actions.anything=Anything
+
 lang=Language
 lang.en=English
 lang.en-US=English
@@ -121,6 +131,7 @@ log.not.found.email.template=Email Template {0}, {1} not found.
 
 # access_controls
 controllers.access_controls.title=Access Control List
+controllers.access_controls.head=Access Control List
 controllers.access_controls.entry.deleted=Access Control Entry deleted
 controllers.access_controls.entry.created=Access Control Entry created
 controllers.access_controls.principal.placeholder=Enter a User Id or Group Id

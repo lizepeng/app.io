@@ -1,9 +1,9 @@
 import models._
 import models.cfs._
 import models.sys.SysConfig
-import play.api._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
+import play.api.{Application, _}
 
 /**
  * @author zepeng.li@gmail.com
