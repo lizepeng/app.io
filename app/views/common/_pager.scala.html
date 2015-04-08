@@ -1,4 +1,4 @@
-@(page: Page[_], link: Pager => Call)
+@(page: Page[_], link: Pager => Call)(implicit lang: Lang)
 
 @if(page.hasNext || page.hasPrev) {
   <nav>

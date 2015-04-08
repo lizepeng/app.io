@@ -1,4 +1,4 @@
-@(fm: Form[_])(implicit req: UserRequest[_])
+@(fm: Form[_])(implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
@@ -24,7 +24,7 @@
         @{_input_email(fm("email"),
           'placeholder -> MSG(s"$pkg.email.enter"),
           'tabindex    -> 1
-          )(_fc_form_group, req.lang)
+          )(_fc_form_group)
         }
 
         <button type="submit" class="btn btn-default" tabindex="2">

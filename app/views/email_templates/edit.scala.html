@@ -1,5 +1,5 @@
 @(fm:Form[_], tmpl:EmailTemplate, updated_by:User, created_by:User)(
-implicit req: UserRequest[_])
+implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
@@ -41,11 +41,11 @@ implicit req: UserRequest[_])
 
           <div class="row">
             <div class="col-xs-12 col-sm-9">
-              @{_input_text(fm("name"),
+              @{_input_text1(fm("name"),
                 '_label      -> MSG("name"),
                 'placeholder -> MSG(s"$pkg.name.place_holder"),
                 'tabindex    -> 1
-                )(_fc_form_group, req.lang)
+                )(_fc_form_group)
               }
             </div>
 
@@ -54,18 +54,18 @@ implicit req: UserRequest[_])
                 Lang.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
                 'tabindex    -> 2,
                 'disabled    -> true
-                )(_fc_form_group, req.lang)
+                )(_fc_form_group)
               }
             </div>
           </div>
 
           <div class="row">
             <div class="col-xs-12">
-              @{_input_text(fm("subject"),
+              @{_input_text1(fm("subject"),
                 '_label      -> MSG("subject"),
                 'placeholder -> MSG(s"$pkg.subject.place_holder"),
                 'tabindex    -> 3
-                )(_fc_form_group, req.lang)
+                )(_fc_form_group)
               }
             </div>
           </div>
@@ -77,7 +77,7 @@ implicit req: UserRequest[_])
                 'placeholder -> MSG(s"$pkg.text.sample"),
                 'rows        -> 24,
                 'tabindex    -> 3
-                )(_fc_form_group, req.lang)
+                )(_fc_form_group)
               }
             </div>
           </div>

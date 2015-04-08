@@ -1,6 +1,7 @@
-@(page: Page[AccessControl], usrs: Map[UUID, User], grps: Map[UUID, Group], fm: Form[_])(implicit req: UserRequest[_])
+@(page: Page[AccessControl], usrs: Map[UUID, User], grps: Map[UUID, Group], fm: Form[_])(
+implicit req: UserRequest[_], lang: Lang)
 
-@import common._; implicit val lang = req.lang
+@import common._
 @import helper._; val pkg = AccessControls.module_name
 
 @layouts.base(MSG(s"$pkg.title")) {
@@ -168,11 +169,5 @@
       @{_pager(page, p => routes.AccessControls.index(p))}
     </div>
   </div>
-}{
-  <style>
-    .btn-toggle {
-      color: #5cb85c;
-    }
-  </style>
-}(libs.assets("js", "pager"),
+}()(libs.assets("js", "pager"),
   libs.assets("js", "toggle_button"))

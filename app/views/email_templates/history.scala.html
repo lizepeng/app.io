@@ -1,5 +1,5 @@
-@(id:UUID, lang:Lang, page: Page[EmailTemplateHistory], usrs:Map[UUID,User])(
-implicit req: UserRequest[_])
+@(tmpl: EmailTemplate, page: Page[EmailTemplateHistory], usrs:Map[UUID,User])(
+implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
@@ -12,7 +12,7 @@ implicit req: UserRequest[_])
     <!-- Nav tabs -->
     <ul class="nav nav-tabs">
       <li role="presentation">
-        <a href="@routes.EmailTemplates.edit(id, lang)" aria-controls="edit">
+        <a href="@routes.EmailTemplates.edit(tmpl.id, tmpl.lang)" aria-controls="edit">
           <i class="fa fa-edit fa-lg"></i>
           @MSG(s"$pkg.title")
         </a>
@@ -55,7 +55,7 @@ implicit req: UserRequest[_])
                   <td class="hidden-xs hidden-sm">@h.subject</td>
                   <td>@usrs.get(h.updated_by).map(_.email).getOrElse("")</td>
                   <td>
-                    <a href="@routes.EmailTemplates.show(id, lang, Some(h.updated_on))">
+                    <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang, Some(h.updated_on))">
                       <i class="fa fa-arrow-circle-right fa-lg"></i>
                     </a>
                   </td>
@@ -63,7 +63,7 @@ implicit req: UserRequest[_])
               }
             </tbody>
           </table>
-          @{_pager(page, p => routes.EmailTemplates.history(id, lang, p))}
+          @{_pager(page, p => routes.EmailTemplates.history(tmpl.id, tmpl.lang, p))}
         </div>
       </div>
     </div>

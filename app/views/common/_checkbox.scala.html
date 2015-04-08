@@ -1,0 +1,19 @@
+@(field: Field, args: (Symbol,Any)*)(
+fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
+implicit lang: Lang)
+
+@boxValue = @{ args.toMap.get('value).getOrElse("true") }
+
+@helper.input(
+  field,
+  args:_*) { (id, name, value, htmlArgs) =>
+
+  <div class="checkbox">
+    <label>
+      <input type="checkbox" id="@id" name="@name" value="@boxValue"
+        @if(value == Some(boxValue)){checked}
+        @toHtmlArgs(htmlArgs.filterKeys(_ != 'value))>
+      @args.toMap.get('_text)
+    </label>
+  </div>
+}(ChainedFieldConstructor(fc, fcs:_*), lang)

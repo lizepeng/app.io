@@ -1,4 +1,4 @@
-@(id: String)(fm: Form[_])(implicit req: UserRequest[_])
+@(id: String)(fm: Form[_])(implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
@@ -23,14 +23,14 @@
 
         @{_input_password(fm("password.original"),
           'tabindex    -> 1
-          )(_fc_form_group, req.lang)
+          )(_fc_form_group)
         }
 
         <p>@MSG(s"$pkg.password.hint")</p>
 
         @{_input_password(fm("password.confirmation"),
           'tabindex    -> 2
-          )(_fc_form_group, req.lang)
+          )(_fc_form_group)
         }
 
         <button type="submit" class="btn btn-default" tabindex="3">

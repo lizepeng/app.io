@@ -176,11 +176,12 @@ object EmailTemplates extends Controller with Logging with AppConfig {
     onDenied = req => Forbidden
   )).async { implicit req =>
     for {
+      tmpl <- EmailTemplate.find(id, lang)
       list <- EmailTemplateHistory.list(id, lang, pager)
       usrs <- User.find(list.map(_.updated_by))
     } yield Ok {
       html.email_templates.history(
-        id, lang, Page(pager, list), usrs
+        tmpl, Page(pager, list), usrs
       )
     }
   }

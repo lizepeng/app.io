@@ -52,7 +52,7 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
       success => (for {
         user <- User.find(success)
         link <- ExpirableLink.nnew(module_name)(user)
-        tmpl <- getEmailTemplate("password_reset.email1", req.lang)
+        tmpl <- getEmailTemplate("password_reset.email1")
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
         Mailer.schedule("noreply", tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
@@ -100,7 +100,7 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
       success => (for {
         link <- ExpirableLink.find(id).andThen { case _ => ExpirableLink.remove(id) }
         user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
-        tmpl <- getEmailTemplate("password_reset.email2", req.lang)
+        tmpl <- getEmailTemplate("password_reset.email2")
       } yield (user, tmpl)).map { case (user, tmpl) =>
         Mailer.schedule("support", tmpl, user)
         Redirect(routes.Sessions.nnew()).flashing(
@@ -126,7 +126,9 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
     }
   } yield usr
 
-  private def getEmailTemplate(key: String, lang: Lang): Future[EmailTemplate] =
+  private def getEmailTemplate(key: String)(
+    implicit lang: Lang
+  ): Future[EmailTemplate] =
     for {
       uuid <- getUUID(key)
       user <- mailer
@@ -145,7 +147,8 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
     } yield tmpl
 
   private def onError(bound: Form[String], msg: String)(
-    implicit req: UserRequest[_]): Result = NotFound {
+    implicit req: UserRequest[_]
+  ): Result = NotFound {
     html.password_reset.nnew {
       bound.withGlobalError(msg)
     }

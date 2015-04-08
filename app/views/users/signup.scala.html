@@ -1,4 +1,4 @@
-@(fm: Form[_])(implicit req: UserRequest[_])
+@(fm: Form[_])(implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
@@ -29,18 +29,18 @@
         @{_input_email(fm("email"),
           Symbol("data-autocheck-url") -> routes.Users.checkEmail,
           'tabindex    -> 1
-          )(_fc_form_group, req.lang)
+          )(_fc_form_group)
         }
 
         @{_input_password(fm("password.original"),
           Symbol("data-autocheck-url") -> routes.Users.checkPassword,
           'tabindex    -> 2
-          )(_fc_form_group, req.lang)
+          )(_fc_form_group)
         }
 
         @{_input_password(fm("password.confirmation"),
           'tabindex    -> 3
-          )(_fc_form_group, req.lang)
+          )(_fc_form_group)
         }
 
         <p class="tos-info">

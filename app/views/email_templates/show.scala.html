@@ -1,4 +1,4 @@
-@(tmpl: EmailTemplate, updated_by:User, created_by:User)(implicit req: UserRequest[_])
+@(tmpl: EmailTemplate, updated_by:User, created_by:User)(implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._

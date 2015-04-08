@@ -1,6 +1,6 @@
-@(field: play.api.data.Field, options: Seq[(String,String)], args: (Symbol,Any)*)(
+@(field: Field, options: Seq[(String,String)], args: (Symbol,Any)*)(
 fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
-implicit lang: play.api.i18n.Lang)
+implicit lang: Lang)
 
 @helper.input(
   field,
@@ -9,12 +9,12 @@ implicit lang: play.api.i18n.Lang)
     case _              => true
   }:_*) { (id, name, value, htmlArgs) =>
 
-  @defining(args.toMap.get('disabled) match {
-    case Some(set: Set[String]) => set
+  @defining(args.toMap.get('disabled).map {
+    case Some(set: Set[_]) => set.collect{case e:String => e}
     case _                      => Set[String]()
   }) { optionsDisabled =>
     @options.map { v =>
-      @defining(optionsDisabled(v._1)) { disabled =>
+      @defining(optionsDisabled.contains(v._1)) { disabled =>
         <div class="radio@if(disabled){ disabled}">
           <label>
             <input type="radio" id="@(id)_@v._1" name="@name" value="@v._1"

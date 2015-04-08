@@ -1,4 +1,5 @@
-@(path: Path, textType: String = "html", name: String = "")
+@(path: Path, textType: String = "html", name: String = "")(
+implicit req: UserRequest[_], lang: Lang)
 
 @import helper._
 

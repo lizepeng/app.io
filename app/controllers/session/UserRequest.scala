@@ -13,7 +13,7 @@ class UserRequest[A](
   req: Request[A]
 ) extends WrappedRequest[A](req) {
 
-  def lang: Lang = {
+  def lang1: Lang = {
     Play.maybeApplication.map {implicit app =>
       val maybeLangFromCookie = req.cookies.get(Play.langCookieName).flatMap(
         c => Lang.get(c.value)

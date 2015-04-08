@@ -1,4 +1,4 @@
-@(fm: Form[_])(implicit req: UserRequest[_])
+@(fm: Form[_])(implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
@@ -21,21 +21,22 @@
       'placeholder -> MSG("email"),
       'tabindex    -> 1,
       '_icons      -> "fa fa-envelope-o fa-fw"
-      )(_fc_login_text, req.lang)
+      )(_fc_login_text)
     }
 
     @{_input_password(fm("password"),
       'placeholder -> MSG("password"),
       'tabindex    -> 2,
       '_icons      -> "fa fa-key fa-fw"
-      )(_fc_login_text, req.lang)
+      )(_fc_login_text)
     }
 
     <div style="margin-top: 20px;">
-      @checkbox(fm("remember_me"),
-      'tabindex -> 3,
-      '_text -> MSG("remember.me")
-      )(common._fc_raw, req.lang)
+      @{_checkbox(fm("remember_me"),
+        'tabindex -> 3,
+        '_text -> MSG("remember.me")
+        )(_fc_raw)
+      }
     </div>
 
     <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="5">

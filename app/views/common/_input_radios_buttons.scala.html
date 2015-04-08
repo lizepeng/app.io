@@ -1,6 +1,6 @@
-@(field: play.api.data.Field, options: Seq[(String,(String,String))], args: (Symbol,Any)*)(
+@(field: Field, options: Seq[(String,(String,String))], args: (Symbol,Any)*)(
 fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
-implicit lang: play.api.i18n.Lang)
+implicit lang: Lang)
 
 @helper.input(field, args:_*) { (id, name, value, htmlArgs) =>
   <div class="btn-group" data-toggle="buttons">

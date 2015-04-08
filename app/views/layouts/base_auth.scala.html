@@ -2,6 +2,6 @@
   content: Html)(
   css: Html *)(
   js: Html *)(
-  implicit req: UserRequest[_])
+  implicit req: UserRequest[_], lang: Lang)
 
-@base(title, above_content)(content)(css:_*)(js:_*)(req)
+@base(title, above_content)(content)(css:_*)(js:_*)

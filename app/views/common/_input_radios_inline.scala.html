@@ -1,6 +1,6 @@
-@(field: play.api.data.Field, options: Seq[(String,String)], args: (Symbol,Any)*)(
+@(field: Field, options: Seq[(String,String)], args: (Symbol,Any)*)(
 fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
-implicit lang: play.api.i18n.Lang)
+implicit lang: Lang)
 
 @helper.input(
   field,
@@ -10,7 +10,7 @@ implicit lang: play.api.i18n.Lang)
   }:_*) { (id, name, value, htmlArgs) =>
 
   @defining(args.toMap.get('disabled) match {
-    case Some(set: Set[String]) => set
+    case Some(set: Set[_]) => set.collect{case e:String => e}
     case _                      => Set[String]()
   }) { optionsDisabled =>
     @options.map { v =>

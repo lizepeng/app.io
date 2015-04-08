@@ -1,5 +1,5 @@
 @(style:String, emphasis:Boolean=false, dismissible:Boolean=false)(
-  content: Html = Html(""))
+content: Html = Html(""))(implicit lang: Lang)
 
 <div class="alert alert-@style @if(dismissible){alert-dismissible}" role="alert">
   @if(dismissible) {
