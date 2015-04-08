@@ -5,7 +5,8 @@ import java.util.UUID
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
-import helpers.Logging
+import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
+import helpers.{Logging, Pager}
 import models.cassandra.{Cassandra, ExtCQL}
 import security.Permission
 
@@ -14,13 +15,17 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
+//TODO change order of fields
 case class AccessControl(
   resource: String,
   action: String,
   principal: UUID,
   is_group: Boolean,
   granted: Boolean
-) extends Permission[UUID, String, String]
+) extends Permission[UUID, String, String] {
+
+  def save = AccessControl.save(this)
+}
 
 sealed class AccessControls
   extends CassandraTable[AccessControls, AccessControl]
@@ -135,4 +140,31 @@ object AccessControl extends AccessControls with Cassandra {
       ids <- group_ids
       ret <- find(resource, action, ids)
     } yield ret
+
+  def save(ac: AccessControl): Future[AccessControl] = CQL {
+    update.where(_.principal_id eqs ac.principal)
+      .and(_.resource eqs ac.resource)
+      .and(_.action eqs ac.action)
+      .and(_.is_group eqs ac.is_group)
+      .modify(_.granted setTo ac.granted)
+  }.future().map { _ => ac }
+
+  def remove(
+    principal: UUID,
+    resource: String,
+    action: String,
+    is_group: Boolean
+  ): Future[ResultSet] = CQL {
+    delete.where(_.principal_id eqs principal)
+      .and(_.resource eqs resource)
+      .and(_.action eqs action)
+      .and(_.is_group eqs is_group)
+  }.future()
+
+  def list(pager: Pager): Future[List[AccessControl]] = {
+    CQL {
+      select.setFetchSize(2000)
+    }.fetchEnumerator |>>>
+      PIteratee.slice[AccessControl](pager.start, pager.limit)
+  }.map(_.toList)
 }

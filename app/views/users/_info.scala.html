@@ -1,0 +1,25 @@
+@(user:User)
+
+@import common._
+
+<div class="row">
+  <div class="col-xs-12 col-sm-6">
+    @common._form_group_static("id") {
+      @user.id
+    }
+  </div>
+  <div class="col-xs-12 col-sm-6">
+    @common._form_group_static("name") {
+      @user.name
+    }
+  </div>
+
+</div>
+
+<div class="row">
+  <div class="col-xs-12 col-sm-6">
+    @common._form_group_static("email") {
+      @user.email
+    }
+  </div>
+</div>

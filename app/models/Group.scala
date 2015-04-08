@@ -6,6 +6,7 @@ import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.Logging
+import models.User._
 import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig
 
@@ -68,6 +69,14 @@ object Group extends Groups with Cassandra {
       resource: String
     ) extends AC.Granted[List[UUID]](action, resource, key)
 
+  }
+
+  def find[A](ids: List[UUID]): Future[Map[UUID, Group]] = {
+    select
+      .where(_.id in ids)
+      .fetch().map(
+        _.map(g => (g.id, g)).toMap
+      )
   }
 
 }

@@ -12,6 +12,7 @@ id=Id
 submit=Submit
 action=Action
 new=New
+new.entry=New Entry
 create=Create
 save=Save
 cancel=Cancel
@@ -29,6 +30,10 @@ history=History
 help=Help
 schedule=Schedule
 subject=Subject
+principal=Principal
+resource=Resource
+type=Type
+granted=Granted
 
 updated_by=Committer
 updated_on=Date Modified
@@ -107,6 +112,13 @@ controllers.email_templates.created=Email Template {0} has been created.
 controllers.email_templates.deleted=Email Template {0} has been deleted.
 log.not.found.email.template=Email Template {0}, {1} not found.
 
+# access_controls
+controllers.access_controls.title=Access Control List
+controllers.access_controls.entry.deleted=Access Control Entry deleted
+controllers.access_controls.entry.created=Access Control Entry created
+controllers.access_controls.principal.placeholder=Enter a User Id or Group Id
+controllers.access_controls.resource.placeholder=e.g. controllers.files
+controllers.access_controls.action.placeholder=e.g. save or *
 # ---------------------------------------------- #
 
 alert.success.title=Success!

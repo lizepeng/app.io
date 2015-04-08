@@ -1,0 +1,10 @@
+@(field: play.api.data.Field, args: (Symbol,Any)*)(
+fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
+implicit lang: play.api.i18n.Lang)
+
+@helper.inputText(
+  field,
+  args ++ Seq(
+    'class -> "form-control"
+    ): _*
+  )(ChainedFieldConstructor(fc, fcs:_*), lang)
