@@ -4,7 +4,8 @@ import java.util.UUID
 
 import controllers.Sessions._
 import controllers.session._
-import models.{InternalGroups, User}
+import helpers._
+import models._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation._
@@ -12,7 +13,7 @@ import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
-import security.AuthCheck
+import security._
 import views._
 
 import scala.concurrent.Future
@@ -20,7 +21,11 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Users extends Controller {
+object Users
+  extends
+  Controller with Logging with PermCheckable {
+
+  override val module_name: String = "controllers.users"
 
   val signUpFM = Form[SignUpFD](
     mapping(
@@ -42,6 +47,7 @@ object Users extends Controller {
     original: String,
     confirmation: String
   ) {
+
     def isConfirmed = original == confirmation
   }
 
@@ -50,7 +56,14 @@ object Users extends Controller {
       Ok(html.users.show())
     }
 
-  def index = TODO
+  def index(pager: Pager) =
+    (UserAction >> PermCheck(Index)).async { implicit req =>
+      User.list(pager).map { list =>
+        Ok(html.users.index(Page(pager, list)))
+      }.recover {
+        case e: BaseException => NotFound
+      }
+    }
 
   def nnew = UserAction { implicit req =>
     req.user match {
@@ -85,11 +98,10 @@ object Users extends Controller {
               password = success.password.original,
               internal_groups = InternalGroups(1)
             )
-          ).map {
-            implicit u =>
-              Redirect {
-                routes.Users.show(u.id)
-              }.createSession(rememberMe = false)
+          ).map { u =>
+            Redirect {
+              routes.Users.show(u.id)
+            }.createSession(rememberMe = false)
           }
       }
     )

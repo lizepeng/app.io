@@ -94,6 +94,16 @@ password.all_upper=Password need at least one lowercase letter
 password.all_lower=Password need at least one uppercase letter
 password.not.confirmed=Password doesn''t match the confirmation
 
+error.uuid=UUID is invalid
+
+# groups
+controllers.groups.head=Groups
+controllers.groups.title=Groups
+
+# users
+controllers.users.head=Users
+controllers.users.title=Users
+
 # files
 controllers.files.missing=Missing File
 controllers.files.uploaded={0} Uploaded

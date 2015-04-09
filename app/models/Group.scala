@@ -5,19 +5,27 @@ import java.util.UUID
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
-import helpers.Logging
-import models.User._
+import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
+import helpers.{Logging, Pager}
 import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
+import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
  */
-case class Group(id: UUID, name: String)
+case class Group(
+  id: UUID,
+  name: String,
+  description: Option[String]
+) {
+
+  def createIfNotExist = Group.createIfNotExist(this)
+}
 
 sealed class Groups
   extends CassandraTable[Groups, Group]
@@ -34,12 +42,16 @@ sealed class Groups
     extends StringColumn(this)
     with StaticColumn[String]
 
+  object description
+    extends OptionalStringColumn(this)
+    with StaticColumn[Option[String]]
+
   object child_id
     extends UUIDColumn(this)
     with ClusteringOrder[UUID]
 
   override def fromRow(r: Row): Group = {
-    Group(id(r), name(r))
+    Group(id(r), name(r), description(r))
   }
 }
 
@@ -71,13 +83,27 @@ object Group extends Groups with Cassandra {
 
   }
 
-  def find[A](ids: List[UUID]): Future[Map[UUID, Group]] = {
+  def createIfNotExist(group: Group): Future[Group] = CQL {
+    insert
+      .value(_.id, group.id)
+      .value(_.name, group.name)
+      .value(_.description, group.description)
+      .ifNotExists()
+  }.future().map { rs =>
+    if (rs.wasApplied()) group else fromRow(rs.one)
+  }
+
+  def find[A](ids: List[UUID]): Future[Map[UUID, Group]] = CQL {
     select
       .where(_.id in ids)
-      .fetch().map(
-        _.map(g => (g.id, g)).toMap
-      )
-  }
+  }.fetch().map(_.map(g => (g.id, g)).toMap)
+
+  def list(pager: Pager): Future[List[Group]] = {
+    CQL {
+      select.setFetchSize(2000)
+    }.fetchEnumerator |>>>
+      PIteratee.slice[Group](pager.start, pager.limit)
+  }.map(_.toList)
 
 }
 
@@ -124,7 +150,13 @@ object InternalGroups extends Logging with SysConfig {
   private lazy val numToId = Await.result(
 
     Future.sequence(
-      ALL.map(n => getUUID(s"internal_group_${"%02d".format(n)}"))
+      ALL.map { n =>
+        val key = s"internal_group_${"%02d".format(n)}"
+        getUUID(key).andThen {
+          case Success(id) =>
+            Group(id, key, Some(key)).createIfNotExist
+        }
+      }
     ), 10 seconds
   )
 

@@ -5,7 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.Implicits._
-import com.websudos.phantom.iteratee.Iteratee
+import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
 import models.sys.SysConfig
@@ -163,13 +163,10 @@ object User extends Users with Logging with SysConfig with Cassandra {
     UserByEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
-  def find[A](ids: List[UUID]): Future[Map[UUID, User]] = {
+  def find[A](ids: List[UUID]): Future[Map[UUID, User]] = CQL {
     select
       .where(_.id in ids)
-      .fetch().map(
-        _.map(u => (u.id, u)).toMap
-      )
-  }
+  }.fetch().map(_.map(u => (u.id, u)).toMap)
 
   private def findGroupIds(id: UUID): Future[List[UUID]] = CQL {
     select(_.ext_group_ids).where(_.id eqs id)
@@ -224,13 +221,12 @@ object User extends Users with Logging with SysConfig with Cassandra {
     }
   }
 
-  def page(start: UUID, limit: Int): Future[Seq[User]] = CQL {
-    select.where(_.id gtToken start).limit(limit)
-  }.fetch()
-
-  def all: Future[Seq[User]] = {
-    select.fetchEnumerator() run Iteratee.collect()
-  }
+  def list(pager: Pager): Future[List[User]] = {
+    CQL {
+      select.setFetchSize(2000)
+    }.fetchEnumerator |>>>
+      PIteratee.slice[User](pager.start, pager.limit)
+  }.map(_.toList)
 
   ////////////////////////////////////////////////////////////////
 

@@ -17,7 +17,9 @@ object Secured {
       Seq(
         AccessControls,
         EmailTemplates,
-        Files
+        Files,
+        Groups,
+        Users
       )
   }
 
