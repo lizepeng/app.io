@@ -279,7 +279,7 @@ object UserByEmail extends UserByEmail with Cassandra {
       .value(_.email, email)
       .value(_.id, id)
       .ifNotExists()
-  }.future().map(_.one.applied)
+  }.future().map(_.wasApplied())
 
   def find(email: String): Future[(String, UUID)] = {
     if (email.isEmpty) throw User.NotFound(email)

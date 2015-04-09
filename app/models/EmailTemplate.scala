@@ -158,7 +158,7 @@ object EmailTemplate extends EmailTemplates with Cassandra {
         .value(_.created_on, tmpl.created_on)
         .value(_.created_by, tmpl.created_by)
         .ifNotExists()
-    }.future().map(_.one.applied)
+    }.future().map(_.wasApplied())
     tmpl <- {
       val curr = if (init) tmpl.created_on else DateTime.now
       CQL {
@@ -172,8 +172,8 @@ object EmailTemplate extends EmailTemplates with Cassandra {
           .and(_.last_updated_on setTo curr)
           .and(_.updated_by setTo tmpl.updated_by)
           .onlyIf(_.last_updated_on eqs tmpl.updated_on)
-      }.future().map(_.one).map { r =>
-        if (r.applied) tmpl.copy(updated_on = curr)
+      }.future().map { r =>
+        if (r.wasApplied()) tmpl.copy(updated_on = curr)
         else throw UpdatedByOther()
       }
     }
