@@ -95,10 +95,10 @@ sealed class Directories
 object Directory extends Directories with Cassandra {
 
   case class NotFound(id: UUID)
-    extends BaseException("cfs.dir.not.found")
+    extends BaseException(CFS.msg_key("dir.not.found"))
 
   case class ChildNotFound(name: String)
-    extends BaseException("cfs.child.not.found")
+    extends BaseException(CFS.msg_key("dir.child.not.found"))
 
   def findChild(
     parent: UUID, name: String

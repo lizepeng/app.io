@@ -6,8 +6,9 @@ import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
-import helpers.{Logging, Pager}
+import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
+import play.api.Play.current
 import security.Permission
 
 import scala.concurrent.Future
@@ -15,7 +16,6 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-//TODO change order of fields
 case class AccessControl(
   resource: String,
   action: String,
@@ -29,6 +29,7 @@ case class AccessControl(
 
 sealed class AccessControls
   extends CassandraTable[AccessControls, AccessControl]
+  with Module[AccessControls, AccessControl]
   with ExtCQL[AccessControls, AccessControl]
   with Logging {
 
@@ -64,30 +65,30 @@ sealed class AccessControls
   }
 }
 
-object AccessControl extends AccessControls with Cassandra {
+object AccessControl extends AccessControls with Cassandra with AppConfig {
 
   abstract class Undefined[P](
     action: String,
     resource: String,
-    module_name: String
+    sub_key: String
   ) extends Permission.Undefined[P, String, String](
-    s"ac.$module_name"
+    s"$fullModuleName.$sub_key"
   )
 
   abstract class Denied[P](
     action: String,
     resource: String,
-    module_name: String
+    sub_key: String
   ) extends Permission.Denied[P, String, String](
-    s"ac.$module_name"
+    s"$fullModuleName.$sub_key"
   )
 
   abstract class Granted[P](
     action: String,
     resource: String,
-    module_name: String
+    sub_key: String
   ) extends Permission.Granted[P, String, String](
-    s"ac.$module_name"
+    s"$fullModuleName.$sub_key"
   )
 
   def find(
@@ -163,7 +164,7 @@ object AccessControl extends AccessControls with Cassandra {
 
   def list(pager: Pager): Future[List[AccessControl]] = {
     CQL {
-      select.setFetchSize(2000)
+      select.setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
       PIteratee.slice[AccessControl](pager.start, pager.limit)
   }.map(_.toList)

@@ -4,16 +4,14 @@ implicit req: UserRequest[_], lang: Lang)
 @import common._
 @import helper._
 
-@pkg = @{AccessControls.module_name}
-
-@layouts.base(MSG(s"$pkg.title")) {
+@layouts.base(AccessControls.vmsg("title")) {
 
   @common._flashing()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-shield fa-lg text-success"></i>
-      @MSG(s"$pkg.title")
+      @AccessControls.vmsg("head")
 
       <a class="btn btn-success pull-right" data-toggle="collapse" href="#new-ace-form" aria-expanded="false" aira-controls="new-ace-form">
         <i class="fa fa-plus fa-lg"></i>
@@ -32,7 +30,7 @@ implicit req: UserRequest[_], lang: Lang)
           <div class="col-xs-9">
             @{_input_text(fm("principal"),
               '_label      -> MSG("principal"),
-              'placeholder -> MSG(s"$pkg.principal.placeholder"),
+              'placeholder -> AccessControls.vmsg("principal.placeholder"),
               'tabindex    -> 1
               )(_fc_form_group)
             }
@@ -55,7 +53,7 @@ implicit req: UserRequest[_], lang: Lang)
         <div class="row">
           <div class="col-xs-12 col-sm-6">
             @{_select(fm("resource"),
-              Secured.Modules.names.map{n => (n, MSG(s"$n.head"))},
+              Secured.Modules.names.map{n => (n, MSG(s"$n.name"))},
               '_label      -> MSG("resource"),
               'tabindex    -> 3
               )(_fc_form_group)
@@ -114,7 +112,7 @@ implicit req: UserRequest[_], lang: Lang)
         </thead>
         <tbody>
           @page.zipWithIndex.map { case (ac,idx) =>
-            <tr @if(ac.resource == pkg){class="danger"}>
+            <tr @if(ac.resource == AccessControls.fullModuleName){class="danger"}>
               <td>
                 @if(ac.is_group){
                   <i class="fa fa-group fa-lg text-info"></i>
@@ -133,7 +131,7 @@ implicit req: UserRequest[_], lang: Lang)
                 </a>
               </td>
               <td>
-                @MSG(s"${ac.resource}.head")
+                @MSG(s"${ac.resource}.name")
               </td>
               <td>
                 @MSG(s"actions.${ac.action}")

@@ -6,9 +6,9 @@ import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
-import helpers.{Logging, Pager}
+import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
-import models.sys.SysConfig
+import play.api.Play.current
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -29,6 +29,7 @@ case class Group(
 
 sealed class Groups
   extends CassandraTable[Groups, Group]
+  with Module[Groups, Group]
   with ExtCQL[Groups, Group]
   with Logging {
 
@@ -55,31 +56,29 @@ sealed class Groups
   }
 }
 
-object Group extends Groups with Cassandra {
+object Group extends Groups with Cassandra with AppConfig {
 
   object AccessControl {
 
     import models.{AccessControl => AC}
 
-    val key = "groups"
-
     case class Undefined(
       principal: List[UUID],
       action: String,
       resource: String
-    ) extends AC.Undefined[List[UUID]](action, resource, key)
+    ) extends AC.Undefined[List[UUID]](action, resource, moduleName)
 
     case class Denied(
       principal: List[UUID],
       action: String,
       resource: String
-    ) extends AC.Denied[List[UUID]](action, resource, key)
+    ) extends AC.Denied[List[UUID]](action, resource, moduleName)
 
     case class Granted(
       principal: List[UUID],
       action: String,
       resource: String
-    ) extends AC.Granted[List[UUID]](action, resource, key)
+    ) extends AC.Granted[List[UUID]](action, resource, moduleName)
 
   }
 
@@ -100,7 +99,7 @@ object Group extends Groups with Cassandra {
 
   def list(pager: Pager): Future[List[Group]] = {
     CQL {
-      select.setFetchSize(2000)
+      select.setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
       PIteratee.slice[Group](pager.start, pager.limit)
   }.map(_.toList)
@@ -138,12 +137,12 @@ case class InternalGroups(code: Int) {
      """
 }
 
-object InternalGroups extends Logging with SysConfig {
+object InternalGroups extends helpers.ModuleLike with SysConfig {
 
   import scala.Predef._
   import scala.language.implicitConversions
 
-  override val module_name: String = "models.group"
+  override val moduleName = Group.moduleName
 
   val ALL = for (gid <- 0 to 18) yield gid
 

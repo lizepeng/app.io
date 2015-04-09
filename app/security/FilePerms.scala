@@ -3,7 +3,7 @@ package security
 import controllers.UserRequest
 import helpers.syntax.PolarQuestion
 import models.User
-import models.cfs.INode
+import models.cfs._
 import play.api.mvc.AnyContent
 
 /**
@@ -75,7 +75,7 @@ object FilePerms {
     principal: User,
     action: Int,
     resource: INode
-  ) extends Permission.Denied[User, Int, INode]("cfs")
+  ) extends Permission.Denied[User, Int, INode](CFS.fullModuleName)
 
   val r   = 4
   val w   = 2
@@ -92,6 +92,7 @@ object FilePerms {
   case class FilePermsBuilder(
     inode: INode, req: UserRequest[AnyContent]
   ) {
+
     val r   = new PolarQuestion {def ? = check(FilePerms.r)}
     val w   = new PolarQuestion {def ? = check(FilePerms.w)}
     val x   = new PolarQuestion {def ? = check(FilePerms.x)}
@@ -108,7 +109,7 @@ object FilePerms {
 
     private def build(action: Int): FilePerms = {
       req.user match {
-        case None    => throw User.IsNotLoggedIn()
+        case None    => throw AuthCheck.Unauthorized()
         case Some(u) => FilePerms(u, action, inode)
       }
     }

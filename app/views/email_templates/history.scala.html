@@ -3,8 +3,6 @@ implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 
-@pkg = @{EmailTemplates.module_name}
-
 @layouts.base(MSG("history")){
 
   <div class="row">
@@ -13,7 +11,7 @@ implicit req: UserRequest[_], lang: Lang)
       <li role="presentation">
         <a href="@routes.EmailTemplates.edit(tmpl.id, tmpl.lang)" aria-controls="edit">
           <i class="fa fa-edit fa-lg"></i>
-          @MSG(s"$pkg.title")
+          @EmailTemplates.vmsg("head")
         </a>
       </li>
       <li role="presentation" class="active">

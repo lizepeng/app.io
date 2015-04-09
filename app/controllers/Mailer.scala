@@ -1,21 +1,19 @@
 package controllers
 
 import akka.actor.Cancellable
-import helpers.{AppConfig, Logging}
-import models.{EmailTemplate, User}
+import helpers.AppConfig
+import models._
 import play.api.Play.current
-import play.api.i18n.{Messages => MSG}
+import play.api.i18n.Messages
 import play.api.libs.mailer._
 import plugins.MAMailerPlugin
 
 /**
  * @author zepeng.li@gmail.com
  */
-object Mailer extends Logging with AppConfig {
+object Mailer extends MVModule("mailer") with AppConfig {
 
-  override lazy val module_name = "controllers.mailer"
-
-  private lazy  val admins      = config
+  private lazy val admins = config
     .getStringSeq("admin.email-addresses")
     .getOrElse(Seq.empty)
 
@@ -61,7 +59,7 @@ object Mailer extends Logging with AppConfig {
   def substitute(text: String, args: (String, Any)*) = {
     val map = args.toMap
     anyPattern replaceAllIn(text, _ match {
-      case msgPattern(n)                    => MSG(n)
+      case msgPattern(n)                    => Messages(n)
       case argPattern(n) if map.contains(n) => map.get(n).get.toString
       case _                                => "#{???}"
     })

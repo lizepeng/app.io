@@ -5,9 +5,7 @@ implicit req: UserRequest[_], lang: Lang)
 @import helper._
 @import play.api.Play.current
 
-@pkg = @{EmailTemplates.module_name}
-
-@layouts.base(MSG(s"$pkg.head")){
+@layouts.base(EmailTemplates.vmsg("title")){
 
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
@@ -21,7 +19,7 @@ implicit req: UserRequest[_], lang: Lang)
       <li role="presentation" class="active">
         <a href="#" aria-controls="edit">
           <i class="fa fa-edit fa-lg"></i>
-          @MSG(s"$pkg.title")
+          @EmailTemplates.vmsg("head")
         </a>
       </li>
       <li role="presentation">
@@ -44,7 +42,7 @@ implicit req: UserRequest[_], lang: Lang)
             <div class="col-xs-12 col-sm-9">
               @{_input_text(fm("name"),
                 '_label      -> MSG("name"),
-                'placeholder -> MSG(s"$pkg.name.place_holder"),
+                'placeholder -> EmailTemplates.vmsg("name.place_holder"),
                 'tabindex    -> 1
                 )(_fc_form_group)
               }
@@ -64,7 +62,7 @@ implicit req: UserRequest[_], lang: Lang)
             <div class="col-xs-12">
               @{_input_text(fm("subject"),
                 '_label      -> MSG("subject"),
-                'placeholder -> MSG(s"$pkg.subject.place_holder"),
+                'placeholder -> EmailTemplates.vmsg("subject.place_holder"),
                 'tabindex    -> 3
                 )(_fc_form_group)
               }
@@ -75,7 +73,7 @@ implicit req: UserRequest[_], lang: Lang)
             <div class="col-xs-12">
               @{_textarea(fm("text"),
                 '_label      -> MSG("text"),
-                'placeholder -> MSG(s"$pkg.text.sample"),
+                'placeholder -> EmailTemplates.vmsg("text.sample"),
                 'rows        -> 24,
                 'tabindex    -> 4
                 )(_fc_form_group)

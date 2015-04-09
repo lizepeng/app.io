@@ -11,12 +11,12 @@ trait Logging {
 
   implicit lazy val Logger =
     play.api.Logger(
-      if (module_name.nonEmpty) module_name
+      if (loggerName.nonEmpty) loggerName
       //be careful, this can not be used with inner class above two level
       else this.getClass.getCanonicalName
     )
 
-  def module_name: String = ""
+  def loggerName: String = ""
 }
 
 trait Loggable extends Product {
@@ -33,6 +33,8 @@ trait Loggable extends Product {
       productIterator.map(_.toString).toList: _*
     )
   }
+
+  def log(implicit logger: play.api.Logger, lang: Lang) = ???
 }
 
 trait TimeLogging extends Logging {

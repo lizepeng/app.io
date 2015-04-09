@@ -8,6 +8,7 @@ import com.websudos.phantom.query.SelectWhere
 import helpers.{Logging, _}
 import models.cassandra._
 import org.joda.time.DateTime
+import play.api.Play.current
 import play.api.i18n.Lang
 import play.api.libs.iteratee.Enumeratee
 
@@ -101,6 +102,7 @@ sealed class EmailTemplates
   with EmailTemplateKey[EmailTemplates, ET]
   with EmailTemplateColumns[EmailTemplates, ET]
   with EmailTemplateHistoryColumns[EmailTemplates, ET]
+  with Module[EmailTemplates, ET]
   with ExtCQL[EmailTemplates, ET]
   with Logging {
 
@@ -117,13 +119,13 @@ sealed class EmailTemplates
   )
 }
 
-object EmailTemplate extends EmailTemplates with Cassandra {
+object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
 
   case class NotFound(id: UUID, lang: String)
-    extends BaseException("not.found.email.template")
+    extends BaseException(msg_key("not.found"))
 
   case class UpdatedByOther()
-    extends BaseException("email.template.updated.by.others")
+    extends BaseException(msg_key("updated.by.others"))
 
   def find(
     id: UUID, lang: Lang,
@@ -181,7 +183,7 @@ object EmailTemplate extends EmailTemplates with Cassandra {
 
   def list(pager: Pager): Future[List[ET]] = {
     CQL {
-      distinct(_.id, _.lang).setFetchSize(2000)
+      distinct(_.id, _.lang).setFetchSize(fetchSize())
     }.fetchEnumerator &>
       Enumeratee.mapM { case (id, lang) => find(id, lang, None) } |>>>
       PIteratee.slice[ET](pager.start, pager.limit)
@@ -197,6 +199,7 @@ sealed class EmailTemplateHistories
   extends CassandraTable[EmailTemplateHistories, ETH]
   with EmailTemplateKey[EmailTemplateHistories, ETH]
   with EmailTemplateHistoryColumns[EmailTemplateHistories, ETH]
+  with Module[EmailTemplateHistories, ETH]
   with ExtCQL[EmailTemplateHistories, ETH]
   with Logging {
 
@@ -211,14 +214,15 @@ sealed class EmailTemplateHistories
   )
 }
 
-object EmailTemplateHistory extends EmailTemplateHistories with Cassandra {
+object EmailTemplateHistory extends EmailTemplateHistories with Cassandra with
+AppConfig {
 
   def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {
     CQL {
       select
         .where(_.id eqs id)
         .and(_.lang eqs lang.code)
-        .setFetchSize(2000)
+        .setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
       PIteratee.slice(pager.start, pager.limit)
   }.map(_.toList)

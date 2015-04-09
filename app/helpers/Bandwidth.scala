@@ -15,13 +15,20 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object Bandwidth extends AppConfig with Logging {
-  override val module_name = "app.bandwidth"
+object Bandwidth {
 
-  lazy val max = config.getBytes("max").map(_.toInt).getOrElse(5 MBps)
-  lazy val min = config.getBytes("min").map(_.toInt).getOrElse(200 KBps)
+  private object Config extends ModuleLike with AppConfig {
+
+    override val moduleName = "bandwidth"
+
+    lazy val max = config.getBytes("max").map(_.toInt).getOrElse(5 MBps)
+    lazy val min = config.getBytes("min").map(_.toInt).getOrElse(200 KBps)
+  }
+
+  import Config._
 
   object LimitTo {
+
     def apply(rate: Int = 1 MBps): Enumeratee[BLK, BLK] = limitTo(
       if (rate < min) min
       else if (rate > max) max
@@ -31,6 +38,7 @@ object Bandwidth extends AppConfig with Logging {
   }
 
   object UnLimited {
+
     def apply(): Enumeratee[BLK, BLK] = Enumeratee.passAlong
   }
 

@@ -65,7 +65,7 @@ sealed class Files
 object File extends Files with Cassandra {
 
   case class NotFound(id: UUID)
-    extends BaseException("cfs.file.not.found")
+    extends BaseException(CFS.msg_key("file.not.found"))
 
   def find(id: UUID)(
     implicit onFound: File => File

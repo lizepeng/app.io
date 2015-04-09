@@ -1,20 +1,22 @@
 @()(implicit req: UserRequest[_], lang: Lang)
 
-@pkg = @{PasswordReset.module_name}
-
-@layouts.base(MSG(s"$pkg.head") + " - " + MSG("app.name")){
+@layouts.base(PasswordReset.vmsg("title") + " - " + MSG("app.name")){
 
   <div class="panel panel-primary auth-form">
     <div class="panel-heading">
       <h3 class="panel-title">
-        @MSG(s"$pkg.title")
+        @PasswordReset.vmsg("title")
       </h3>
     </div>
     <div class="panel-body">
-      <p>@MSG(s"$pkg.sent.msg1")</p>
-      <p>@MSG(s"$pkg.sent.msg2")</p>
+      <p>
+        @PasswordReset.vmsg("sent.msg1")
+      </p>
+      <p>
+        @PasswordReset.vmsg("sent.msg2")
+      </p>
       <a href="@routes.Sessions.nnew" class="btn btn-default" tabindex="2">
-        @MSG(s"$pkg.return.to.sign.in")
+        @PasswordReset.vmsg("return.to.sign.in")
         <i class="fa fa-arrow-right"></i>
       </a>
     </div>

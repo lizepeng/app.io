@@ -15,7 +15,7 @@ implicit lang: Lang)
   </div>
   <div class="col-xs-12 col-sm-3">
     @common._form_group_static("updated_on") {
-      @tmpl.updated_on.toString("yyyy-MM-dd hh:mm:ss")
+      @tmpl.updated_on.toString(MSG("datetime.format"))
     }
   </div>
 
@@ -30,7 +30,7 @@ implicit lang: Lang)
 
   <div class="col-xs-12 col-sm-3">
     @common._form_group_static("created_on") {
-      @tmpl.created_on.toString("yyyy-MM-dd hh:mm:ss")
+      @tmpl.created_on.toString(MSG("datetime.format"))
     }
   </div>
 </div>

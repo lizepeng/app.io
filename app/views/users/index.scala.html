@@ -1,19 +1,17 @@
 @(page: Page[User])(
-implicit req: UserRequest[_], lang: Lang)
+implicit req: UserRequest[_], lang: Lang, msg: String => String)
 
 @import common._
 @import helper._
 
-@pkg = @{Users.module_name}
-
-@layouts.base(MSG(s"$pkg.title")) {
+@layouts.base(Users.vmsg("title")) {
 
   @common._flashing()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-user fa-lg"></i>
-      @MSG(s"$pkg.head")
+      @Users.vmsg("head")
     </h2>
   </div>
 

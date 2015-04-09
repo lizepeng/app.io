@@ -56,10 +56,6 @@ application.langs="en-US,zh,ja"
 # logger.models=DEBUG
 
 app.domain=app.io
-app.bandwidth.max=5M
-app.bandwidth.min=200K
-
-akka.loglevel=INFO
 
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-min=8
@@ -67,14 +63,21 @@ mailer-context.fork-join-executor.parallelism-max=4
 traffic-shaper-context.fork-join-executor.parallelism-max=4
 
 cassandra.cql.log=[batch,insert,update,delete]
+cassandra.fetch-size=0
+
+helpers.bandwidth.max=5M
+helpers.bandwidth.min=200K
 
 controllers.files.bandwidth.upload=1.5M
-controllers.files.bandwidth.download=2M
+controllers.files.bandwidth.download=1M
 controllers.files.bandwidth.stream=1M
 
 controllers.mailer.admin.email-addresses=["admin@app.io"]
 
-models.cfs.stream-fetch-size=5000
+models.cfs.files.stream-fetch-size=5000
+models.cfs.files.list-fetch-size=0
+
+akka.loglevel=INFO
 
 mimetype {
   mkv:video/x-matroska

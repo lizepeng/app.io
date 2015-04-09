@@ -4,18 +4,13 @@ import controllers.session.UserAction
 import helpers._
 import models.Group
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.mvc.Controller
 import security._
 import views.html
 
 /**
  * @author zepeng.li@gmail.com
  */
-object Groups
-  extends Controller
-  with Logging with PermCheckable {
-
-  override val module_name: String = "controllers.groups"
+object Groups extends MVController(Group) {
 
   def index(pager: Pager) =
     (UserAction >> PermCheck(Index)).async { implicit req =>

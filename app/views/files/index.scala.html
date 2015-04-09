@@ -4,9 +4,7 @@ implicit req: UserRequest[_], lang: Lang)
 @import common._
 @import helper._
 
-@pkg = @{Files.module_name}
-
-@layouts.base(MSG(s"$pkg.title")) {
+@layouts.base(Files.vmsg("title")) {
 
   @common._flashing()
 
@@ -18,7 +16,7 @@ implicit req: UserRequest[_], lang: Lang)
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-hdd-o fa-lg"></i>
-      @MSG(s"$pkg.head")
+      @Files.vmsg("head")
     </h2>
   </div>
   <div class="row">

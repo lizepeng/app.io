@@ -2,14 +2,13 @@ package controllers
 
 import controllers.Users.{Password, Rules}
 import controllers.session.UserAction
-import helpers.{AppConfig, Logging}
-import models.sys.SysConfig
-import models.{EmailTemplate, ExpirableLink, User}
+import helpers._
+import models._
 import org.joda.time.DateTime
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{Lang, Messages => MSG}
+import play.api.i18n.Lang
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.{Controller, Result}
 import views._
@@ -19,9 +18,9 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object PasswordReset extends Controller with Logging with SysConfig with AppConfig {
-
-  override val module_name = "controllers.password_reset"
+object PasswordReset
+  extends MVModule("password_reset") with Controller
+  with SysConfig with AppConfig {
 
   val emailFM = Form(
     single("email" -> text.verifying(Rules.email))
@@ -47,21 +46,21 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
   def create = UserAction.async { implicit req =>
     emailFM.bindFromRequest().fold(
       failure => Future.successful {
-        onError(emailFM, s"$module_name.email.not.found")
+        onError(emailFM, "email.not.found")
       },
       success => (for {
         user <- User.find(success)
-        link <- ExpirableLink.nnew(module_name)(user)
-        tmpl <- getEmailTemplate("password_reset.email1")
+        link <- ExpirableLink.nnew(fullModuleName)(user)
+        tmpl <- getEmailTemplate(s"$moduleName.email1")
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
         Mailer.schedule("noreply", tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
       }.recover {
         case e: User.NotFound          =>
-          onError(emailFM, s"$module_name.email.not.found")
+          onError(emailFM, "email.not.found")
         case e: EmailTemplate.NotFound =>
           Logger.warn(e.reason)
-          onError(emailFM, s"$module_name.email.not.found")
+          onError(emailFM, "email.not.found")
       }
 
     )
@@ -76,13 +75,13 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
    */
   def show(id: String) = UserAction.async { implicit req =>
     ExpirableLink.find(id).map { ln =>
-      if (ln.module != module_name)
-        onError(emailFM, s"$module_name.invalid.reset.link")
+      if (ln.module != fullModuleName)
+        onError(emailFM, "invalid.reset.link")
       else
         Ok(html.password_reset.show(id)(resetFM))
     }.recover {
       case e: ExpirableLink.NotFound =>
-        onError(emailFM, s"$module_name.invalid.reset.link")
+        onError(emailFM, "invalid.reset.link")
     }
   }
 
@@ -93,22 +92,22 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
         BadRequest {
           html.password_reset.show(id) {
             if (bound.hasGlobalErrors) bound
-            else bound.withGlobalError(s"$module_name.failed")
+            else bound.withGlobalError(msg_key("failed"))
           }
         }
       },
       success => (for {
         link <- ExpirableLink.find(id).andThen { case _ => ExpirableLink.remove(id) }
         user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
-        tmpl <- getEmailTemplate("password_reset.email2")
+        tmpl <- getEmailTemplate(s"$moduleName.email2")
       } yield (user, tmpl)).map { case (user, tmpl) =>
         Mailer.schedule("support", tmpl, user)
         Redirect(routes.Sessions.nnew()).flashing(
-          AlertLevel.Info -> MSG(s"$module_name.password.changed")
+          AlertLevel.Info -> msg("password.changed")
         )
       }.recover {
         case e: ExpirableLink.NotFound =>
-          onError(emailFM, s"$module_name.invalid.reset.link")
+          onError(emailFM, "invalid.reset.link")
       }
     )
   }
@@ -119,8 +118,8 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
       case e: User.NotFound => User.save(
         User(
           id = uid,
-          name = "password_reset",
-          email = s"password_reset@$domain"
+          name = moduleName,
+          email = s"$moduleName@$domain"
         )
       )
     }
@@ -138,7 +137,9 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
         EmailTemplate.save(
           EmailTemplate(
             uuid, Lang.defaultLang,
-            key, "", "",
+            key,
+            subject = "",
+            text = "",
             now, user.id,
             now, user.id
           )
@@ -146,11 +147,11 @@ object PasswordReset extends Controller with Logging with SysConfig with AppConf
       }
     } yield tmpl
 
-  private def onError(bound: Form[String], msg: String)(
+  private def onError(bound: Form[String], key: String)(
     implicit req: UserRequest[_]
   ): Result = NotFound {
     html.password_reset.nnew {
-      bound.withGlobalError(msg)
+      bound.withGlobalError(msg_key(key))
     }
   }
 }

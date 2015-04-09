@@ -1,7 +1,7 @@
 package security
 
 import controllers._
-import helpers.BaseException
+import helpers._
 import play.api.mvc._
 
 import scala.concurrent.Future
@@ -10,10 +10,12 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 object AuthCheck
-  extends ActionFilter[UserRequest] {
+  extends ActionFilter[UserRequest] with ModuleLike {
+
+  override val moduleName = "auth_check"
 
   case class Unauthorized()
-    extends BaseException("auth.check.unauthorized")
+    extends BaseException(msg_key("unauthorized"))
 
   /**
    * access denied
@@ -33,4 +35,5 @@ object AuthCheck
       }
     )
   }
+
 }

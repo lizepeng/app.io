@@ -7,23 +7,18 @@ import helpers._
 import models._
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
-import play.api.mvc.{Controller, Result}
+import play.api.mvc.Result
 import security._
-import views.{AlertLevel, html}
+import views._
 
 import scala.concurrent.Future
 
 /**
  * @author zepeng.li@gmail.com
  */
-object AccessControls
-  extends Controller
-  with Logging with PermCheckable {
-
-  override val module_name: String = "controllers.access_controls"
+object AccessControls extends MVController(AccessControl) {
 
   implicit val access_control_writes = Json.writes[AccessControl]
 
@@ -40,8 +35,8 @@ object AccessControls
           Secured.Actions.names.contains(_)
         ),
       "principal" -> of[UUID],
-      "is_group" -> boolean,
-      "granted" -> boolean
+      "is_group" -> default(boolean, false),
+      "granted" -> default(boolean, false)
     )(AccessControl.apply)(AccessControl.unapply)
   )
 
@@ -51,7 +46,10 @@ object AccessControls
     }
 
   def save(
-    principal: UUID, resource: String, action: String, is_group: Boolean
+    principal: UUID,
+    resource: String,
+    action: String,
+    is_group: Boolean
   ) = (UserAction >> PermCheck(Save)).async { implicit req =>
     val form = Form(single("value" -> boolean))
     form.bindFromRequest().fold(
@@ -63,14 +61,17 @@ object AccessControls
   }
 
   def destroy(
-    principal: UUID, resource: String, action: String, is_group: Boolean
+    principal: UUID,
+    resource: String,
+    action: String,
+    is_group: Boolean
   ) = (UserAction >> PermCheck(Destroy)).async { implicit req =>
     AccessControl.remove(principal, resource, action, is_group).map { _ =>
       RedirectToPreviousURI
         .getOrElse(
           Redirect(routes.AccessControls.index())
         ).flashing(
-          AlertLevel.Success -> MSG(s"$module_name.entry.deleted")
+          AlertLevel.Success -> msg("entry.deleted")
         )
     }
   }
@@ -83,7 +84,7 @@ object AccessControls
         success => success.save.flatMap { saved =>
           index0(
             pager, AccessControlFM,
-            AlertLevel.Success -> MSG(s"$module_name.entry.created")
+            AlertLevel.Success -> msg("entry.created")
           )
         }
       )

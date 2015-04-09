@@ -9,7 +9,6 @@ import models._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation._
-import play.api.i18n.{Messages => MSG}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -21,11 +20,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Users
-  extends
-  Controller with Logging with PermCheckable {
-
-  override val module_name: String = "controllers.users"
+object Users extends MVController(User) {
 
   val signUpFM = Form[SignUpFD](
     mapping(
@@ -83,25 +78,23 @@ object Users
           }
         }
       },
-      success => User.find(success.email).map { _ =>
-        BadRequest {
-          html.users.signup {
-            bound.withGlobalError("sign.up.failed")
-              .withError("email", "login.email.taken")
-          }
+      success => User.checkEmail(success.email).flatMap { _ =>
+        User(
+          email = success.email,
+          password = success.password.original,
+          internal_groups = InternalGroups(1)
+        ).save.map { u =>
+          Redirect {
+            routes.Users.show(u.id)
+          }.createSession(rememberMe = false)
         }
-      }.recoverWith {
-        case e: User.NotFound =>
-          User.save(
-            User(
-              email = success.email,
-              password = success.password.original,
-              internal_groups = InternalGroups(1)
-            )
-          ).map { u =>
-            Redirect {
-              routes.Users.show(u.id)
-            }.createSession(rememberMe = false)
+      }.recover {
+        case e: User.EmailTaken =>
+          BadRequest {
+            html.users.signup {
+              bound.withGlobalError("sign.up.failed")
+                .withError("email", e.message)
+            }
           }
       }
     )
@@ -112,10 +105,11 @@ object Users
 
     form.bindFromRequest().fold(
       failure => Future.successful(Forbidden(failure.errorsAsJson)),
-      success => User.find(success).map { _ =>
-        Forbidden(Json.obj("value" -> MSG("login.email.taken")))
+      success => User.checkEmail(success).map { _ =>
+        Ok("")
       }.recover {
-        case e: User.NotFound => Ok("")
+        case e: User.EmailTaken =>
+          Forbidden(Json.obj("value" -> e.message))
       }
     )
   }
@@ -150,10 +144,10 @@ object Users
     private val emailRegex = """[\w\.-]+@[\w\.-]+\.\w+$""".r
 
     def email = Constraint[String]("constraint.email.check") {
-      case o if isEmpty(o)    => Invalid(VE("login.email.empty"))
-      case o if o.length > 39 => Invalid(VE("login.email.invalid"))
+      case o if isEmpty(o)    => Invalid(VE("email.empty"))
+      case o if o.length > 39 => Invalid(VE("email.invalid"))
       case emailRegex()       => Valid
-      case _                  => Invalid(VE("login.email.invalid"))
+      case _                  => Invalid(VE("email.invalid"))
     }
 
     private def isEmpty(s: String) = s == null || s.trim.isEmpty

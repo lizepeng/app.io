@@ -17,17 +17,17 @@ trait Permission[P, A, R] {
 
 object Permission {
 
-  abstract class Denied[P, A, R](module_name: String)
-    extends BaseException(s"$module_name.perm.denied")
+  abstract class Denied[P, A, R](super_key: String)
+    extends BaseException(s"$super_key.perm.denied")
     with Permission[P, A, R]
 
-  abstract class Undefined[P, A, R](module_name: String)
-    extends BaseException(s"$module_name.perm.undefined")
+  abstract class Undefined[P, A, R](super_key: String)
+    extends BaseException(s"$super_key.perm.undefined")
     with Permission[P, A, R]
 
-  abstract class Granted[P, A, R](module_name: String)
+  abstract class Granted[P, A, R](super_key: String)
     extends Loggable with Permission[P, A, R] {
-    val code = s"$module_name.perm.granted"
+    val code = s"$super_key.perm.granted"
 
     override def canAccess = true
   }

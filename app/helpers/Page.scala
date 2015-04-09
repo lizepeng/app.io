@@ -29,7 +29,7 @@ case class Pager(start: Int, limit: Int) {
 
 object Pager {
 
-  def first = Pager(0, 10 + 1)
+  def first = Pager(0, 15 + 1)
 
   implicit def queryStringBinder(
     implicit intBinder: QueryStringBindable[Int]

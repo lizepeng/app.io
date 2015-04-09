@@ -8,8 +8,8 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
-import models.sys.SysConfig
 import org.joda.time.DateTime
+import play.api.Play.current
 import play.api.libs.Crypto
 
 import scala.concurrent.duration._
@@ -52,6 +52,8 @@ case class User(
     User.savePassword(this, newPassword)
   }
 
+  def save = User.save(this)
+
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")
 
@@ -64,6 +66,7 @@ case class User(
  */
 sealed class Users
   extends CassandraTable[Users, User]
+  with Module[Users, User]
   with ExtCQL[Users, User]
   with Logging {
 
@@ -99,54 +102,44 @@ sealed class Users
   }
 }
 
-object User extends Users with Logging with SysConfig with Cassandra {
-
-  override val module_name: String = "models.user"
+object User extends Users with Cassandra with SysConfig with AppConfig {
 
   case class NotFound(user: String)
-    extends BaseException("not.found.user")
+    extends BaseException(msg_key("not.found"))
 
   case class WrongPassword(email: String)
-    extends BaseException("password.wrong")
+    extends BaseException(msg_key("wrong.password"))
 
   case class AuthFailed(id: UUID)
-    extends BaseException("auth.failed")
+    extends BaseException(msg_key("auth.failed"))
 
   case class NoCredentials()
-    extends BaseException("no.credentials")
-
-  case class Unauthorized(user_id: UUID)
-    extends BaseException("unauthorized.user")
+    extends BaseException(msg_key("no.credentials"))
 
   case class EmailTaken(email: String)
-    extends BaseException("login.email.taken")
-
-  case class IsNotLoggedIn()
-    extends BaseException("is.not.logged.in.user")
+    extends BaseException(msg_key("email.taken"))
 
   object AccessControl {
 
     import models.{AccessControl => AC}
 
-    val key = "user"
-
     case class Undefined(
       principal: UUID,
       action: String,
       resource: String
-    ) extends AC.Undefined[UUID](action, resource, key)
+    ) extends AC.Undefined[UUID](action, resource, moduleName)
 
     case class Denied(
       principal: UUID,
       action: String,
       resource: String
-    ) extends AC.Denied[UUID](action, resource, key)
+    ) extends AC.Denied[UUID](action, resource, moduleName)
 
     case class Granted(
       principal: UUID,
       action: String,
       resource: String
-    ) extends AC.Granted[UUID](action, resource, key)
+    ) extends AC.Granted[UUID](action, resource, moduleName)
 
   }
 
@@ -173,6 +166,13 @@ object User extends Users with Logging with SysConfig with Cassandra {
   }.one().map {
     case None      => List.empty
     case Some(ids) => ids
+  }
+
+  def checkEmail(email: String): Future[Boolean] = {
+    UserByEmail.cql_check(email).one().map {
+      case None => true
+      case _    => throw EmailTaken(email)
+    }
   }
 
   /**
@@ -223,7 +223,7 @@ object User extends Users with Logging with SysConfig with Cassandra {
 
   def list(pager: Pager): Future[List[User]] = {
     CQL {
-      select.setFetchSize(2000)
+      select.setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
       PIteratee.slice[User](pager.start, pager.limit)
   }.map(_.toList)
@@ -289,6 +289,10 @@ object UserByEmail extends UserByEmail with Cassandra {
 
   def cql_del(email: String) = CQL {
     delete.where(_.email eqs email)
+  }
+
+  def cql_check(email: String) = CQL {
+    select(_.id).where(_.email eqs email)
   }
 
   def remove(email: String): Future[ResultSet] = {

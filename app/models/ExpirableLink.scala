@@ -20,6 +20,7 @@ case class ExpirableLink(
 
 sealed class ExpirableLinks
   extends CassandraTable[ExpirableLinks, ExpirableLink]
+  with Module[ExpirableLinks, ExpirableLink]
   with ExtCQL[ExpirableLinks, ExpirableLink]
   with Logging {
 
@@ -42,13 +43,13 @@ sealed class ExpirableLinks
 object ExpirableLink extends ExpirableLinks with Cassandra {
 
   case class NotFound(id: String)
-    extends BaseException("not.found.expirable.link")
+    extends BaseException(msg_key("not.found"))
 
   def find(id: String): Future[ExpirableLink] =
     CQL {
       select.where(_.id eqs id)
     }.one().map {
-      case None => throw NotFound(id)
+      case None       => throw NotFound(id)
       case Some(link) => link
     }
 

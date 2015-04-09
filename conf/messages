@@ -1,184 +1,223 @@
-products.list.title={0,choice,0#no|1#one|1<{0,number,integer} products} Found
-ds.list.title=Daily Summary
+# global message
+app.name                                         =App.io
+app.url                                          =http://127.0.0.1:9000
 
-app.name=App.io
-app.url=http://127.0.0.1:9000
+# common words
+home                                             =Home
+contact                                          =Contact
+com.profile                                      =Corporate Profile
+id                                               =Id
+user                                             =User
+email                                            =Email address
+submit                                           =Submit
+action                                           =Action
+new                                              =New
+new.entry                                        =New Entry
+create                                           =Create
+save                                             =Save
+cancel                                           =Cancel
+delete                                           =Delete
+previous                                         =Previous
+next                                             =Next
+detail                                           =Detail
+edit                                             =Edit
+date                                             =Date
+text                                             =Text
+setting                                          =Setting
+preference                                       =Preference
+name                                             =Name
+history                                          =History
+help                                             =Help
+schedule                                         =Schedule
+subject                                          =Subject
+principal                                        =Principal
+resource                                         =Resource
+type                                             =Type
+granted                                          =Granted
+browse                                           =Browse
+size                                             =Size
+explore                                          =Explore
+features                                         =Features
+wiki                                             =Wiki
+about                                            =About
+updated_by                                       =Committer
+updated_on                                       =Date Modified
+created_by                                       =Author
+created_on                                       =Date Created
 
-home=Home
-contact=Contact
-com.profile=Corporate Profile
+# action
+actions.nnew                                     =New
+actions.create                                   =Create
+actions.edit                                     =Edit
+actions.save                                     =Save
+actions.destroy                                  =Destroy
+actions.index                                    =List All
+actions.show                                     =Show
+actions.history.index                            =List History
+actions.anything                                 =Anything
 
-id=Id
-submit=Submit
-action=Action
-new=New
-new.entry=New Entry
-create=Create
-save=Save
-cancel=Cancel
-delete=Delete
-previous=Previous
-next=Next
-detail=Detail
-edit=Edit
-date=Date
-text=Text
-setting=Setting
-preference=Preference
-name=Name
-history=History
-help=Help
-schedule=Schedule
-subject=Subject
-principal=Principal
-resource=Resource
-type=Type
-granted=Granted
-browse=Browse
-size=Size
-explore=Explore
-features=Features
-wiki=Wiki
-about=About
+# language
+lang                                             =Language
+lang.en                                          =English
+lang.en-US                                       =English
+lang.zh                                          =Chinese
+lang.ja                                          =Japanese
 
-updated_by=Committer
-updated_on=Date Modified
-created_by=Author
-created_on=Date Created
+# date time formats
+date.format.long                                 =yyyy-MM-dd
+month.format.long                                =yyyy-MM
+datetime.format                                  =yyyy-MM-dd hh:mm:ss
 
-actions.nnew=New
-actions.create=Create
-actions.edit=Edit
-actions.save=Save
-actions.destroy=Destroy
-actions.index=List All
-actions.show=Show
-actions.history.index=List History
-actions.anything=Anything
 
-lang=Language
-lang.en=English
-lang.en-US=English
-lang.zh=Chinese
-lang.ja=Japanese
+# form validation
+email.empty                                      =Email can''t be blank
+email.invalid                                    =Valid email is required
 
-date.format.long=yyyy-MM-dd
-month.format.long=yyyy-MM
+password.too.short                               =Password is too short (minimum is {0} characters)
+password.too.long                                =Password is too long (maximum is {0} characters)
+password.all_number                              =Password need at least one number
+password.all_upper                               =Password need at least one lowercase letter
+password.all_lower                               =Password need at least one uppercase letter
+password.not.confirmed                           =Password doesn''t match the confirmation
+
+error.required                                   = This field is required
+error.uuid                                       =UUID is invalid
+error.minLength                                  = Minimum length is {0}
+error.maxLength                                  = Maximum length is {0}
+error.min                                        =TODO
+error.min.strict                                 =TODO
+error.max                                        =TODO
+error.max.strict                                 =TODO
 
 # sign in / sign up
-user.name=User Name
-user=User
-email=Email address
-remember.me=Remember me
-password.original=Password
-password.confirmation=Confirm your password
+user.name                                        =User Name
 
-user.code.forgot=Forgot your username?
-user.pwd.forgot=Forgot your password?
+remember.me                                      =Remember me
+password.original                                =Password
+password.confirmation                            =Confirm your password
+user.code.forgot                                 =Forgot your username?
+user.pwd.forgot                                  =Forgot your password?
+sign.in                                          =Sign In
+sign.out                                         =Sign Out
+sign.in.head                                     =Sign in to App.io
+sign.up.head                                     =Join App.io
+sign.up.failed                                   =There were problems creating your account.
 
-sign.in=Sign In
-sign.out=Sign Out
-sign.in.head=Sign in to App.io
-sign.in.msg.error=TODO
-sign.up.head=Join App.io
-sign.up.failed=There were problems creating your account.
-
-login.email.empty=Email can''t be blank
-login.email.invalid=Valid email is required
-login.email.taken=Email {0} is invalid or already taken
-
-password.too.short=Password is too short (minimum is {0} characters)
-password.too.long=Password is too long (maximum is {0} characters)
-password.all_number=Password need at least one number
-password.all_upper=Password need at least one lowercase letter
-password.all_lower=Password need at least one uppercase letter
-password.not.confirmed=Password doesn''t match the confirmation
-
-error.uuid=UUID is invalid
+sign.in.msg.error                                =TODO
 
 # groups
-controllers.groups.head=Groups
-controllers.groups.title=Groups
+controllers.groups.name                          =Groups
+
+views.groups.head                                =Groups
+views.groups.title                               =Groups
 
 # users
-controllers.users.head=Users
-controllers.users.title=Users
+controllers.users.name                           =Users
+
+views.users.head                                 =Users
+views.users.title                                =Users
+
+msg.models.users.email.taken                     =Email is invalid or already taken
+msg.models.users.not.found                       =Wrong Username/Email and password combination
+msg.models.users.wrong.password                  =Wrong Username/Email and password combination
+
+log.models.users.email.taken                     =Email {0} is invalid or already taken
+log.models.users.not.found                       =no such user: [{0}]
+log.models.users.wrong.password                  =wrong password of user: [{0}]
+log.models.users.auth.failed                     =TODO
+log.models.users.no.credentials                     =TODO
 
 # files
-controllers.files.missing=Missing File
-controllers.files.uploaded={0} Uploaded
-controllers.files.deleted={0} Deleted
-controllers.files.not.found={0} Not Found
-controllers.files.title=File System
-controllers.files.head=File System
+controllers.files.name                           =File System
+controllers.files.missing                        =Missing File
+controllers.files.uploaded                       ={0} Uploaded
+controllers.files.deleted                        ={0} Deleted
+controllers.files.not.found                      ={0} Not Found
+
+views.files.title                                =File System
+views.files.head                                 =File System
+
+log.models.cfs.files.dir.child.not.found                   =No such child [{0}] in dir
+log.models.cfs.files.dir.not.found                    =No such dir [{0}]
+log.models.cfs.files.file.not.found                    =No such file [{0}]
+log.models.cfs.files.perm.denied                       =Permission Denied [{0}]
 
 # password_reset
-controllers.password_reset.head=Forgot your password?
-controllers.password_reset.title=Forgot password
-controllers.password_reset.email.not.found=Can't find that email, sorry.
-controllers.password_reset.email.enter=Enter your email address
-controllers.password_reset.return.to.sign.in=Return to sign in
-controllers.password_reset.sent.msg1=We’ve sent you an email containing a link that will allow you to reset your password for the next 24 hours.
-controllers.password_reset.sent.msg2=Please check your spam folder if the email doesn’t appear within a few minutes.
+controllers.password_reset.email.not.found       =Can't find that email, sorry.
 
-controllers.password_reset.change.head=Sign in
-controllers.password_reset.change.title=Change your password
-controllers.password_reset.password.hint=Must contain one lowercase letter, one number, and be at least 7 characters long
-controllers.password_reset.password.change=Change password
-controllers.password_reset.invalid.reset.link=It looks like you clicked on an invalid password reset link. Please try again.
-controllers.password_reset.failed=There were problems reseting your password.
-controllers.password_reset.password.changed=New password set successfully.
+views.password_reset.head                        =Forgot your password?
+views.password_reset.title                       =Forgot password
+views.password_reset.email.enter                 =Enter your email address
+views.password_reset.return.to.sign.in           =Return to sign in
+views.password_reset.sent.msg1                   =We’ve sent you an email containing a link that will allow you to reset your password for the next 24 hours.
+views.password_reset.sent.msg2                   =Please check your spam folder if the email doesn’t appear within a few minutes.
+
+controllers.password_reset.invalid.reset.link    =It looks like you clicked on an invalid password reset link. Please try again.
+controllers.password_reset.failed                =There were problems reseting your password.
+controllers.password_reset.password.changed      =New password set successfully.
+
+views.password_reset.change.head                 =Sign in
+views.password_reset.change.title                =Change your password
+views.password_reset.password.hint               =Must contain one lowercase letter, one number, and be at least 7 characters long
+views.password_reset.password.change             =Change password
 
 # email_templates
-controllers.email_templates.title=Email Templates
-controllers.email_templates.head=Email Templates
-controllers.email_templates.name.place_holder=Enter name of your new email template
-controllers.email_templates.subject.place_holder=Enter subject of your new email template
-controllers.email_templates.text.sample=Text sample.
-controllers.email_templates.created=Email Template {0} has been created.
-controllers.email_templates.deleted=Email Template {0} has been deleted.
-log.not.found.email.template=Email Template {0}, {1} not found.
+controllers.email_templates.name                 =Email Templates
+controllers.email_templates.created              =Email Template {0} has been created.
+controllers.email_templates.deleted              =Email Template {0} has been deleted.
+
+views.email_templates.title                      =Email Templates
+views.email_templates.head                       =Email Templates
+views.email_templates.name.place_holder          =Enter name of your new email template
+views.email_templates.subject.place_holder       =Enter subject of your new email template
+views.email_templates.text.sample                =Text sample.
+
+log.models.email_templates.not.found             =Email Template {0}, {1} not found.
+log.models.email_templates.updated.by.others     =Email Template has been edited by other users.
 
 # access_controls
-controllers.access_controls.title=Access Control List
-controllers.access_controls.head=Access Control List
-controllers.access_controls.entry.deleted=Access Control Entry deleted
-controllers.access_controls.entry.created=Access Control Entry created
-controllers.access_controls.principal.placeholder=Enter a User Id or Group Id
-controllers.access_controls.resource.placeholder=e.g. controllers.files
-controllers.access_controls.action.placeholder=e.g. save or *
-# ---------------------------------------------- #
+controllers.access_controls.name                 =Access Control List
+controllers.access_controls.entry.deleted        =Access Control Entry deleted
+controllers.access_controls.entry.created        =Access Control Entry created
 
-alert.success.title=Success!
-alert.info.title=Info!
-alert.warning.title=Warning!
-alert.danger.title=Error!
+views.access_controls.title                      =Access Control List
+views.access_controls.head                       =Access Control List
+views.access_controls.principal.placeholder      =Enter a User Id or Group Id
 
-address=Address
-address.postcode=Postcode
-address.country=Country
-address.state=State
-address.city=City
-address.street=Street
-address.building=Building
+log.models.access_controls.users.perm.undefined  = Undefined: [User,   {0}, {1}, {2}]
+log.models.access_controls.groups.perm.undefined = Undefined: [Groups, {0}, {1}, {2}]
+log.models.access_controls.users.perm.granted    = Granted:   [User,   {0}, {1}, {2}]
+log.models.access_controls.groups.perm.granted   = Granted:   [Groups, {0}, {1}, {2}]
+log.models.access_controls.users.perm.denied     = Denied:    [User,   {0}, {1}, {2}]
+log.models.access_controls.groups.perm.denied    = Denied:    [Groups, {0}, {1}, {2}]
 
-msg.not.found.user=Wrong Username/Email and password combination
-msg.password.wrong=Wrong Username/Email and password combination
+# expirable_links
+log.models.expirable_links.not.found             =Expirable Link {0} not found.
 
-log.not.found.user=no such user: [{0}]
-log.password.wrong=wrong password of user: [{0}]
+# security
+msg.security.auth_check.unauthorized             =Authorization Failed.
 
-log.cfs.child.not.found=No such inode [{0}]
-log.cfs.file.not.found=No such file [{0}]
-log.cfs.perm.denied=Permission Denied [{0}]
-log.ac.user.perm.undefined   = Undefined: [User,   {0}, {1}, {2}]
-log.ac.groups.perm.undefined = Undefined: [Groups, {0}, {1}, {2}]
-log.ac.user.perm.granted     = Granted:   [User,   {0}, {1}, {2}]
-log.ac.groups.perm.granted   = Granted:   [Groups, {0}, {1}, {2}]
-log.ac.user.perm.denied      = Denied:    [User,   {0}, {1}, {2}]
-log.ac.groups.perm.denied    = Denied:    [Groups, {0}, {1}, {2}]
+log.security.auth_check.unauthorized             =Authorization Failed.
 
-msg.confirm.delete=TODO
-msg.master.created={0} has been created
-msg.master.updated={0} has been updated
-msg.master.deleted={0} has been deleted
+# alert
+alert.success.title                              =Success!
+alert.info.title                                 =Info!
+alert.warning.title                              =Warning!
+alert.danger.title                               =Error!
+
+# address
+address                                          =Address
+address.postcode                                 =Postcode
+address.country                                  =Country
+address.state                                    =State
+address.city                                     =City
+address.street                                   =Street
+address.building                                 =Building
+
+# TODO
+msg.confirm.delete                               =TODO
+msg.master.created                               ={0} has been created
+msg.master.updated                               ={0} has been updated
+msg.master.deleted                               ={0} has been deleted
+
+# products.list.title                            ={0,choice,0#no|1#one|1<{0,number,integer} products} Found

@@ -3,9 +3,7 @@
 @import common._
 @import helper._
 
-@pkg = @{PasswordReset.module_name}
-
-@layouts.base(MSG(s"$pkg.change.head") + " - " + MSG("app.name")){
+@layouts.base(PasswordReset.vmsg("change.title") + " - " + MSG("app.name")){
 
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
@@ -16,7 +14,7 @@
   <div class="panel panel-primary auth-form">
     <div class="panel-heading">
       <h3 class="panel-title">
-        @MSG(s"$pkg.change.title")
+        @PasswordReset.vmsg("change.title")
       </h3>
     </div>
     <div class="panel-body">
@@ -27,7 +25,7 @@
           )(_fc_form_group)
         }
 
-        <p>@MSG(s"$pkg.password.hint")</p>
+        <p>@PasswordReset.vmsg("password.hint")</p>
 
         @{_input_password(fm("password.confirmation"),
           'tabindex    -> 2
@@ -35,7 +33,7 @@
         }
 
         <button type="submit" class="btn btn-default" tabindex="3">
-          @MSG(s"$pkg.password.change")
+          @PasswordReset.vmsg("password.change")
         </button>
       }
     </div>

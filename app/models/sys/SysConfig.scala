@@ -3,7 +3,6 @@ package models.sys
 import java.util.UUID
 
 import com.datastax.driver.core.Row
-import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.Logging
@@ -42,7 +41,7 @@ sealed class SysConfigs
   }
 }
 
-object SysConfig extends SysConfigs with Logging with Cassandra {
+object SysConfig extends SysConfigs with Cassandra {
 
   def getOrElseUpdate[T](
     module: String,
@@ -67,6 +66,7 @@ object SysConfig extends SysConfigs with Logging with Cassandra {
   }
 
   trait Serializer[T] {
+
     def << : String => T
 
     def >>: : T => String
@@ -78,12 +78,4 @@ object SysConfig extends SysConfigs with Logging with Cassandra {
     def >>: = _.toString
   }
 
-}
-
-trait SysConfig {
-  self: Logging =>
-
-  def getUUID(key: String) = {
-    SysConfig.getOrElseUpdate(module_name, key, UUIDs.timeBased())
-  }
 }

@@ -83,6 +83,6 @@ object PermCheck extends Logging {
       granted => Logger.debug(granted.reason); Some(granted.canAccess)
     }.recover {
       case e: AccessControl.Undefined[_] => Logger.trace(e.reason); None
-      case e: AccessControl.Denied[_]    => Logger.trace(e.reason); Some(false)
+      case e: AccessControl.Denied[_]    => Logger.warn(e.reason); Some(false)
     }
 }

@@ -5,13 +5,12 @@ import java.util.UUID
 import controllers.session.UserAction
 import helpers.Bandwidth._
 import helpers._
+import models._
 import models.cfs._
-import models.{Home, User}
 import play.api.Play.current
 import play.api.http.ContentTypes
-import play.api.i18n.{Messages => MSG}
 import play.api.libs.MimeTypes
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
 import play.api.mvc.BodyParsers.parse.Multipart._
 import play.api.mvc.BodyParsers.parse._
@@ -26,11 +25,7 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-object Files
-  extends Controller
-  with Logging with AppConfig with PermCheckable {
-
-  override val module_name: String = "controllers.files"
+object Files extends MVController(CFS) with AppConfig {
 
   lazy val bandwidth_upload  : Int =
     getBandwidth("upload").getOrElse(1.5 MBps)
@@ -98,13 +93,13 @@ object Files
   def destroy(id: UUID): Action[AnyContent] =
     (UserAction >> AuthCheck).async { implicit req =>
       INode.find(id).map {
-        case None        => NotFound(MSG(s"$module_name.not.found", id))
+        case None        => NotFound(msg("not.found", id))
         case Some(inode) => File.purge(id)
           RedirectToPreviousURI
             .getOrElse(
               Redirect(routes.Files.index(Path()))
             ).flashing(
-              AlertLevel.Success -> MSG(s"$module_name.deleted", inode.name)
+              AlertLevel.Success -> msg("deleted", inode.name)
             )
       }
     }
@@ -115,11 +110,11 @@ object Files
         req.body.file("files").map { files =>
           val ref: File = files.ref
           Redirect(routes.Files.index(Path())).flashing(
-            AlertLevel.Success -> MSG(s"$module_name.uploaded", ref.name)
+            AlertLevel.Success -> msg("uploaded", ref.name)
           )
         }.getOrElse {
           Redirect(routes.Files.index(Path())).flashing(
-            AlertLevel.Info -> MSG(s"$module_name.missing")
+            AlertLevel.Info -> msg("missing")
           )
         }
     }
@@ -137,7 +132,10 @@ object Files
     )
   }
 
-  private def streamRange(file: File, first: Long, lastOpt: Option[Long]): Result = {
+  private def streamRange(
+    file: File,
+    first: Long,
+    lastOpt: Option[Long]): Result = {
     val end = lastOpt.filter(_ < file.size).getOrElse(file.size - 1)
     Result(
       ResponseHeader(

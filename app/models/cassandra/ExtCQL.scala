@@ -5,13 +5,13 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.column.SelectColumn
 import com.websudos.phantom.query._
-import play.api.LoggerLike
+import helpers.Logging
 
 /**
  * @author zepeng.li@gmail.com
  */
 trait ExtCQL[T <: CassandraTable[T, R], R] {
-  self: CassandraTable[T, R] =>
+  self: CassandraTable[T, R] with Logging =>
 
   lazy val flags: Int = play.api.Play.current
     .configuration
@@ -24,8 +24,6 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
     case "delete" => 0x01
   }.foldLeft(0)(_ | _)
 
-  def Logger: LoggerLike
-
   override def distinct[A](f1: T => SelectColumn[A]): SelectQuery[T, A] = {
     val t = this.asInstanceOf[T]
     val c = f1(t)
@@ -36,7 +34,9 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
     val t = this.asInstanceOf[T]
     val c1 = f1(t)
     val c2 = f2(t)
-    new SelectQuery[T, (A, B)](t, QueryBuilder.select.distinct().column(c1.col.name).column(c2.col.name).from(tableName), r => (c1(r), c2(r)))
+    new SelectQuery[T, (A, B)](
+      t, QueryBuilder.select.distinct().column(c1.col.name).column(c2.col.name).from(tableName), r => (c1(r), c2(r))
+    )
   }
 
   def CQL(cql: BatchStatement) =

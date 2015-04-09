@@ -1,5 +1,4 @@
 import controllers.UserRequest
-import helpers.Logging
 import models.User
 
 import scala.language.implicitConversions
@@ -12,14 +11,6 @@ package object security {
   case class CheckedAction(name: String)
 
   case class CheckedResource(name: String)
-
-  trait PermCheckable {
-    self: Logging =>
-
-    implicit lazy val CheckedModuleName = CheckedResource(module_name)
-
-    def CheckedActions: Seq[CheckedAction] = CommonActions
-  }
 
   val NNew         = CheckedAction("nnew")
   val Create       = CheckedAction("create")
@@ -44,5 +35,5 @@ package object security {
   )
 
   implicit def authenticatedUser(implicit req: UserRequest[_]): User =
-    req.user.getOrElse(throw User.IsNotLoggedIn())
+    req.user.getOrElse(throw AuthCheck.Unauthorized())
 }

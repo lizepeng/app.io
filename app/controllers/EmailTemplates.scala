@@ -10,20 +10,15 @@ import models._
 import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{Lang, Messages => MSG}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc._
+import play.api.i18n.Lang
+import play.api.libs.concurrent.Execution.Implicits._
 import security._
 import views._
 
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-object EmailTemplates
-  extends Controller
-  with Logging with AppConfig with PermCheckable {
-
-  override val module_name: String = "controllers.email_templates"
+object EmailTemplates extends MVController(EmailTemplate) {
 
   val TemplateFM = Form[TemplateFD](
     mapping(
@@ -95,7 +90,7 @@ object EmailTemplates
             Redirect {
               routes.EmailTemplates.index()
             }.flashing {
-              AlertLevel.Success -> MSG(s"$module_name.created", saved.name)
+              AlertLevel.Success -> msg("created", saved.name)
             }
           }
         }
@@ -182,13 +177,13 @@ object EmailTemplates
       } yield RedirectToPreviousURI.getOrElse {
         Redirect(routes.EmailTemplates.index())
       }.flashing {
-        AlertLevel.Success -> MSG(s"$module_name.deleted", tmpl.name)
+        AlertLevel.Success -> msg("deleted", tmpl.name)
       }
     }.recover {
-      case e: NotFound => NotFound(MSG(s"$module_name.not.found", id))
+      case e: NotFound => NotFound(msg("not.found", id))
     }
 
     }
 
-  private def key_editing(id: UUID) = s"$module_name - $id - version"
+  private def key_editing(id: UUID) = s"$fullModuleName - $id - version"
 }
