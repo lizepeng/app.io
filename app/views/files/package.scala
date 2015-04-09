@@ -1,6 +1,6 @@
 package views.html
 
-import _root_.helpers.syntax.PolarQuestion
+import _root_.helpers.syntax._
 import play.api.http.ContentTypes
 import play.api.libs.MimeTypes
 
@@ -13,18 +13,18 @@ package object files {
 
     def icon: String = {
       ext.map {
-        case "png" | "jpg" | "gif"         => "fa-file-image-o"
-        case ext if audio.?                => "fa-file-audio-o"
-        case "txt"                         => "fa-file-text-o"
-        case ext if pdf.?                  => "fa-file-pdf-o"
-        case "doc" | "docx"                => "fa-file-word-o"
-        case "ppt"                         => "fa-file-powerpoint-o"
-        case "xls" | "xlsx"                => "fa-file-excel-o"
-        case ext if video.?                => "fa-file-video-o"
-        case "zip" | "rar" | "7z"          => "fa-file-archive-o"
-        case "tar" | "gz" | "bz"           => "fa-file-archive-o"
-        case "html" | "css" | "js" | "xml" => "fa-file-code-o"
-        case _                             => "fa-file-o"
+        case ci"png"  | ci"jpg" | ci"gif"          => "fa-file-image-o"
+        case ext if audio.?                        => "fa-file-audio-o"
+        case ci"txt"                               => "fa-file-text-o"
+        case ext if pdf.?                          => "fa-file-pdf-o"
+        case ci"doc"  | ci"docx"                   => "fa-file-word-o"
+        case ci"ppt"                               => "fa-file-powerpoint-o"
+        case ci"xls"  | ci"xlsx"                   => "fa-file-excel-o"
+        case ext if video.?                        => "fa-file-video-o"
+        case ci"zip"  | ci"rar" | ci"7z"           => "fa-file-archive-o"
+        case ci"tar"  | ci"gz"  | ci"bz"           => "fa-file-archive-o"
+        case ci"html" | ci"css" | ci"js" | ci"xml" => "fa-file-code-o"
+        case _                                     => "fa-file-o"
       }.get
     }
 
@@ -38,22 +38,22 @@ package object files {
 
     def pdf = new PolarQuestion {
       def ? : Boolean = ext.exists {
-        case "pdf" | "ps" => true
-        case _            => false
+        case ci"pdf" | ci"ps" => true
+        case _                => false
       }
     }
 
     def audio = new PolarQuestion {
       def ? : Boolean = ext.exists {
-        case "mp3" | "wma" | "m4a" => true
-        case _                     => false
+        case ci"mp3" | ci"wma" | ci"m4a" => true
+        case _                           => false
       }
     }
 
     def video = new PolarQuestion {
       def ? : Boolean = ext.exists {
-        case "mp4" | "mkv" => true
-        case _             => false
+        case ci"mp4" | ci"mkv" | ci"mov" => true
+        case _                           => false
       }
     }
 

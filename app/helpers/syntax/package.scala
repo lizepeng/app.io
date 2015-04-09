@@ -67,6 +67,7 @@ package object syntax {
    * @param i
    */
   implicit class Int2DateTime(val i: Int) extends AnyVal {
+
     def day: Period = days
 
     def days: Period = Period.days(i)
@@ -85,7 +86,13 @@ package object syntax {
   }
 
   trait PolarQuestion {
+
     def ? : Boolean
+  }
+
+  implicit class CaseInsensitiveRegex(sc: StringContext) {
+
+    def ci = ("(?i)" + sc.parts.mkString).r
   }
 
 }
