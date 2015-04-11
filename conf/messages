@@ -45,6 +45,7 @@ updated_on                                       =Date Modified
 created_by                                       =Author
 created_on                                       =Date Created
 internal_groups                                  =Internal Groups
+modules                                          =Modules
 
 # action
 actions.nnew                                     =New

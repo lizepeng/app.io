@@ -1,7 +1,0 @@
-@(title: String, above_content: Html = Html(""))(
-  content: Html)(
-  css: Html *)(
-  js: Html *)(
-  implicit req: UserRequest[_], lang: Lang)
-
-@base(title, above_content)(content)(css:_*)(js:_*)

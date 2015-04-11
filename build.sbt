@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "com.websudos"      %% "phantom-dsl"       % "1.5.0",
   "com.websudos"      %% "phantom-zookeeper" % "1.5.0",
   "org.webjars"       %  "bootstrap"         % "3.3.1",
-  "org.webjars"       %  "font-awesome"      % "4.2.0",
+  "org.webjars"       %  "font-awesome"      % "4.3.0",
   "org.webjars"       %  "underscorejs"      % "1.4.4",
   "org.webjars"       %  "backbonejs"        % "1.0.0",
   "org.webjars"       %  "holderjs"          % "2.4.0",
