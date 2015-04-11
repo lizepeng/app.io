@@ -17,11 +17,11 @@ object PermCheck extends Logging {
     resource: String,
     onDenied: RequestHeader => Result
   ): ActionFunction[UserRequest, UserRequest] = {
-    apply(Anything, onDenied)(CheckedResource(resource))
+    apply(_.Anything, onDenied)(CheckedResource(resource))
   }
 
   def apply(
-    action: CheckedAction,
+    action: CheckedActions => CheckedAction,
     onDenied: RequestHeader => Result = req => Results.Forbidden)(
     implicit resource: CheckedResource
   ): ActionFunction[UserRequest, UserRequest] =
@@ -34,19 +34,19 @@ object PermCheck extends Logging {
 
         val checked = for {
           b1 <- check(
-            previous = None, action,
+            previous = None, action(CheckedActions),
             ac => AccessControl.find(
               resource.name, ac.name, u.external_groups
             )
           )
           b2 <- check(
-            previous = b1, action,
+            previous = b1, action(CheckedActions),
             ac => AccessControl.find(
               resource.name, ac.name, u.internal_groups
             )
           )
           b3 <- check(
-            previous = b2, action,
+            previous = b2, action(CheckedActions),
             ac => AccessControl.find(
               resource.name, ac.name, u.id
             )
@@ -67,9 +67,9 @@ object PermCheck extends Logging {
   ): Future[Option[Boolean]] = previous match {
     case Some(false) => Future.successful(previous)
     case b@_         => for {
-      b1 <- toOption(tryToCheck(Anything)).map(_.orElse(b))
+      b1 <- toOption(tryToCheck(CheckedActions.Anything)).map(_.orElse(b))
       b2 <-
-      if (action == Anything) Future.successful(b1)
+      if (action == CheckedActions.Anything) Future.successful(b1)
       else b1 match {
         case b@Some(false) => Future.successful(b)
         case None          => toOption(tryToCheck(action))

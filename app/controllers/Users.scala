@@ -52,7 +52,7 @@ object Users extends MVController(User) {
     }
 
   def index(pager: Pager) =
-    (UserAction >> PermCheck(Index)).async { implicit req =>
+    (UserAction >> PermCheck(_.Index)).async { implicit req =>
       User.list(pager).map { list =>
         Ok(html.users.index(Page(pager, list)))
       }.recover {

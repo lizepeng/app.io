@@ -10,5 +10,4 @@ trait PermCheckable extends ModuleLike {
 
   implicit lazy val CheckedModuleName = CheckedResource(fullModuleName)
 
-  def CheckedActions: Seq[CheckedAction] = CommonActions
 }

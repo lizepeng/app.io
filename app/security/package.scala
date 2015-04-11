@@ -12,27 +12,32 @@ package object security {
 
   case class CheckedResource(name: String)
 
-  val NNew         = CheckedAction("nnew")
-  val Create       = CheckedAction("create")
-  val Edit         = CheckedAction("edit")
-  val Save         = CheckedAction("save")
-  val Destroy      = CheckedAction("destroy")
-  val Index        = CheckedAction("index")
-  val Show         = CheckedAction("show")
-  val HistoryIndex = CheckedAction("history.index")
-  val Anything     = CheckedAction("anything")
+  trait CheckedActions {
 
-  val CommonActions = Seq(
-    NNew,
-    Create,
-    Edit,
-    Save,
-    Destroy,
-    Index,
-    Show,
-    HistoryIndex,
-    Anything
-  )
+    val NNew         = CheckedAction("nnew")
+    val Create       = CheckedAction("create")
+    val Edit         = CheckedAction("edit")
+    val Save         = CheckedAction("save")
+    val Destroy      = CheckedAction("destroy")
+    val Index        = CheckedAction("index")
+    val Show         = CheckedAction("show")
+    val HistoryIndex = CheckedAction("history.index")
+    val Anything     = CheckedAction("anything")
+
+    val ALL = Seq(
+      NNew,
+      Create,
+      Edit,
+      Save,
+      Destroy,
+      Index,
+      Show,
+      HistoryIndex,
+      Anything
+    )
+  }
+
+  object CheckedActions extends CheckedActions
 
   implicit def authenticatedUser(implicit req: UserRequest[_]): User =
     req.user.getOrElse(throw AuthCheck.Unauthorized())

@@ -70,7 +70,7 @@ object Files extends MVController(CFS) with AppConfig {
     }
 
   def index(path: Path, pager: Pager) =
-    (UserAction >> PermCheck(Index)).async { implicit req =>
+    (UserAction >> PermCheck(_.Index)).async { implicit req =>
       (for {
         home <- Home(req.user)
         curr <- home.dir(path) if FilePerms(curr).rx.?

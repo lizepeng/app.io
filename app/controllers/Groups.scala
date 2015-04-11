@@ -34,7 +34,7 @@ object Groups extends MVController(Group) {
   )
 
   def index(pager: Pager) =
-    (UserAction >> PermCheck(Index)).async { implicit req =>
+    (UserAction >> PermCheck(_.Index)).async { implicit req =>
       Group.list(pager).map { list =>
         render {
           case Accepts.Html() =>
@@ -48,7 +48,7 @@ object Groups extends MVController(Group) {
     }
 
   def save =
-    (UserAction >> PermCheck(Save)).async { implicit req =>
+    (UserAction >> PermCheck(_.Save)).async { implicit req =>
       val bound = GroupFM.bindFromRequest()
       bound.fold(
         failure => Future.successful(BadRequest(bound.errorsAsJson)),
@@ -57,7 +57,7 @@ object Groups extends MVController(Group) {
     }
 
   def checkName =
-    (UserAction >> PermCheck(Show)) { implicit req =>
+    (UserAction >> PermCheck(_.Show)) { implicit req =>
       val bound = Form(single(mapping_name)).bindFromRequest()
       bound.fold(
         failure => BadRequest(bound.errorsAsJson),

@@ -41,7 +41,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
   }
 
   def index(pager: Pager) =
-    (UserAction >> PermCheck(Index)).async { implicit req =>
+    (UserAction >> PermCheck(_.Index)).async { implicit req =>
       EmailTemplate.list(pager).map { list =>
         Ok(html.email_templates.index(Page(pager, list)))
       }.recover {
@@ -50,7 +50,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def show(id: UUID, lang: Lang, updated_on: Option[DateTime] = None) =
-    (UserAction >> PermCheck(Show)).async { implicit req =>
+    (UserAction >> PermCheck(_.Show)).async { implicit req =>
       for {
         tmpl <- EmailTemplate.find(id, lang, updated_on)
         usr1 <- User.find(tmpl.updated_by)
@@ -61,12 +61,12 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def nnew() =
-    (UserAction >> PermCheck(NNew)) { implicit req =>
+    (UserAction >> PermCheck(_.NNew)) { implicit req =>
       Ok(html.email_templates.nnew(TemplateFM))
     }
 
   def create =
-    (UserAction >> PermCheck(Create)).async { implicit req =>
+    (UserAction >> PermCheck(_.Create)).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure => Future.successful {
@@ -98,7 +98,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def edit(id: UUID, lang: Lang) =
-    (UserAction >> PermCheck(Edit)).async { implicit req =>
+    (UserAction >> PermCheck(_.Edit)).async { implicit req =>
       val result =
         for {
           tmpl <- EmailTemplate.find(id, lang)
@@ -118,7 +118,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def save(id: UUID, lang: Lang) =
-    (UserAction >> PermCheck(Save)).async { implicit req =>
+    (UserAction >> PermCheck(_.Save)).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure =>
@@ -157,7 +157,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def history(id: UUID, lang: Lang, pager: Pager) =
-    (UserAction >> PermCheck(HistoryIndex)).async { implicit req =>
+    (UserAction >> PermCheck(_.HistoryIndex)).async { implicit req =>
       for {
         tmpl <- EmailTemplate.find(id, lang)
         list <- EmailTemplateHistory.list(id, lang, pager)
@@ -170,7 +170,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def destroy(id: UUID, lang: Lang) =
-    (UserAction >> PermCheck(Destroy)).async { implicit req => {
+    (UserAction >> PermCheck(_.Destroy)).async { implicit req => {
       for {
         tmpl <- EmailTemplate.find(id, lang)
         ___ <- EmailTemplate.destroy(id, lang)
