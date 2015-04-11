@@ -46,10 +46,7 @@ object Users extends MVController(User) {
     def isConfirmed = original == confirmation
   }
 
-  def show(id: UUID) =
-    (UserAction >> AuthCheck) { implicit req =>
-      Ok(html.users.show())
-    }
+  def show(id: UUID) = TODO
 
   def index(pager: Pager) =
     (UserAction >> PermCheck(_.Index)).async { implicit req =>
@@ -63,7 +60,7 @@ object Users extends MVController(User) {
   def nnew = UserAction { implicit req =>
     req.user match {
       case None    => Ok(views.html.users.signup(signUpFM))
-      case Some(u) => Redirect(routes.Users.show(u.id))
+      case Some(u) => Redirect(routes.My.dashboard())
     }
   }
 
@@ -84,7 +81,7 @@ object Users extends MVController(User) {
           password = success.password.original
         ).save.map { u =>
           Redirect {
-            routes.Users.show(u.id)
+            routes.My.dashboard()
           }.createSession(rememberMe = false)(u)
         }
       }.recover {

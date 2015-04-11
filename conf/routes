@@ -25,12 +25,15 @@ GET  /login                                 controllers.Sessions.nnew
 POST /login                                 controllers.Sessions.create
 POST /logout                                controllers.Sessions.destroy
 
-GET  /users/:id                             controllers.Users.show(id:UUID)
-GET  /users                                 controllers.Users.index(p:Pager?=Pager.first)
 GET  /join                                  controllers.Users.nnew
 POST /join                                  controllers.Users.create
 POST /signup_check/username                 controllers.Users.checkEmail
 POST /signup_check/password                 controllers.Users.checkPassword
+
+GET  /my/dashboard                          controllers.My.dashboard
+
+GET  /users                                 controllers.Users.index(p:Pager?=Pager.first)
+GET  /users/:id                             controllers.Users.show(id:UUID)
 
 GET  /groups                                controllers.Groups.index(p:Pager?=Pager.first)
 POST /groups                                controllers.Groups.save

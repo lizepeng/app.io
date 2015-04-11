@@ -47,7 +47,7 @@ object Sessions extends Controller with session.Session with Logging {
         case Failure(e: User.NotFound)      => Logger.info(e.reason)
         case Failure(e: User.WrongPassword) => Logger.info(e.reason)
       }.map { implicit user =>
-        Redirect(routes.Users.show(user.id)).createSession(success.remember_me)
+        Redirect(routes.My.dashboard()).createSession(success.remember_me)
       }.recover { case e: BaseException =>
         BadRequest(html.account.login(form.withGlobalError(e.message)))
       }
