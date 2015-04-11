@@ -81,12 +81,11 @@ object Users extends MVController(User) {
       success => User.checkEmail(success.email).flatMap { _ =>
         User(
           email = success.email,
-          password = success.password.original,
-          internal_groups = InternalGroups(1)
+          password = success.password.original
         ).save.map { u =>
           Redirect {
             routes.Users.show(u.id)
-          }.createSession(rememberMe = false)
+          }.createSession(rememberMe = false)(u)
         }
       }.recover {
         case e: User.EmailTaken =>

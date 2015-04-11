@@ -191,7 +191,7 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
           .value(_.salt, u.salt)
           .value(_.encrypted_password, u.encrypted_password)
           .value(_.email, u.email)
-          .value(_.internal_groups, u.internal_groups.code)
+          .value(_.internal_groups, u.internal_groups.code | InternalGroups.Anyone)
       }.future().map(_ => u)
       else throw EmailTaken(u.email)
     } yield user

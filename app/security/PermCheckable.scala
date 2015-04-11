@@ -9,5 +9,4 @@ import helpers.ModuleLike
 trait PermCheckable extends ModuleLike {
 
   implicit lazy val CheckedModuleName = CheckedResource(fullModuleName)
-
 }
