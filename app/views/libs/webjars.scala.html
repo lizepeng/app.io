@@ -21,6 +21,12 @@
           "lib/font-awesome/css/font-awesome.min.css")
       }
 
+      case "xeditable" => {
+        @css(
+          "lib/angular-xeditable/dist/css/xeditable.css",
+          "lib/angular-xeditable/dist/css/xeditable.css")
+      }
+
     }
   }
   case "js" => {
@@ -54,6 +60,18 @@
         @js(
           "lib/holderjs/holder.js",
           "lib/holderjs/holder.js")
+      }
+
+      case "xeditable" => {
+        @js(
+          "lib/angular-xeditable/dist/js/xeditable.js",
+          "lib/angular-xeditable/dist/js/xeditable.min.js")
+      }
+
+      case "angular" => {
+        @js(
+          "lib/angular/angular.js",
+          "lib/angular/angular.min.js")
       }
 
       case "jquery-ui" => {

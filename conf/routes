@@ -33,6 +33,8 @@ POST /signup_check/username                 controllers.Users.checkEmail
 POST /signup_check/password                 controllers.Users.checkPassword
 
 GET  /groups                                controllers.Groups.index(p:Pager?=Pager.first)
+POST /groups                                controllers.Groups.save
+POST /groups/check_name                     controllers.Groups.checkName
 
 GET  /password_reset                        controllers.PasswordReset.nnew
 POST /password_reset                        controllers.PasswordReset.create

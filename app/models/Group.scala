@@ -25,6 +25,8 @@ case class Group(
 ) {
 
   def createIfNotExist = Group.createIfNotExist(this)
+
+  def save = Group.save(this)
 }
 
 sealed class Groups
@@ -96,6 +98,13 @@ object Group extends Groups with Cassandra with AppConfig {
     select
       .where(_.id in ids)
   }.fetch().map(_.map(g => (g.id, g)).toMap)
+
+  def save(group: Group): Future[Group] = CQL {
+    update
+      .where(_.id eqs group.id)
+      .modify(_.name setTo group.name)
+      .and(_.description setTo group.description)
+  }.future().map(_ => group)
 
   def list(pager: Pager): Future[List[Group]] = {
     CQL {

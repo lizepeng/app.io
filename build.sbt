@@ -17,7 +17,9 @@ libraryDependencies ++= Seq(
   "org.webjars"       %  "font-awesome"      % "4.2.0",
   "org.webjars"       %  "underscorejs"      % "1.4.4",
   "org.webjars"       %  "backbonejs"        % "1.0.0",
-  "org.webjars"       %  "holderjs"          % "2.4.0"
+  "org.webjars"       %  "holderjs"          % "2.4.0",
+  "org.webjars"       %  "fuelux"            % "3.3.1",
+  "org.webjars.bower" % "angular-xeditable"  % "0.1.9"
 )
 
 resolvers ++= Seq(

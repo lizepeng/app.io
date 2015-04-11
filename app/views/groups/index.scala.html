@@ -15,39 +15,91 @@ implicit req: UserRequest[_], lang: Lang)
     </h2>
   </div>
 
-  <div class="row">
-    <div class="table-responsive">
-      <table class="table table-hover table-ellipsis">
+  <div class="row" ng-app="app">
+    <div class="table-responsive" ng-controller="GroupsCtrl">
+      <table class="table table-hover table-ellipsis"
         <thead>
           <tr>
-            <th class="col-xs-5  col-sm-5 ">
+            <th class="col-xs-6 col-sm-4">
               @MSG("id")
             </th>
-            <th class="hidden-xs col-sm-2 ">
+            <th class="col-xs-4 col-sm-3">
               @MSG("name")
             </th>
-            <th class="col-xs-4  col-sm-2 text-right">
+            <th class="hidden-xs col-sm-3">
+              @MSG("description")
+            </th>
+            <th class="col-xs-2  col-sm-1 text-right">
               @MSG("action")
             </th>
           </tr>
         </thead>
         <tbody>
-          @page.map { grp =>
-            <tr>
-              <td>
-                @grp.id
-              </td>
-              <td class="hidden-xs">
-                @grp.name
-              </td>
-              <td>
-              </td>
-            </tr>
-          }
+          <tr ng-repeat="grp in groups">
+            <td>
+              {{ grp.id || "empty"}}
+            </td>
+            <td>
+              <a href="#" editable-text="grp.name" buttons="no"
+              onbeforesave="checkName($data)"
+              onaftersave="update(grp)">
+                {{ grp.name || "empty"}}
+              </a>
+            </td>
+            <td class="hidden-xs">
+              {{ grp.description || "empty"}}
+            </td>
+            <td>
+            </td>
+          </tr>
         </tbody>
       </table>
 
       @{_pager(page, p => routes.Groups.index(p))}
     </div>
   </div>
-}()(libs.assets("js", "pager"))
+}(
+  libs.webjars("css", "xeditable")
+)(
+  libs.webjars("js", "angular"),
+  libs.webjars("js", "xeditable"),
+  libs.assets("js", "pager"),
+  controller
+)
+
+@controller = {
+  <script>
+    var app = angular.module('app', ["xeditable"]);
+
+    app.run(function(editableOptions) {
+      editableOptions.theme = 'bs3';
+    });
+
+    app.controller('GroupsCtrl', function ($scope, $http, $q) {
+      $scope.groups = [
+        @page.map { grp =>
+          {id: "@grp.id", name:"@grp.name", description: "@grp.description" },
+        }
+      ];
+
+      $scope.checkName = function(data) {
+        var d = $q.defer();
+        $http.post('@routes.Groups.checkName', {name:data})
+          .success(function(res){
+            d.resolve();
+          })
+          .error(function(data, status) {
+            if (status === 403) { d.resolve("Forbidden"); }
+            else if (status === 400) { d.resolve(data.name[0]); }
+            else { d.resolve("Unknown error"); }
+          });
+        return d.promise;
+      };
+
+      $scope.update = function(grp) {
+        return $http.post('@routes.Groups.save', grp);
+      };
+
+    });
+  </script>
+}
