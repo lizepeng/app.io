@@ -4,13 +4,13 @@
   <nav>
     <ul class="pager">
       <li class="previous@if(!page.hasPrev){ disabled}">
-        <a href="@link(page.pager.prev)">
+        <a href="@if(page.hasPrev){@link(page.pager.prev)}">
           <i class="fa fa-long-arrow-left"></i>
           @MSG("previous")
         </a>
       </li>
       <li class="next@if(!page.hasNext){ disabled}">
-        <a href="@link(page.pager.next)">
+        <a href="@if(page.hasNext){@link(page.pager.next)}">
           @MSG("next")
           <i class="fa fa-long-arrow-right"></i>
         </a>

@@ -15,7 +15,7 @@ implicit req: UserRequest[_], lang: Lang)
     </h2>
   </div>
 
-  <div class="row" ng-app="app">
+  <div class="row">
     <div class="table-responsive" ng-controller="GroupsCtrl">
       <table class="table table-hover table-ellipsis"
         <thead>
@@ -61,21 +61,19 @@ implicit req: UserRequest[_], lang: Lang)
 }(
   libs.webjars("css", "xeditable")
 )(
-  libs.webjars("js", "angular"),
   libs.webjars("js", "xeditable"),
-  libs.assets("js", "pager"),
   controller
 )
 
 @controller = {
   <script>
-    var app = angular.module('app', ["xeditable"]);
+    var list = angular.module('group.list', ["xeditable"]);
 
-    app.run(function(editableOptions) {
+    list.run(function(editableOptions) {
       editableOptions.theme = 'bs3';
     });
 
-    app.controller('GroupsCtrl', function ($scope, $http, $q) {
+    list.controller('GroupsCtrl', function ($scope, $http, $q) {
       $scope.groups = [
         @page.map { grp =>
           {id: "@grp.id", name:"@grp.name", description: "@grp.description" },
@@ -99,7 +97,8 @@ implicit req: UserRequest[_], lang: Lang)
       $scope.update = function(grp) {
         return $http.post('@routes.Groups.save', grp);
       };
-
     });
+
+    angular.module('app').requires.push('group.list');
   </script>
 }

@@ -7,7 +7,7 @@
 @import helper._
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="app">
   <head>
     <title>@title</title>
     <meta charset="utf-8">
@@ -48,9 +48,11 @@
 
   <link rel="shortcut icon" type="image/png"
     href="@routes.Assets.at("images/favicon.png")">
-  @libs.webjars("js", "bootstrap")
-  @*libs.webjars("js", "backbone")*@
-  @*libs.assets("js", "hello")*@
+  @libs.webjars("js", "angular"),
+  @libs.webjars("js", "angular-bootstrap-tpls"),
+  <script>
+    angular.module('app', ['ui.bootstrap']);
+  </script>
   @js
 </html>
 
@@ -94,7 +96,7 @@
         </div>
 
         <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
+          <ul class="nav navbar-nav" >
             @mainMenu
             <li>
               <a href="@routes.Application.wiki()">
@@ -111,49 +113,48 @@
 }
 
 @mainMenu = {
-  @req.user.map { u =>
-
-    <li class="dropdown ">
-      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-        @MSG("modules")
-        <span class="caret"></span>
-      </a>
-      <ul class="dropdown-menu" role="menu">
-        <li>
-          <a href="@routes.Files.index(Path())">
-            <i class="fa fa-hdd-o"></i>
-            @MSG("controllers.files.name")
-          </a>
-        </li>
-        <li>
-          <a href="@routes.EmailTemplates.index()">
-            <i class="fa fa-envelope-square"></i>
-            @MSG("controllers.email_templates.name")
-          </a>
-        </li>
-        <li>
-          <a href="@routes.AccessControls.index()">
-            <i class="fa fa-shield"></i>
-            @MSG("controllers.access_controls.name")
-          </a>
-        </li>
-        <li>
-          <a href="@routes.Groups.index()">
-            <i class="fa fa-group"></i>
-            @MSG("controllers.groups.name")
-          </a>
-        </li>
-        <li>
-          <a href="@routes.Users.index()">
-            <i class="fa fa-user"></i>
-            @MSG("controllers.users.name")
-          </a>
-        </li>
-
-      </ul>
-    </li>
-  }
+  <li class="dropdown" dropdown>
+    <a href="#" class="dropdown-toggle" dropdown-toggle>
+      @MSG("modules") <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu" role="menu">
+      <li>
+        <a href="@routes.Files.index(Path())">
+          <i class="fa fa-hdd-o"></i>
+          @MSG("controllers.files.name")
+        </a>
+      </li>
+      <li>
+        <a href="@routes.EmailTemplates.index()">
+          <i class="fa fa-envelope-square"></i>
+          @MSG("controllers.email_templates.name")
+        </a>
+      </li>
+      <li>
+        <a href="@routes.AccessControls.index()">
+          <i class="fa fa-shield"></i>
+          @MSG("controllers.access_controls.name")
+        </a>
+      </li>
+      <li class="divider"></li>
+      <li>
+        <a href="@routes.Groups.index()">
+          <i class="fa fa-group"></i>
+          @MSG("controllers.groups.name")
+        </a>
+      </li>
+      <li>
+        <a href="@routes.Users.index()">
+          <i class="fa fa-user"></i>
+          @MSG("controllers.users.name")
+        </a>
+      </li>
+    </ul>
+  </li>
 }
+
+
+
 
 @*****************************************************************************@
 
