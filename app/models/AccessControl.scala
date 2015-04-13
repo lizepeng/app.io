@@ -125,7 +125,7 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
       .and(_.is_group eqs true)
   }.fetch().map { r =>
     import Group.AccessControl._
-    if (r.isEmpty || r.size != group_ids.size)
+    if (r.isEmpty)
       throw Undefined(group_ids, action, resource)
     else if (r.contains(false))
       throw Denied(group_ids, action, resource)

@@ -15,6 +15,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+//Work with angularjs
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
 
 /* CUSTOMIZE THE NAVBAR
 -------------------------------------------------- */
@@ -109,8 +111,14 @@ body {
   margin-right: 0px;
 }
 
-.btn-toggle {
-  color: #5cb85c;
+.toggle-switch {
+  .active {
+    cursor:pointer;
+    color: #5cb85c;
+  }
+  .inactive {
+    cursor:pointer;
+  }
 }
 
 .auth-form {
@@ -131,10 +139,6 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  tr i {
-    padding-right: 10px;
   }
 }
 

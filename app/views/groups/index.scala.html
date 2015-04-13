@@ -37,7 +37,7 @@ implicit req: UserRequest[_], lang: Lang)
         <tbody>
           <tr ng-repeat="grp in groups">
             <td>
-              {{ grp.id || "empty"}}
+              <code>{{ grp.id || "empty"}}</code>
             </td>
             <td>
               <a href="#" editable-text="grp.name" buttons="no"
@@ -67,7 +67,7 @@ implicit req: UserRequest[_], lang: Lang)
 
 @controller = {
   <script>
-    var list = angular.module('group.list', ["xeditable"]);
+    var list = angular.module('groups.list', ["xeditable"]);
 
     list.run(function(editableOptions) {
       editableOptions.theme = 'bs3';
@@ -99,6 +99,6 @@ implicit req: UserRequest[_], lang: Lang)
       };
     });
 
-    angular.module('app').requires.push('group.list');
+    angular.module('app').requires.push('groups.list');
   </script>
 }

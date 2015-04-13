@@ -12,84 +12,93 @@ implicit req: UserRequest[_], lang: Lang)
     <h2 style="margin-left: 20px">
       <i class="fa fa-shield fa-lg text-success"></i>
       @AccessControls.vmsg("head")
-
-      <a class="btn btn-success pull-right" data-toggle="collapse" href="#new-ace-form" aria-expanded="false" aira-controls="new-ace-form">
-        <i class="fa fa-plus fa-lg"></i>
-        @MSG("new.entry")
-      </a>
     </h2>
   </div>
 
-  <div class="row collapse @if(fm.hasErrors){in} panel panel-default" id="new-ace-form">
-
-    <div class="panel-body">
-
-      @form(action = routes.AccessControls.create(page.pager)) {
-
-        <div class="row">
-          <div class="col-xs-9">
-            @{_input_text(fm("principal"),
-              '_label      -> MSG("principal"),
-              'placeholder -> AccessControls.vmsg("principal.placeholder"),
-              'tabindex    -> 1
-              )(_fc_form_group)
-            }
-          </div>
-
-          <div class="col-xs-3">
-            @{_input_radios_buttons(fm("is_group"),
-              Seq(
-                "false" -> ("", "fa fa-user fa-lg text-info"),
-                "true"  -> ("", "fa fa-group fa-lg text-info")),
-              '_label      -> MSG("type"),
-              '_btnstyle  -> "btn-default",
-              'tabindex    -> 2
-              )(_fc_raw, _fc_form_group_static)
-            }
-          </div>
-
-        </div>
-
-        <div class="row">
-          <div class="col-xs-12 col-sm-6">
-            @{_select(fm("resource"),
-              Secured.Modules.names.map{n => (n, MSG(s"$n.name"))},
-              '_label      -> MSG("resource"),
-              'tabindex    -> 3
-              )(_fc_form_group)
-            }
-          </div>
-
-          <div class="col-xs-9 col-sm-3">
-            @{_select(fm("action"),
-              Secured.Actions.names.map{n => (n, MSG(s"actions.$n"))},
-              '_label      -> MSG("action"),
-              'tabindex    -> 4
-              )(_fc_form_group)
-            }
-          </div>
-
-          <div style="col-xs-4 col-sm-3">
-            @{_input_radios_buttons(fm("granted"),
-              Seq(
-                "true" -> (MSG("allow"), "fa fa-check fa-lg text-success"),
-                "false"  -> (MSG("deny"), "fa fa-ban fa-lg text-danger")),
-              '_label      -> MSG("granted"),
-              '_btnstyle  -> "btn-default",
-              'tabindex    -> 5
-              )(_fc_raw, _fc_form_group_static)
-            }
-          </div>
-        </div>
-
-
-        <button type="submit" class="btn btn-success" tabindex="5">
-          <i class="fa fa-save fa-lg"></i>
-          @MSG("create")
-        </button>
-      }
-
+  <div ng-controller="NewEntryCtrl">
+    <div class="row">
+      <button class="btn btn-success pull-right"
+              ng-click="isCollapsed = !isCollapsed">
+        <i class="fa fa-plus fa-lg"></i>
+        @MSG("new.entry")
+      </button>
     </div>
+
+    <div collapse="isCollapsed" class="row collapse @if(fm.hasErrors){in}">
+      <div class="panel panel-default">
+
+        <div class="panel-body">
+
+          @form(action = routes.AccessControls.create(page.pager)) {
+
+            <div class="row">
+              <div class="col-xs-9">
+                @{_input_text(fm("principal"),
+                  '_label      -> MSG("principal"),
+                  'placeholder -> AccessControls.vmsg("principal.placeholder"),
+                  'tabindex    -> 1
+                  )(_fc_form_group)
+                }
+              </div>
+
+              <div class="col-xs-3">
+                @{_input_radios_buttons(fm("is_group"),
+                  Seq(
+                    "false" -> ("", "fa fa-user fa-lg text-info"),
+                    "true"  -> ("", "fa fa-group fa-lg text-info")),
+                  '_label      -> MSG("type"),
+                  '_btnstyle  -> "btn-default",
+                  'tabindex    -> 2
+                  )(_fc_raw, _fc_form_group_static)
+                }
+              </div>
+
+            </div>
+
+            <div class="row">
+              <div class="col-xs-12 col-sm-6">
+                @{_select(fm("resource"),
+                  Secured.Modules.names.map{n => (n, MSG(s"$n.name"))},
+                  '_label      -> MSG("resource"),
+                  'tabindex    -> 3
+                  )(_fc_form_group)
+                }
+              </div>
+
+              <div class="col-xs-9 col-sm-3">
+                @{_select(fm("action"),
+                  Secured.Actions.names.map{n => (n, MSG(s"actions.$n"))},
+                  '_label      -> MSG("action"),
+                  'tabindex    -> 4
+                  )(_fc_form_group)
+                }
+              </div>
+
+              <div style="col-xs-4 col-sm-3">
+                @{_input_radios_buttons(fm("granted"),
+                  Seq(
+                    "true" -> (MSG("allow"), "fa fa-check fa-lg text-success"),
+                    "false"  -> (MSG("deny"), "fa fa-ban fa-lg text-danger")),
+                  '_label      -> MSG("granted"),
+                  '_btnstyle  -> "btn-default",
+                  'tabindex    -> 5
+                  )(_fc_raw, _fc_form_group_static)
+                }
+              </div>
+            </div>
+
+
+            <button type="submit" class="btn btn-success" tabindex="5">
+              <i class="fa fa-save fa-lg"></i>
+              @MSG("create")
+            </button>
+          }
+
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <div class="row">
@@ -111,57 +120,56 @@ implicit req: UserRequest[_], lang: Lang)
           </tr>
         </thead>
         <tbody>
-          @page.zipWithIndex.map { case (ac,idx) =>
-            <tr @if(ac.resource == AccessControls.fullModuleName){class="danger"}>
-              <td>
-                @if(ac.is_group){
-                  <i class="fa fa-group fa-lg text-info"></i>
-                  @grps.get(ac.principal).map(_.name)
-                } else {
-                  @usrs.get(ac.principal).map{ user =>
-                    <a href="@routes.Users.show(user.id)">
-                      <i class="fa fa-user fa-lg text-info"></i>
-                      @user.email
-                    </a>
-                  }
-                }
-
-                <a class="pull-right" data-toggle="collapse" href="#info-@idx" aria-expanded="false" aira-controls="new-ace-form">
-                  <i class="fa fa-info-circle fa-lg"></i>
-                </a>
-              </td>
-              <td>
-                @MSG(s"${ac.resource}.name")
-              </td>
-              <td>
-                @MSG(s"actions.${ac.action}")
-              </td>
-              <td>
-                <div class="btn-toolbar">
-                  <div class="btn-group">
-                    @{_toggle_button(ac.granted,
-                      routes.AccessControls.save(ac.principal,ac.resource,ac.action,ac.is_group))}
-                  </div>
-                  <div class="btn-group">
-                    @form(routes.AccessControls.destroy(ac.principal,ac.resource,ac.action,ac.is_group), 'class -> "form-inline") {
-                      @common._previous_uri()
-                      <button type="submit" class="btn form-inline-btn">
-                        <i class="fa fa-trash-o fa-lg text-danger"></i>
-                      </button>
+          @page.map { ac =>
+            <tbody ng-controller="InfoCtrl">
+              <tr @if(ac.resource == AccessControls.fullModuleName){class="danger"}>
+                <td>
+                  @if(ac.is_group){
+                    <i class="fa fa-group fa-lg text-info"></i>
+                    @grps.get(ac.principal).map(_.name)
+                  } else {
+                    @usrs.get(ac.principal).map{ user =>
+                      <a href="@routes.Users.show(user.id)">
+                        <i class="fa fa-user fa-lg text-info"></i>
+                        @user.email
+                      </a>
                     }
+                  }
+                  <a class=" pull-right" href="#">
+                    <i class="fa fa-info-circle fa-lg text-info" ng-click="isCollapsed = !isCollapsed"></i>
+                  </a>
+                </td>
+                <td>
+                  @MSG(s"${ac.resource}.name")
+                </td>
+                <td>
+                  @MSG(s"actions.${ac.action}")
+                </td>
+                <td>
+                  <div class="btn-toolbar">
+                    <div class="btn-group">
+                      <toggle-switch status="@ac.granted"
+                      post-to="@routes.AccessControls.save(ac.principal,ac.resource,ac.action,ac.is_group)"/>
+                    </div>
+                    <div class="btn-group">
+                      @form(routes.AccessControls.destroy(ac.principal,ac.resource,ac.action,ac.is_group), 'class -> "form-inline") {
+                        @common._previous_uri()
+                        <button type="submit" class="btn form-inline-btn">
+                          <i class="fa fa-trash-o fa-lg text-danger"></i>
+                        </button>
+                      }
+                    </div>
                   </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr class="collapse" id="info-@idx">
-              <td colspan="4">
-                @usrs.get(ac.principal).map{ user =>
-                  @users._info(user)
-                }
-              </td>
-            </tr>
-
+                </td>
+              </tr>
+              <tr collapse="isCollapsed">
+                <td colspan="4">
+                  @usrs.get(ac.principal).map{ user =>
+                    @users._info(user)
+                  }
+                </td>
+              </tr>
+            </tbody>
           }
         </tbody>
       </table>
@@ -169,5 +177,23 @@ implicit req: UserRequest[_], lang: Lang)
       @{_pager(page, p => routes.AccessControls.index(p))}
     </div>
   </div>
-}()(libs.assets("js", "pager"),
-  libs.assets("js", "toggle_button"))
+
+
+}()(
+  libs.assets("js", "ui.components"),
+  controller
+)
+
+@controller = {
+  <script>
+    angular.module('access_controls.list', ['ui.bootstrap'])
+      .controller('InfoCtrl',['$scope', function ($scope) {
+        $scope.isCollapsed = true;
+      }])
+      .controller('NewEntryCtrl',['$scope', function ($scope) {
+        $scope.isCollapsed = true;
+      }]);
+
+    angular.module('app').requires.push('access_controls.list', 'ui.components.toggle-switch');
+  </script>
+}

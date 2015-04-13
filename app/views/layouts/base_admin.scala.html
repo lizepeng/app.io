@@ -48,10 +48,13 @@
 
   <link rel="shortcut icon" type="image/png"
     href="@routes.Assets.at("images/favicon.png")">
-  @libs.webjars("js", "angular"),
-  @libs.webjars("js", "angular-bootstrap-tpls"),
+  @libs.webjars("js", "angular")
+  @libs.webjars("js", "angular-bootstrap-tpls")
   <script>
-    angular.module('app', ['ui.bootstrap']);
+    angular.module('app', ['ui.bootstrap'])
+      .controller('NavbarCtrl', ['$scope', function($scope){
+        $scope.isCollapsed = true;
+      }]);
   </script>
   @js
 </html>
@@ -81,11 +84,11 @@
 @navbar = {
   <div class="navbar-wrapper">
 
-    <div class="navbar navbar-default navbar-static-top" role="navigation">
+    <div class="navbar navbar-default navbar-static-top" role="navigation" ng-controller="NavbarCtrl">
       <div class="container">
 
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collaped" data-toggle="collapse" data-target="#navbar">
+          <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -95,7 +98,7 @@
           </a>
         </div>
 
-        <div id="navbar" class="navbar-collapse collapse">
+        <div class="navbar-collapse collapse" collapse="isCollapsed">
           <ul class="nav navbar-nav" >
             @mainMenu
             <li>

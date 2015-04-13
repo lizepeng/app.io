@@ -46,7 +46,7 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
             </tr>
             <tr collapse="isCollapsed">
               <td colspan="3">
-                @{_info(usr)}
+                @users._info(usr)
               </td>
             </tr>
           </tbody>
@@ -61,11 +61,11 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
 
 @controller = {
   <script>
-    angular.module('user.list', ['ui.bootstrap'])
+    angular.module('users.list', ['ui.bootstrap'])
       .controller('InfoCtrl',['$scope', function ($scope) {
         $scope.isCollapsed = true;
       }]);
 
-    angular.module('app').requires.push('user.list');
+    angular.module('app').requires.push('users.list');
   </script>
 }
