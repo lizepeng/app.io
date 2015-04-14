@@ -25,6 +25,7 @@ package object security {
     val Anything     = CheckedAction("anything")
 
     val ALL = Seq(
+      Anything,
       NNew,
       Create,
       Edit,
@@ -32,8 +33,7 @@ package object security {
       Destroy,
       Index,
       Show,
-      HistoryIndex,
-      Anything
+      HistoryIndex
     )
   }
 

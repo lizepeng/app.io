@@ -24,7 +24,7 @@ implicit req: UserRequest[_], lang: Lang)
       </button>
     </div>
 
-    <div collapse="isCollapsed" class="row collapse @if(fm.hasErrors){in}">
+    <div collapse="isCollapsed" class="row" style="margin-top:10px;">
       <div class="panel panel-default">
 
         <div class="panel-body">
@@ -42,7 +42,7 @@ implicit req: UserRequest[_], lang: Lang)
               </div>
 
               <div class="col-xs-3">
-                @{_input_radios_buttons(fm("is_group"),
+                @{ng._input_radios_buttons(fm("is_group"),
                   Seq(
                     "false" -> ("", "fa fa-user fa-lg text-info"),
                     "true"  -> ("", "fa fa-group fa-lg text-info")),
@@ -75,7 +75,7 @@ implicit req: UserRequest[_], lang: Lang)
               </div>
 
               <div style="col-xs-4 col-sm-3">
-                @{_input_radios_buttons(fm("granted"),
+                @{ng._input_radios_buttons(fm("granted"),
                   Seq(
                     "true" -> (MSG("allow"), "fa fa-check fa-lg text-success"),
                     "false"  -> (MSG("deny"), "fa fa-ban fa-lg text-danger")),
@@ -191,7 +191,9 @@ implicit req: UserRequest[_], lang: Lang)
         $scope.isCollapsed = true;
       }])
       .controller('NewEntryCtrl',['$scope', function ($scope) {
-        $scope.isCollapsed = true;
+        $scope.isCollapsed = @(!fm.hasErrors);
+        $scope.is_group = {value:"@{fm("is_group").value.map(_.toString).getOrElse("true")}"};
+        $scope.granted = {value:"@{fm("granted").value.map(_.toString).getOrElse("true")}"};
       }]);
 
     angular.module('app').requires.push('access_controls.list', 'ui.components.toggle-switch');

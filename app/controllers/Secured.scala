@@ -13,11 +13,11 @@ object Secured {
 
     lazy val modules: Seq[PermCheckable] =
       Seq(
-        AccessControls,
-        EmailTemplates,
         Files,
         Groups,
-        Users
+        Users,
+        EmailTemplates,
+        AccessControls
       )
   }
 
