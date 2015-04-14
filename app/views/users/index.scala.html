@@ -20,13 +20,14 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
       <table class="table table-hover table-ellipsis">
         <thead>
           <tr>
-            <th class="col-xs-4  col-sm-3 ">
+            <th class="col-xs-8  col-sm-6 ">
               @MSG("email")
             </th>
-            <th class="hidden-xs col-sm-2 ">
+            <th class="hidden-xs col-sm-3 ">
               @MSG("name")
             </th>
-            <th class="col-xs-3  col-sm-2 text-right">
+            <th class="visible-xs"></th>
+            <th class="col-xs-4  col-sm-3 text-right">
               @MSG("action")
             </th>
           </tr>
@@ -38,9 +39,10 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
                 <i class="fa fa-info-circle fa-lg text-info" ng-click="isCollapsed = !isCollapsed"></i>
                 @usr.email
               </td>
-              <td>
+              <td class="hidden-xs">
                 @usr.name
               </td>
+              <td class="visible-xs"></td>
               <td>
               </td>
             </tr>

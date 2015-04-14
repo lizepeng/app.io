@@ -1,34 +1,69 @@
 @(user:User)(implicit req: UserRequest[_], lang: Lang)
 
 <div class="row">
-  <div class="col-xs-12 col-sm-6">
+  <div class="col-xs-12 col-sm-6 col-md-5">
     @common._form_group_static("id") {
       <code>@user.id</code>
     }
   </div>
-  <div class="col-xs-12 col-sm-6">
+  <div class="col-xs-12 col-sm-6 col-md-3">
     @common._form_group_static("name") {
       @user.name
     }
   </div>
-
-</div>
-
-<div class="row">
-  <div class="col-xs-12 col-sm-6">
+  <div class="col-xs-12 col-sm-12 col-md-3">
     @common._form_group_static("email") {
       @user.email
     }
   </div>
-
 </div>
 
 <div class="row">
   <div class="col-xs-12 col-sm-12">
     @common._form_group_static("internal_groups") {
-      <pre>
-        @user.internal_groups
-      </pre>
+
+      <table class="table table-bordered table-condensed">
+        <thead>
+          <tr class="info">
+            @for(i <- InternalGroups.Half1st) {
+              <th class="text-center">@("G" + i)</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            @for(i <- InternalGroups.Half1st) {
+              @isGroupMember(user, i)
+            }
+          </tr>
+        </tbody>
+        <thead>
+          <tr class="info">
+            <th></th>
+            @for(i <- InternalGroups.Half2nd) {
+              <th class="text-center">@("G" + i)</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td>
+            @for(i <- InternalGroups.Half2nd) {
+                @isGroupMember(user, i)
+            }
+          </tr>
+        </tbody>
+      </table>
     }
   </div>
 </div>
+
+@isGroupMember(user:User, i:Int) = {
+  <td class="text-center">
+    @if(user.internal_groups.contains(i)){
+      <i class="fa fa-check-circle fa-lg text-success"></i>
+    }else{
+      <i class="fa fa-circle-thin fa-lg"></i>
+    }
+  </td>
+}
