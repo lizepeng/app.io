@@ -17,7 +17,7 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
 
   <div class="row">
     <div class="table-responsive">
-      <table class="table table-hover table-ellipsis"
+      <table class="table table-hover table-ellipsis">
         <thead>
           <tr>
             <th class="col-xs-4  col-sm-3 ">
@@ -28,7 +28,7 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
             </th>
             <th class="col-xs-3  col-sm-2 text-right">
               @MSG("action")
-            </th
+            </th>
           </tr>
         </thead>
         @page.map { usr =>

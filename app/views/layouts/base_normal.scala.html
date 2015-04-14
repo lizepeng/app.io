@@ -7,7 +7,7 @@
 @import helper._
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="app">
   <head>
     <title>@title</title>
     <meta charset="utf-8">
@@ -34,9 +34,14 @@
 
   <link rel="shortcut icon" type="image/png"
     href="@routes.Assets.at("images/favicon.png")">
-  @libs.webjars("js", "bootstrap")
-  @*libs.webjars("js", "backbone")*@
-  @*libs.assets("js", "hello")*@
+  @libs.webjars("js", "angular")
+  @libs.webjars("js", "angular-bootstrap-tpls")
+  <script>
+    angular.module('app', ['ui.bootstrap'])
+      .controller('NavbarCtrl', ['$scope', function($scope){
+        $scope.isCollapsed = true;
+      }]);
+  </script>
   @js
 </html>
 
@@ -65,11 +70,11 @@
 @navbar = {
   <div class="navbar-wrapper">
 
-    <div class="navbar navbar-inverse navbar-static-top" role="navigation">
+    <div class="navbar navbar-inverse navbar-static-top" role="navigation" ng-controller="NavbarCtrl">
       <div class="container">
 
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collaped" data-toggle="collapse" data-target="#navbar">
+          <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -79,7 +84,7 @@
           </a>
         </div>
 
-        <div id="navbar" class="navbar-collapse collapse">
+        <div class="navbar-collapse collapse" collapse="isCollapsed">
           <ul class="nav navbar-nav">
             @mainMenu
             <li><a href="@routes.Application.wiki()">
@@ -96,27 +101,31 @@
 
 @mainMenu = {
   @req.user.map { u =>
-    <li class="dropdown ">
-      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-        aria-expanded="false">
+    <li class="dropdown" dropdown>
+      <a href="#" class="dropdown-toggle" dropdown-toggle>
         @MSG("explore")<span class="caret"></span>
       </a>
       <ul class="dropdown-menu" role="menu">
-        <li><a href="#">
-          <i class="icon-bar-chart"></i> @MSG("TODO")
-        </a></li>
-        <li><a href="#">
-          <i class="icon-pencil"></i> @MSG("Nothing")
-        </a></li>
-        <li><a href="#">
-          <i class="icon-calendar"></i> @MSG("Empty")
-        </a></li>
+        <li>
+          <a href="#">
+            <i class="icon-bar-chart"></i> @MSG("TODO")
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="icon-pencil"></i> @MSG("Nothing")
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="icon-calendar"></i> @MSG("Empty")
+          </a>
+        </li>
       </ul>
     </li>
 
-    <li class="dropdown ">
-      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-        aria-expanded="false">
+    <li class="dropdown" dropdown>
+      <a href="#" class="dropdown-toggle" dropdown-toggle>
         @MSG("features")<span class="caret"></span>
       </a>
       <ul class="dropdown-menu" role="menu">
@@ -130,11 +139,6 @@
           <a href="@routes.EmailTemplates.index()">
             <i class="fa fa-fw fa-envelope-square"></i>
             @MSG("controllers.email_templates.name")
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <i class="icon-picture"></i> @MSG("Nothing")
           </a>
         </li>
       </ul>
