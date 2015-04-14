@@ -82,4 +82,4 @@ implicit req: UserRequest[_], lang: Lang)
       @{_pager(page, p => routes.EmailTemplates.index(p))}
     </div>
   </div>
-}()(libs.assets("js", "pager"))
+}()()

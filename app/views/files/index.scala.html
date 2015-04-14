@@ -97,6 +97,5 @@ implicit req: UserRequest[_], lang: Lang)
 }{
   @{_upload(path, "css")}
 }(
-  _upload(path, "js"),
-  libs.assets("js", "pager")
+  _upload(path, "js")
 )
