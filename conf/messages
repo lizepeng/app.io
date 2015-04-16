@@ -109,6 +109,7 @@ sign.in.msg.error                                =TODO
 
 # groups
 controllers.groups.name                          =Groups
+controllers.groups.created                       =New group created
 
 views.groups.head                                =Groups
 views.groups.title                               =Groups

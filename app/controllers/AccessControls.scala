@@ -81,7 +81,7 @@ object AccessControls extends MVController(AccessControl) {
       val bound = AccessControlFM.bindFromRequest()
       bound.fold(
         failure => index0(pager, bound),
-        success => success.save.flatMap { saved =>
+        success => success.save.flatMap { _ =>
           index0(
             pager, AccessControlFM,
             AlertLevel.Success -> msg("entry.created")

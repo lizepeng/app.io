@@ -23,9 +23,9 @@ case class EmailTemplate(
   name: String,
   subject: String,
   text: String,
-  updated_on: DateTime,
+  updated_on: DateTime, //TODO updated_at
   updated_by: UUID,
-  created_on: DateTime,
+  created_on: DateTime, //retrieve from id
   created_by: UUID
 ) {
 

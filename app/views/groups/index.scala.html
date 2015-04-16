@@ -1,4 +1,4 @@
-@(page: Page[Group])(
+@(page: Page[Group], fm: Form[_])(
 implicit req: UserRequest[_], lang: Lang)
 
 @import common._
@@ -14,6 +14,54 @@ implicit req: UserRequest[_], lang: Lang)
       @Groups.vmsg("head")
     </h2>
   </div>
+
+  <div ng-controller="NewEntryCtrl">
+    <div class="row">
+      <button class="btn btn-success pull-right"
+              ng-click="isCollapsed = !isCollapsed">
+        <i class="fa fa-plus fa-lg"></i>
+        @MSG("new.entry")
+      </button>
+    </div>
+
+    <div collapse="isCollapsed" class="row" style="margin-top:10px;">
+      <div class="panel panel-default">
+
+        <div class="panel-body">
+
+          @form(action = routes.Groups.create(page.pager)) {
+
+            <div class="row">
+              <div class="col-xs-12 col-sm-6">
+                @{_input_text(fm("name"),
+                  '_label      -> MSG("name"),
+                  'tabindex    -> 1
+                  )(_fc_form_group)
+                }
+              </div>
+
+              <div class="col-xs-12 col-sm-6">
+                @{_input_text(fm("description"),
+                  '_label      -> MSG("description"),
+                  'tabindex    -> 2
+                  )(_fc_form_group)
+                }
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-success" tabindex="3">
+              <i class="fa fa-save fa-lg"></i>
+              @MSG("create")
+            </button>
+          }
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
 
   <div class="row">
     <div class="table-responsive" ng-controller="GroupsCtrl">
@@ -94,10 +142,13 @@ implicit req: UserRequest[_], lang: Lang)
         return d.promise;
       };
 
-      $scope.update = function(grp) {
-        return $http.post('@routes.Groups.save', grp);
+      $scope.update = function(url, grp) {
+        return $http.post(url, grp); //TODO get url from controller
       };
-    });
+    })
+    .controller('NewEntryCtrl',['$scope', function ($scope) {
+      $scope.isCollapsed = @(!fm.hasErrors);
+    }]);
 
     angular.module('app').requires.push('groups.list');
   </script>

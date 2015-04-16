@@ -60,6 +60,9 @@ sealed class Groups
 
 object Group extends Groups with Cassandra with AppConfig {
 
+  case class NotFound(id: UUID)
+    extends BaseException(msg_key("not.found"))
+
   object AccessControl {
 
     import models.{AccessControl => AC}
@@ -94,7 +97,14 @@ object Group extends Groups with Cassandra with AppConfig {
     if (rs.wasApplied()) group else fromRow(rs.one)
   }
 
-  def find[A](ids: List[UUID]): Future[Map[UUID, Group]] = CQL {
+  def find(id: UUID): Future[Group] = CQL {
+    select.where(_.id eqs id)
+  }.one().map {
+    case Some(g) => g
+    case None    => throw NotFound(id)
+  }
+
+  def find(ids: List[UUID]): Future[Map[UUID, Group]] = CQL {
     select
       .where(_.id in ids)
   }.fetch().map(_.map(g => (g.id, g)).toMap)
@@ -105,6 +115,10 @@ object Group extends Groups with Cassandra with AppConfig {
       .modify(_.name setTo group.name)
       .and(_.description setTo group.description)
   }.future().map(_ => group)
+
+  def remove(id: UUID): Future[ResultSet] = CQL {
+    delete.where(_.id eqs id)
+  }.future()
 
   def list(pager: Pager): Future[List[Group]] = {
     CQL {
