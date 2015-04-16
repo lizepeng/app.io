@@ -4,7 +4,6 @@ import controllers.Users.{Password, Rules}
 import controllers.session.UserAction
 import helpers._
 import models._
-import org.joda.time.DateTime
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
@@ -133,15 +132,14 @@ object PasswordReset
       user <- mailer
       tmpl <- EmailTemplate.find(uuid, lang)
         .recoverWith { case e: EmailTemplate.NotFound =>
-        val now = DateTime.now
         EmailTemplate.save(
           EmailTemplate(
             uuid, Lang.defaultLang,
             key,
             subject = "",
             text = "",
-            now, user.id,
-            now, user.id
+            user.id,
+            user.id
           )
         )
       }

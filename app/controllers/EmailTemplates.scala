@@ -75,15 +75,12 @@ object EmailTemplates extends MVController(EmailTemplate) {
           }
         },
         success => {
-          val now = DateTime.now
           EmailTemplate(
             id = UUIDs.timeBased(),
             lang = Lang(success.lang),
             name = success.name,
             subject = success.subject,
             text = success.text,
-            created_on = now,
-            updated_on = now,
             created_by = req.user.get.id,
             updated_by = req.user.get.id
           ).save.map { saved =>
@@ -104,7 +101,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
           tmpl <- EmailTemplate.find(id, lang)
           usr1 <- User.find(tmpl.updated_by)
           usr2 <- User.find(tmpl.created_by)
-          ____ <- SessionData.set[DateTime](key_editing(id), tmpl.updated_on)
+          ____ <- SessionData.set[DateTime](key_editing(id), tmpl.updated_at)
         } yield Ok {
           html.email_templates.edit(
             TemplateFM.fill(tmpl), tmpl, usr1, usr2

@@ -27,7 +27,7 @@ implicit req: UserRequest[_], lang: Lang)
             <th class="col-xs-5">@MSG("name")</th>
             <th class="col-xs-2 text-right">@MSG("size")</th>
             <th class="col-xs-3 text-right hidden-xs hidden-sm">
-              @MSG("created_on")
+              @MSG("created_at")
             </th>
             <th class="col-xs-2 text-right">@MSG("action")</th>
           </tr>
@@ -65,7 +65,7 @@ implicit req: UserRequest[_], lang: Lang)
                   @f.size_pp
                 </td>
                 <td class="text-right hidden-xs hidden-sm">
-                  @f.created_on.toString("yyyy-MM-dd hh:mm:ss")
+                  @f.created_at.toString(MSG("datetime.format"))
                 </td>
 
                 <td>

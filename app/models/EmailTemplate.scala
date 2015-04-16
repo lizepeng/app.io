@@ -23,11 +23,10 @@ case class EmailTemplate(
   name: String,
   subject: String,
   text: String,
-  updated_on: DateTime, //TODO updated_at
+  updated_at: DateTime,
   updated_by: UUID,
-  created_on: DateTime, //retrieve from id
   created_by: UUID
-) {
+) extends TimeBased {
 
   def save = EmailTemplate.save(this)
 }
@@ -40,7 +39,7 @@ case class EmailTemplateHistory(
   text: String,
   updated_on: DateTime,
   updated_by: UUID
-)
+) extends TimeBased
 
 import models.{EmailTemplate => ET, EmailTemplateHistory => ETH}
 
@@ -63,10 +62,6 @@ trait EmailTemplateColumns[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
   object last_updated_on
-    extends DateTimeColumn(this)
-    with StaticColumn[DateTime]
-
-  object created_on
     extends DateTimeColumn(this)
     with StaticColumn[DateTime]
 
@@ -114,7 +109,6 @@ sealed class EmailTemplates
     text(r),
     updated_on(r),
     updated_by(r),
-    created_on(r),
     created_by(r)
   )
 }
@@ -126,6 +120,27 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
 
   case class UpdatedByOther()
     extends BaseException(msg_key("updated.by.others"))
+
+  def apply(
+    id: UUID,
+    lang: Lang,
+    name: String,
+    subject: String,
+    text: String,
+    updated_by: UUID,
+    created_by: UUID
+  ): EmailTemplate = {
+    EmailTemplate(
+      id = id,
+      lang = lang,
+      name = name,
+      subject = subject,
+      text = text,
+      updated_at = TimeBased.extractDatetime(id),
+      updated_by = updated_by,
+      created_by = created_by
+    )
+  }
 
   def find(
     id: UUID, lang: Lang,
@@ -156,13 +171,12 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
       insert
         .value(_.id, tmpl.id)
         .value(_.lang, tmpl.lang.code)
-        .value(_.last_updated_on, tmpl.created_on)
-        .value(_.created_on, tmpl.created_on)
+        .value(_.last_updated_on, tmpl.created_at)
         .value(_.created_by, tmpl.created_by)
         .ifNotExists()
     }.future().map(_.wasApplied())
     tmpl <- {
-      val curr = if (init) tmpl.created_on else DateTime.now
+      val curr = if (init) tmpl.created_at else DateTime.now
       CQL {
         update
           .where(_.id eqs tmpl.id)
@@ -173,9 +187,9 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
           .and(_.text setTo tmpl.text)
           .and(_.last_updated_on setTo curr)
           .and(_.updated_by setTo tmpl.updated_by)
-          .onlyIf(_.last_updated_on eqs tmpl.updated_on)
+          .onlyIf(_.last_updated_on eqs tmpl.updated_at)
       }.future().map { r =>
-        if (r.wasApplied()) tmpl.copy(updated_on = curr)
+        if (r.wasApplied()) tmpl.copy(updated_at = curr)
         else throw UpdatedByOther()
       }
     }
