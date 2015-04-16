@@ -1,4 +1,4 @@
-package security
+package models
 
 import helpers.{BaseException, Loggable}
 

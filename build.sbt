@@ -35,7 +35,8 @@ TwirlKeys.templateImports ++= Seq(
   "java.util.UUID",
   "models.cfs._",
   "org.joda.time._",
-  "play.api.i18n.{Messages => MSG}"
+  "play.api.i18n.{Messages => MSG}",
+  "security._"
 )
 
 PlayKeys.routesImport ++= Seq(

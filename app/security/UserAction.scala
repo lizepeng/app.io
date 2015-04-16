@@ -1,6 +1,5 @@
-package controllers.session
+package security
 
-import controllers._
 import play.api.mvc._
 
 import scala.language.higherKinds

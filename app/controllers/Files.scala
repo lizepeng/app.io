@@ -2,8 +2,7 @@ package controllers
 
 import java.util.UUID
 
-import controllers.session.UserAction
-import helpers.Bandwidth._
+import controllers.Bandwidth._
 import helpers._
 import models._
 import models.cfs._
@@ -72,7 +71,7 @@ object Files extends MVController(CFS) with AppConfig {
   def index(path: Path, pager: Pager) =
     (UserAction >> PermCheck(_.Index)).async { implicit req =>
       (for {
-        home <- Home(req.user)
+        home <- Home(req.user.getOrElse(throw AuthCheck.Unauthorized()))
         curr <- home.dir(path) if FilePerms(curr).rx.?
         list <- curr.list(pager)
       } yield list).map { list =>
@@ -169,7 +168,7 @@ object Files extends MVController(CFS) with AppConfig {
     implicit req: UserRequest[AnyContent]
   ): Future[Result] = {
     (for {
-      home <- Home(req.user)
+      home <- Home(req.user.getOrElse(throw AuthCheck.Unauthorized()))
       file <- home.file(path)
     } yield file).map {
       block(_)
@@ -183,7 +182,7 @@ object Files extends MVController(CFS) with AppConfig {
   }
 
   private def CFSBodyParser(path: Path) =
-    new BodyParser[MultipartFormData[File]] with session.Session {
+    new BodyParser[MultipartFormData[File]] with security.Session {
       override def apply(req: RequestHeader) = Iteratee.flatten {
         (for {
           user <- req.user

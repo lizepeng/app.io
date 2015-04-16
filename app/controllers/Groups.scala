@@ -5,7 +5,6 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.session.UserAction
 import helpers._
 import models.Group
 import play.api.data.Form

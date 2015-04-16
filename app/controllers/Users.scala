@@ -3,7 +3,6 @@ package controllers
 import java.util.UUID
 
 import controllers.Sessions._
-import controllers.session._
 import helpers._
 import models._
 import play.api.data.Form

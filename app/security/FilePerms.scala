@@ -1,8 +1,7 @@
 package security
 
-import controllers.UserRequest
 import helpers.syntax.PolarQuestion
-import models.User
+import models._
 import models.cfs._
 import play.api.mvc.AnyContent
 

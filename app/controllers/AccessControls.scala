@@ -1,8 +1,6 @@
 package controllers
 
 import java.util.UUID
-
-import controllers.session.UserAction
 import helpers._
 import models._
 import play.api.data.Form

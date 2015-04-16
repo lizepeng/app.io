@@ -1,8 +1,7 @@
-package controllers.session
+package security
 
 import java.util.UUID
 
-import controllers.UserRequest
 import helpers.BaseException
 import helpers.syntax._
 import models.User.Credentials

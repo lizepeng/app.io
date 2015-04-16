@@ -9,7 +9,6 @@ import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import play.api.Play.current
-import security.Permission
 
 import scala.concurrent.Future
 

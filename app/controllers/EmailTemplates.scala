@@ -3,7 +3,6 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.session._
 import helpers._
 import models.EmailTemplate.{NotFound, UpdatedByOther}
 import models._

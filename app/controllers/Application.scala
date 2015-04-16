@@ -1,12 +1,12 @@
 package controllers
 
-import controllers.session._
 import helpers.AppConfig
 import models.Schemas
 import models.cfs.Path
 import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Controller
+import security.UserAction
 import views._
 
 object Application

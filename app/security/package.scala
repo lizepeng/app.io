@@ -1,5 +1,5 @@
-import controllers.UserRequest
 import models.User
+import security.UserRequest
 
 import scala.language.implicitConversions
 

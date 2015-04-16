@@ -1,6 +1,5 @@
 package controllers
 
-import controllers.session.UserAction
 import models.Group
 import security._
 import views._

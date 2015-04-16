@@ -1,12 +1,12 @@
 package controllers
 
-import controllers.session._
-import helpers.{BaseException, Logging}
+import helpers._
 import models._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
+import security.UserAction
 import views._
 
 import scala.concurrent.Future
@@ -16,7 +16,7 @@ import scala.util.Failure
  * @author zepeng.li@gmail.com
  *
  **/
-object Sessions extends Controller with session.Session with Logging {
+object Sessions extends Controller with security.Session with Logging {
 
   val loginFM = Form[LoginFD](
     mapping(

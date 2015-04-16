@@ -1,7 +1,6 @@
 package controllers
 
 import controllers.Users.{Password, Rules}
-import controllers.session.UserAction
 import helpers._
 import models._
 import models.sys.SysConfig
@@ -11,6 +10,7 @@ import play.api.data.Forms._
 import play.api.i18n.Lang
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.{Controller, Result}
+import security._
 import views._
 
 import scala.concurrent.Future
