@@ -1,10 +1,8 @@
-name := "app-io"
+name := "app-io.api"
 
 version := "0.1-SNAPSHOT"
 
-lazy val api      = (project in file("modules/api")).enablePlugins(PlayScala)
-lazy val root     = (project in file(".")).enablePlugins(PlayScala)
-                    .dependsOn(api).aggregate(api)
+lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.2"
 
@@ -31,18 +29,13 @@ resolvers ++= Seq(
 )
 
 TwirlKeys.templateImports ++= Seq(
-  "helpers._",
   "java.util.UUID",
-  "models.cfs._",
   "org.joda.time._",
   "play.api.i18n.{Messages => MSG}"
 )
 
 PlayKeys.routesImport ++= Seq(
-  "helpers._",
   "java.util.UUID",
   "org.joda.time.DateTime",
-  "models.cfs._",
-  "play.api.i18n.Lang",
-  "scala.language.reflectiveCalls"
+  "play.api.i18n.Lang"
 )

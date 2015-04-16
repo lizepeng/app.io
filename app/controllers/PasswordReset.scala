@@ -4,6 +4,7 @@ import controllers.Users.{Password, Rules}
 import controllers.session.UserAction
 import helpers._
 import models._
+import models.sys.SysConfig
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._

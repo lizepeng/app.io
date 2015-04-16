@@ -8,6 +8,7 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
+import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.Play.current
 import play.api.libs.Crypto

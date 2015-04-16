@@ -2,8 +2,9 @@ package models.cfs
 
 import com.websudos.phantom.Implicits._
 import helpers._
-import models.User
+import models._
 import models.cfs.Directory.NotFound
+import models.sys.SysConfig
 import play.api.Play.current
 
 import scala.concurrent.Await

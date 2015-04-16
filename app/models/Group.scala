@@ -8,6 +8,7 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
+import models.sys.SysConfig
 import play.api.Play.current
 
 import scala.concurrent.duration._

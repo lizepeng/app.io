@@ -3,16 +3,26 @@ package models.sys
 import java.util.UUID
 
 import com.datastax.driver.core.Row
+import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
-import helpers.Logging
+import helpers.{Logging, ModuleLike}
 import models.cassandra.{Cassandra, ExtCQL}
 
 import scala.concurrent.Future
 
 /**
- * @author zepeng.li@gmail.com
+  * @author zepeng.li@gmail.com
  */
+trait SysConfig {
+  self: ModuleLike =>
+
+  def getUUID(key: String) = {
+    models.sys.SysConfig
+      .getOrElseUpdate(fullModuleName, key, UUIDs.timeBased())
+  }
+}
+
 case class SysConfigEntry(
   module: String,
   key: String,
