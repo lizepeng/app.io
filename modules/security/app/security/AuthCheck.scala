@@ -1,6 +1,5 @@
 package security
 
-import controllers._
 import helpers._
 import play.api.mvc._
 
@@ -23,7 +22,8 @@ object AuthCheck
    * @param req
    * @return
    */
-  def onUnauthorized(req: RequestHeader) = Results.Redirect(routes.Sessions.nnew())
+  //TODO
+  def onUnauthorized(req: RequestHeader) = Results.Forbidden
 
   override protected def filter[A](
     req: UserRequest[A]

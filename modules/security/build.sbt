@@ -1,4 +1,4 @@
-name := "app-io.api"
+name := "app-io.security"
 
 Common.settings
 

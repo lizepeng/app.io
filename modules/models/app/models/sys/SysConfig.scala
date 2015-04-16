@@ -12,15 +12,17 @@ import models.cassandra.{Cassandra, ExtCQL}
 import scala.concurrent.Future
 
 /**
-  * @author zepeng.li@gmail.com
+ * @author zepeng.li@gmail.com
  */
 trait SysConfig {
   self: ModuleLike =>
 
   def getUUID(key: String) = {
-    models.sys.SysConfig
-      .getOrElseUpdate(fullModuleName, key, UUIDs.timeBased())
+    SysConfig.getOrElseUpdate(
+      fullModuleName, key, UUIDs.timeBased()
+    )(SysConfig.uuidSerializer)
   }
+
 }
 
 case class SysConfigEntry(
