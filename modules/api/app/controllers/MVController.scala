@@ -1,4 +1,4 @@
-package controllers
+package controllers.api
 
 import helpers.ModuleLike
 import play.api.mvc.Controller

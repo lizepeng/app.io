@@ -1,6 +1,7 @@
 package controllers
 
 import akka.actor.Cancellable
+import controllers.api.MVModule
 import helpers.AppConfig
 import models._
 import play.api.Play.current
@@ -21,7 +22,8 @@ object Mailer extends MVModule("mailer") with AppConfig {
     mailer: String,
     tmpl: EmailTemplate,
     user: User,
-    args: (String, Any)*): Cancellable = MAMailerPlugin(mailer).schedule {
+    args: (String, Any)*
+  ): Cancellable = MAMailerPlugin(mailer).schedule {
     val args2: Seq[(String, Any)] =
       args ++ Seq(
         "user.name" -> user.name,

@@ -1,4 +1,4 @@
-package controllers
+package controllers.api
 
 import play.api.mvc._
 import security._

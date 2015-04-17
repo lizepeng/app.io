@@ -1,6 +1,7 @@
 package controllers
 
 import controllers.Users.{Password, Rules}
+import controllers.api.MVModule
 import helpers._
 import models._
 import models.sys.SysConfig

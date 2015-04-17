@@ -1,5 +1,6 @@
 package controllers
 
+import controllers.api.MVController
 import models.Group
 import security._
 import views._

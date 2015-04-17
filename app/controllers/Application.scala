@@ -1,5 +1,6 @@
 package controllers
 
+import controllers.api.MVModule
 import helpers.AppConfig
 import models.Schemas
 import models.cfs.Path

@@ -3,4 +3,5 @@
 # ~~~~
 
 # Home page
-GET  /index                              api.controllers.Application.index
+GET  /index                   controllers.api.Application.index
+GET  /groups                  controllers.api.Groups.index(p:Pager?=Pager.first)

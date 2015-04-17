@@ -17,7 +17,8 @@ object Secured {
         Groups,
         Users,
         EmailTemplates,
-        AccessControls
+        AccessControls,
+        controllers.api.Groups
       )
   }
 
