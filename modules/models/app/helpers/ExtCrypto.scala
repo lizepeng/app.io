@@ -8,6 +8,7 @@ import scala.language.postfixOps
  * @author zepeng.li@gmail.com
  */
 object ExtCrypto {
+
   def sha2(text: String, length: Int = 256): String = {
     val digest = MessageDigest.getInstance(s"SHA-$length")
     digest.reset()

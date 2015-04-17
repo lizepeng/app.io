@@ -6,6 +6,7 @@ import helpers.{BaseException, Loggable}
  * @author zepeng.li@gmail.com
  */
 trait Permission[P, A, R] {
+
   def canAccess: Boolean = false
 
   def principal: P
@@ -27,6 +28,7 @@ object Permission {
 
   abstract class Granted[P, A, R](super_key: String)
     extends Loggable with Permission[P, A, R] {
+
     val code = s"$super_key.perm.granted"
 
     override def canAccess = true

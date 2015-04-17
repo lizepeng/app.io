@@ -43,7 +43,8 @@ sealed class SessionData
 object SessionData extends SessionData with Cassandra {
 
   def get[T: TypeTag](
-    key: String)(
+    key: String
+  )(
     implicit user: User
   ): Future[Option[T]] = {
     typeOf[T] match {
@@ -54,7 +55,8 @@ object SessionData extends SessionData with Cassandra {
   }.map(_.map(_.asInstanceOf[T]))
 
   def set[T: TypeTag](
-    key: String, value: T)(
+    key: String, value: T
+  )(
     implicit user: User
   ): Future[Boolean] = typeOf[T] match {
     case t if t =:= typeOf[DateTime] =>
@@ -73,8 +75,10 @@ object SessionData extends SessionData with Cassandra {
   }.future()
 
   def getOrElse[T: TypeTag](
-    key: String, expiration: Int = 0)(
-    orElse: => T)(
+    key: String, expiration: Int = 0
+  )(
+    orElse: => T
+  )(
     implicit user: User
   ): Future[T] = {
     get[T](key).map {
@@ -88,7 +92,8 @@ object SessionData extends SessionData with Cassandra {
 
   private def get0[T](
     key: String,
-    select: SelectQuery[SessionData, T])(
+    select: SelectQuery[SessionData, T]
+  )(
     implicit user: User
   ): Future[Option[T]] = CQL {
     select
@@ -99,7 +104,8 @@ object SessionData extends SessionData with Cassandra {
   private def set0(
     key: String,
     modify: UpdateWhere[SessionData, UUID]
-      => AssignmentsQuery[SessionData, UUID])(
+      => AssignmentsQuery[SessionData, UUID]
+  )(
     implicit user: User
   ): Future[Boolean] = CQL {
     modify(

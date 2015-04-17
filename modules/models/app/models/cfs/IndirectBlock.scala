@@ -21,6 +21,7 @@ case class IndirectBlock(
   length: Long = 0,
   id: UUID = UUIDs.timeBased()
 ) {
+
   def next = IndirectBlock(inode_id, offset + length, 0, UUIDs.timeBased())
 
   def +(length: Int) = IndirectBlock(inode_id, offset, this.length + length, id)
@@ -91,7 +92,7 @@ object IndirectBlock extends IndirectBlocks with Cassandra {
       .where(_.inode_id eqs id)
       .setFetchSize(CFS.listFetchSize)
       .fetchEnumerator() &>
-      Enumeratee.onIterateeDone {() =>
+      Enumeratee.onIterateeDone { () =>
         CQL {delete.where(_.inode_id eqs id)}.future()
       } |>>> Iteratee.foreach[UUID](Block.purge(_))
   }

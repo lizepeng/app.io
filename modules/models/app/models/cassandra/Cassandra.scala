@@ -13,6 +13,7 @@ import scala.concurrent._
  */
 trait Cassandra
   extends CassandraConnector {
+
   val keySpace = "app"
 
   override def manager = ClosableCassandraManager

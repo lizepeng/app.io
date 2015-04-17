@@ -9,6 +9,7 @@ import scala.language.implicitConversions
  * @author zepeng.li@gmail.com
  */
 object ExtEnumeratee {
+
   def flattenOption[A]: Enumeratee[Option[A], A] =
     Enumeratee.filter[Option[A]](_.isDefined) ><> Enumeratee.map(_.get)
 }

@@ -41,7 +41,10 @@ package object syntax {
 
   implicit class SugarArray[T](val array: Array[T]) extends AnyVal {
 
-    def getOrElse(idx: Int, t: T) = if (array.isDefinedAt(idx)) array(idx) else t
+    def getOrElse(
+      idx: Int,
+      t: T
+    ) = if (array.isDefinedAt(idx)) array(idx) else t
 
   }
 

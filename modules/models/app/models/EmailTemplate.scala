@@ -144,12 +144,14 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
 
   def find(
     id: UUID, lang: Lang,
-    updated_on: Option[DateTime] = None): Future[ET] =
+    updated_on: Option[DateTime] = None
+  ): Future[ET] =
     find(id, lang.code, updated_on)
 
   def find(
     id: UUID, lang: String,
-    updated_on: Option[DateTime]): Future[ET] =
+    updated_on: Option[DateTime]
+  ): Future[ET] =
     CQL {
       val cql: SelectWhere[EmailTemplates, ET] = select
         .where(_.id eqs id)

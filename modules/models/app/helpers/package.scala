@@ -20,11 +20,17 @@ package object helpers {
   implicit def extendCrypto(c: Crypto.type): ExtCrypto.type = ExtCrypto
 
   implicit object bindableQueryLang extends Parsing[Lang](
-    Lang(_), _.code, (key: String, e: Exception) => "Cannot parse parameter %s as Lang: %s".format(key, e.getMessage)
+    Lang(_), _.code, (
+    key: String,
+    e: Exception
+    ) => "Cannot parse parameter %s as Lang: %s".format(key, e.getMessage)
   )
 
   implicit object bindableQueryDateTime extends Parsing[DateTime](
-    s => new DateTime(s.toLong), _.getMillis.toString, (key: String, e: Exception) => "Cannot parse parameter %s as DateTime: %s".format(key, e.getMessage)
+    s => new DateTime(s.toLong), _.getMillis.toString, (
+    key: String,
+    e: Exception
+    ) => "Cannot parse parameter %s as DateTime: %s".format(key, e.getMessage)
   )
 
   implicit def uuidFormat: Formatter[UUID] = new Formatter[UUID] {
