@@ -1,5 +1,3 @@
-
-
 package controllers
 
 import java.util.UUID
@@ -11,7 +9,6 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
-import security._
 import views._
 
 import scala.concurrent.Future
@@ -34,7 +31,7 @@ object Groups extends MVController(Group) {
   )
 
   def index(pager: Pager) =
-    (UserAction >> PermCheck(_.Index)).async { implicit req =>
+    PermCheck(_.Index).async { implicit req =>
       Group.list(pager).map { list =>
         render {
           case Accepts.Html() =>
@@ -51,7 +48,7 @@ object Groups extends MVController(Group) {
     }
 
   def create(pager: Pager) = {
-    (UserAction >> PermCheck(_.Index)).async { implicit req =>
+    PermCheck(_.Index).async { implicit req =>
       val bound: Form[Group] = GroupFM.bindFromRequest()
       bound.fold(
         failure => Group.list(pager).map { list =>
@@ -70,7 +67,7 @@ object Groups extends MVController(Group) {
   }
 
   def save(id: UUID) =
-    (UserAction >> PermCheck(_.Save)).async { implicit req =>
+    PermCheck(_.Save).async { implicit req =>
       val bound = GroupFM.bindFromRequest()
       bound.fold(
         failure => Future.successful(BadRequest(bound.errorsAsJson)),
@@ -87,7 +84,7 @@ object Groups extends MVController(Group) {
     }
 
   def destroy(id: UUID) =
-    (UserAction >> PermCheck(_.Save)).async { implicit req =>
+    PermCheck(_.Destroy).async { implicit req =>
       Group.remove(id).map { _ =>
         RedirectToPreviousURI
           .getOrElse(
@@ -99,11 +96,13 @@ object Groups extends MVController(Group) {
     }
 
   def checkName =
-    (UserAction >> PermCheck(_.Show)) { implicit req =>
-      val bound = Form(single(mapping_name)).bindFromRequest()
-      bound.fold(
-        failure => BadRequest(bound.errorsAsJson),
-        success => Ok
-      )
+    PermCheck(_.Show).async { implicit req =>
+      Future.successful {
+        val bound = Form(single(mapping_name)).bindFromRequest()
+        bound.fold(
+          failure => BadRequest(bound.errorsAsJson),
+          success => Ok
+        )
+      }
     }
 }

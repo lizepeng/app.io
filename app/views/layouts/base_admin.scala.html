@@ -2,7 +2,7 @@
   content: Html)(
   css: Html *)(
   js: Html *)(
-  implicit req: UserRequest[_], lang: Lang)
+  implicit req: MaybeUserRequest[_], lang: Lang)
 
 @import helper._
 
@@ -163,7 +163,7 @@
 
 
 @userSubMenu = {
-  @req.user match {
+  @req.maybeUser match {
     case None => {
       <ul class="nav navbar-nav navbar-right">
         <li><a href="@routes.Sessions.nnew">@MSG("sign.in")</a></li>

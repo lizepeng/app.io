@@ -1,4 +1,3 @@
-import controllers.Files._
 import play.api.mvc._
 
 /**
@@ -14,6 +13,6 @@ package object controllers {
   }
 
   def RedirectToPreviousURI(implicit req: Request[AnyContent]): Option[Result] = {
-    req.previousURI.map(Redirect(_))
+    req.previousURI.map(Results.Redirect(_))
   }
 }

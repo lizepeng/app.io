@@ -1,5 +1,5 @@
+import helpers.BaseException
 import models.User
-import security.UserRequest
 
 import scala.language.implicitConversions
 
@@ -7,6 +7,14 @@ import scala.language.implicitConversions
  * @author zepeng.li@gmail.com
  */
 package object security {
+
+  /**
+   * May be caused by [[User.AuthFailed]] or [[User.NoCredentials]]
+   *
+   * @see [[Session.RequestWithUser.user]]
+   */
+  case class Unauthorized()
+    extends BaseException("security.unauthorized")
 
   case class CheckedAction(name: String)
 
@@ -39,6 +47,8 @@ package object security {
 
   object CheckedActions extends CheckedActions
 
-  implicit def authenticatedUser(implicit req: UserRequest[_]): User =
-    req.user.getOrElse(throw AuthCheck.Unauthorized())
+  //convenient method for multiple implicit parameters
+  implicit def authenticatedUser(
+    implicit req: UserRequest[_]
+  ): User = req.user
 }

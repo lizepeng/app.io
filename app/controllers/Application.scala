@@ -6,27 +6,27 @@ import models.cfs.Path
 import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Controller
-import security.UserAction
+import security._
 import views._
 
 object Application
   extends MVModule("app") with Controller
   with AppConfig {
 
-  def index = UserAction { implicit req =>
+  def index = MaybeUserAction { implicit req =>
     Ok(html.welcome.index())
   }
 
-  def about = UserAction { implicit req =>
+  def about = MaybeUserAction { implicit req =>
     Ok(html.static_pages.about())
   }
 
-  def wiki = UserAction { implicit req =>
+  def wiki = MaybeUserAction { implicit req =>
     val videoPath = config.getString("wiki.video").map(Path(_))
     Ok(html.static_pages.wiki(videoPath))
   }
 
-  def recreate = UserAction.async {
+  def recreate = MaybeUserAction.async {
     Schemas.create.map { _ => Ok("Schema Created") }
   }
 

@@ -10,7 +10,7 @@ import views._
 object My extends MVController(Group) {
 
   def dashboard =
-    (UserAction >> AuthCheck) { implicit req =>
+    (MaybeUserAction >> AuthCheck) { implicit req =>
       Ok(html.my.dashboard())
     }
 }

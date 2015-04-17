@@ -1,4 +1,4 @@
-@(id: String)(fm: Form[_])(implicit req: UserRequest[_], lang: Lang)
+@(id: String)(fm: Form[_])(implicit req: MaybeUserRequest[_], lang: Lang)
 
 @import common._
 @import helper._

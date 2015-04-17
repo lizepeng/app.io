@@ -37,7 +37,7 @@ object Files extends MVController(CFS) with AppConfig {
     config.getBytes(s"bandwidth.$key").map(_.toInt)
 
   def download(path: Path, inline: Boolean) =
-    (UserAction >> AuthCheck).async { implicit req =>
+    PermCheck(_.Show).async { implicit req =>
       serveFile(path) { file =>
         val stm = streamWhole(file)
         if (inline) stm
@@ -49,7 +49,7 @@ object Files extends MVController(CFS) with AppConfig {
     }
 
   def stream(path: Path) =
-    UserAction.async { implicit req =>
+    PermCheck(_.Show).async { implicit req =>
       serveFile(path) { file =>
         val size = file.size
         val byte_range_spec = """bytes=(\d+)-(\d*)""".r
@@ -69,28 +69,28 @@ object Files extends MVController(CFS) with AppConfig {
     }
 
   def index(path: Path, pager: Pager) =
-    (UserAction >> PermCheck(_.Index)).async { implicit req =>
+    PermCheck(_.Index).async { implicit req =>
       (for {
-        home <- Home(req.user.getOrElse(throw AuthCheck.Unauthorized()))
-        curr <- home.dir(path) if FilePerms(curr).rx.?
+        home <- Home(req.user)
+        curr <- home.dir(path) if FilePermissions(curr).rx.?
         list <- curr.list(pager)
       } yield list).map { list =>
         Ok(html.files.index(path, Page(pager, list)))
       }.andThen {
-        case Failure(e: FilePerms.Denied) => Logger.trace(e.reason)
+        case Failure(e: FilePermissions.Denied) => Logger.trace(e.reason)
       }.recover {
-        case e: FilePerms.Denied => Forbidden
-        case e: BaseException    => NotFound
+        case e: FilePermissions.Denied => Forbidden
+        case e: BaseException          => NotFound
       }
     }
 
   def show(path: Path) =
-    (UserAction >> AuthCheck).async { implicit req =>
+    PermCheck(_.Show).async { implicit req =>
       serveFile(path) { file => Ok(html.files.show(path, file)) }
     }
 
   def destroy(id: UUID): Action[AnyContent] =
-    (UserAction >> AuthCheck).async { implicit req =>
+    PermCheck(_.Destroy).async { implicit req =>
       INode.find(id).map {
         case None        => NotFound(msg("not.found", id))
         case Some(inode) => File.purge(id)
@@ -104,7 +104,7 @@ object Files extends MVController(CFS) with AppConfig {
     }
 
   def create(path: Path) =
-    (UserAction >> AuthCheck)(CFSBodyParser(path)) {
+    PermCheck(_.Create)(CheckedModuleName)(CFSBodyParser(path)) {
       implicit req =>
         req.body.file("files").map { files =>
           val ref: File = files.ref
@@ -134,7 +134,8 @@ object Files extends MVController(CFS) with AppConfig {
   private def streamRange(
     file: File,
     first: Long,
-    lastOpt: Option[Long]): Result = {
+    lastOpt: Option[Long]
+  ): Result = {
     val end = lastOpt.filter(_ < file.size).getOrElse(file.size - 1)
     Result(
       ResponseHeader(
@@ -165,10 +166,10 @@ object Files extends MVController(CFS) with AppConfig {
   )
 
   def serveFile(path: Path)(block: File => Result)(
-    implicit req: UserRequest[AnyContent]
+    implicit req: UserRequest[_]
   ): Future[Result] = {
     (for {
-      home <- Home(req.user.getOrElse(throw AuthCheck.Unauthorized()))
+      home <- Home(req.user)
       file <- home.file(path)
     } yield file).map {
       block(_)
@@ -182,17 +183,18 @@ object Files extends MVController(CFS) with AppConfig {
   }
 
   private def CFSBodyParser(path: Path) =
-    new BodyParser[MultipartFormData[File]] with security.Session {
-      override def apply(req: RequestHeader) = Iteratee.flatten {
-        (for {
-          user <- req.user
-          home <- Home(user)
-          curr <- home.dir(path)
-        } yield (user, curr)).map { case (user, curr) =>
-          multipartFormData(saveTo(curr)(user))
-        }.recover {
-          case e: BaseException => parse.error(Future.successful(BadRequest))
-        }.map(_.apply(req))
+    new AuthorizedBodyParser[MultipartFormData[File]](
+      AuthCheck.onUnauthorized,
+      req => NotFound
+    ) {
+      override def parser(
+        req: RequestHeader,
+        user: User
+      ): Future[BodyParser[MultipartFormData[File]]] = (for {
+        home <- Home(user)
+        curr <- home.dir(path)
+      } yield curr).map { case curr =>
+        multipartFormData(saveTo(curr)(user))
       }
     }
 

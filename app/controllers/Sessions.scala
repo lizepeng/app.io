@@ -6,7 +6,7 @@ import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
-import security.UserAction
+import security._
 import views._
 
 import scala.concurrent.Future
@@ -16,7 +16,7 @@ import scala.util.Failure
  * @author zepeng.li@gmail.com
  *
  **/
-object Sessions extends Controller with security.Session with Logging {
+object Sessions extends Controller with _root_.security.Session with Logging {
 
   val loginFM = Form[LoginFD](
     mapping(
@@ -32,14 +32,14 @@ object Sessions extends Controller with security.Session with Logging {
     remember_me: Boolean
   )
 
-  def nnew = UserAction { implicit req =>
-    req.user match {
+  def nnew = MaybeUserAction { implicit req =>
+    req.maybeUser match {
       case Some(u) => Redirect(routes.Application.index())
       case None    => Ok(html.account.login(loginFM))
     }
   }
 
-  def create = UserAction.async { implicit req =>
+  def create = MaybeUserAction.async { implicit req =>
     val form = loginFM.bindFromRequest
     form.fold(
       failure => Future.successful(BadRequest(html.account.login(failure))),

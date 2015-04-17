@@ -11,7 +11,7 @@ object Secured {
 
     def names: Seq[String] = modules.map(_.CheckedModuleName.name)
 
-    lazy val modules: Seq[PermCheckable] =
+    lazy val modules: Seq[PermissionCheckable] =
       Seq(
         Files,
         Groups,

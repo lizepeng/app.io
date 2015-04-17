@@ -6,8 +6,10 @@ import play.api.mvc._
 /**
  * @author zepeng.li@gmail.com
  */
-class UserRequest[A](
-  val user: Option[User],
-  req: Request[A]
-) extends WrappedRequest[A](req) {
+case class UserRequest[A](
+  user: User,
+  inner: Request[A]
+) extends WrappedRequest[A](inner) with MaybeUserRequest[A] {
+
+  override def maybeUser: Option[User] = Some(user)
 }

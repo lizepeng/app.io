@@ -8,7 +8,7 @@ import play.api.mvc.AnyContent
 /**
  * @author zepeng.li@gmail.com
  */
-case class FilePerms(
+case class FilePermissions(
   principal: User,
   action: Int,
   resource: INode
@@ -68,7 +68,7 @@ case class FilePerms(
 
 }
 
-object FilePerms {
+object FilePermissions {
 
   case class Denied(
     principal: User,
@@ -92,25 +92,18 @@ object FilePerms {
     inode: INode, req: UserRequest[AnyContent]
   ) {
 
-    val r   = new PolarQuestion {def ? = check(FilePerms.r)}
-    val w   = new PolarQuestion {def ? = check(FilePerms.w)}
-    val x   = new PolarQuestion {def ? = check(FilePerms.x)}
-    val rw  = new PolarQuestion {def ? = check(FilePerms.rw)}
-    val rx  = new PolarQuestion {def ? = check(FilePerms.rx)}
-    val wx  = new PolarQuestion {def ? = check(FilePerms.wx)}
-    val rwx = new PolarQuestion {def ? = check(FilePerms.rwx)}
+    val r   = new PolarQuestion {def ? = check(FilePermissions.r)}
+    val w   = new PolarQuestion {def ? = check(FilePermissions.w)}
+    val x   = new PolarQuestion {def ? = check(FilePermissions.x)}
+    val rw  = new PolarQuestion {def ? = check(FilePermissions.rw)}
+    val rx  = new PolarQuestion {def ? = check(FilePermissions.rx)}
+    val wx  = new PolarQuestion {def ? = check(FilePermissions.wx)}
+    val rwx = new PolarQuestion {def ? = check(FilePermissions.rwx)}
 
     private def check(action: Int): Boolean = {
-      val perm: FilePerms = build(action)
+      val perm: FilePermissions = FilePermissions(req.user, action, inode)
       if (perm.canAccess) true
       else throw Denied(perm.principal, perm.action, perm.resource)
-    }
-
-    private def build(action: Int): FilePerms = {
-      req.user match {
-        case None    => throw AuthCheck.Unauthorized()
-        case Some(u) => FilePerms(u, action, inode)
-      }
     }
   }
 

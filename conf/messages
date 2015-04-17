@@ -128,7 +128,7 @@ log.models.users.email.taken                     =Email {0} is invalid or alread
 log.models.users.not.found                       =no such user: [{0}]
 log.models.users.wrong.password                  =wrong password of user: [{0}]
 log.models.users.auth.failed                     =TODO
-log.models.users.no.credentials                     =TODO
+log.models.users.no.credentials                  =TODO
 
 # files
 controllers.files.name                           =File System
@@ -198,9 +198,9 @@ log.models.access_controls.groups.perm.denied    = Denied:    [Groups, {0}, {1},
 log.models.expirable_links.not.found             =Expirable Link {0} not found.
 
 # security
-msg.security.auth_check.unauthorized             =Authorization Failed.
+msg.security.unauthorized                        =Authorization Failed.
 
-log.security.auth_check.unauthorized             =Authorization Failed.
+log.security.unauthorized                        =Authorization Failed.
 
 # alert
 alert.success.title                              =Success!

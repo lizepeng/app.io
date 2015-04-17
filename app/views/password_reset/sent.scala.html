@@ -1,4 +1,4 @@
-@()(implicit req: UserRequest[_], lang: Lang)
+@()(implicit req: MaybeUserRequest[_], lang: Lang)
 
 @layouts.base(PasswordReset.vmsg("title") + " - " + MSG("app.name")){
 

@@ -48,7 +48,7 @@ object Users extends MVController(User) {
   def show(id: UUID) = TODO
 
   def index(pager: Pager) =
-    (UserAction >> PermCheck(_.Index)).async { implicit req =>
+    PermCheck(_.Index).async { implicit req =>
       User.list(pager).map { list =>
         Ok(html.users.index(Page(pager, list)))
       }.recover {
@@ -56,14 +56,14 @@ object Users extends MVController(User) {
       }
     }
 
-  def nnew = UserAction { implicit req =>
-    req.user match {
+  def nnew = MaybeUserAction { implicit req =>
+    req.maybeUser match {
       case None    => Ok(views.html.users.signup(signUpFM))
       case Some(u) => Redirect(routes.My.dashboard())
     }
   }
 
-  def create = UserAction.async { implicit req =>
+  def create = MaybeUserAction.async { implicit req =>
     val bound = signUpFM.bindFromRequest
     bound.fold(
       failure => Future.successful {

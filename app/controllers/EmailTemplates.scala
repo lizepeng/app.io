@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import helpers._
-import models.EmailTemplate.{NotFound, UpdatedByOther}
+import models.EmailTemplate.NotFound
 import models._
 import org.joda.time.DateTime
 import play.api.data.Form
@@ -40,7 +40,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
   }
 
   def index(pager: Pager) =
-    (UserAction >> PermCheck(_.Index)).async { implicit req =>
+    PermCheck(_.Index).async { implicit req =>
       EmailTemplate.list(pager).map { list =>
         Ok(html.email_templates.index(Page(pager, list)))
       }.recover {
@@ -49,7 +49,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def show(id: UUID, lang: Lang, updated_on: Option[DateTime] = None) =
-    (UserAction >> PermCheck(_.Show)).async { implicit req =>
+    PermCheck(_.Show).async { implicit req =>
       for {
         tmpl <- EmailTemplate.find(id, lang, updated_on)
         usr1 <- User.find(tmpl.updated_by)
@@ -60,12 +60,14 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def nnew() =
-    (UserAction >> PermCheck(_.NNew)) { implicit req =>
-      Ok(html.email_templates.nnew(TemplateFM))
+    PermCheck(_.NNew).async { implicit req =>
+      Future.successful {
+        Ok(html.email_templates.nnew(TemplateFM))
+      }
     }
 
   def create =
-    (UserAction >> PermCheck(_.Create)).async { implicit req =>
+    PermCheck(_.Create).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure => Future.successful {
@@ -80,8 +82,8 @@ object EmailTemplates extends MVController(EmailTemplate) {
             name = success.name,
             subject = success.subject,
             text = success.text,
-            created_by = req.user.get.id,
-            updated_by = req.user.get.id
+            created_by = req.user.id,
+            updated_by = req.user.id
           ).save.map { saved =>
             Redirect {
               routes.EmailTemplates.index()
@@ -94,7 +96,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def edit(id: UUID, lang: Lang) =
-    (UserAction >> PermCheck(_.Edit)).async { implicit req =>
+    PermCheck(_.Edit).async { implicit req =>
       val result =
         for {
           tmpl <- EmailTemplate.find(id, lang)
@@ -107,14 +109,14 @@ object EmailTemplates extends MVController(EmailTemplate) {
           )
         }
       result.recover {
-        case e: NotFound => Redirect {
+        case e: EmailTemplate.NotFound => Redirect {
           routes.EmailTemplates.nnew()
         }
       }
     }
 
   def save(id: UUID, lang: Lang) =
-    (UserAction >> PermCheck(_.Save)).async { implicit req =>
+    PermCheck(_.Save).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure =>
@@ -134,7 +136,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
                   name = success.name,
                   subject = success.subject,
                   text = success.text,
-                  updated_by = req.user.get.id
+                  updated_by = req.user.id
                 ).save
                 usr1 <- User.find(done.updated_by)
                 usr2 <- User.find(done.created_by)
@@ -144,7 +146,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
               }
             case None    => Future.successful(BadRequest)
           }.recover {
-            case e: UpdatedByOther => Redirect {
+            case e: EmailTemplate.UpdatedByOther => Redirect {
               routes.EmailTemplates.edit(id, lang)
             }
           }
@@ -153,7 +155,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def history(id: UUID, lang: Lang, pager: Pager) =
-    (UserAction >> PermCheck(_.HistoryIndex)).async { implicit req =>
+    PermCheck(_.HistoryIndex).async { implicit req =>
       for {
         tmpl <- EmailTemplate.find(id, lang)
         list <- EmailTemplateHistory.list(id, lang, pager)
@@ -166,7 +168,7 @@ object EmailTemplates extends MVController(EmailTemplate) {
     }
 
   def destroy(id: UUID, lang: Lang) =
-    (UserAction >> PermCheck(_.Destroy)).async { implicit req => {
+    PermCheck(_.Destroy).async { implicit req => {
       for {
         tmpl <- EmailTemplate.find(id, lang)
         ___ <- EmailTemplate.destroy(id, lang)

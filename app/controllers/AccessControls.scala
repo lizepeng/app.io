@@ -1,6 +1,7 @@
 package controllers
 
 import java.util.UUID
+
 import helpers._
 import models._
 import play.api.data.Form
@@ -39,7 +40,7 @@ object AccessControls extends MVController(AccessControl) {
   )
 
   def index(pager: Pager) =
-    (UserAction >> PermCheck(_.Index)).async { implicit req =>
+    PermCheck(_.Index).async { implicit req =>
       index0(pager, AccessControlFM)
     }
 
@@ -48,7 +49,7 @@ object AccessControls extends MVController(AccessControl) {
     resource: String,
     action: String,
     is_group: Boolean
-  ) = (UserAction >> PermCheck(_.Save)).async { implicit req =>
+  ) = PermCheck(_.Save).async { implicit req =>
     val form = Form(single("value" -> boolean))
     form.bindFromRequest().fold(
       failure => Future.successful(Forbidden(failure.errorsAsJson)),
@@ -63,7 +64,7 @@ object AccessControls extends MVController(AccessControl) {
     resource: String,
     action: String,
     is_group: Boolean
-  ) = (UserAction >> PermCheck(_.Destroy)).async { implicit req =>
+  ) = PermCheck(_.Destroy).async { implicit req =>
     AccessControl.remove(principal, resource, action, is_group).map { _ =>
       RedirectToPreviousURI
         .getOrElse(
@@ -75,7 +76,7 @@ object AccessControls extends MVController(AccessControl) {
   }
 
   def create(pager: Pager) =
-    (UserAction >> PermCheck(_.Create)).async { implicit req =>
+    PermCheck(_.Create).async { implicit req =>
       val bound = AccessControlFM.bindFromRequest()
       bound.fold(
         failure => index0(pager, bound),

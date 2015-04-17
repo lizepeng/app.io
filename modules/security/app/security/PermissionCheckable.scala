@@ -6,7 +6,7 @@ import helpers.ModuleLike
  * @author zepeng.li@gmail.com
  */
 
-trait PermCheckable extends ModuleLike {
+trait PermissionCheckable extends ModuleLike {
 
   implicit lazy val CheckedModuleName = CheckedResource(fullModuleName)
 }

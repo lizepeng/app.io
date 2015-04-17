@@ -24,8 +24,8 @@ trait Loggable extends Product {
   def code: String
 
   def message(implicit lang: Lang): String = message("msg")
-
-  def reason(implicit lang: Lang): String = message("log")
+  
+  def reason: String = message("log")(Lang.defaultLang)
 
   def message(key: String)(implicit lang: Lang): String = {
     Messages(

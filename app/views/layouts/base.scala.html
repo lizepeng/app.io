@@ -2,9 +2,9 @@
   content: Html)(
   css: Html *)(
   js: Html *)(
-  implicit req: UserRequest[_], lang: Lang)
+  implicit req: MaybeUserRequest[_], lang: Lang)
 
-@req.user match {
+@req.maybeUser match {
   case Some(u) if u.internal_groups.contains(1) => {
     @base_admin(
       title, above_content)(content)(css:_*)(js:_*)

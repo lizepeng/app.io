@@ -2,11 +2,11 @@ package controllers
 
 import helpers.ModuleLike
 import play.api.mvc.Controller
-import security.PermCheckable
+import security._
 
 /**
  * @author zepeng.li@gmail.com
  */
 abstract class MVController[T <: ModuleLike](model: T)
   extends MVModule(model.moduleName)
-  with Controller with PermCheckable
+  with Controller with PermissionCheckable

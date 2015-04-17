@@ -34,7 +34,7 @@ object PasswordReset
       .verifying("password.not.confirmed", _.isConfirmed)
   )
 
-  def nnew = UserAction { implicit req =>
+  def nnew = MaybeUserAction { implicit req =>
     Ok(html.password_reset.nnew(emailFM))
   }
 
@@ -43,7 +43,7 @@ object PasswordReset
    *
    * @return
    */
-  def create = UserAction.async { implicit req =>
+  def create = MaybeUserAction.async { implicit req =>
     emailFM.bindFromRequest().fold(
       failure => Future.successful {
         onError(emailFM, "email.not.found")
@@ -73,7 +73,7 @@ object PasswordReset
    * @param id
    * @return
    */
-  def show(id: String) = UserAction.async { implicit req =>
+  def show(id: String) = MaybeUserAction.async { implicit req =>
     ExpirableLink.find(id).map { ln =>
       if (ln.module != fullModuleName)
         onError(emailFM, "invalid.reset.link")
@@ -85,7 +85,7 @@ object PasswordReset
     }
   }
 
-  def save(id: String) = UserAction.async { implicit req =>
+  def save(id: String) = MaybeUserAction.async { implicit req =>
     val bound = resetFM.bindFromRequest()
     bound.fold(
       failure => Future.successful {
@@ -147,7 +147,7 @@ object PasswordReset
     } yield tmpl
 
   private def onError(bound: Form[String], key: String)(
-    implicit req: UserRequest[_]
+    implicit req: MaybeUserRequest[_]
   ): Result = NotFound {
     html.password_reset.nnew {
       bound.withGlobalError(msg_key(key))
