@@ -1,14 +1,27 @@
 import models._
 import models.cfs._
 import models.sys.SysConfig
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import play.api.{Application, _}
+import play.filters.gzip.GzipFilter
 
 /**
  * @author zepeng.li@gmail.com
  */
-object Global extends GlobalSettings {
+object Global
+  extends WithFilters(
+    new GzipFilter(
+      shouldGzip = (req, resp) =>
+        resp.headers.get(HeaderNames.CONTENT_TYPE).exists {
+          case s if s.startsWith(MimeTypes.JSON) => true
+          case s if s.startsWith(MimeTypes.HTML) => true
+          case _                                 => false
+        }
+    )
+  )
+  with GlobalSettings {
 
   override def onStart(app: Application) = {
     Logger.info("System has started")
