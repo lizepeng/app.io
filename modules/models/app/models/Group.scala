@@ -10,6 +10,9 @@ import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig
 import play.api.Play.current
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -88,6 +91,16 @@ object Group extends Groups with Cassandra with AppConfig {
 
   }
 
+  // Json Reads and Writes
+  val reads_name       = (__ \ "name").read[String](minLength[String](2) keepAnd maxLength[String](255))
+  val reads_id         = (__ \ "id").read[UUID]
+  val read_description = (__ \ "description").read[Option[String]]
+
+  implicit val group_writes = Json.writes[Group]
+  implicit val group_reads  = (
+    reads_id and reads_name and read_description
+    )(Group.apply _)
+
   def createIfNotExist(group: Group): Future[Group] = CQL {
     insert
       .value(_.id, group.id)
@@ -121,13 +134,12 @@ object Group extends Groups with Cassandra with AppConfig {
     delete.where(_.id eqs id)
   }.future()
 
-  def list(pager: Pager): Future[List[Group]] = {
+  def list(pager: Pager): Future[Page[Group]] = {
     CQL {
       select.setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
       PIteratee.slice[Group](pager.start, pager.limit)
-  }.map(_.toList)
-
+  }.map(_.toList).map(Page(pager, _))
 }
 
 case class InternalGroups(code: Int) {

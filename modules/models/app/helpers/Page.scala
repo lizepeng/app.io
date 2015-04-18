@@ -9,7 +9,7 @@ import scala.language.implicitConversions
  */
 case class Page[E](pager: Pager, elements: List[E]) {
 
-  def hasNext = elements.size > pager.limit - 1
+  def hasNext = elements.size > pager.pageSize
 
   def hasPrev = pager.start > 0
 }
@@ -22,9 +22,12 @@ object Page {
 
 case class Pager(start: Int, limit: Int) {
 
-  def prev = copy((start - (limit - 1)) max 0, limit)
+  val pageSize = limit - 1
+  val pageNum  = start / pageSize + 1
 
-  def next = copy(start + (limit - 1), limit)
+  def prev = copy((start - pageSize) max 0, limit)
+
+  def next = copy(start + pageSize, limit)
 }
 
 object Pager {
@@ -45,15 +48,15 @@ object Pager {
           limit <- intBinder.bind(s"per_page", params)
         } yield {
           (start, limit) match {
-            case (Right(s), Right(l)) => Right(Pager(s * l, l + 1))
+            case (Right(n), Right(s)) => Right(Pager((n - 1) * s, s + 1))
             case _                    => Left("Unable to bind a Pager")
           }
         }
       }
 
       override def unbind(key: String, p: Pager): String = {
-        val start = intBinder.unbind(s"page", p.start / (p.limit - 1))
-        val limit = intBinder.unbind(s"per_page", p.limit - 1)
+        val start = intBinder.unbind(s"page", p.pageNum)
+        val limit = intBinder.unbind(s"per_page", p.pageSize)
         s"$start&$limit"
       }
     }

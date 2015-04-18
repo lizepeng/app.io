@@ -29,7 +29,8 @@ libraryDependencies ++= Seq(
   "org.webjars"       %  "holderjs"          % "2.4.0",
   "org.webjars"       %  "fuelux"            % "3.3.1",
   "org.webjars.bower" % "angular-xeditable"  % "0.1.9",
-  "org.webjars.bower" % "angular-bootstrap"  % "0.12.1"
+  "org.webjars.bower" % "angular-bootstrap"  % "0.12.1",
+  "org.webjars.bower" % "angular-resource"   % "1.3.15"
 )
 
 TwirlKeys.templateImports ++= Seq(

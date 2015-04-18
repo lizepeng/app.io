@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.api.MVController
+import controllers.api.{JsonClientErrors, MVController}
 import helpers._
 import models.Group
 import play.api.data.Form
@@ -33,16 +33,8 @@ object Groups extends MVController(Group) {
 
   def index(pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      Group.list(pager).map { list =>
-        render {
-          case Accepts.Html() =>
-            Ok(html.groups.index(Page(pager, list), GroupFM))
-              .flashing(
-                AlertLevel.Success -> "created"
-              )
-          case Accepts.Json() =>
-            Ok(Json.toJson(list))
-        }
+      Future.successful {
+        Ok(html.groups.index(pager, GroupFM))
       }.recover {
         case e: BaseException => NotFound
       }
@@ -52,9 +44,9 @@ object Groups extends MVController(Group) {
     PermCheck(_.Index).async { implicit req =>
       val bound: Form[Group] = GroupFM.bindFromRequest()
       bound.fold(
-        failure => Group.list(pager).map { list =>
+        failure => Future.successful {
           BadRequest {
-            html.groups.index(Page(pager, list), bound)
+            html.groups.index(pager, bound)
           }
         },
         success => success.save.map { _ =>
@@ -97,11 +89,10 @@ object Groups extends MVController(Group) {
     }
 
   def checkName =
-    PermCheck(_.Show).async { implicit req =>
+    PermCheck(_.Show).async(parse.json) { implicit req =>
       Future.successful {
-        val bound = Form(single(mapping_name)).bindFromRequest()
-        bound.fold(
-          failure => BadRequest(bound.errorsAsJson),
+        req.body.validate(Group.reads_name).fold(
+          failure => UnprocessableEntity(JsonClientErrors(failure)),
           success => Ok
         )
       }

@@ -46,6 +46,7 @@ created_by                                       =Author
 created_at                                       =Date Created
 internal_groups                                  =Internal Groups
 modules                                          =Modules
+description                                      =Description
 
 # action
 actions.nnew                                     =New
@@ -216,6 +217,10 @@ address.state                                    =State
 address.city                                     =City
 address.street                                   =Street
 address.building                                 =Building
+
+# api
+api.json.validation.failed                       =Validation Failed
+api.json.body.wrong.type                         =Body should be a JSON object
 
 # TODO
 msg.confirm.delete                               =TODO

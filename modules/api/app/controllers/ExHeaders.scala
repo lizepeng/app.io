@@ -1,6 +1,6 @@
 package controllers
 
-import helpers.{AppConfig, Pager}
+import helpers._
 import play.api.Play.current
 import play.api.mvc.Call
 
@@ -17,18 +17,21 @@ trait ExHeaders {
    *
    * first and last are not supported yet.
    *
-   * @param pager current pager
+   * @param page current page
    * @param call the function to supply link string
    * @return
    */
   def linkHeader(
-    pager: Pager, call: Pager => Call
+    page: Page[_], call: Pager => Call
   ): (String, String) = {
-    LINK ->
-      s"""<$hostname${call(pager.next)}>; rel="next",
-         |<$hostname${call(pager.prev)}>; rel="prev"
-       """
-        .stripMargin
-        .replaceAll("\n", "")
+    //TODO how about the first or last page situation ?
+
+    val next: Seq[String] = if (!page.hasNext) Seq[String]()
+    else Seq( s"""<$hostname${call(page.pager.next)}>; rel="next"""")
+
+    val prev: Seq[String] = if (!page.hasPrev) Seq()
+    else Seq( s"""<$hostname${call(page.pager.prev)}>; rel="prev"""")
+
+    LINK -> (next ++ prev).mkString(",")
   }
 }

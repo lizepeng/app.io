@@ -1,0 +1,37 @@
+@(fes: helper.FieldElements)
+
+@defining( fes.args.get('_formname).map(_.toString).getOrElse("form") ) { formname =>
+@defining( s"$formname.${fes.id}" ) { fullname =>
+
+  <div class="form-group" ng-class="!@(fullname).$valid ? 'has-error has-feedback' : ''">
+
+    <label class="control-label" for="@fes.id">
+      @fes.label(fes.lang)
+    </label>
+
+    @fes.input
+
+    <span ng-show="!@(fullname).$valid" class="form-control-feedback">
+      <i class="fa fa-warning fa-lg"></i>
+    </span>
+
+    @fes.args.get('required).map { _ =>
+      <span ng-show="@(fullname).$error.required" class="help-block">
+        @MSG("error.required")
+      </span>
+    }
+
+    @fes.args.get('minLength).map { value =>
+      <span ng-show="@(fullname).$error.minlength" class="help-block">
+        @MSG("error.minLength", value)
+      </span>
+    }
+
+    @fes.args.get('maxLength).map { value =>
+      <span ng-show="@(fullname).$error.maxlength" class="help-block">
+        @MSG("error.maxLength", value)
+      </span>
+    }
+
+  </div>
+}}
