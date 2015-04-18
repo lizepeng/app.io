@@ -56,6 +56,7 @@ application.langs="en-US,zh,ja"
 # logger.models=DEBUG
 
 app.domain=app.io
+app.hostname="http://127.0.0.1:9000"
 
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-min=8

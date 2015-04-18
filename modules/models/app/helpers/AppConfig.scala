@@ -1,5 +1,6 @@
 package helpers
 
+import helpers.AppConfig.Required
 import play.api.{Application, Configuration}
 
 /**
@@ -13,8 +14,19 @@ trait AppConfig {
   def config(implicit app: Application): Configuration =
     appConfig.getConfig(fullModuleName).getOrElse(Configuration.empty)
 
-  def domain(implicit app: Application) =
-    appConfig.getString("app.domain").getOrElse("undefined application domain")
+  def domain(implicit app: Application) = getEssentialString("app.domain")
+
+  def hostname(implicit app: Application) = getEssentialString("app.hostname")
+
+  /**
+   *
+   * @param key the configuration key
+   * @return
+   * @throws Required if corresponding value not exists
+   */
+  private def getEssentialString(key: String)(implicit app: Application) = {
+    appConfig.getString(key).getOrElse(throw new Required(key))
+  }
 
   /**
    * Return fetch size for Cassandra
@@ -50,4 +62,11 @@ trait AppConfig {
    */
   def defaultFetchSize(implicit app: Application) =
     appConfig.getInt("cassandra.fetch-size").getOrElse(0)
+}
+
+object AppConfig {
+
+  class Required(key: String)
+    extends RuntimeException(s"<$key> is required")
+
 }
