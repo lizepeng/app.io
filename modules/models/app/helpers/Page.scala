@@ -45,14 +45,14 @@ object Pager {
           limit <- intBinder.bind(s"per_page", params)
         } yield {
           (start, limit) match {
-            case (Right(s), Right(l)) => Right(Pager(s, l + 1))
+            case (Right(s), Right(l)) => Right(Pager(s * l, l + 1))
             case _                    => Left("Unable to bind a Pager")
           }
         }
       }
 
       override def unbind(key: String, p: Pager): String = {
-        val start = intBinder.unbind(s"page", p.start)
+        val start = intBinder.unbind(s"page", p.start / (p.limit - 1))
         val limit = intBinder.unbind(s"per_page", p.limit - 1)
         s"$start&$limit"
       }
