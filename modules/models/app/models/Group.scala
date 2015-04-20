@@ -180,10 +180,12 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
 
   override val moduleName = Group.moduleName
 
-  val ALL     = for (gid <- 0 to 18) yield gid
-  val Half1st = for (gid <- 0 to 9) yield gid
-  val Half2nd = for (gid <- 10 to 18) yield gid
-  val Anyone  = 1 << 18
+  val ALL        = for (gid <- 0 to 18) yield gid
+  val Half1st    = for (gid <- 0 to 9) yield gid
+  val Half2nd    = for (gid <- 10 to 18) yield gid
+  val AnyoneMask = 1 << 18
+  val Anyone     = 0
+  val AnyoneId   = numToId(Anyone)
 
   private lazy val numToId = Await.result(
 

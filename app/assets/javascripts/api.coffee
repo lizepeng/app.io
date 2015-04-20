@@ -1,5 +1,5 @@
 # RESTful api client
-angular.module 'api', [ 'api.group' ]
+angular.module 'api', [ 'api.group', 'api.user' ]
 
 # Model Group
 angular.module 'api.group', [ 'ngResource' ]
@@ -8,9 +8,33 @@ angular.module 'api.group', [ 'ngResource' ]
     $resource 'api/groups/:id', id: '@id'
   ]
 
-# help to display json error message
+# Model User
+angular.module 'api.user', [ 'ngResource' ]
+
+  .factory 'User', [ '$resource', ($resource) ->
+    $resource 'api/users/:id/:relations', {
+      id        : '@id'
+      relations : ''
+    }, {
+      groups :
+        method  : 'GET'
+        params  :
+          relations : 'groups'
+        isArray : true
+
+      externalGroups :
+        method  : 'GET'
+        params  :
+          relations : 'groups'
+          options   : 'external'
+        isArray : true
+    }
+  ]
+
+# Helpers
 angular.module 'api.helper', []
 
+  # Helper to display json error message
   .factory 'ClientError', ->
     service = {}
     service.firstMsg = (data, status) ->
@@ -20,6 +44,7 @@ angular.module 'api.helper', []
       else "Unknown Error"
     service
 
+  # Helper to parse pagination link header
   .factory 'LinkHeader', ->
     service = {}
     service.parse = (headers) ->

@@ -33,7 +33,7 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
           </tr>
         </thead>
         @page.map { usr =>
-          <tbody ng-controller="InfoCtrl">
+          <tbody ng-controller="InfoCtrl" data-id="@usr.id">
             <tr>
               <td>
                 <i class="fa fa-info-circle fa-lg text-info" ng-click="isCollapsed = !isCollapsed"></i>
@@ -49,6 +49,17 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
             <tr collapse="isCollapsed">
               <td colspan="3">
                 @users._info(usr)
+                <div class="row">
+                  <div class="col-xs-12">
+                    @common._form_group_static("external_groups") {
+                      <div>
+                        <div class="list-group">
+                          <a ng-repeat="grp in groups" class="list-group-item">{{ grp.name }}</a>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -58,14 +69,23 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
     </div>
   </div>
 }()(
+  libs.webjars("js", "angular-resource"),
+  libs.assets("js", "api"),
   controller
 )
 
 @controller = {
   <script>
-    angular.module('users.list', ['ui.bootstrap'])
-      .controller('InfoCtrl',['$scope', function ($scope) {
+    angular.module('users.list', ['ui.bootstrap', 'api.user'])
+      .controller('InfoCtrl',['$scope', '$attrs', 'User', function ($scope, $attrs, User) {
         $scope.isCollapsed = true;
+        $scope.groups = [];
+
+        $scope.$watch('isCollapsed', function(nv) {
+          if(nv === false && $scope.groups.length === 0){
+            $scope.groups = User.externalGroups({id: $attrs.id})
+          }
+        });
       }]);
 
     angular.module('app').requires.push('users.list');

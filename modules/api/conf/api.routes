@@ -3,9 +3,12 @@
 # ~~~~
 
 # Home page
-GET    /index       controllers.api.Application.index
-GET    /groups      controllers.api.Groups.index(p:Pager?=Pager.first)
-POST   /groups      controllers.api.Groups.create
-GET    /groups/:id  controllers.api.Groups.show(id:UUID)
-POST   /groups/:id  controllers.api.Groups.save(id:UUID)
-DELETE /groups/:id  controllers.api.Groups.destroy(id:UUID)
+GET    /index             controllers.api.Application.index
+
+GET    /groups            controllers.api.Groups.index(p:Pager?=Pager.first)
+POST   /groups            controllers.api.Groups.create
+GET    /groups/:id        controllers.api.Groups.show(id:UUID)
+POST   /groups/:id        controllers.api.Groups.save(id:UUID)
+DELETE /groups/:id        controllers.api.Groups.destroy(id:UUID)
+
+GET    /users/:id/groups  controllers.api.Users.groups(id:UUID,options:Option[String])
