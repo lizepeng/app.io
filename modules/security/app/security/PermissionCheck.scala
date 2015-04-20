@@ -29,22 +29,16 @@ trait PermissionCheck
       b1 <- check(
         previous = None, act,
         ac => AccessControl.find(
-          resource.name, ac.name, u.external_groups
+          resource.name, ac.name, u.groups
         )
       )
       b2 <- check(
         previous = b1, act,
         ac => AccessControl.find(
-          resource.name, ac.name, u.internal_groups
-        )
-      )
-      b3 <- check(
-        previous = b2, act,
-        ac => AccessControl.find(
           resource.name, ac.name, u.id
         )
       )
-    } yield b3
+    } yield b2
 
     checked.map {
       case Some(true) => None

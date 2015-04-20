@@ -33,6 +33,8 @@ case class User(
 
   def external_groups: Future[List[UUID]] = User.findGroupIds(id)
 
+  def groups: Future[List[UUID]] = external_groups.map(_ ++ internal_groups)
+
   def hasPassword(submittedPasswd: String) = {
     if (encrypted_password == "") false
     else encrypted_password == encrypt(salt, submittedPasswd)
