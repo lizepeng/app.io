@@ -45,15 +45,18 @@ object Groups
     PermCheck(_.Save).async(parse.json) { implicit req =>
       req.body match {
         case json: JsObject =>
-          (json ++ Json.obj("id" -> UUIDs.timeBased())).validate[Group].fold(
-            failure => Future.successful(
-              UnprocessableEntity(JsonClientErrors(failure))
-            ),
-            success => success.save.map { saved =>
-              Created(Json.toJson(saved))
-                .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
-            }
-          )
+          (json ++ Json.obj(
+            "id" -> UUIDs.timeBased(),
+            "is_internal" -> false
+          )).validate[Group].fold(
+              failure => Future.successful(
+                UnprocessableEntity(JsonClientErrors(failure))
+              ),
+              success => success.save.map { saved =>
+                Created(Json.toJson(saved))
+                  .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
+              }
+            )
         case _              => Future.successful(
           BadRequest(WrongTypeOfJSON())
         )
@@ -63,7 +66,9 @@ object Groups
 
   def destroy(id: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
-      Group.remove(id).map(_ => NoContent)
+      Group.remove(id)
+        .map { _ => NoContent }
+        .recover { case e: Group.NotWritable => NoContent }
     }
 
   def save(id: UUID) =

@@ -87,20 +87,23 @@ implicit req: UserRequest[_], lang: Lang)
         <tbody>
           <tr ng-repeat="grp in GroupList.groups">
             <td>
-              <code>{{ grp.id || "empty"}}</code>
+              <code>{{ grp.id }}</code>
             </td>
             <td>
               <a href="#" editable-text="grp.name" buttons="no"
               onbeforesave="checkName($data)"
               onaftersave="grp.$save()">
-                {{ grp.name || "empty"}}
+                {{ grp.name }}
               </a>
             </td>
             <td class="hidden-xs">
-              {{ grp.description || "empty"}}
+              {{ grp.description }}
             </td>
             <td>
-              <button type="button" class="btn btn-danger btn-sm" ng-click="GroupList.delete(grp)">
+              <button type="button" class="btn btn-danger btn-xs"
+                ng-show="!grp.is_internal"
+                ng-click="GroupList.delete(grp)">
+                <i class="fa fa-trash"></i>
                 @MSG("delete")
               </button>
             </td>

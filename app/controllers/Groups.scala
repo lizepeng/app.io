@@ -27,7 +27,8 @@ object Groups extends MVController(Group) {
     mapping(
       "id" -> default(of[UUID], UUIDs.timeBased()),
       mapping_name,
-      "description" -> optional(text(1, 255))
+      "description" -> optional(text(1, 255)),
+      "isInternal" -> default(boolean, false)
     )(Group.apply)(Group.unapply)
   )
 

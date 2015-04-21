@@ -25,7 +25,8 @@ import scala.util.Success
 case class Group(
   id: UUID,
   name: String,
-  description: Option[String]
+  description: Option[String],
+  is_internal: Boolean
 ) {
 
   def createIfNotExist = Group.createIfNotExist(this)
@@ -53,12 +54,16 @@ sealed class Groups
     extends OptionalStringColumn(this)
     with StaticColumn[Option[String]]
 
+  object is_internal
+    extends OptionalBooleanColumn(this)
+    with StaticColumn[Option[Boolean]]
+
   object child_id
     extends UUIDColumn(this)
     with ClusteringOrder[UUID]
 
   override def fromRow(r: Row): Group = {
-    Group(id(r), name(r), description(r))
+    Group(id(r), name(r), description(r), is_internal(r).contains(true))
   }
 }
 
@@ -66,6 +71,9 @@ object Group extends Groups with Cassandra with AppConfig {
 
   case class NotFound(id: UUID)
     extends BaseException(msg_key("not.found"))
+
+  case class NotWritable(id: UUID)
+    extends BaseException(msg_key("not.writable"))
 
   object AccessControl {
 
@@ -92,13 +100,14 @@ object Group extends Groups with Cassandra with AppConfig {
   }
 
   // Json Reads and Writes
-  val reads_name       = (__ \ "name").read[String](minLength[String](2) keepAnd maxLength[String](255))
-  val reads_id         = (__ \ "id").read[UUID]
-  val read_description = (__ \ "description").read[Option[String]]
+  val reads_name        = (__ \ "name").read[String](minLength[String](2) keepAnd maxLength[String](255))
+  val reads_id          = (__ \ "id").read[UUID]
+  val reads_description = (__ \ "description").read[Option[String]]
+  val reads_is_internal = (__ \ "is_internal").read[Boolean]
 
   implicit val group_writes = Json.writes[Group]
   implicit val group_reads  = (
-    reads_id and reads_name and read_description
+    reads_id and reads_name and reads_description and reads_is_internal
     )(Group.apply _)
 
   def createIfNotExist(group: Group): Future[Group] = CQL {
@@ -106,6 +115,7 @@ object Group extends Groups with Cassandra with AppConfig {
       .value(_.id, group.id)
       .value(_.name, group.name)
       .value(_.description, group.description)
+      .value(_.is_internal, Some(group.is_internal).filter(_ == true))
       .ifNotExists()
   }.future().map { rs =>
     if (rs.wasApplied()) group else fromRow(rs.one)
@@ -128,11 +138,14 @@ object Group extends Groups with Cassandra with AppConfig {
       .where(_.id eqs group.id)
       .modify(_.name setTo group.name)
       .and(_.description setTo group.description)
+      .and(_.is_internal setTo Some(group.is_internal).filter(_ == true))
   }.future().map(_ => group)
 
-  def remove(id: UUID): Future[ResultSet] = CQL {
-    delete.where(_.id eqs id)
-  }.future()
+  def remove(id: UUID): Future[ResultSet] =
+    if (InternalGroups.Id2Num.contains(id))
+      Future.failed(NotWritable(id))
+    else
+      CQL {delete.where(_.id eqs id)}.future()
 
   def list(pager: Pager): Future[Page[Group]] = {
     CQL {
@@ -185,22 +198,24 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
   val Half2nd    = for (gid <- 10 to 18) yield gid
   val AnyoneMask = 1 << 18
   val Anyone     = 0
-  val AnyoneId   = numToId(Anyone)
+  val AnyoneId   = Num2Id(Anyone)
 
-  private lazy val numToId = Await.result(
+  private lazy val Num2Id = Await.result(
 
     Future.sequence(
       ALL.map { n =>
         val key = s"internal_group_${"%02d".format(n)}"
         getUUID(key).andThen {
           case Success(id) =>
-            Group(id, key, Some(key)).createIfNotExist
+            Group(id, key, Some(key), is_internal = true).createIfNotExist
         }
       }
     ), 10 seconds
   )
 
+  lazy val Id2Num = Num2Id.zipWithIndex.toMap
+
   implicit def toGroupIdList(igs: InternalGroups): List[UUID] = {
-    igs.numbers.map(numToId).toList
+    igs.numbers.map(Num2Id).toList
   }
 }
