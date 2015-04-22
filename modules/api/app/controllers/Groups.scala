@@ -120,7 +120,7 @@ object Groups
           }
         )
         .recover {
-        case e: BaseException => NotFound
+        case e: User.NotFound => NotFound(Json.obj("message" -> e.message))
       }
     }
 

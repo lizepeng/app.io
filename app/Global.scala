@@ -3,9 +3,12 @@ import models.cfs._
 import models.sys.SysConfig
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.{Application, _}
 import play.filters.gzip.GzipFilter
+
+import scala.concurrent.Future
 
 /**
  * @author zepeng.li@gmail.com
@@ -56,6 +59,17 @@ object Global
     Directory.shutdown()
 
     Logger.info("System shutdown...")
+  }
+
+  override def onBadRequest(
+    request: RequestHeader,
+    error: String
+  ): Future[Result] = {
+    if (request.uri.startsWith("/api"))
+      Future.successful {
+        Results.BadRequest(Json.obj("message" -> error))
+      }
+    else super.onBadRequest(request, error)
   }
 
   override def doFilter(next: EssentialAction): EssentialAction = {

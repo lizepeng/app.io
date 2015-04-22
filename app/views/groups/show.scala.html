@@ -8,10 +8,14 @@ implicit req: UserRequest[_], lang: Lang)
 
   @common._flashing()
 
+  <div ng-controller="AlertCtrl">
+    <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</alert>
+  </div>
+
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-group fa-lg"></i>
-      @Groups.vmsg("head")
+      @group.name
     </h2>
   </div>
 
@@ -68,7 +72,7 @@ implicit req: UserRequest[_], lang: Lang)
             Symbol("ng-model") -> "user.email"
           )
 
-          <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)">
+          <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)" ng-disabled="form.$invalid">
             <i class="fa fa-plus"></i>
             @MSG("create")
           </button>
@@ -93,8 +97,8 @@ implicit req: UserRequest[_], lang: Lang)
       ["xeditable", 'api.group', 'api.helper']);
 
     list.factory('GroupUsersList',
-      ['Group',
-      function(Group){
+      ['Group', 'Alerts',
+      function(Group, Alerts){
         var service = {};
 
         service.users = [];
@@ -108,9 +112,13 @@ implicit req: UserRequest[_], lang: Lang)
         };
 
         service.create = function(data) {
-          Group.addUser(service.group, data, function (value) {
-            service.users.unshift(value);
-          });
+          Group.addUser(service.group, data,
+            function (value) {
+              service.users.unshift(value);
+            },
+            function (res) {
+              Alerts.push({type:'danger', msg:res.data.message})
+            });
         };
 
         service.delete = function(data) {
@@ -121,9 +129,22 @@ implicit req: UserRequest[_], lang: Lang)
         };
 
         return service;
-    }]);
+    }])
+    .factory('Alerts', [
+      function() {
+        return [];
+    }])
 
-    list.controller('UserGroupsCtrl',
+    .controller('AlertCtrl',
+      ['$scope', 'Alerts',
+      function ($scope, Alerts) {
+      $scope.alerts = Alerts;
+
+      $scope.closeAlert = function(index) {
+        $scope.alerts.splice(index, 1);
+      };
+    }])
+    .controller('UserGroupsCtrl',
       ['$scope', '$attrs', 'GroupUsersList',
       function ($scope, $attrs, GroupUsersList) {
         $scope.GroupUsersList = GroupUsersList.init($attrs.id);

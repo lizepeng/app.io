@@ -116,7 +116,10 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
   case class WrongPassword(email: String)
     extends BaseException(msg_key("wrong.password"))
 
-  case class AuthFailed(id: UUID)
+  case class SaltNotMatch(id: UUID)
+    extends BaseException(msg_key("salt.not.match"))
+
+  case class AuthFailed()
     extends BaseException(msg_key("auth.failed"))
 
   case class NoCredentials()
@@ -252,7 +255,7 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
   def auth(cred: Credentials): Future[User] = {
     find(cred.id).map { u =>
       if (u.salt == cred.salt) u
-      else throw AuthFailed(cred.id)
+      else throw SaltNotMatch(cred.id)
     }
   }
 

@@ -53,7 +53,7 @@ trait Session {
      *
      * @return authorized user
      *         [[User.NoCredentials]] - if no credentials exists
-     *         [[User.AuthFailed]]    - if salt is not right
+     *         [[User.SaltNotMatch]]  - if salt is not right
      */
     def user: Future[User] = retrieve(req) match {
       case None       => Future.failed(User.NoCredentials())

@@ -27,7 +27,7 @@ abstract class AuthorizedBodyParser[A](
       }.recover {
         case e: User.NoCredentials =>
           parse.error(Future.successful(onUnauthorized(req)))
-        case e: User.AuthFailed    =>
+        case e: User.SaltNotMatch  =>
           parse.error(Future.successful(onUnauthorized(req)))
         case e: BaseException      =>
           parse.error(Future.successful(onException(req)))

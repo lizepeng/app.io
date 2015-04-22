@@ -10,7 +10,6 @@ import security._
 import views._
 
 import scala.concurrent.Future
-import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -43,9 +42,9 @@ object Sessions extends Controller with _root_.security.Session with Logging {
     val form = loginFM.bindFromRequest
     form.fold(
       failure => Future.successful(BadRequest(html.account.login(failure))),
-      success => User.auth(success.email, success.password).andThen {
-        case Failure(e: User.NotFound)      => Logger.info(e.reason)
-        case Failure(e: User.WrongPassword) => Logger.info(e.reason)
+      success => User.auth(success.email, success.password).recover {
+        case e: User.NotFound      => Logger.warn(e.reason); throw User.AuthFailed()
+        case e: User.WrongPassword => Logger.warn(e.reason); throw User.AuthFailed()
       }.map { implicit user =>
         Redirect(routes.My.dashboard()).createSession(success.remember_me)
       }.recover { case e: BaseException =>

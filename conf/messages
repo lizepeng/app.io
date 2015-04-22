@@ -122,8 +122,9 @@ views.users.head                                 =Users
 views.users.title                                =Users
 
 msg.models.users.email.taken                     =Email is invalid or already taken
-msg.models.users.not.found                       =Wrong Username/Email and password combination
-msg.models.users.wrong.password                  =Wrong Username/Email and password combination
+msg.models.users.not.found                       =User {0} doesn't exists
+msg.models.users.wrong.password                  =Wrong Password
+msg.models.users.auth.failed                     =Wrong Username/Email and password combination
 
 log.models.users.email.taken                     =Email {0} is invalid or already taken
 log.models.users.not.found                       =no such user: [{0}]

@@ -9,9 +9,10 @@ import scala.language.implicitConversions
 package object security {
 
   /**
-   * May be caused by [[User.AuthFailed]] or [[User.NoCredentials]]
+   * May be caused by [[User.SaltNotMatch]] or [[User.NoCredentials]]
    *
    * @see [[Session.RequestWithUser.user]]
+   * @see [[AuthorizationCheck.onUnauthorized]]
    */
   case class Unauthorized()
     extends BaseException("security.unauthorized")
@@ -47,8 +48,7 @@ package object security {
 
   object CheckedActions extends CheckedActions
 
+  //TODO do we need this??
   //convenient method for multiple implicit parameters
-  implicit def authenticatedUser(
-    implicit req: UserRequest[_]
-  ): User = req.user
+  implicit def authenticatedUser(implicit req: UserRequest[_]): User = req.user
 }
