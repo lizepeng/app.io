@@ -49,17 +49,7 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
             <tr collapse="isCollapsed">
               <td colspan="3">
                 @users._info(usr)
-                <div class="row">
-                  <div class="col-xs-12">
-                    @common._form_group_static("external_groups") {
-                      <div>
-                        <div class="list-group">
-                          <a ng-repeat="grp in groups" class="list-group-item">{{ grp.name }}</a>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
+
               </td>
             </tr>
           </tbody>
@@ -78,12 +68,14 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
   <script>
     angular.module('users.list', ['ui.bootstrap', 'api.user'])
       .controller('InfoCtrl',['$scope', '$attrs', 'User', function ($scope, $attrs, User) {
+        var initialized = false;
+
         $scope.isCollapsed = true;
         $scope.groups = [];
-
         $scope.$watch('isCollapsed', function(nv) {
-          if(nv === false && $scope.groups.length === 0){
+          if(nv === false && $scope.groups.length === 0 && !initialized){
             $scope.groups = User.externalGroups({id: $attrs.id})
+            initialized = true;
           }
         });
       }]);

@@ -42,7 +42,9 @@ implicit req: UserRequest[_], lang: Lang)
         <tbody>
           <tr ng-repeat="usr in GroupUsersList.users">
             <td>
-              {{ usr.email }}
+              <a ng-href="/users/{{usr.id}}">
+                {{ usr.email }}
+              </a>
             </td>
             <td>
               {{ usr.name }}
@@ -50,7 +52,7 @@ implicit req: UserRequest[_], lang: Lang)
             <td>
               <button type="button" class="btn btn-danger btn-xs pull-right"
                 ng-click="GroupUsersList.delete(usr)">
-                <i class="fa fa-trash"></i>
+                <i class="fa fa-user-times"></i>
                 @MSG("delete")
               </button>
             </td>
@@ -73,8 +75,8 @@ implicit req: UserRequest[_], lang: Lang)
           )
 
           <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)" ng-disabled="form.$invalid">
-            <i class="fa fa-plus"></i>
-            @MSG("create")
+            <i class="fa fa-user-plus"></i>
+            @MSG("add.user")
           </button>
         </form>
       </div>

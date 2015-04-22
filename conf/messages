@@ -45,8 +45,10 @@ updated_at                                       =Date Modified
 created_by                                       =Author
 created_at                                       =Date Created
 internal_groups                                  =Internal Groups
+external_groups                                  =External Groups
 modules                                          =Modules
 description                                      =Description
+add.user                                         =Add User
 
 # action
 actions.nnew                                     =New

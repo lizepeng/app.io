@@ -19,7 +19,7 @@
 </div>
 
 <div class="row">
-  <div class="col-xs-12 col-sm-12">
+  <div class="col-xs-12 col-sm-6">
     @common._form_group_static("internal_groups") {
 
       <table class="table table-bordered table-condensed">
@@ -54,6 +54,15 @@
           </tr>
         </tbody>
       </table>
+    }
+  </div>
+  <div class="col-xs-12 col-sm-6">
+    @common._form_group_static("external_groups") {
+      <div>
+        <div class="list-group">
+          <a ng-href="/groups/{{grp.id}}" ng-repeat="grp in groups" class="list-group-item">{{ grp.name }}</a>
+        </div>
+      </div>
     }
   </div>
 </div>

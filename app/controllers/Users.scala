@@ -46,7 +46,12 @@ object Users extends MVController(User) {
     def isConfirmed = original == confirmation
   }
 
-  def show(id: UUID) = TODO
+  def show(id: UUID) =
+    PermCheck(_.Show).async { implicit req =>
+      User.find(id).map { user =>
+        Ok(html.users.show(user))
+      }
+    }
 
   def index(pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
