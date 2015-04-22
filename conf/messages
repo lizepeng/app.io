@@ -117,6 +117,9 @@ controllers.groups.created                       =New group created
 views.groups.head                                =Groups
 views.groups.title                               =Groups
 
+msg.models.groups.not.empty                      =Group is not empty
+msg.models.groups.not.writable                   =Group is not writable
+
 # users
 controllers.users.name                           =Users
 

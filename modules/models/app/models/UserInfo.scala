@@ -13,20 +13,26 @@ case class UserInfo(
   id: UUID,
   name: String,
   email: String,
-  internal_groups: Int
+  int_groups: Int,
+  ext_groups: Set[UUID]
 )
 
 object UserInfo {
 
   //TODO validation
   // Json Reads and Writes
-  val reads_id              = (__ \ "id").read[UUID]
-  val reads_name            = (__ \ "name").read[String](minLength[String](2) keepAnd maxLength[String](255))
-  val reads_email           = (__ \ "email").read[String](email)
-  val reads_internal_groups = (__ \ "internal_groups").read[Int]
+  val reads_id         = (__ \ "id").read[UUID]
+  val reads_name       = (__ \ "name").read[String](minLength[String](2) keepAnd maxLength[String](255))
+  val reads_email      = (__ \ "email").read[String](email)
+  val reads_int_groups = (__ \ "int_groups").read[Int]
+  val reads_ext_groups = (__ \ "ext_groups").read[Set[UUID]]
 
   implicit val user_writes = Json.writes[UserInfo]
   implicit val user_reads  = (
-    reads_id and reads_name and reads_email and reads_internal_groups
+    reads_id
+      and reads_name
+      and reads_email
+      and reads_int_groups
+      and reads_ext_groups
     )(UserInfo.apply _)
 }

@@ -1,9 +1,9 @@
+import controllers.api.JsonMessage
 import models._
 import models.cfs._
 import models.sys.SysConfig
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.{Application, _}
 import play.filters.gzip.GzipFilter
@@ -67,7 +67,7 @@ object Global
   ): Future[Result] = {
     if (request.uri.startsWith("/api"))
       Future.successful {
-        Results.BadRequest(Json.obj("message" -> error))
+        Results.BadRequest(JsonMessage(error))
       }
     else super.onBadRequest(request, error)
   }

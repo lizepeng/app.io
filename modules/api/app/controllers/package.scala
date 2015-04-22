@@ -1,5 +1,6 @@
 package controllers
 
+import helpers.BaseException
 import play.api.data.validation.ValidationError
 import play.api.http.Writeable
 import play.api.i18n.{Lang, Messages}
@@ -49,6 +50,17 @@ package object api {
       }
     )
 
+  }
+
+  object JsonMessage {
+
+    def apply(e: BaseException)(implicit lang: Lang): JsObject = {
+      apply(e.message(lang))
+    }
+
+    def apply(msg: String): JsObject = {
+      Json.obj("message" -> msg)
+    }
   }
 
   object WrongTypeOfJSON {

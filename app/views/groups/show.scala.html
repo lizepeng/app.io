@@ -117,10 +117,19 @@ implicit req: UserRequest[_], lang: Lang)
         service.create = function(data) {
           Group.addUser(service.group, data,
             function (value) {
-              service.users.unshift(value);
+              var exists = false;
+              for (var i = 0; i < service.users.length; i++) {
+                 if(service.users[i].id === value.id) {
+                    exists = true;
+                    break;
+                 }
+              };
+              if (!exists) {
+                service.users.push(value);
+              };
             },
             function (res) {
-              Alerts.push({type:'danger', msg:res.data.message})
+              Alerts.push({type:'danger', msg:res.data.message});
             });
         };
 

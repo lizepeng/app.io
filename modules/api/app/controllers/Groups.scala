@@ -5,7 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import controllers.ExHeaders
 import helpers._
-import models.{Group, User}
+import models._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 
@@ -66,9 +66,14 @@ object Groups
 
   def destroy(id: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
-      Group.remove(id)
-        .map { _ => NoContent }
-        .recover { case e: Group.NotWritable => NoContent }
+      Group.remove(id).map {
+        _ => NoContent
+      }.recover {
+        case e: Group.NotWritable =>
+          MethodNotAllowed(JsonMessage(e))
+        case e: Group.NotEmpty    =>
+          MethodNotAllowed(JsonMessage(e))
+      }
     }
 
   def save(id: UUID) =
@@ -109,18 +114,22 @@ object Groups
           (req.body \ "email").validate[String].map(User.find)
         ).map {
         _.flatMap { user =>
-          Group.addChild(id, user.id).map(_ => user)
+          val info: UserInfo = user.toUserInfo
+          if (user.groups.contains(id)) Future.successful {
+            Ok(Json.toJson(info))
+          }
+          else Group.addChild(id, user.id).map { _ =>
+            Created(Json.toJson(info))
+          }
         }
       }.fold(
           failure => Future.successful {
             UnprocessableEntity(JsonClientErrors(failure))
           },
-          success => success.map(_.toUserInfo).map { info =>
-            Ok(Json.toJson(info))
-          }
+          success => success
         )
         .recover {
-        case e: User.NotFound => NotFound(Json.obj("message" -> e.message))
+        case e: User.NotFound => NotFound(JsonMessage(e))
       }
     }
 

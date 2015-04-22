@@ -48,7 +48,7 @@ package object security {
 
   object CheckedActions extends CheckedActions
 
-  //TODO do we need this??
-  //convenient method for multiple implicit parameters
+  //we need this implicit method for convenience
+  //if method has multiple implicit parameters
   implicit def authenticatedUser(implicit req: UserRequest[_]): User = req.user
 }

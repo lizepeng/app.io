@@ -77,6 +77,9 @@ object Group extends Groups with Cassandra with AppConfig {
   case class NotWritable(id: UUID)
     extends BaseException(msg_key("not.writable"))
 
+  case class NotEmpty(id: UUID)
+    extends BaseException(msg_key("not.empty"))
+
   object AccessControl {
 
     import models.{AccessControl => AC}
@@ -147,7 +150,15 @@ object Group extends Groups with Cassandra with AppConfig {
     if (InternalGroups.Id2Num.contains(id))
       Future.failed(NotWritable(id))
     else
-      CQL {delete.where(_.id eqs id)}.future()
+      CQL {
+        select(_.child_id)
+          .where(_.id eqs id)
+      }.one().recover {
+        case e: Exception => None
+      }.flatMap {
+        case None => CQL {delete.where(_.id eqs id)}.future()
+        case _    => throw NotEmpty(id)
+      }
 
   def list(pager: Pager): Future[Page[Group]] = {
     CQL {
