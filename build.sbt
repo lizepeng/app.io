@@ -4,6 +4,10 @@ Common.settings
 
 scalacOptions += "-feature"
 
+LessKeys.compress in Assets := true
+
+pipelineStages := Seq(uglify, gzip)
+
 lazy val models   = (project in file("modules/models"))
                     .enablePlugins(PlayScala)
 

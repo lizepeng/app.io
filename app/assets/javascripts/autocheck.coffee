@@ -45,14 +45,14 @@ $('input[data-autocheck-url]').on 'input', ->
       url  : $(@).data "autocheck-url"
       data : value : $(@).val()
 
-    .fail (r) =>
+    .fail (r) ->
       formGroup
         .removeClass 'has-success'
         .addClass 'has-error'
         .addHelp(r.responseJSON.value)
       icon.warning()
 
-    .done (r) =>
+    .done ->
       formGroup
         .removeClass 'has-error'
         .addClass 'has-success'
