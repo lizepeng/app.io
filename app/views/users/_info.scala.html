@@ -60,7 +60,10 @@
     @common._form_group_static("external_groups") {
       <div>
         <div class="list-group">
-          <a ng-href="/groups/{{grp.id}}" ng-repeat="grp in groups" class="list-group-item">{{ grp.name }}</a>
+          <a ng-href="/groups/{{grp.id}}" ng-repeat="grp in groups" class="list-group-item">
+            <i class="fa fa-group fa-fw"></i>
+            {{ grp.name }}
+          </a>
         </div>
       </div>
     }
