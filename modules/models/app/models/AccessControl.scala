@@ -10,6 +10,7 @@ import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import play.api.Play.current
 
+import scala.collection.TraversableOnce
 import scala.concurrent.Future
 
 /**
@@ -115,31 +116,24 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
   def find(
     resource: String,
     action: String,
-    group_ids: List[UUID]
-  ): Future[Granted[List[UUID]]] = CQL {
-    select(_.granted)
-      .where(_.principal_id in group_ids)
-      .and(_.resource eqs resource)
-      .and(_.action eqs action)
-      .and(_.is_group eqs true)
-  }.fetch().map { r =>
-    import Group.AccessControl._
-    if (r.isEmpty)
-      throw Undefined(group_ids, action, resource)
-    else if (r.contains(false))
-      throw Denied(group_ids, action, resource)
-    else Granted(group_ids, action, resource)
+    group_ids: TraversableOnce[UUID]
+  ): Future[Granted[Set[UUID]]] = {
+    val gids = group_ids.toSet
+    CQL {
+      select(_.granted)
+        .where(_.principal_id in gids.toList)
+        .and(_.resource eqs resource)
+        .and(_.action eqs action)
+        .and(_.is_group eqs true)
+    }.fetch().map { r =>
+      import Group.AccessControl._
+      if (r.isEmpty)
+        throw Undefined(gids, action, resource)
+      else if (r.contains(false))
+        throw Denied(gids, action, resource)
+      else Granted(gids, action, resource)
+    }
   }
-
-  def find(
-    resource: String,
-    action: String,
-    group_ids: Future[List[UUID]]
-  ): Future[Granted[List[UUID]]] =
-    for {
-      ids <- group_ids
-      ret <- find(resource, action, ids)
-    } yield ret
 
   def save(ac: AccessControl): Future[AccessControl] = CQL {
     update.where(_.principal_id eqs ac.principal)

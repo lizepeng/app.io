@@ -13,6 +13,7 @@ import org.joda.time.DateTime
 import play.api.Play.current
 import play.api.libs.Crypto
 
+import scala.collection.TraversableOnce
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
@@ -26,14 +27,13 @@ case class User(
   salt: String = "",
   encrypted_password: String = "",
   email: String = "",
-  internal_groups: InternalGroups = InternalGroups(0),
+  int_groups: InternalGroups = InternalGroups(0),
+  ext_groups: Set[UUID] = Set(),
   password: String = "",
   remember_me: Boolean = false
 ) extends TimeBased {
 
-  def external_groups: Future[List[UUID]] = User.findGroupIds(id)
-
-  def groups: Future[List[UUID]] = external_groups.map(_ ++ internal_groups)
+  lazy val groups: Set[UUID] = ext_groups union int_groups
 
   def hasPassword(submittedPasswd: String) = {
     if (encrypted_password == "") false
@@ -56,6 +56,8 @@ case class User(
   }
 
   def save = User.save(this)
+
+  def toUserInfo = UserInfo(id, name, email, int_groups.code)
 
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")
@@ -89,7 +91,7 @@ sealed class Users
 
   object internal_groups extends IntColumn(this)
 
-  object ext_group_ids extends ListColumn[Users, User, UUID](this)
+  object external_groups extends SetColumn[Users, User, UUID](this)
 
   override def fromRow(r: Row): User = {
     User(
@@ -99,6 +101,7 @@ sealed class Users
       encrypted_password(r),
       email(r),
       InternalGroups(internal_groups(r)),
+      external_groups(r),
       "",
       remember_me = false
     )
@@ -159,17 +162,10 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
     UserByEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
-  def find[A](ids: List[UUID]): Future[Map[UUID, User]] = CQL {
+  def find(ids: TraversableOnce[UUID]): Future[Map[UUID, User]] = CQL {
     select
-      .where(_.id in ids)
+      .where(_.id in ids.toSet.toList)
   }.fetch().map(_.map(u => (u.id, u)).toMap)
-
-  private def findGroupIds(id: UUID): Future[List[UUID]] = CQL {
-    select(_.ext_group_ids).where(_.id eqs id)
-  }.one().map {
-    case None      => List.empty
-    case Some(ids) => ids
-  }
 
   def checkEmail(email: String): Future[Boolean] = {
     UserByEmail.cql_check(email).one().map {
@@ -194,7 +190,8 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
           .value(_.salt, u.salt)
           .value(_.encrypted_password, u.encrypted_password)
           .value(_.email, u.email)
-          .value(_.internal_groups, u.internal_groups.code | InternalGroups.AnyoneMask)
+          .value(_.internal_groups, u.int_groups.code | InternalGroups.AnyoneMask)
+          .value(_.external_groups, Set[UUID]())
       }.future().map(_ => u)
       else throw EmailTaken(u.email)
     } yield user
@@ -230,6 +227,18 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
     }.fetchEnumerator |>>>
       PIteratee.slice[User](pager.start, pager.limit)
   }.map(_.toList)
+
+  def cql_add_group(id: UUID, gid: UUID) = CQL {
+    update
+      .where(_.id eqs id)
+      .modify(_.external_groups add gid)
+  }
+
+  def cql_del_group(id: UUID, gid: UUID) = CQL {
+    update
+      .where(_.id eqs id)
+      .modify(_.external_groups remove gid)
+  }
 
   ////////////////////////////////////////////////////////////////
 

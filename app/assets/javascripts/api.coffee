@@ -5,14 +5,36 @@ angular.module 'api', [ 'api.group', 'api.user' ]
 angular.module 'api.group', [ 'ngResource' ]
 
   .factory 'Group', [ '$resource', ($resource) ->
-    $resource 'api/groups/:id', id: '@id'
+    $resource '/api/groups/:id/:relations/:uid', {
+      id        : '@id'
+      relations : ''
+      uid       : ''
+    }, {
+      users :
+        method  : 'GET'
+        params  :
+          relations : 'users'
+        isArray : true
+
+      addUser :
+        method  : 'POST'
+        params  :
+          relations : 'users'
+          uid       : '@uid'
+
+      delUser :
+        method  : 'DELETE'
+        params  :
+          relations : 'users'
+          uid       : '@uid'
+    }
   ]
 
 # Model User
 angular.module 'api.user', [ 'ngResource' ]
 
   .factory 'User', [ '$resource', ($resource) ->
-    $resource 'api/users/:id/:relations', {
+    $resource '/api/users/:id/:relations', {
       id        : '@id'
       relations : ''
     }, {

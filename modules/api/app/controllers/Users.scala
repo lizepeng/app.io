@@ -8,8 +8,6 @@ import models._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 
-import scala.concurrent.Future
-
 /**
  * @author zepeng.li@gmail.com
  */
@@ -21,14 +19,13 @@ object Users
     PermCheck(_.Show).async { implicit req =>
       (for {
         user <- User.find(id)
-        gids <- options match {
-          case Some("internal") => Future.successful {
-            Nil ::: user.internal_groups
+        grps <- Group.find(
+          options match {
+            case Some("internal") => Set.empty union user.int_groups
+            case Some("external") => user.ext_groups
+            case _                => user.groups
           }
-          case Some("external") => user.external_groups
-          case _                => user.groups
-        }
-        grps <- Group.find(gids)
+        )
       } yield grps.values).map { grps =>
         Ok(Json.toJson(grps.filter(_.id != InternalGroups.AnyoneId)))
       }.recover {

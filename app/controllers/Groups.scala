@@ -41,6 +41,15 @@ object Groups extends MVController(Group) {
       }
     }
 
+  def show(id: UUID) =
+    PermCheck(_.Show).async { implicit req =>
+      Group.find(id).map { grp =>
+        Ok(html.groups.show(grp))
+      }.recover {
+        case e: BaseException => NotFound
+      }
+    }
+
   def create(pager: Pager) = {
     PermCheck(_.Index).async { implicit req =>
       val bound: Form[Group] = GroupFM.bindFromRequest()

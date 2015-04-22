@@ -2,12 +2,13 @@ package helpers
 
 import play.api.mvc.QueryStringBindable
 
+import scala.collection.Iterable
 import scala.language.implicitConversions
 
 /**
  * @author zepeng.li@gmail.com
  */
-case class Page[E](pager: Pager, elements: List[E]) {
+case class Page[E](pager: Pager, elements: Iterable[E]) {
 
   def hasNext = elements.size > pager.pageSize
 
@@ -16,7 +17,7 @@ case class Page[E](pager: Pager, elements: List[E]) {
 
 object Page {
 
-  implicit def PageToIterator[E](p: Page[E]): List[E] =
+  implicit def PageToIterator[E](p: Page[E]): Iterable[E] =
     p.elements.take(p.pager.limit - 1)
 }
 

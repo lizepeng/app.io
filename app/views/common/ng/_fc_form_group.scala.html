@@ -17,19 +17,19 @@
 
     @fes.args.get('required).map { _ =>
       <span ng-show="@(fullname).$error.required" class="help-block">
-        @MSG("error.required")
+        @MSG("error.required")(fes.lang)
       </span>
     }
 
     @fes.args.get('minLength).map { value =>
       <span ng-show="@(fullname).$error.minlength" class="help-block">
-        @MSG("error.minLength", value)
+        @MSG("error.minLength", value)(fes.lang)
       </span>
     }
 
     @fes.args.get('maxLength).map { value =>
       <span ng-show="@(fullname).$error.maxlength" class="help-block">
-        @MSG("error.maxLength", value)
+        @MSG("error.maxLength", value)(fes.lang)
       </span>
     }
 

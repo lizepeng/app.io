@@ -21,7 +21,7 @@ case class FilePermissions(
       if ((resource.permission & mask) == mask) return true
     }
     //check internal group permission
-    for (gid <- principal.internal_groups.numbers) {
+    for (gid <- principal.int_groups.numbers) {
       val mask = action.toLong << (19 - gid) * 3
       if ((resource.permission & mask) == mask) return true
     }
@@ -61,8 +61,8 @@ case class FilePermissions(
       ${pprintLine(20)}
       ${pprintIndices(20)}
       ${pprintPerms(resource.permission)}
-      ${principal.internal_groups.pprintLine1}
-      ${principal.internal_groups.pprintLine2}
+      ${principal.int_groups.pprintLine1}
+      ${principal.int_groups.pprintLine2}
       ${pprintLine(20)}
      """
 

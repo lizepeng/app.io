@@ -5,6 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
+import com.websudos.phantom.batch.BatchStatement
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
@@ -14,6 +15,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
+import scala.collection.TraversableOnce
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
@@ -80,29 +82,29 @@ object Group extends Groups with Cassandra with AppConfig {
     import models.{AccessControl => AC}
 
     case class Undefined(
-      principal: List[UUID],
+      principal: Set[UUID],
       action: String,
       resource: String
-    ) extends AC.Undefined[List[UUID]](action, resource, moduleName)
+    ) extends AC.Undefined[Set[UUID]](action, resource, moduleName)
 
     case class Denied(
-      principal: List[UUID],
+      principal: Set[UUID],
       action: String,
       resource: String
-    ) extends AC.Denied[List[UUID]](action, resource, moduleName)
+    ) extends AC.Denied[Set[UUID]](action, resource, moduleName)
 
     case class Granted(
-      principal: List[UUID],
+      principal: Set[UUID],
       action: String,
       resource: String
-    ) extends AC.Granted[List[UUID]](action, resource, moduleName)
+    ) extends AC.Granted[Set[UUID]](action, resource, moduleName)
 
   }
 
   // Json Reads and Writes
   val reads_name        = (__ \ "name").read[String](minLength[String](2) keepAnd maxLength[String](255))
   val reads_id          = (__ \ "id").read[UUID]
-  val reads_description = (__ \ "description").read[Option[String]]
+  val reads_description = (__ \ "description").readNullable[String]
   val reads_is_internal = (__ \ "is_internal").read[Boolean]
 
   implicit val group_writes = Json.writes[Group]
@@ -128,9 +130,9 @@ object Group extends Groups with Cassandra with AppConfig {
     case None    => throw NotFound(id)
   }
 
-  def find(ids: List[UUID]): Future[Map[UUID, Group]] = CQL {
+  def find(ids: TraversableOnce[UUID]): Future[Map[UUID, Group]] = CQL {
     select
-      .where(_.id in ids)
+      .where(_.id in ids.toSet.toList)
   }.fetch().map(_.map(g => (g.id, g)).toMap)
 
   def save(group: Group): Future[Group] = CQL {
@@ -149,10 +151,46 @@ object Group extends Groups with Cassandra with AppConfig {
 
   def list(pager: Pager): Future[Page[Group]] = {
     CQL {
-      select.setFetchSize(fetchSize())
+      distinct(_.id).setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
-      PIteratee.slice[Group](pager.start, pager.limit)
-  }.map(_.toList).map(Page(pager, _))
+      PIteratee.slice[UUID](pager.start, pager.limit)
+  }.flatMap(find).map(_.values).map(Page(pager, _))
+
+  def children(id: UUID, pager: Pager): Future[Page[UUID]] = {
+    CQL {
+      select(_.child_id)
+        .where(_.id eqs id)
+        .setFetchSize(fetchSize())
+    }.fetchEnumerator() |>>>
+      PIteratee.slice[UUID](pager.start, pager.limit)
+  }.map(_.toIterable)
+    //because child_id could be null
+    .recover { case e: Exception => Nil }
+    .map(Page(pager, _))
+
+  def addChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
+    BatchStatement()
+      .add(Group.cql_add_child(id, child_id))
+      .add(User.cql_add_group(child_id, id))
+  }.future()
+
+  def delChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
+    BatchStatement()
+      .add(Group.cql_del_child(id, child_id))
+      .add(User.cql_del_group(child_id, id))
+  }.future()
+
+  def cql_add_child(id: UUID, child_id: UUID) = CQL {
+    insert
+      .value(_.id, id)
+      .value(_.child_id, child_id)
+  }
+
+  def cql_del_child(id: UUID, child_id: UUID) = CQL {
+    delete
+      .where(_.id eqs id)
+      .and(_.child_id eqs child_id)
+  }
 }
 
 case class InternalGroups(code: Int) {
@@ -215,7 +253,7 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
 
   lazy val Id2Num = Num2Id.zipWithIndex.toMap
 
-  implicit def toGroupIdList(igs: InternalGroups): List[UUID] = {
-    igs.numbers.map(Num2Id).toList
+  implicit def toGroupIdSet(igs: InternalGroups): Set[UUID] = {
+    igs.numbers.map(Num2Id).toSet
   }
 }

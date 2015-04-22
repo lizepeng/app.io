@@ -5,7 +5,7 @@
   implicit req: MaybeUserRequest[_], lang: Lang)
 
 @req.maybeUser match {
-  case Some(u) if u.internal_groups.contains(1) => {
+  case Some(u) if u.int_groups.contains(1) => {
     @base_admin(
       title, above_content)(content)(css:_*)(js:_*)
   }

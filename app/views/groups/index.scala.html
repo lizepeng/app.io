@@ -87,7 +87,9 @@ implicit req: UserRequest[_], lang: Lang)
         <tbody>
           <tr ng-repeat="grp in GroupList.groups">
             <td>
-              <code>{{ grp.id }}</code>
+              <a ng-href="{{urlShow(grp.id)}}" title="">
+                <code>{{ grp.id }}</code>
+              </a>
             </td>
             <td>
               <a href="#" editable-text="grp.name" buttons="no"
@@ -100,7 +102,7 @@ implicit req: UserRequest[_], lang: Lang)
               {{ grp.description }}
             </td>
             <td>
-              <button type="button" class="btn btn-danger btn-xs"
+              <button type="button" class="btn btn-danger btn-xs pull-right"
                 ng-show="!grp.is_internal"
                 ng-click="GroupList.delete(grp)">
                 <i class="fa fa-trash"></i>
@@ -138,11 +140,19 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "xeditable"),
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
+  jsRoutes,
   controller
 )
 
+@jsRoutes = {
+  @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Groups.show
+  )
+}
+
 @controller = {
   <script>
+
 
     var list = angular.module('groups.list',
       ["xeditable", 'api.group', 'api.helper']);
@@ -193,6 +203,10 @@ implicit req: UserRequest[_], lang: Lang)
       ['$scope', '$http', '$q', 'ClientError', 'GroupList',
       function ($scope, $http, $q, ClientError, GroupList) {
         $scope.GroupList  = GroupList;
+
+        $scope.urlShow = function(id) {
+          return jsRoutes.controllers.Groups.show(id).url;
+        };
 
         $scope.checkName = function(data) {
           var d = $q.defer();

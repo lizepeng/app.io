@@ -5,7 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import controllers.ExHeaders
 import helpers._
-import models.Group
+import models.{Group, User}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 
@@ -87,5 +87,45 @@ object Groups
             case e: BaseException => NotFound
           }
       )
+    }
+
+  def users(id: UUID, pager: Pager) =
+    PermCheck(_.Show).async { implicit req =>
+      (for {
+        page <- Group.children(id, pager)
+        usrs <- User.find(page.elements.toList)
+      } yield (page, usrs.values)).map { case (page, usrs) =>
+        Ok(Json.toJson(usrs.map(_.toUserInfo)))
+          .withHeaders(linkHeader(page, routes.Groups.users(id, _)))
+      }.recover {
+        case e: BaseException => NotFound
+      }
+    }
+
+  def addUser(id: UUID) =
+    PermCheck(_.Save).async(parse.json) { implicit req =>
+      (req.body \ "id").validate[UUID].map(User.find)
+        .orElse(
+          (req.body \ "email").validate[String].map(User.find)
+        ).map {
+        _.flatMap { user =>
+          Group.addChild(id, user.id).map(_ => user)
+        }
+      }.fold(
+          failure => Future.successful {
+            UnprocessableEntity(JsonClientErrors(failure))
+          },
+          success => success.map(_.toUserInfo).map { info =>
+            Ok(Json.toJson(info))
+          }
+        )
+        .recover {
+        case e: BaseException => NotFound
+      }
+    }
+
+  def delUser(id: UUID, uid: UUID) =
+    PermCheck(_.Destroy).async { implicit req =>
+      Group.delChild(id, uid).map { _ => NoContent }
     }
 }
