@@ -3,7 +3,6 @@ package controllers.api
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.ExHeaders
 import elasticsearch._
 import helpers._
 import models._

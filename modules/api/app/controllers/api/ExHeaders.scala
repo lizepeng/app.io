@@ -1,4 +1,4 @@
-package controllers
+package controllers.api
 
 import helpers._
 import play.api.Play.current

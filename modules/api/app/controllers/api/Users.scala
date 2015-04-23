@@ -2,7 +2,6 @@ package controllers.api
 
 import java.util.UUID
 
-import controllers.ExHeaders
 import helpers._
 import models._
 import play.api.libs.concurrent.Execution.Implicits._
