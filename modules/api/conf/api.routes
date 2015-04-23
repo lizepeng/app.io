@@ -14,4 +14,6 @@ GET    /groups/:id/users      controllers.api.Groups.users(id:UUID,p:Pager?=Page
 POST   /groups/:id/users      controllers.api.Groups.addUser(id:UUID)
 DELETE /groups/:id/users/:uid controllers.api.Groups.delUser(id:UUID, uid:UUID)
 
-GET    /users/:id/groups  controllers.api.Users.groups(id:UUID,options:Option[String])
+GET    /groups/search/:kw     controllers.api.Groups.search(kw)
+
+GET    /users/:id/groups      controllers.api.Users.groups(id:UUID,options:Option[String])

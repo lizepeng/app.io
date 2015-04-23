@@ -4,6 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import controllers.ExHeaders
+import elasticsearch._
 import helpers._
 import models._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -20,7 +21,7 @@ import scala.concurrent.Future
  */
 object Groups
   extends MVController(Group)
-  with ExHeaders with AppConfig {
+  with ExHeaders with AppConfig with ESClient {
 
   def index(pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
@@ -52,22 +53,33 @@ object Groups
               failure => Future.successful(
                 UnprocessableEntity(JsonClientErrors(failure))
               ),
-              success => success.save.map { saved =>
-                Created(Json.toJson(saved))
-                  .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
-              }
+              success => for {
+                saved <- success.save
+                _json <- Future.successful(Json.toJson(saved))
+                _____ <- esIndex(saved.id, _json)
+              } yield {
+                  Created(_json)
+                    .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
+                }
             )
         case _              => Future.successful(
           BadRequest(WrongTypeOfJSON())
         )
       }
+    }
 
+  def search(keyword: String) =
+    PermCheck(_.Show).async { implicit req =>
+      esSearch(keyword).map {Ok(_)}
     }
 
   def destroy(id: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
-      Group.remove(id).map {
-        _ => NoContent
+      (for {
+        ___ <- Group.remove(id)
+        res <- esDelete(id)
+      } yield res).map { _ =>
+        NoContent
       }.recover {
         case e: Group.NotWritable =>
           MethodNotAllowed(JsonMessage(e))
@@ -84,10 +96,12 @@ object Groups
         ),
         success =>
           (for {
-            ___ <- Group.find(id)
-            grp <- success.save
-          } yield grp).map { grp =>
-            Ok(Json.toJson(grp))
+            _____ <- Group.find(id)
+            saved <- success.save
+            _json <- Future.successful(Json.toJson(saved))
+            _____ <- esUpdate(id, _json)
+          } yield _json).map { _json =>
+            Ok(_json)
           }.recover {
             case e: BaseException => NotFound
           }
