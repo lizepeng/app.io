@@ -5,14 +5,14 @@ import java.util.UUID
 import com.sksamuel.elastic4s.ElasticClient
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.source.JsonDocumentSource
-import controllers.api.MVModule
+import helpers._
 import play.api.libs.json.JsValue
 
 /**
  * @author zepeng.li@gmail.com
  */
 trait ESClient {
-  self: MVModule =>
+  self: ModuleLike =>
 
   val es_client = ElasticClient.local
 

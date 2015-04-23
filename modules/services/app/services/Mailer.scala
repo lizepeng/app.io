@@ -1,8 +1,7 @@
-package controllers
+package services
 
 import akka.actor.Cancellable
-import controllers.api.MVModule
-import helpers.AppConfig
+import helpers._
 import models._
 import play.api.Play.current
 import play.api.i18n.Messages
@@ -12,7 +11,9 @@ import plugins.MAMailerPlugin
 /**
  * @author zepeng.li@gmail.com
  */
-object Mailer extends MVModule("mailer") with AppConfig {
+object Mailer extends ModuleLike with AppConfig {
+
+  override val moduleName: String = "mailer"
 
   private lazy val admins = config
     .getStringSeq("admin.email-addresses")
@@ -49,7 +50,7 @@ object Mailer extends MVModule("mailer") with AppConfig {
     to = Seq(s"Administrators ${admins.map("<" + _ + ">").mkString(",")}"),
     bodyText = Some(
       s"""
-         |$text
+        |$text
       """.stripMargin
     )
   )

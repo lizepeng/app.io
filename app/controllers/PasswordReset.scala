@@ -12,6 +12,7 @@ import play.api.i18n.Lang
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.{Controller, Result}
 import security._
+import services._
 import views._
 
 import scala.concurrent.Future

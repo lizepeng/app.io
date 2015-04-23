@@ -12,7 +12,3 @@ PlayKeys.routesImport ++= Seq(
   "play.api.i18n.Lang",
   "scala.language.reflectiveCalls"
 )
-
-libraryDependencies ++= Seq(
-  "com.sksamuel.elastic4s" %% "elastic4s" % "1.5.4"
-)

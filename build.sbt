@@ -15,9 +15,13 @@ lazy val security = (project in file("modules/security"))
                     .enablePlugins(PlayScala)
                     .dependsOn(models).aggregate(models)
 
+lazy val services = (project in file("modules/services"))
+                    .enablePlugins(PlayScala)
+                    .dependsOn(models).aggregate(models)
+
 lazy val api      = (project in file("modules/api"))
                     .enablePlugins(PlayScala)
-                    .dependsOn(security).aggregate(security)
+                    .dependsOn(security, services).aggregate(security, services)
 
 lazy val root     = (project in file("."))
                     .enablePlugins(PlayScala)
@@ -25,7 +29,6 @@ lazy val root     = (project in file("."))
 
 libraryDependencies ++= Seq(
   filters,
-  "com.typesafe.play" %% "play-mailer"       % "2.4.0",
   "org.webjars"       %  "bootstrap"         % "3.3.1",
   "org.webjars"       %  "font-awesome"      % "4.3.0",
   "org.webjars"       %  "underscorejs"      % "1.4.4",
