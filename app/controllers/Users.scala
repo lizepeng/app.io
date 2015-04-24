@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import controllers.Sessions._
-import controllers.api.MVController
+import controllers.api.SecuredController
 import helpers._
 import models._
 import play.api.data.Form
@@ -20,7 +20,9 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Users extends MVController(User) {
+object Users
+  extends SecuredController(User)
+  with ViewMessages {
 
   val signUpFM = Form[SignUpFD](
     mapping(
@@ -55,8 +57,8 @@ object Users extends MVController(User) {
 
   def index(pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      User.list(pager).map { list =>
-        Ok(html.users.index(Page(pager, list)))
+      User.list(pager).map { page =>
+        Ok(html.users.index(page))
       }.recover {
         case e: BaseException => NotFound
       }

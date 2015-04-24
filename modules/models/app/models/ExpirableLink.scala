@@ -20,8 +20,8 @@ case class ExpirableLink(
 
 sealed class ExpirableLinks
   extends CassandraTable[ExpirableLinks, ExpirableLink]
-  with Module[ExpirableLinks, ExpirableLink]
   with ExtCQL[ExpirableLinks, ExpirableLink]
+  with Module[ExpirableLink]
   with Logging {
 
   override val tableName = "expirable_links"

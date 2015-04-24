@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import controllers.Bandwidth._
-import controllers.api.MVController
+import controllers.api.SecuredController
 import helpers._
 import models._
 import models.cfs._
@@ -25,7 +25,10 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-object Files extends MVController(CFS) with AppConfig {
+object Files
+  extends SecuredController(CFS)
+  with ViewMessages
+  with AppConfig {
 
   lazy val bandwidth_upload  : Int =
     getBandwidth("upload").getOrElse(1.5 MBps)

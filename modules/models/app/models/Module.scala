@@ -6,8 +6,8 @@ import helpers.ModuleLike
 /**
  * @author zepeng.li@gmail.com
  */
-trait Module[T <: CassandraTable[T, R], R] extends ModuleLike {
-  self: CassandraTable[T, R] =>
+trait Module[R] extends ModuleLike {
+  self: CassandraTable[_, R] =>
 
   override def moduleName = tableName
 }

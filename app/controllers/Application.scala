@@ -1,8 +1,9 @@
 package controllers
 
-import controllers.api.MVModule
-import helpers.AppConfig
-import models.Schemas
+import batches.ReIndex
+import elasticsearch.ES
+import helpers.{AppConfig, ModuleLike}
+import models._
 import models.cfs.Path
 import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits._
@@ -11,8 +12,10 @@ import security._
 import views._
 
 object Application
-  extends MVModule("app") with Controller
-  with AppConfig {
+  extends Controller
+  with ModuleLike with ViewMessages with AppConfig {
+
+  override val moduleName = "app"
 
   def index = MaybeUserAction { implicit req =>
     Ok(html.welcome.index())
@@ -31,4 +34,18 @@ object Application
     Schemas.create.map { _ => Ok("Schema Created") }
   }
 
+  def reindex = MaybeUserAction {
+    new ReIndex[Group](
+      Group.all,
+      list => (ES.BulkIndex(list) into Group)
+        .map { res => Logger.info(res.getTook.toString) }
+    )(10).start()
+
+    new ReIndex[User](
+      User.all,
+      list => (ES.BulkIndex(list) into User)
+        .map { res => Logger.info(res.getTook.toString) }
+    )(10).start()
+    Ok("started")
+  }
 }

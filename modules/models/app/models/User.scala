@@ -12,6 +12,7 @@ import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.Play.current
 import play.api.libs.Crypto
+import play.api.libs.iteratee.Enumerator
 
 import scala.collection.TraversableOnce
 import scala.concurrent.duration._
@@ -71,8 +72,8 @@ case class User(
  */
 sealed class Users
   extends CassandraTable[Users, User]
-  with Module[Users, User]
   with ExtCQL[Users, User]
+  with Module[User]
   with Logging {
 
   override val tableName = "users"
@@ -224,12 +225,18 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
     }
   }
 
-  def list(pager: Pager): Future[List[User]] = {
+  def list(pager: Pager): Future[Page[User]] = {
     CQL {
       select.setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
       PIteratee.slice[User](pager.start, pager.limit)
-  }.map(_.toList)
+  }.map(_.toIterable).map(Page(pager, _))
+
+  def all: Enumerator[User] = {
+    CQL {
+      select.setFetchSize(fetchSize())
+    }.fetchEnumerator
+  }
 
   def cql_add_group(id: UUID, gid: UUID) = CQL {
     update

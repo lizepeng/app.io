@@ -1,7 +1,6 @@
 package controllers
 
 import controllers.Users.{Password, Rules}
-import controllers.api.MVModule
 import helpers._
 import models._
 import models.sys.SysConfig
@@ -21,9 +20,10 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 object PasswordReset
-  extends MVModule("password_reset") with Controller
-  with SysConfig with AppConfig {
+  extends Controller
+  with ModuleLike with ViewMessages with SysConfig with AppConfig {
 
+  override val moduleName = "password_reset"
   val emailFM = Form(
     single("email" -> text.verifying(Rules.email))
   )

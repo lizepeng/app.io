@@ -19,8 +19,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 object Groups
-  extends MVController(Group)
-  with ExHeaders with AppConfig with ESClient {
+  extends SecuredController(Group)
+  with ExHeaders with AppConfig {
 
   def index(pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
@@ -54,10 +54,9 @@ object Groups
               ),
               success => for {
                 saved <- success.save
-                _json <- Future.successful(Json.toJson(saved))
-                _____ <- esIndex(saved.id, _json)
+                _resp <- ES.Index(saved) into Group
               } yield {
-                  Created(_json)
+                  Created(_resp._1)
                     .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
                 }
             )
@@ -69,14 +68,15 @@ object Groups
 
   def search(keyword: String) =
     PermCheck(_.Show).async { implicit req =>
-      esSearch(keyword).map {Ok(_)}
+      ES.Search(Group)(keyword).map {Ok(_)}
     }
 
   def destroy(id: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
+        grp <- Group.find(id)
         ___ <- Group.remove(id)
-        res <- esDelete(id)
+        res <- ES.Delete(grp) from Group
       } yield res).map { _ =>
         NoContent
       }.recover {
@@ -84,6 +84,8 @@ object Groups
           MethodNotAllowed(JsonMessage(e))
         case e: Group.NotEmpty    =>
           MethodNotAllowed(JsonMessage(e))
+        case e: Group.NotFound    =>
+          NotFound
       }
     }
 
@@ -97,10 +99,9 @@ object Groups
           (for {
             _____ <- Group.find(id)
             saved <- success.save
-            _json <- Future.successful(Json.toJson(saved))
-            _____ <- esUpdate(id, _json)
-          } yield _json).map { _json =>
-            Ok(_json)
+            _resp <- ES.Update(saved) in Group
+          } yield _resp._1).map {
+            Ok(_)
           }.recover {
             case e: BaseException => NotFound
           }

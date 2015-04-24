@@ -97,8 +97,8 @@ sealed class EmailTemplates
   with EmailTemplateKey[EmailTemplates, ET]
   with EmailTemplateColumns[EmailTemplates, ET]
   with EmailTemplateHistoryColumns[EmailTemplates, ET]
-  with Module[EmailTemplates, ET]
   with ExtCQL[EmailTemplates, ET]
+  with Module[ET]
   with Logging {
 
   override def fromRow(r: Row): ET = ET(
@@ -215,8 +215,8 @@ sealed class EmailTemplateHistories
   extends CassandraTable[EmailTemplateHistories, ETH]
   with EmailTemplateKey[EmailTemplateHistories, ETH]
   with EmailTemplateHistoryColumns[EmailTemplateHistories, ETH]
-  with Module[EmailTemplateHistories, ETH]
   with ExtCQL[EmailTemplateHistories, ETH]
+  with Module[ETH]
   with Logging {
 
   override def fromRow(r: Row): ETH = ETH(

@@ -1,4 +1,5 @@
 import controllers.api.JsonMessage
+import elasticsearch.ES
 import models._
 import models.cfs._
 import models.sys.SysConfig
@@ -57,6 +58,10 @@ object Global
     //CFS View
     File.shutdown()
     Directory.shutdown()
+
+    Logger.info("Shutting down elastic search...")
+
+    ES.Client.close()
 
     Logger.info("System shutdown...")
   }

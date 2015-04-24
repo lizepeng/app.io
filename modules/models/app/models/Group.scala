@@ -12,6 +12,7 @@ import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig
 import play.api.Play.current
 import play.api.libs.functional.syntax._
+import play.api.libs.iteratee._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
@@ -29,7 +30,7 @@ case class Group(
   name: String,
   description: Option[String],
   is_internal: Boolean
-) {
+) extends TimeBased {
 
   def createIfNotExist = Group.createIfNotExist(this)
 
@@ -38,8 +39,8 @@ case class Group(
 
 sealed class Groups
   extends CassandraTable[Groups, Group]
-  with Module[Groups, Group]
   with ExtCQL[Groups, Group]
+  with Module[Group]
   with Logging {
 
   override val tableName = "groups"
@@ -133,10 +134,17 @@ object Group extends Groups with Cassandra with AppConfig {
     case None    => throw NotFound(id)
   }
 
-  def find(ids: TraversableOnce[UUID]): Future[Map[UUID, Group]] = CQL {
-    select
+  def find(ids: TraversableOnce[UUID]): Future[Map[UUID, Group]] = {
+    (stream(ids) |>>> Iteratee.getChunks[Group])
+      .map(_.map(g => (g.id, g)).toMap)
+  }
+
+  def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
+    distinct(_.id, _.name, _.description, _.is_internal)
       .where(_.id in ids.toSet.toList)
-  }.fetch().map(_.map(g => (g.id, g)).toMap)
+  }.fetchEnumerator() &>
+    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
+    Enumeratee.map(t => Group.apply _ tupled t)
 
   def save(group: Group): Future[Group] = CQL {
     update
@@ -166,6 +174,14 @@ object Group extends Groups with Cassandra with AppConfig {
     }.fetchEnumerator |>>>
       PIteratee.slice[UUID](pager.start, pager.limit)
   }.flatMap(find).map(_.values).map(Page(pager, _))
+
+  def all: Enumerator[Group] = CQL {
+    distinct(_.id).setFetchSize(fetchSize())
+  }.fetchEnumerator &>
+    Enumeratee.grouped {
+      Enumeratee.take(Math.max(fetchSize() / 10, 100)) &>>
+        Iteratee.getChunks
+    } &> Enumeratee.mapFlatten(stream)
 
   def children(id: UUID, pager: Pager): Future[Page[UUID]] = {
     CQL {

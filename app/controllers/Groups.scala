@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.api.{JsonClientErrors, MVController}
+import controllers.api.{JsonClientErrors, SecuredController}
 import helpers._
 import models.Group
 import play.api.data.Form
@@ -17,7 +17,9 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Groups extends MVController(Group) {
+object Groups
+  extends SecuredController(Group)
+  with ViewMessages {
 
   implicit val group_writes = Json.writes[Group]
 

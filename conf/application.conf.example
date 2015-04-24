@@ -66,6 +66,9 @@ traffic-shaper-context.fork-join-executor.parallelism-max=4
 cassandra.cql.log=[batch,insert,update,delete]
 cassandra.fetch-size=0
 
+elasticsearch.client.uri="elasticsearch://127.0.0.1:9300"
+elasticsearch.cluster.name=elasticsearch_name
+
 helpers.bandwidth.max=5M
 helpers.bandwidth.min=200K
 

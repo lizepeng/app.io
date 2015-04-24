@@ -2,7 +2,7 @@ package controllers
 
 import java.util.UUID
 
-import controllers.api.MVController
+import controllers.api.SecuredController
 import helpers._
 import models._
 import play.api.data.Form
@@ -18,7 +18,9 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object AccessControls extends MVController(AccessControl) {
+object AccessControls
+  extends SecuredController(AccessControl)
+  with ViewMessages {
 
   implicit val access_control_writes = Json.writes[AccessControl]
 

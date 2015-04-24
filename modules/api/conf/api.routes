@@ -14,3 +14,4 @@ DELETE /groups/:id/users/:uid controllers.api.Groups.delUser(id:UUID, uid:UUID)
 GET    /groups/search/:kw     controllers.api.Groups.search(kw)
 
 GET    /users/:id/groups      controllers.api.Users.groups(id:UUID,options:Option[String])
+GET    /users/search/:kw      controllers.api.Users.search(kw)

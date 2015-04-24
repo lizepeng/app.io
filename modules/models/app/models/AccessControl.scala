@@ -29,8 +29,8 @@ case class AccessControl(
 
 sealed class AccessControls
   extends CassandraTable[AccessControls, AccessControl]
-  with Module[AccessControls, AccessControl]
   with ExtCQL[AccessControls, AccessControl]
+  with Module[AccessControl]
   with Logging {
 
   override val tableName = "access_controls"

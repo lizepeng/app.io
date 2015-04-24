@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.api.MVController
+import controllers.api.SecuredController
 import helpers._
 import models.EmailTemplate.NotFound
 import models._
@@ -18,7 +18,9 @@ import views._
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-object EmailTemplates extends MVController(EmailTemplate) {
+object EmailTemplates
+  extends SecuredController(EmailTemplate)
+  with ViewMessages {
 
   val TemplateFM = Form[TemplateFD](
     mapping(

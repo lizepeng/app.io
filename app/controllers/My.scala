@@ -1,6 +1,6 @@
 package controllers
 
-import controllers.api.MVController
+import controllers.api.SecuredController
 import models.Group
 import security._
 import views._
@@ -8,7 +8,7 @@ import views._
 /**
  * @author zepeng.li@gmail.com
  */
-object My extends MVController(Group) {
+object My extends SecuredController(Group) {
 
   def dashboard =
     (MaybeUserAction >> AuthCheck) { implicit req =>
