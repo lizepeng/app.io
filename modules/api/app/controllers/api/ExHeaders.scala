@@ -22,7 +22,7 @@ trait ExHeaders {
    * @return
    */
   def linkHeader(
-    page: Page[_], call: Pager => Call
+    page: PageLike, call: Pager => Call
   ): (String, String) = {
     //TODO how about the first or last page situation ?
 

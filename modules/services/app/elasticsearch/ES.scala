@@ -2,15 +2,15 @@ package elasticsearch
 
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s._
-import helpers.{AppConfig, ModuleLike}
+import helpers._
 import models._
 import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.delete.DeleteResponse
 import org.elasticsearch.action.index.IndexResponse
-import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.action.update.UpdateResponse
 import org.elasticsearch.common.settings.ImmutableSettings
 import play.api.Play.current
+import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.JsValue
 
 import scala.concurrent.Future
@@ -49,11 +49,18 @@ object ES extends ModuleLike with AppConfig {
 
   def BulkIndex[R <: HasID](rs: Seq[R]) = new BulkIndexAction(rs)
 
-  def Search(t: Module[_])(keyword: String)
-  : Future[SearchResponse] =
-    Client.execute {
-      search in indexName / t.moduleName query keyword
+  def Search(q: Option[String], p: Pager) = new SearchAction(q, p)
+
+  class SearchAction(q: Option[String], p: Pager) {
+
+    def in(t: Module[_]): Future[ESPage] = {
+      Client.execute {
+        val indexType = indexName / t.moduleName
+        val s = search in indexType start p.start limit p.limit
+        if (q.isEmpty) s else s query q.get
+      }.map(ESPage(p, _))
     }
+  }
 
   class IndexAction[R <: HasID](r: R) {
 

@@ -1,7 +1,6 @@
 package controllers
 
 import helpers.BaseException
-import org.elasticsearch.action.search.SearchResponse
 import play.api.data.validation.ValidationError
 import play.api.http._
 import play.api.i18n.{Lang, Messages}
@@ -21,19 +20,6 @@ package object api {
   implicit def prettyWritableOf_JsValue(implicit codec: Codec): Writeable[JsValue] = {
     Writeable(jsval => codec.encode(Json.prettyPrint(jsval)))
   }
-
-  /**
-   * `Writable` for `SearchResponse` values - Json
-   */
-  implicit def writableOf_SearchResponse(implicit codec: Codec): Writeable[SearchResponse] = {
-    Writeable(response => codec.encode(response.toString))
-  }
-
-  /**
-   * Default content type for `SearchResponse` values (`application/json`).
-   */
-  implicit def contentTypeOf_SearchResponse(implicit codec: Codec): ContentTypeOf[SearchResponse] =
-    ContentTypeOf[SearchResponse](Some(ContentTypes.JSON))
 
   /**
    * Just like an HTML error page shows a useful error message to a visitor.
@@ -69,10 +55,14 @@ package object api {
   object JsonMessage {
 
     def apply(e: BaseException)(implicit lang: Lang): JsObject = {
-      apply(e.message(lang))
+      generate(e.message)
     }
 
-    def apply(msg: String): JsObject = {
+    def apply(key: String)(implicit lang: Lang): JsObject = {
+      generate(Messages(key))
+    }
+
+    private def generate(msg: String): JsObject = {
       Json.obj("message" -> msg)
     }
   }

@@ -27,6 +27,8 @@ object Global
   )
   with GlobalSettings {
 
+  private object ControlNothing extends Controller
+
   override def onStart(app: Application) = {
     Logger.info("System has started")
     Schemas.create
@@ -72,7 +74,7 @@ object Global
   ): Future[Result] = {
     if (request.uri.startsWith("/api"))
       Future.successful {
-        Results.BadRequest(JsonMessage(error))
+        Results.BadRequest(JsonMessage(error)(ControlNothing.request2lang(request)))
       }
     else super.onBadRequest(request, error)
   }

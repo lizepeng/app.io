@@ -172,8 +172,8 @@ implicit req: UserRequest[_], lang: Lang)
           return $http.get('/api/users', {
             params: {q: "*" + val + "*"}
           }).then(function(response){
-            return response.data.hits.hits.map(function(item){
-              return item._source.email;
+            return response.data.map(function(item){
+              return item.email;
             });
           });
         };

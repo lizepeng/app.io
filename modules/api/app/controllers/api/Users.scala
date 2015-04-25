@@ -33,8 +33,12 @@ object Users
       }
     }
 
-  def search(q: String) =
-    PermCheck(_.Show).async { implicit req =>
-      ES.Search(User)(q).map {Ok(_)}
+  def index(q: Option[String], p: Pager) =
+    PermCheck(_.Index).async { implicit req =>
+      (ES.Search(q, p) in User).map { page =>
+        Ok(page).withHeaders(
+          linkHeader(page, routes.Users.index(q, _))
+        )
+      }
     }
 }

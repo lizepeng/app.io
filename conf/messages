@@ -94,6 +94,9 @@ error.min.strict                                 =TODO
 error.max                                        =TODO
 error.max.strict                                 =TODO
 
+query.params.page.lte.zero                       =Param page/per_page must be greater than zero
+query.params.page.failed                         =Unable to bind page/per_page
+
 # sign in / sign up
 user.name                                        =User Name
 

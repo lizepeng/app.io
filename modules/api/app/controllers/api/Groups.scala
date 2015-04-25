@@ -22,13 +22,12 @@ object Groups
   extends SecuredController(Group)
   with ExHeaders with AppConfig {
 
-  def index(pager: Pager) =
+  def index(q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      Group.list(pager).map { page =>
-        Ok(Json.toJson(page.elements))
-          .withHeaders(linkHeader(page, routes.Groups.index))
-      }.recover {
-        case e: BaseException => NotFound
+      (ES.Search(q, p) in Group).map { page =>
+        Ok(page).withHeaders(
+          linkHeader(page, routes.Groups.index(q, _))
+        )
       }
     }
 
@@ -64,11 +63,6 @@ object Groups
           BadRequest(WrongTypeOfJSON())
         )
       }
-    }
-
-  def search(keyword: String) =
-    PermCheck(_.Show).async { implicit req =>
-      ES.Search(Group)(keyword).map {Ok(_)}
     }
 
   def destroy(id: UUID) =
