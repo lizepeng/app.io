@@ -67,11 +67,13 @@ implicit req: UserRequest[_], lang: Lang)
         <form name="form" class="form-inline" novalidate>
 
           @ng._form_group("email1",
-            '_type       -> "email",
-            'required    -> true,
-            'maxLength   -> 64,
-            'email       -> None,
-            'placeholder -> "Enter user's email",
+            '_type        -> "email",
+            'required     -> true,
+            'maxLength    -> 64,
+            'email        -> None,
+            'placeholder  -> "Enter user's email",
+            'typeahead    -> "email for email in getUserEmails($viewValue)",
+            'autocomplete -> "off",
             Symbol("ng-model") -> "user.email"
           )
 
@@ -162,9 +164,19 @@ implicit req: UserRequest[_], lang: Lang)
         $scope.GroupUsersList = GroupUsersList.init($attrs.id);
     }])
     .controller('NewEntryCtrl',
-      ['$scope', 'GroupUsersList',
-      function ($scope, GroupUsersList) {
+      ['$scope', '$http', 'GroupUsersList',
+      function ($scope, $http, GroupUsersList) {
         $scope.GroupUsersList  = GroupUsersList;
+
+        $scope.getUserEmails = function(val) {
+          return $http.get('/api/users', {
+            params: {q: "*" + val + "*"}
+          }).then(function(response){
+            return response.data.hits.hits.map(function(item){
+              return item._source.email;
+            });
+          });
+        };
     }]);
 
     angular.module('app').requires.push('group.users.list');

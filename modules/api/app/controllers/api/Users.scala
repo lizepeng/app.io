@@ -33,8 +33,8 @@ object Users
       }
     }
 
-  def search(keyword: String) =
+  def search(q: String) =
     PermCheck(_.Show).async { implicit req =>
-      ES.Search(User)(keyword).map {Ok(_)}
+      ES.Search(User)(q).map {Ok(_)}
     }
 }
