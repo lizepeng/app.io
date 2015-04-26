@@ -107,9 +107,9 @@ implicit req: UserRequest[_], lang: Lang)
 }(
   libs.webjars("css", "xeditable")
 )(
-  libs.webjars("js", "xeditable"),
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
+  libs.webjars("js", "xeditable"),
   jsRoutes,
   controller
 )

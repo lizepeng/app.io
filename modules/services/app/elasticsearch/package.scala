@@ -1,5 +1,5 @@
 import com.sksamuel.elastic4s.source._
-import models.{Group, User}
+import models._
 import org.elasticsearch.action.search.SearchResponse
 import play.api.http._
 import play.api.libs.json._
@@ -22,6 +22,9 @@ package object elasticsearch {
 
   implicit def UserToJsonDocSource(u: User): JsonDocSource =
     JsonDocSource(Json.toJson(u.toUserInfo))
+
+  implicit def AccessControlToJsonDocSource(ac: AccessControl): JsonDocSource =
+    JsonDocSource(Json.toJson(ac))
 
   /**
    * `Writable` for `SearchResponse` values - Json

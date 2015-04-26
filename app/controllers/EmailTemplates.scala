@@ -163,6 +163,7 @@ object EmailTemplates
         tmpl <- EmailTemplate.find(id, lang)
         list <- EmailTemplateHistory.list(id, lang, pager)
         usrs <- User.find(list.map(_.updated_by))
+          .map(_.map(u => (u.id, u)).toMap)
       } yield Ok {
         html.email_templates.history(
           tmpl, Page(pager, list), usrs

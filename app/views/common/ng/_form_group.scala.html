@@ -5,6 +5,8 @@ implicit lang: Lang)
 
 @inputType = @{argsMap.get('_type).map(_.toString).getOrElse("text")}
 @formname  = @{argsMap.get('_formname).map(_.toString).getOrElse("form")}
+@label     = @{argsMap.get('_label).map(_.toString).getOrElse(MSG(name))}
+@inline    = @{argsMap.get('_inline).map(_ == true).getOrElse(true)}
 
 @htmlArgs = @{
   args.filterNot(arg => arg._1.name.startsWith("_"))
@@ -15,7 +17,9 @@ implicit lang: Lang)
 @defining( s"$formname.$name" ) { fullname =>
   <div class="form-group" ng-class="@{fullname}.$valid ? '' : 'has-error has-feedback'">
 
-    <input type="@inputType" name="@name" class="form-control" @toHtmlArgs(htmlArgs)>
+    <label @if(inline){class="sr-only"} for="@name">@label</label>
+
+    <input type="@inputType" id="@name" name="@name" class="form-control" @toHtmlArgs(htmlArgs)>
 
     <span ng-show="@{fullname}.$invalid" class="form-control-feedback" >
       <i class="fa fa-warning fa-lg ng-cloak" ></i>

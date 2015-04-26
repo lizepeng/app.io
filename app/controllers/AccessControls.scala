@@ -100,7 +100,9 @@ object AccessControls
     (for {
       list <- AccessControl.list(pager)
       usrs <- User.find(list.filter(!_.is_group).map(_.principal))
+        .map(_.map(u => (u.id, u)).toMap)
       grps <- Group.find(list.filter(_.is_group).map(_.principal))
+        .map(_.map(g => (g.id, g)).toMap)
     } yield (list, usrs, grps)).map { case (l, u, g) =>
       Ok(
         html.access_controls.index(Page(pager, l), u, g, fm)

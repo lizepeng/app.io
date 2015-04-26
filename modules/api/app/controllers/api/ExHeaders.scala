@@ -7,8 +7,8 @@ import play.api.mvc.Call
 /**
  * @author zepeng.li@gmail.com
  */
-trait ExHeaders {
-  self: AppConfig =>
+trait ExHeaders extends AppConfig {
+  self: ModuleLike =>
 
   val LINK = "Link"
 

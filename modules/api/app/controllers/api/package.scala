@@ -3,7 +3,7 @@ package controllers
 import helpers.BaseException
 import play.api.data.validation.ValidationError
 import play.api.http._
-import play.api.i18n.{Lang, Messages}
+import play.api.i18n.{Lang, Messages => MSG}
 import play.api.libs.json._
 import play.api.mvc.Codec
 
@@ -29,7 +29,7 @@ package object api {
     def apply(
       errors: Seq[(JsPath, Seq[ValidationError])]
     )(implicit lang: Lang): JsObject = Json.obj(
-      "message" -> Messages("api.json.validation.failed"),
+      "message" -> MSG("api.json.validation.failed"),
       "errors" -> JsArray {
         errors.map { case (path, errs) =>
           Json.obj(
@@ -41,7 +41,7 @@ package object api {
               errs.map { err =>
                 Json.obj(
                   "code" -> err.message,
-                  "message" -> Messages(err.message, err.args: _*)
+                  "message" -> MSG(err.message, err.args: _*)
                 )
               }
             }
@@ -59,7 +59,7 @@ package object api {
     }
 
     def apply(key: String)(implicit lang: Lang): JsObject = {
-      generate(Messages(key))
+      generate(MSG(key))
     }
 
     private def generate(msg: String): JsObject = {
@@ -70,7 +70,7 @@ package object api {
   object WrongTypeOfJSON {
 
     def apply()(implicit lang: Lang): JsObject =
-      Json.obj("message" -> Messages("api.json.body.wrong.type"))
+      Json.obj("message" -> MSG("api.json.body.wrong.type"))
   }
 
 }

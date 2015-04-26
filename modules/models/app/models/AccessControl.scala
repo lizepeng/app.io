@@ -9,6 +9,8 @@ import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import play.api.Play.current
+import play.api.libs.iteratee.Enumerator
+import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
@@ -91,6 +93,16 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
     s"$fullModuleName.$sub_key"
   )
 
+  // Json Reads and Writes
+  implicit val access_control_writes = Json.writes[AccessControl]
+
+  def find(
+    principal_id: UUID
+  ): Future[Seq[AccessControl]] = CQL {
+    select.
+      where(_.principal_id eqs principal_id)
+  }.fetch()
+
   def find(
     resource: String,
     action: String,
@@ -161,4 +173,10 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
     }.fetchEnumerator |>>>
       PIteratee.slice[AccessControl](pager.start, pager.limit)
   }.map(_.toList)
+
+  def all: Enumerator[AccessControl] = {
+    CQL {
+      select.setFetchSize(fetchSize())
+    }.fetchEnumerator
+  }
 }

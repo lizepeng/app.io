@@ -47,7 +47,7 @@ object ES extends ModuleLike with AppConfig {
 
   def Update[R <: HasID](r: R) = new UpdateAction(r)
 
-  def BulkIndex[R <: HasID](rs: Seq[R]) = new BulkIndexAction(rs)
+  def BulkIndex[R](rs: Seq[R]) = new BulkIndexAction(rs)
 
   def Search(q: Option[String], p: Pager) = new SearchAction(q, p)
 
@@ -55,9 +55,10 @@ object ES extends ModuleLike with AppConfig {
 
     def in(t: Module[_]): Future[ESPage] = {
       Client.execute {
-        val indexType = indexName / t.moduleName
-        val s = search in indexType start p.start limit p.limit
-        if (q.isEmpty) s else s query q.get
+        Def(search in indexName / t.moduleName)
+          .?(cond = true)(_ start p.start limit p.limit)
+          .?(q.isDefined)(_ query q.get)
+          .result
       }.map(ESPage(p, _))
     }
   }
@@ -100,16 +101,26 @@ object ES extends ModuleLike with AppConfig {
     }
   }
 
-  class BulkIndexAction[R <: HasID](rs: Seq[R]) {
+  class BulkIndexAction[R](rs: Seq[R]) {
 
     def into(t: Module[R])(
       implicit converter: R => JsonDocSource
     ): Future[BulkResponse] = Client.execute {
       bulk(
         rs.map { r =>
-          index into s"$indexName/${t.moduleName}" id r.id doc r
+          Def(index into s"$indexName/${t.moduleName}")
+            .?(r.isInstanceOf[HasID])(_ id r.asInstanceOf[HasID].id)
+            .?(cond = true)(_ doc r)
+            .result
         }: _*
       )
+    }
+  }
+
+  private case class Def[T](result: T) {
+
+    def ?(cond: => Boolean)(append: T => T): Def[T] = {
+      if (cond) Def(append(result)) else this
     }
   }
 

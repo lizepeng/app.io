@@ -46,6 +46,12 @@ object Application
       list => (ES.BulkIndex(list) into User)
         .map { res => Logger.info(res.getTook.toString) }
     )(10).start()
+
+    new ReIndex[AccessControl](
+      AccessControl.all,
+      list => (ES.BulkIndex(list) into AccessControl)
+        .map { res => Logger.info(res.getTook.toString) }
+    )(10).start()
     Ok("started")
   }
 }

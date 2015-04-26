@@ -134,9 +134,8 @@ object Group extends Groups with Cassandra with AppConfig {
     case None    => throw NotFound(id)
   }
 
-  def find(ids: TraversableOnce[UUID]): Future[Map[UUID, Group]] = {
-    (stream(ids) |>>> Iteratee.getChunks[Group])
-      .map(_.map(g => (g.id, g)).toMap)
+  def find(ids: TraversableOnce[UUID]): Future[Seq[Group]] = {
+    stream(ids) |>>> Iteratee.getChunks[Group]
   }
 
   def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
@@ -167,13 +166,6 @@ object Group extends Groups with Cassandra with AppConfig {
         case None => CQL {delete.where(_.id eqs id)}.future()
         case _    => throw NotEmpty(id)
       }
-
-  def list(pager: Pager): Future[Page[Group]] = {
-    CQL {
-      distinct(_.id).setFetchSize(fetchSize())
-    }.fetchEnumerator |>>>
-      PIteratee.slice[UUID](pager.start, pager.limit)
-  }.flatMap(find).map(_.values).map(Page(pager, _))
 
   def all: Enumerator[Group] = CQL {
     distinct(_.id).setFetchSize(fetchSize())

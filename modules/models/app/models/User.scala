@@ -166,10 +166,10 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
     UserByEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
-  def find(ids: TraversableOnce[UUID]): Future[Map[UUID, User]] = CQL {
+  def find(ids: TraversableOnce[UUID]): Future[Seq[User]] = CQL {
     select
       .where(_.id in ids.toSet.toList)
-  }.fetch().map(_.map(u => (u.id, u)).toMap)
+  }.fetch()
 
   def checkEmail(email: String): Future[Boolean] = {
     UserByEmail.cql_check(email).one().map {

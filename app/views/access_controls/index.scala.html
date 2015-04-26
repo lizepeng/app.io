@@ -29,6 +29,48 @@ implicit req: UserRequest[_], lang: Lang)
 
         <div class="panel-body">
 
+          <form name="form" ng-controller="Ctrl1">
+            @ng._form_group("principal",
+              '_inline      -> false,
+              'maxLength    -> 64,
+              'minLength    -> 2,
+              'tabindex     -> 1,
+              'placeholder  -> Groups.vmsg("name.placeholder"),
+              'autocomplete -> "off",
+              Symbol("ng-model") -> "ac.principal"
+            )
+
+            @ng._select("resource",
+              '_inline      -> false,
+              'tabindex     -> 2,
+              Symbol("ng-model")   -> "ac.resource",
+              Symbol("ng-options") -> "res.label for res in resources track by res.key"
+            )
+
+            @ng._select("action",
+              '_inline      -> false,
+              'tabindex     -> 3,
+              Symbol("ng-model")   -> "ac.action",
+              Symbol("ng-options") -> "act as act.label for act in actions"
+            )
+
+            <div class="btn-group">
+              <label class="btn btn-default" ng-model="ac.granted" btn-radio="true">
+                <i class="fa fa-check-circle fa-lg text-success"></i>
+                @MSG("allow")
+              </label>
+              <label class="btn btn-default" ng-model="ac.granted" btn-radio="false">
+                <i class="fa fa-ban fa-lg text-danger"></i>
+                @MSG("deny")
+              </label>
+            </div>
+
+            <p>
+              {{ ac | json }}
+            </p>
+          </form>
+
+
           @form(action = routes.AccessControls.create(page.pager)) {
 
             <div class="row">
@@ -101,99 +143,165 @@ implicit req: UserRequest[_], lang: Lang)
 
   </div>
 
-  <div class="row">
-    <div class="table-responsive">
-      <table class="table table-hover table-ellipsis">
-        <thead>
-          <tr>
-            <th class="col-xs-4  col-sm-4 ">
-              @MSG("principal")
-            </th>
-            <th class="col-xs-2  col-sm-4 ">
-              @MSG("resource")
-            </th>
-            <th class="col-xs-1  col-sm-2 ">
-              @MSG("action")
-            </th>
-            <th class="col-xs-2  col-sm-2 text-right">
-            </th>
-          </tr>
-        </thead>
-        @page.map { ac =>
-          <tbody ng-controller="InfoCtrl">
-            <tr @if(ac.resource == AccessControls.fullModuleName){class="danger"}>
-              <td>
-                @if(ac.is_group){
-                  <i class="fa fa-group fa-lg text-info"></i>
-                  @grps.get(ac.principal).map(_.name)
-                } else {
-                  @usrs.get(ac.principal).map{ user =>
-                    <a href="@routes.Users.show(user.id)">
-                      <i class="fa fa-user fa-lg text-info"></i>
-                      @user.email
-                    </a>
-                  }
-                }
-                <a class=" pull-right" href="#">
-                  <i class="fa fa-info-circle fa-lg text-info" ng-click="isCollapsed = !isCollapsed"></i>
+  <div ng-controller="ACCtrl">
+    <div class="row">
+      <div class="table-responsive">
+        <table class="table table-hover ">
+          <thead>
+            <tr>
+              <th class="col-xs-4  col-sm-4 ">
+                @MSG("principal")
+              </th>
+              <th class="col-xs-2  col-sm-4 ">
+                @MSG("resource")
+              </th>
+              <th class="col-xs-1  col-sm-2 ">
+                @MSG("action")
+              </th>
+              <th class="col-xs-2  col-sm-2 text-right">
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="ng-cloak" ng-repeat="ac in ACList.acs">
+              <td ng-if="ac.is_group">
+                <a ng-href="{{jsRoutes.controllers.Groups.show(ac.principal).url}}">
+                  <i class="fa fa-group fa-lg fa-fw text-info"></i>
+                  {{ ACList.groups[ac.principal].name }}
+                </a>
+              </td>
+              <td ng-if="!ac.is_group">
+                <a ng-href="{{jsRoutes.controllers.Users.show(ac.principal).url}}">
+                  <i class="fa fa-user fa-lg fa-fw text-info"></i>
+                  {{ ACList.users[ac.principal].email }}
                 </a>
               </td>
               <td>
-                @MSG(s"${ac.resource}.name")
+                {{ ac.resource }}
               </td>
               <td>
-                @MSG(s"actions.${ac.action}")
+                {{ ac.action }}
               </td>
               <td>
                 <div class="btn-toolbar">
                   <div class="btn-group">
-                    <toggle-switch status="@ac.granted"
-                    post-to="@routes.AccessControls.save(ac.principal,ac.resource,ac.action,ac.is_group)"/>
+                    <toggle-switch status="ac.granted"/>
                   </div>
-                  <div class="btn-group">
-                    @form(routes.AccessControls.destroy(ac.principal,ac.resource,ac.action,ac.is_group), 'class -> "form-inline") {
-                      @common._previous_uri()
-                      <button type="submit" class="btn form-inline-btn">
-                        <i class="fa fa-trash-o fa-lg text-danger"></i>
-                      </button>
-                    }
+                  <div class="btn-group" style="padding-top:3px">
+                    <button type="button" class="btn btn-danger btn-xs">
+                      <i class="fa fa-trash-o"></i>
+                      @MSG("delete")
+                    </button>
                   </div>
                 </div>
               </td>
             </tr>
-            <tr collapse="isCollapsed">
-              <td colspan="4">
-                @usrs.get(ac.principal).map{ user =>
-                  @users._info(user)
-                }
-              </td>
-            </tr>
           </tbody>
-        }
-      </table>
-
-      @{_pager(page, p => routes.AccessControls.index(p))}
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      @ng._pager("ACList.links")
     </div>
   </div>
-
-
 }()(
-  libs.assets("js", "ui.components"),
+  libs.webjars("js", "angular-resource"),
+  libs.assets("js", "api"),
+  libs.assets("js", "ui.parts"),
+  jsRoutes,
   controller
 )
 
+@jsRoutes = {
+  @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Groups.show,
+    routes.javascript.Users.show
+  )
+}
+
 @controller = {
   <script>
-    angular.module('access_controls.list', ['ui.bootstrap'])
-      .controller('InfoCtrl',['$scope', function ($scope) {
-        $scope.isCollapsed = true;
+    angular.module('access_controls.list',
+      ['ui.bootstrap', 'ui.parts.toggle-switch',
+       'api.access_control', 'api.group', 'api.user', 'api.helper'])
+
+      .factory('ACList',
+        ['AccessControl', 'Group', 'User', 'LinkHeader', 'Alert',
+        function(AC, Group, User, LinkHeader, Alert){
+          var service = {};
+          service.links = LinkHeader.links;
+
+          service.acs = AC.query({
+            page     :@page.pager.pageNum,
+            per_page :@page.pager.pageSize
+            }, function(acs, headers){
+              LinkHeader.updateLinks(
+                '@Html(routes.AccessControls.index(page.pager.next).toString)',
+                '@Html(routes.AccessControls.index(page.pager.prev).toString)',
+                headers);
+
+              Group.query({ids:AC.gids(acs).join(',')},
+                function (grps, headers) {
+                  service.groups = Group.toMap(grps);
+              });
+
+              User.query({ids:AC.uids(acs).join(',')},
+                function (usrs, headers) {
+                  service.users = User.toMap(usrs);
+              });
+            });
+
+          service.create = function(data) {
+            new AC(data).$save(function(value){
+              service.acs.push(value);
+            });
+          };
+
+          service.delete = function(data) {
+            data.$delete(
+              function(){
+                var idx = service.acs.indexOf(data);
+                service.acs.splice(idx, 1);
+              },
+              function(res){
+                Alert.push({type:'danger', msg:res.data.message});
+            });
+          };
+
+          return service;
       }])
+
+      .controller('ACCtrl', ['$scope', 'ACList',function ($scope, ACList) {
+          $scope.ACList = ACList;
+          $scope.jsRoutes  = jsRoutes;
+      }])
+
+      .controller('AlertCtrl',['$scope', 'Alert', function ($scope, Alert) {
+        $scope.Alert = Alert;
+      }])
+
+      .controller('Ctrl1',['$scope', function ($scope) {
+        $scope.resources = [@Secured.Modules.names.map{n =>
+          { label: '@MSG(s"$n.name")', key: '@n' },
+        }];
+
+        $scope.actions = [@Secured.Actions.names.map{n =>
+          { label: '@MSG(s"actions.$n")', key: '@n' },
+        }];
+
+        $scope.ac = {
+          resource :$scope.resources[0],
+          action   :$scope.actions[0]
+        };
+      }])
+
+
       .controller('NewEntryCtrl',['$scope', function ($scope) {
-        $scope.isCollapsed = @(!fm.hasErrors);
+        $scope.isCollapsed = false;
         $scope.is_group = {value:"@{fm("is_group").value.map(_.toString).getOrElse("true")}"};
         $scope.granted = {value:"@{fm("granted").value.map(_.toString).getOrElse("true")}"};
       }]);
 
-    angular.module('app').requires.push('access_controls.list', 'ui.components.toggle-switch');
+    angular.module('app').requires.push('access_controls.list');
   </script>
 }

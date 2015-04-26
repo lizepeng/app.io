@@ -1,6 +1,6 @@
-angular.module 'ui.components', [ 'ui.components.toggle-switch' ]
+angular.module 'ui.parts', [ 'ui.parts.toggle-switch' ]
 
-angular.module 'ui.components.toggle-switch', [ 'ui.template/buttons/toggle-switch.html' ]
+angular.module 'ui.parts.toggle-switch', [ 'ui.template/buttons/toggle-switch.html' ]
 
   .controller 'ToggleSwitchController', [ '$scope', '$http', '$attrs', ($scope, $http, $attrs) ->
     isRemote = 'postTo' of $attrs

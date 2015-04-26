@@ -45,8 +45,8 @@ GET  /groups/:id                            controllers.Groups.show(id:UUID)
 
 GET  /password_reset                        controllers.PasswordReset.nnew
 POST /password_reset                        controllers.PasswordReset.create
-GET  /password_reset/:id                    controllers.PasswordReset.show(id:String)
-POST /password_reset/:id                    controllers.PasswordReset.save(id:String)
+GET  /password_reset/:id                    controllers.PasswordReset.show(id)
+POST /password_reset/:id                    controllers.PasswordReset.save(id)
 
 GET  /email_templates                       controllers.EmailTemplates.index(p:Pager?=Pager.first)
 GET  /email_templates/new                   controllers.EmailTemplates.nnew
@@ -59,5 +59,5 @@ POST /email_templates/destroy/:id           controllers.EmailTemplates.destroy(i
 
 GET  /access_controls                       controllers.AccessControls.index(p:Pager?=Pager.first)
 POST /access_controls                       controllers.AccessControls.create(p:Pager?=Pager.first)
-POST /access_controls/:p/:r/:a/:i           controllers.AccessControls.save(p:UUID,r:String,a:String,i:Boolean)
-POST /access_controls/destroy/:p/:r/:a/:i   controllers.AccessControls.destroy(p:UUID,r:String,a:String,i:Boolean)
+POST /access_controls/:p/:r/:a/:i           controllers.AccessControls.save(p:UUID,r,a,i:Boolean)
+POST /access_controls/destroy/:p/:r/:a/:i   controllers.AccessControls.destroy(p:UUID,r,a,i:Boolean)

@@ -13,7 +13,7 @@ import play.api.libs.json._
  */
 object Users
   extends SecuredController(User)
-  with ExHeaders with AppConfig {
+  with ExHeaders {
 
   def groups(id: UUID, options: Option[String]) =
     PermCheck(_.Show).async { implicit req =>
@@ -26,19 +26,24 @@ object Users
             case _                => user.groups
           }
         )
-      } yield grps.values).map { grps =>
+      } yield grps).map { grps =>
         Ok(Json.toJson(grps.filter(_.id != InternalGroups.AnyoneId)))
       }.recover {
         case e: BaseException => NotFound
       }
     }
 
-  def index(q: Option[String], p: Pager) =
+  def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      (ES.Search(q, p) in User).map { page =>
-        Ok(page).withHeaders(
-          linkHeader(page, routes.Users.index(q, _))
-        )
-      }
+      if (ids.nonEmpty)
+        User.find(ids).map { usrs =>
+          Ok(Json.toJson(usrs.map(_.toUserInfo)))
+        }
+      else
+        (ES.Search(q, p) in User).map { page =>
+          Ok(page).withHeaders(
+            linkHeader(page, routes.Users.index(Nil, q, _))
+          )
+        }
     }
 }
