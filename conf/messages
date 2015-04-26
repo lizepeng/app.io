@@ -119,6 +119,10 @@ controllers.groups.created                       =New group created
 
 views.groups.head                                =Groups
 views.groups.title                               =Groups
+views.groups.user.email.placeholder              =Enter User''s Email
+views.groups.name.placeholder                    =Group Name
+views.groups.description.placeholder             =Description
+views.groups.new.group                           =New Group
 
 msg.models.groups.not.empty                      =Group is not empty
 msg.models.groups.not.writable                   =Group is not writable
@@ -130,7 +134,7 @@ views.users.head                                 =Users
 views.users.title                                =Users
 
 msg.models.users.email.taken                     =Email is invalid or already taken
-msg.models.users.not.found                       =User {0} doesn't exists
+msg.models.users.not.found                       =User {0} doesn''t exists
 msg.models.users.wrong.password                  =Wrong Password
 msg.models.users.auth.failed                     =Wrong Username/Email and password combination
 

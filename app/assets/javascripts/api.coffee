@@ -102,3 +102,12 @@ angular.module 'api.helper', []
         links[name] = url
       links
     service
+
+  # Helper to make alert easier to use
+  # msg format: {type:'danger', msg:'msg'}
+  .factory 'Alert', ->
+    alerts  : []
+    dismiss : (idx) ->
+      this.alerts.splice(idx, 1)
+    push    : (msg) ->
+      this.alerts.push(msg)

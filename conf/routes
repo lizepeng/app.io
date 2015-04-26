@@ -40,10 +40,8 @@ GET  /users                                 controllers.Users.index(p:Pager?=Pag
 GET  /users/:id                             controllers.Users.show(id:UUID)
 
 GET  /groups                                controllers.Groups.index(p:Pager?=Pager.first)
-POST /groups                                controllers.Groups.create(p:Pager?=Pager.first)
 POST /groups/check_name                     controllers.Groups.checkName
 GET  /groups/:id                            controllers.Groups.show(id:UUID)
-POST /groups/:id                            controllers.Groups.save(id:UUID)
 
 GET  /password_reset                        controllers.PasswordReset.nnew
 POST /password_reset                        controllers.PasswordReset.create

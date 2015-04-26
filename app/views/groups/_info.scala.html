@@ -1,16 +1,16 @@
 @(group:Group)(implicit req: UserRequest[_], lang: Lang)
 
-<div class="col-xs-12 col-sm-6 col-md-5">
+<div class="col-xs-12 col-md-5">
   @common._form_group_static("id") {
     <code>@group.id</code>
   }
 </div>
-<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="col-xs-6 col-md-3">
   @common._form_group_static("name") {
     @group.name
   }
 </div>
-<div class="col-xs-12 col-sm-12 col-md-3">
+<div class="col-xs-6 col-md-3">
   @common._form_group_static("description") {
     @group.description
   }

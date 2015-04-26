@@ -1,4 +1,4 @@
-@(pager: Pager, fm: Form[_])(
+@(pager: Pager)(
 implicit req: UserRequest[_], lang: Lang)
 
 @import common._
@@ -6,10 +6,8 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(Groups.vmsg("title")) {
 
-  @common._flashing()
-
   <div ng-controller="AlertCtrl">
-    <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</alert>
+    <alert ng-repeat="alert in Alert.alerts" type="{{alert.type}}" close="Alert.dismiss($index)">{{alert.msg}}</alert>
   </div>
 
   <div class="row" style="margin-top:10px">
@@ -19,108 +17,91 @@ implicit req: UserRequest[_], lang: Lang)
     </h2>
   </div>
 
-  <div ng-controller="NewEntryCtrl">
+  <div ng-controller="GroupsCtrl">
+
     <div class="row">
-      <button class="btn btn-success pull-right"
-              ng-click="isCollapsed = !isCollapsed">
-        <i class="fa fa-plus fa-lg"></i>
-        @MSG("new.entry")
-      </button>
-    </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-ellipsis">
+          <thead>
+            <tr>
+              <th class="hidden-xs col-sm-5">
+                @MSG("id")
+              </th>
+              <th class="col-xs-7 col-sm-3">
+                @MSG("name")
+              </th>
+              <th class="hidden-xs col-sm-2">
+                @MSG("description")
+              </th>
+              <th class="col-xs-2  col-sm-1 text-right">
+                @MSG("action")
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="grp in GroupList.groups">
+              <td class="hidden-xs">
+                <a ng-href="{{jsRoutes.controllers.Groups.show(grp.id).url}}">
+                  <code>{{ grp.id }}</code>
+                </a>
+              </td>
 
-    <div collapse="isCollapsed" class="row" style="margin-top:10px;">
-      <div class="panel panel-default">
+              <td>
+                <a ng-href="{{jsRoutes.controllers.Groups.show(grp.id).url}}" class="hidden-sm hidden-md hidden-lg">
+                  <i class="fa fa-info-circle fa-lg text-info"></i>
+                </a>
 
-        <div class="panel-body">
+                <a href="#" editable-text="grp.name" buttons="no"
+                onbeforesave="checkName($data)"
+                onaftersave="grp.$save()">
+                  {{ grp.name }}
+                </a>
+              </td>
 
-          <form name="form" novalidate>
-            <div class="row">
-              <div class="col-xs-12 col-sm-6">
-                @{_input_text(fm("name"),
-                  '_label     -> MSG("name"),
-                  'tabindex   -> 1,
-                  'required  -> true,
-                  'minLength -> 2,
-                  'maxLength -> 64,
-                  Symbol("ng-model") -> "group.name"
-                  )(ng._fc_form_group)
-                }
-              </div>
-
-              <div class="col-xs-12 col-sm-6">
-                @{_input_text(fm("description"),
-                  '_label    -> MSG("description"),
-                  'tabindex  -> 2,
-                  Symbol("ng-model") -> "group.description"
-                  )(ng._fc_form_group)
-                }
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-success" tabindex="3"
-              ng-disabled="form.$invalid"
-              ng-click="GroupList.create(group)">
-              <i class="fa fa-save fa-lg"></i>
-              @MSG("create")
-            </button>
-          </form>
-        </div>
+              <td class="hidden-xs">
+                {{ grp.description }}
+              </td>
+              <td>
+                <button type="button" class="btn btn-danger btn-xs pull-right"
+                  ng-show="!grp.is_internal"
+                  ng-click="GroupList.delete(grp)">
+                  <i class="fa fa-trash"></i>
+                  @MSG("delete")
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-  </div>
+    <div class="row">
+      <form name="form" class="form-inline col-sm-offset-4 col-md-offset-6" novalidate>
 
+        @ng._form_group("name",
+          'maxLength    -> 64,
+          'minLength    -> 2,
+          'tabindex     -> 1,
+          'placeholder  -> Groups.vmsg("name.placeholder"),
+          'autocomplete -> "off",
+          Symbol("ng-model") -> "group.name"
+        )
 
-  <div class="row">
-    <div class="table-responsive" ng-controller="GroupsCtrl">
-      <table class="table table-hover table-ellipsis">
-        <thead>
-          <tr>
-            <th class="col-xs-6 col-sm-5">
-              @MSG("id")
-            </th>
-            <th class="col-xs-4 col-sm-3">
-              @MSG("name")
-            </th>
-            <th class="hidden-xs col-sm-2">
-              @MSG("description")
-            </th>
-            <th class="col-xs-2  col-sm-1 text-right">
-              @MSG("action")
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="grp in GroupList.groups">
-            <td>
-              <a ng-href="{{jsRoutes.controllers.Groups.show(grp.id).url}}">
-                <code>{{ grp.id }}</code>
-              </a>
-            </td>
-            <td>
-              <a href="#" editable-text="grp.name" buttons="no"
-              onbeforesave="checkName($data)"
-              onaftersave="grp.$save()">
-                {{ grp.name }}
-              </a>
-            </td>
-            <td class="hidden-xs">
-              {{ grp.description }}
-            </td>
-            <td>
-              <button type="button" class="btn btn-danger btn-xs pull-right"
-                ng-show="!grp.is_internal"
-                ng-click="GroupList.delete(grp)">
-                <i class="fa fa-trash"></i>
-                @MSG("delete")
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        @ng._form_group("description",
+          'tabindex    -> 2,
+          'placeholder -> Groups.vmsg("description.placeholder"),
+          Symbol("ng-model") -> "group.description"
+        )
 
+        <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid">
+          <i class="fa fa-plus"></i>
+          @Groups.vmsg("new.group")
+        </button>
+      </form>
+    </div>
+
+    <div class="row">
       @ng._pager("GroupList.links")
-
     </div>
   </div>
 }(
@@ -149,8 +130,8 @@ implicit req: UserRequest[_], lang: Lang)
     });
 
     list.factory('GroupList',
-      ['Group', 'LinkHeader', 'Alerts',
-      function(Group, LinkHeader, Alerts){
+      ['Group', 'LinkHeader', 'Alert',
+      function(Group, LinkHeader, Alert){
         var service = {};
         service.links = LinkHeader.links;
 
@@ -166,7 +147,7 @@ implicit req: UserRequest[_], lang: Lang)
 
         service.create = function(data) {
           new Group(data).$save(function(value){
-            service.groups.unshift(value);
+            service.groups.push(value);
           });
         };
 
@@ -177,15 +158,11 @@ implicit req: UserRequest[_], lang: Lang)
               service.groups.splice(idx, 1);
             },
             function(res){
-              Alerts.push({type:'danger', msg:res.data.message});
+              Alert.push({type:'danger', msg:res.data.message});
           });
         };
 
         return service;
-    }])
-    .factory('Alerts', [
-      function() {
-        return [];
     }]);
 
     list.controller('GroupsCtrl',
@@ -206,21 +183,8 @@ implicit req: UserRequest[_], lang: Lang)
           return d.promise;
         };
     }])
-    .controller('NewEntryCtrl',
-      ['$scope', 'GroupList',
-      function ($scope, GroupList) {
-        $scope.GroupList  = GroupList;
-
-        $scope.isCollapsed = @(!fm.hasErrors);
-    }])
-    .controller('AlertCtrl',
-      ['$scope', 'Alerts',
-      function ($scope, Alerts) {
-      $scope.alerts = Alerts;
-
-      $scope.closeAlert = function(index) {
-        $scope.alerts.splice(index, 1);
-      };
+    .controller('AlertCtrl',['$scope', 'Alert', function ($scope, Alert) {
+      $scope.Alert = Alert;
     }]);
 
     angular.module('app').requires.push('groups.list');

@@ -6,10 +6,8 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(Groups.vmsg("title")) {
 
-  @common._flashing()
-
   <div ng-controller="AlertCtrl">
-    <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</alert>
+    <alert ng-repeat="alert in Alert.alerts" type="{{alert.type}}" close="Alert.dismiss($index)">{{alert.msg}}</alert>
   </div>
 
   <div class="row" style="margin-top:10px">
@@ -24,6 +22,27 @@ implicit req: UserRequest[_], lang: Lang)
   </div>
 
   <div class="row">
+    <form name="form" class="form-inline col-sm-6 col-sm-offset-6 col-md-5 col-md-offset-7"
+      ng-controller="NewEntryCtrl" novalidate>
+
+      @ng._form_group("email",
+        '_type        -> "email",
+        'maxLength    -> 64,
+        'email        -> None,
+        'placeholder  -> Groups.vmsg("user.email.placeholder"),
+        'typeahead    -> "email for email in getUserEmails($viewValue)",
+        'autocomplete -> "off",
+        Symbol("ng-model") -> "user.email"
+      )
+
+      <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)" ng-disabled="form.$invalid">
+        <i class="fa fa-user-plus"></i>
+        @MSG("add.user")
+      </button>
+    </form>
+  </div>
+
+  <div class="row">
     <div class="table-responsive" ng-controller="UserGroupsCtrl" data-id="@group.id">
       <table class="table table-hover table-ellipsis">
         <thead>
@@ -31,7 +50,7 @@ implicit req: UserRequest[_], lang: Lang)
             <th class="col-xs-4 col-sm-5">
               @MSG("email")
             </th>
-            <th class="col-xs-4 col-sm-5">
+            <th class="hidden-xs col-sm-5 ">
               @MSG("name")
             </th>
             <th class="col-xs-2  col-sm-2 text-right">
@@ -47,7 +66,7 @@ implicit req: UserRequest[_], lang: Lang)
                 {{ usr.email }}
               </a>
             </td>
-            <td>
+            <td class="hidden-xs">
               {{ usr.name }}
             </td>
             <td>
@@ -60,30 +79,6 @@ implicit req: UserRequest[_], lang: Lang)
           </tr>
         </tbody>
       </table>
-    </div>
-    <div class="row">
-      <div class="col-xs-12" ng-controller="NewEntryCtrl">
-
-        <form name="form" class="form-inline" novalidate>
-
-          @ng._form_group("email1",
-            '_type        -> "email",
-            'required     -> true,
-            'maxLength    -> 64,
-            'email        -> None,
-            'placeholder  -> "Enter user's email",
-            'typeahead    -> "email for email in getUserEmails($viewValue)",
-            'autocomplete -> "off",
-            Symbol("ng-model") -> "user.email"
-          )
-
-          <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)" ng-disabled="form.$invalid">
-            <i class="fa fa-user-plus"></i>
-            @MSG("add.user")
-          </button>
-        </form>
-      </div>
-
     </div>
   </div>
 }(
@@ -102,8 +97,8 @@ implicit req: UserRequest[_], lang: Lang)
       ["xeditable", 'api.group', 'api.helper']);
 
     list.factory('GroupUsersList',
-      ['Group', 'Alerts',
-      function(Group, Alerts){
+      ['Group', 'Alert',
+      function(Group, Alert){
         var service = {};
 
         service.users = [];
@@ -127,11 +122,11 @@ implicit req: UserRequest[_], lang: Lang)
                  }
               };
               if (!exists) {
-                service.users.push(value);
+                service.users.unshift(value);
               };
             },
             function (res) {
-              Alerts.push({type:'danger', msg:res.data.message});
+              Alert.push({type:'danger', msg:res.data.message});
             });
         };
 
@@ -144,20 +139,7 @@ implicit req: UserRequest[_], lang: Lang)
 
         return service;
     }])
-    .factory('Alerts', [
-      function() {
-        return [];
-    }])
 
-    .controller('AlertCtrl',
-      ['$scope', 'Alerts',
-      function ($scope, Alerts) {
-      $scope.alerts = Alerts;
-
-      $scope.closeAlert = function(index) {
-        $scope.alerts.splice(index, 1);
-      };
-    }])
     .controller('UserGroupsCtrl',
       ['$scope', '$attrs', 'GroupUsersList',
       function ($scope, $attrs, GroupUsersList) {
@@ -177,6 +159,9 @@ implicit req: UserRequest[_], lang: Lang)
             });
           });
         };
+    }])
+    .controller('AlertCtrl',['$scope', 'Alert', function ($scope, Alert) {
+      $scope.Alert = Alert;
     }]);
 
     angular.module('app').requires.push('group.users.list');
