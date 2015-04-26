@@ -76,7 +76,7 @@ controllers.files.bandwidth.upload=1.5M
 controllers.files.bandwidth.download=1M
 controllers.files.bandwidth.stream=1M
 
-controllers.mailer.admin.email-addresses=["admin@app.io"]
+services.mailer.admin.email-addresses=["admin@app.io"]
 
 models.cfs.files.stream-fetch-size=5000
 models.cfs.files.list-fetch-size=0

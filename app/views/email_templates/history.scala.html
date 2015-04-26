@@ -28,7 +28,7 @@ implicit req: UserRequest[_], lang: Lang)
         <thead>
           <tr>
             <th class="col-xs-4 col-sm-4 col-md-2">
-              @MSG("updated_on")
+              @MSG("updated_at")
             </th>
             <th class="hidden-xs col-sm-3 col-md-3">
               @MSG("name")
@@ -46,7 +46,7 @@ implicit req: UserRequest[_], lang: Lang)
           @page.map { h =>
             <tr>
               <td>
-                @h.updated_on.toString("yyyy-MM-dd hh:mm:ss")
+                @h.updated_at.toString("yyyy-MM-dd hh:mm:ss")
               </td>
               <td class="hidden-xs">
                 @h.name
@@ -58,7 +58,7 @@ implicit req: UserRequest[_], lang: Lang)
                 @usrs.get(h.updated_by).map(_.email).getOrElse("")
               </td>
               <td>
-                <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang, Some(h.updated_on))">
+                <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang, Some(h.updated_at))">
                   <i class="fa fa-arrow-circle-right fa-lg"></i>
                 </a>
               </td>

@@ -37,7 +37,7 @@ case class EmailTemplateHistory(
   name: String,
   subject: String,
   text: String,
-  updated_on: DateTime,
+  updated_at: DateTime,
   updated_by: UUID
 ) extends TimeBased
 
@@ -61,7 +61,7 @@ trait EmailTemplateKey[T <: CassandraTable[T, R], R] {
 trait EmailTemplateColumns[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
-  object last_updated_on
+  object last_updated_at
     extends DateTimeColumn(this)
     with StaticColumn[DateTime]
 
@@ -74,7 +74,7 @@ trait EmailTemplateColumns[T <: CassandraTable[T, R], R] {
 trait EmailTemplateHistoryColumns[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
-  object updated_on
+  object updated_at
     extends DateTimeColumn(this)
     with ClusteringOrder[DateTime]
 
@@ -107,7 +107,7 @@ sealed class EmailTemplates
     name(r),
     subject(r),
     text(r),
-    updated_on(r),
+    updated_at(r),
     updated_by(r),
     created_by(r)
   )
@@ -144,28 +144,28 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
 
   def find(
     id: UUID, lang: Lang,
-    updated_on: Option[DateTime] = None
+    updated_at: Option[DateTime] = None
   ): Future[ET] =
-    find(id, lang.code, updated_on)
+    find(id, lang.code, updated_at)
 
   def find(
     id: UUID, lang: String,
-    updated_on: Option[DateTime]
+    updated_at: Option[DateTime]
   ): Future[ET] =
     CQL {
       val cql: SelectWhere[EmailTemplates, ET] = select
         .where(_.id eqs id)
         .and(_.lang eqs lang)
 
-      updated_on
-        .map(d => cql.and(_.updated_on eqs d))
+      updated_at
+        .map(d => cql.and(_.updated_at eqs d))
         .getOrElse(cql)
     }.one().map {
       case None       => throw NotFound(id, lang)
       case Some(tmpl) => tmpl
     }.recoverWith {
       case e: NotFound if lang != Lang.defaultLang.code =>
-        EmailTemplate.find(id, Lang.defaultLang, updated_on)
+        EmailTemplate.find(id, Lang.defaultLang, updated_at)
     }
 
   def save(tmpl: ET): Future[ET] = for {
@@ -173,7 +173,7 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
       insert
         .value(_.id, tmpl.id)
         .value(_.lang, tmpl.lang.code)
-        .value(_.last_updated_on, tmpl.created_at)
+        .value(_.last_updated_at, tmpl.created_at)
         .value(_.created_by, tmpl.created_by)
         .ifNotExists()
     }.future().map(_.wasApplied())
@@ -183,13 +183,13 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
         update
           .where(_.id eqs tmpl.id)
           .and(_.lang eqs tmpl.lang.code)
-          .and(_.updated_on eqs curr)
+          .and(_.updated_at eqs curr)
           .modify(_.name setTo tmpl.name)
           .and(_.subject setTo tmpl.subject)
           .and(_.text setTo tmpl.text)
-          .and(_.last_updated_on setTo curr)
+          .and(_.last_updated_at setTo curr)
           .and(_.updated_by setTo tmpl.updated_by)
-          .onlyIf(_.last_updated_on eqs tmpl.updated_at)
+          .onlyIf(_.last_updated_at eqs tmpl.updated_at)
       }.future().map { r =>
         if (r.wasApplied()) tmpl.copy(updated_at = curr)
         else throw UpdatedByOther()
@@ -225,7 +225,7 @@ sealed class EmailTemplateHistories
     name(r),
     subject(r),
     text(r),
-    updated_on(r),
+    updated_at(r),
     updated_by(r)
   )
 }

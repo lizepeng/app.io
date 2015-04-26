@@ -51,10 +51,10 @@ object EmailTemplates
       }
     }
 
-  def show(id: UUID, lang: Lang, updated_on: Option[DateTime] = None) =
+  def show(id: UUID, lang: Lang, updated_at: Option[DateTime] = None) =
     PermCheck(_.Show).async { implicit req =>
       for {
-        tmpl <- EmailTemplate.find(id, lang, updated_on)
+        tmpl <- EmailTemplate.find(id, lang, updated_at)
         usr1 <- User.find(tmpl.updated_by)
         usr2 <- User.find(tmpl.created_by)
       } yield Ok {

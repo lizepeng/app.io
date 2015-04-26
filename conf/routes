@@ -52,7 +52,7 @@ GET  /email_templates                       controllers.EmailTemplates.index(p:P
 GET  /email_templates/new                   controllers.EmailTemplates.nnew
 POST /email_templates/new                   controllers.EmailTemplates.create
 GET  /email_templates/edit/:id              controllers.EmailTemplates.edit(id:UUID,lang:Lang)
-GET  /email_templates/show/:id              controllers.EmailTemplates.show(id:UUID,lang:Lang,updated_on:Option[DateTime]?=None)
+GET  /email_templates/show/:id              controllers.EmailTemplates.show(id:UUID,lang:Lang,updated_at:Option[DateTime]?=None)
 POST /email_templates/:id                   controllers.EmailTemplates.save(id:UUID,lang:Lang)
 GET  /email_templates/hisotry/:id           controllers.EmailTemplates.history(id:UUID,lang:Lang,p:Pager?=Pager.first)
 POST /email_templates/destroy/:id           controllers.EmailTemplates.destroy(id:UUID,lang:Lang)

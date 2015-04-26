@@ -8,9 +8,7 @@ implicit lang: Lang)
 <div class="row">
   <div class="col-xs-12 col-sm-9">
     @common._form_group_static("updated_by") {
-      <a href="@routes.Users.show(updated_by.id)" title="">
-        @updated_by.email
-      </a>
+      @updated_by.email
     }
   </div>
   <div class="col-xs-12 col-sm-3">
