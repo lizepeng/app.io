@@ -23,46 +23,50 @@ implicit req: UserRequest[_], lang: Lang)
     </ul>
 
     <!-- Tab panes -->
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="table-responsive">
-          <table class="table table-hover table-ellipsis">
-            <thead>
-              <tr>
-                <th class="col-xs-5 col-sm-4 col-md-2">
-                  @MSG("updated_on")
-                </th>
-                <th class="col-xs-3 col-sm-3 col-md-3">
-                  @MSG("name")
-                </th>
-                <th class="hidden-xs hidden-sm col-md-4">
-                  @MSG("subject")
-                </th>
-                <th class="col-xs-3 col-sm-4 col-md-2">
-                  @MSG("updated_by")
-                </th>
-                <th class="col-xs-1 col-sm-1 col-md-1"></th>
-              </tr>
-            </thead>
-            <tbody>
-              @page.map { h =>
-                <tr>
-                  <td>@h.updated_on.toString("yyyy-MM-dd hh:mm:ss")</td>
-                  <td>@h.name</td>
-                  <td class="hidden-xs hidden-sm">@h.subject</td>
-                  <td>@usrs.get(h.updated_by).map(_.email).getOrElse("")</td>
-                  <td>
-                    <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang, Some(h.updated_on))">
-                      <i class="fa fa-arrow-circle-right fa-lg"></i>
-                    </a>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          @{_pager(page, p => routes.EmailTemplates.history(tmpl.id, tmpl.lang, p))}
-        </div>
-      </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-ellipsis">
+        <thead>
+          <tr>
+            <th class="col-xs-4 col-sm-4 col-md-2">
+              @MSG("updated_on")
+            </th>
+            <th class="hidden-xs col-sm-3 col-md-3">
+              @MSG("name")
+            </th>
+            <th class="hidden-xs hidden-sm col-md-4">
+              @MSG("subject")
+            </th>
+            <th class="col-xs-4 col-sm-4 col-md-2">
+              @MSG("updated_by")
+            </th>
+            <th class="col-xs-1 col-sm-1 col-md-1"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @page.map { h =>
+            <tr>
+              <td>
+                @h.updated_on.toString("yyyy-MM-dd hh:mm:ss")
+              </td>
+              <td class="hidden-xs">
+                @h.name
+              </td>
+              <td class="hidden-xs hidden-sm">
+                @h.subject
+              </td>
+              <td>
+                @usrs.get(h.updated_by).map(_.email).getOrElse("")
+              </td>
+              <td>
+                <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang, Some(h.updated_on))">
+                  <i class="fa fa-arrow-circle-right fa-lg"></i>
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @{_pager(page, p => routes.EmailTemplates.history(tmpl.id, tmpl.lang, p))}
     </div>
 
   </div>
