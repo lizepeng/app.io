@@ -114,6 +114,7 @@ sign.up.failed                                   =There were problems creating y
 sign.in.msg.error                                =TODO
 
 # groups
+controllers.api.groups.name                      =API: Groups
 controllers.groups.name                          =Groups
 controllers.groups.created                       =New group created
 
@@ -128,6 +129,7 @@ msg.models.groups.not.empty                      =Group is not empty
 msg.models.groups.not.writable                   =Group is not writable
 
 # users
+controllers.api.users.name                       =API: Users
 controllers.users.name                           =Users
 
 views.users.head                                 =Users
