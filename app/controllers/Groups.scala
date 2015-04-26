@@ -35,12 +35,8 @@ object Groups
   )
 
   def index(pager: Pager) =
-    PermCheck(_.Index).async { implicit req =>
-      Future.successful {
-        Ok(html.groups.index(pager, GroupFM))
-      }.recover {
-        case e: BaseException => NotFound
-      }
+    PermCheck(_.Index).apply { implicit req =>
+      Ok(html.groups.index(pager, GroupFM))
     }
 
   def show(id: UUID) =

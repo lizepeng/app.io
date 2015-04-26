@@ -1,5 +1,5 @@
-@(page: Page[User])(
-implicit req: UserRequest[_], lang: Lang, msg: String => String)
+@(pager: Pager)(
+implicit req: UserRequest[_], lang: Lang)
 
 @import common._
 @import helper._
@@ -16,15 +16,15 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
   </div>
 
   <div class="row">
-    <div class="table-responsive">
+    <div class="table-responsive" ng-controller="UsersCtrl">
       <table class="table table-hover table-ellipsis">
         <thead>
           <tr>
             <th class="col-xs-8  col-sm-6 ">
-              @MSG("email")
+              @MSG("id")
             </th>
             <th class="hidden-xs col-sm-3 ">
-              @MSG("name")
+              @MSG("email")
             </th>
             <th class="visible-xs"></th>
             <th class="col-xs-4  col-sm-3 text-right">
@@ -32,55 +32,107 @@ implicit req: UserRequest[_], lang: Lang, msg: String => String)
             </th>
           </tr>
         </thead>
-        @page.map { usr =>
-          <tbody ng-controller="InfoCtrl" data-id="@usr.id">
-            <tr>
-              <td>
-                <i class="fa fa-info-circle fa-lg text-info" ng-click="isCollapsed = !isCollapsed"></i>
-                @usr.email
-              </td>
-              <td class="hidden-xs">
-                @usr.name
-              </td>
-              <td class="visible-xs"></td>
-              <td>
-                <div class="pull-right">
-                  <i class="fa fa-unlock-alt fa-lg fa-fw"></i>
-                </div>
-              </td>
-            </tr>
-            <tr collapse="isCollapsed">
-              <td colspan="3">
-                @users._info(usr)
-              </td>
-            </tr>
-          </tbody>
-        }
+        <tbody>
+          <tr ng-repeat="usr in UserList.users">
+            <td>
+              <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}" title="">
+                <code>{{ usr.id }}</code>
+              </a>
+            </td>
+            <td class="hidden-xs">
+              {{ usr.email }}
+            </td>
+            <td class="visible-xs"></td>
+            <td>
+              <div class="pull-right">
+                <i class="fa fa-unlock-alt fa-lg fa-fw"></i>
+              </div>
+            </td>
+          </tr>
+        </tbody>
       </table>
-      @{_pager(page, p => routes.Users.index(p))}
+
+      <nav>
+        <ul class="pager">
+          <li class="previous"
+            ng-class="UserList.links.has('prev') ? '' : 'disabled'">
+            <a ng-href="{{UserList.links.prev}}">
+              <i class="fa fa-long-arrow-left"></i>
+              @MSG("previous")
+            </a>
+          </li>
+          <li class="next"
+            ng-class="UserList.links.has('next') ? '' : 'disabled'">
+            <a ng-href="{{UserList.links.next}}">
+              @MSG("next")
+              <i class="fa fa-long-arrow-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
     </div>
   </div>
 }()(
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
+  jsRoutes,
   controller
 )
 
+@jsRoutes = {
+  @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Users.show
+  )
+}
+
 @controller = {
   <script>
-    angular.module('users.list', ['ui.bootstrap', 'api.user'])
-      .controller('InfoCtrl',['$scope', '$attrs', 'User', function ($scope, $attrs, User) {
-        var initialized = false;
+    var list = angular.module('users.list',
+      ['ui.bootstrap', 'api.user', 'api.helper']);
 
-        $scope.isCollapsed = true;
-        $scope.groups = [];
-        $scope.$watch('isCollapsed', function(nv) {
-          if(nv === false && $scope.groups.length === 0 && !initialized){
-            $scope.groups = User.externalGroups({id: $attrs.id})
-            initialized = true;
+    list.factory('UserList',
+      ['User', 'LinkHeader', 'Alerts',
+      function(User, LinkHeader, Alerts){
+        var service = {};
+
+        service.links = {
+          prev: '@Html(routes.Users.index(pager.prev).toString)',
+          next: '@Html(routes.Users.index(pager.next).toString)',
+          has : function(rel) {
+            return rel in this && this[rel] !== "";
           }
-        });
-      }]);
+        };
+
+        service.users = User.query({
+          page     :@pager.pageNum,
+          per_page :@pager.pageSize
+          }, function(value, headers){
+            var links = LinkHeader.parse(headers);
+            if (!links.has('next')) {service.links.next = ''};
+            if (!links.has('prev')) {service.links.prev = ''};
+          });
+
+        service.create = function(data) {
+          new User(data).$save(function(value){
+            service.users.unshift(value);
+          });
+        };
+
+        return service;
+    }])
+
+    .factory('Alerts', [
+      function() {
+        return [];
+    }])
+
+    .controller('UsersCtrl',
+      ['$scope', 'UserList',
+      function ($scope, UserList) {
+        $scope.UserList = UserList;
+        $scope.jsRoutes = jsRoutes;
+    }]);
 
     angular.module('app').requires.push('users.list');
   </script>

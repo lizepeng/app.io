@@ -93,7 +93,7 @@ implicit req: UserRequest[_], lang: Lang)
         <tbody>
           <tr ng-repeat="grp in GroupList.groups">
             <td>
-              <a ng-href="{{urlShow(grp.id)}}" title="">
+              <a ng-href="{{jsRoutes.controllers.Groups.show(grp.id).url}}">
                 <code>{{ grp.id }}</code>
               </a>
             </td>
@@ -158,8 +158,6 @@ implicit req: UserRequest[_], lang: Lang)
 
 @controller = {
   <script>
-
-
     var list = angular.module('groups.list',
       ["xeditable", 'api.group', 'api.helper']);
 
@@ -216,7 +214,8 @@ implicit req: UserRequest[_], lang: Lang)
     list.controller('GroupsCtrl',
       ['$scope', '$http', '$q', 'ClientError', 'GroupList',
       function ($scope, $http, $q, ClientError, GroupList) {
-        $scope.GroupList  = GroupList;
+        $scope.GroupList = GroupList;
+        $scope.jsRoutes  = jsRoutes;
 
         $scope.urlShow = function(id) {
           return jsRoutes.controllers.Groups.show(id).url;

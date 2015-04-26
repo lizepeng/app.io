@@ -56,12 +56,8 @@ object Users
     }
 
   def index(pager: Pager) =
-    PermCheck(_.Index).async { implicit req =>
-      User.list(pager).map { page =>
-        Ok(html.users.index(page))
-      }.recover {
-        case e: BaseException => NotFound
-      }
+    PermCheck(_.Index).apply { implicit req =>
+      Ok(html.users.index(pager))
     }
 
   def nnew = MaybeUserAction { implicit req =>
