@@ -35,7 +35,7 @@ implicit req: UserRequest[_], lang: Lang)
         <tbody>
           <tr ng-repeat="usr in UserList.users">
             <td>
-              <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}" title="">
+              <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
                 <code>{{ usr.id }}</code>
               </a>
             </td>
@@ -52,24 +52,7 @@ implicit req: UserRequest[_], lang: Lang)
         </tbody>
       </table>
 
-      <nav>
-        <ul class="pager">
-          <li class="previous"
-            ng-class="UserList.links.has('prev') ? '' : 'disabled'">
-            <a ng-href="{{UserList.links.prev}}">
-              <i class="fa fa-long-arrow-left"></i>
-              @MSG("previous")
-            </a>
-          </li>
-          <li class="next"
-            ng-class="UserList.links.has('next') ? '' : 'disabled'">
-            <a ng-href="{{UserList.links.next}}">
-              @MSG("next")
-              <i class="fa fa-long-arrow-right"></i>
-            </a>
-          </li>
-        </ul>
-      </nav>
+      @ng._pager("UserList.links")
 
     </div>
   </div>
@@ -95,22 +78,16 @@ implicit req: UserRequest[_], lang: Lang)
       ['User', 'LinkHeader', 'Alerts',
       function(User, LinkHeader, Alerts){
         var service = {};
-
-        service.links = {
-          prev: '@Html(routes.Users.index(pager.prev).toString)',
-          next: '@Html(routes.Users.index(pager.next).toString)',
-          has : function(rel) {
-            return rel in this && this[rel] !== "";
-          }
-        };
+        service.links = LinkHeader.links;
 
         service.users = User.query({
           page     :@pager.pageNum,
           per_page :@pager.pageSize
           }, function(value, headers){
-            var links = LinkHeader.parse(headers);
-            if (!links.has('next')) {service.links.next = ''};
-            if (!links.has('prev')) {service.links.prev = ''};
+            LinkHeader.updateLinks(
+              '@Html(routes.Users.index(pager.next).toString)',
+              '@Html(routes.Users.index(pager.prev).toString)',
+              headers);
           });
 
         service.create = function(data) {

@@ -69,6 +69,20 @@ angular.module 'api.helper', []
   # Helper to parse pagination link header
   .factory 'LinkHeader', ->
     service = {}
+
+    service.links =
+      prev: ''
+      next: ''
+      has : (rel) ->
+        return rel of this && this[rel] != ''
+
+    service.updateLinks = (next, prev, headers) ->
+      links = service.parse headers
+      if links.has 'next'
+        service.links.next = next
+      if links.has 'prev'
+        service.links.prev = prev
+
     service.parse = (headers) ->
       header = headers('Link')
       if header.length == 0

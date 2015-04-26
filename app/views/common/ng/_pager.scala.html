@@ -1,0 +1,31 @@
+@**
+ * Parameter 'links' should be a javascript object like this:
+ * {
+ *    prev: '<link>',
+ *    next: '<link>',
+ *    has : function(rel) {
+ *      return rel in this && this[rel] !== '';
+ *    }
+ *  }
+ *  and a default could be found in LinkHeader service
+ *@
+@(links: String)(implicit lang: Lang)
+
+<nav>
+  <ul class="pager">
+    <li class="previous"
+      ng-class="@(links).has('prev') ? '' : 'disabled'">
+      <a ng-href="{{@(links).prev}}">
+        <i class="fa fa-long-arrow-left"></i>
+        @MSG("previous")
+      </a>
+    </li>
+    <li class="next"
+      ng-class="@(links).has('next') ? '' : 'disabled'">
+      <a ng-href="{{@(links).next}}">
+        @MSG("next")
+        <i class="fa fa-long-arrow-right"></i>
+      </a>
+    </li>
+  </ul>
+</nav>

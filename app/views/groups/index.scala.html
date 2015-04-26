@@ -119,24 +119,7 @@ implicit req: UserRequest[_], lang: Lang)
         </tbody>
       </table>
 
-      <nav>
-        <ul class="pager">
-          <li class="previous"
-            ng-class="GroupList.links.has('prev') ? '' : 'disabled'">
-            <a ng-href="{{GroupList.links.prev}}">
-              <i class="fa fa-long-arrow-left"></i>
-              @MSG("previous")
-            </a>
-          </li>
-          <li class="next"
-            ng-class="GroupList.links.has('next') ? '' : 'disabled'">
-            <a ng-href="{{GroupList.links.next}}">
-              @MSG("next")
-              <i class="fa fa-long-arrow-right"></i>
-            </a>
-          </li>
-        </ul>
-      </nav>
+      @ng._pager("GroupList.links")
 
     </div>
   </div>
@@ -169,22 +152,16 @@ implicit req: UserRequest[_], lang: Lang)
       ['Group', 'LinkHeader', 'Alerts',
       function(Group, LinkHeader, Alerts){
         var service = {};
-
-        service.links = {
-          prev: '@Html(routes.Groups.index(pager.prev).toString)',
-          next: '@Html(routes.Groups.index(pager.next).toString)',
-          has : function(rel) {
-            return rel in this && this[rel] !== "";
-          }
-        };
+        service.links = LinkHeader.links;
 
         service.groups = Group.query({
           page     :@pager.pageNum,
           per_page :@pager.pageSize
           }, function(value, headers){
-            var links = LinkHeader.parse(headers);
-            if (!links.has('next')) {service.links.next = ''};
-            if (!links.has('prev')) {service.links.prev = ''};
+            LinkHeader.updateLinks(
+              '@Html(routes.Groups.index(pager.next).toString)',
+              '@Html(routes.Groups.index(pager.prev).toString)',
+              headers);
           });
 
         service.create = function(data) {
@@ -216,10 +193,6 @@ implicit req: UserRequest[_], lang: Lang)
       function ($scope, $http, $q, ClientError, GroupList) {
         $scope.GroupList = GroupList;
         $scope.jsRoutes  = jsRoutes;
-
-        $scope.urlShow = function(id) {
-          return jsRoutes.controllers.Groups.show(id).url;
-        };
 
         $scope.checkName = function(data) {
           var d = $q.defer();
