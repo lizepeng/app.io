@@ -6,7 +6,7 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(Groups.vmsg("title")) {
 
-  <div ng-controller="AlertCtrl">
+  <div class="ng-cloak" ng-controller="AlertCtrl">
     <alert ng-repeat="alert in Alert.alerts" type="{{alert.type}}" close="Alert.dismiss($index)">{{alert.msg}}</alert>
   </div>
 
@@ -39,7 +39,7 @@ implicit req: UserRequest[_], lang: Lang)
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="grp in GroupList.groups">
+            <tr class="ng-cloak" ng-repeat="grp in GroupList.groups">
               <td class="hidden-xs">
                 <a ng-href="{{jsRoutes.controllers.Groups.show(grp.id).url}}">
                   <code>{{ grp.id }}</code>

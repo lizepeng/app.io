@@ -18,29 +18,29 @@ implicit lang: Lang)
     <input type="@inputType" name="@name" class="form-control" @toHtmlArgs(htmlArgs)>
 
     <span ng-show="@{fullname}.$invalid" class="form-control-feedback" >
-      <i class="fa fa-warning fa-lg" ></i>
+      <i class="fa fa-warning fa-lg ng-cloak" ></i>
     </span>
 
     @htmlArgs.get('required).map { _ =>
-      <span ng-show="@{fullname}.$error.required" class="help-block">
+      <span ng-show="@{fullname}.$error.required" class="help-block ng-cloak">
         @MSG("error.required")
       </span>
     }
 
     @htmlArgs.get('minLength).map { value =>
-      <span ng-show="@{fullname}.$error.minlength" class="help-block">
+      <span ng-show="@{fullname}.$error.minlength" class="help-block ng-cloak">
         @MSG("error.minLength", value)
       </span>
     }
 
     @htmlArgs.get('maxLength).map { value =>
-      <span ng-show="@{fullname}.$error.maxlength" class="help-block">
+      <span ng-show="@{fullname}.$error.maxlength" class="help-block ng-cloak">
         @MSG("error.maxLength", value)
       </span>
     }
 
     @htmlArgs.get('email).map { _ =>
-      <span ng-show="@{fullname}.$error.email" class="help-block">
+      <span ng-show="@{fullname}.$error.email" class="help-block ng-cloak">
         @MSG("error.email")
       </span>
     }

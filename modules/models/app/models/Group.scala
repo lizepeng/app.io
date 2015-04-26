@@ -261,6 +261,9 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
   val ALL        = for (gid <- 0 to 18) yield gid
   val Half1st    = for (gid <- 0 to 9) yield gid
   val Half2nd    = for (gid <- 10 to 18) yield gid
+  val Div1       = for (gid <- 0 to 6) yield gid
+  val Div2       = for (gid <- 7 to 12) yield gid
+  val Div3       = for (gid <- 13 to 18) yield gid
   val AnyoneMask = 1 << 18
   val Anyone     = 0
   val AnyoneId   = Num2Id(Anyone)

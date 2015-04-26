@@ -1,73 +1,85 @@
 @(user:User)(implicit req: UserRequest[_], lang: Lang)
 
-<div class="row">
-  <div class="col-xs-12 col-sm-6 col-md-5">
-    @common._form_group_static("id") {
-      <code>@user.id</code>
-    }
-  </div>
-  <div class="col-xs-12 col-sm-6 col-md-3">
-    @common._form_group_static("name") {
-      @user.name
-    }
-  </div>
-  <div class="col-xs-12 col-sm-12 col-md-3">
-    @common._form_group_static("email") {
-      @user.email
-    }
-  </div>
+<div class="col-xs-12 col-sm-6 col-md-5">
+  @common._form_group_static("id") {
+    <code>@user.id</code>
+  }
+</div>
+<div class="col-xs-12 col-sm-6 col-md-3">
+  @common._form_group_static("name") {
+    @user.name
+  }
+</div>
+<div class="col-xs-12 col-sm-12 col-md-3">
+  @common._form_group_static("email") {
+    @user.email
+  }
 </div>
 
-<div class="row">
-  <div class="col-xs-12 col-sm-6">
-    @common._form_group_static("internal_groups") {
+<div class="col-xs-12 col-sm-6">
+  @common._form_group_static("internal_groups") {
 
-      <table class="table table-bordered table-condensed">
-        <thead>
-          <tr class="info">
-            @for(i <- InternalGroups.Half1st) {
-              <th class="text-center">@("G" + i)</th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            @for(i <- InternalGroups.Half1st) {
+    <table class="table table-bordered table-condensed">
+      <thead>
+        <tr class="info">
+          @for(i <- InternalGroups.Div1) {
+            <th class="text-center">@("G" + i)</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          @for(i <- InternalGroups.Div1) {
+            @isGroupMember(user, i)
+          }
+        </tr>
+      </tbody>
+      <thead>
+        <tr class="info">
+          <th></th>
+          @for(i <- InternalGroups.Div2) {
+            <th class="text-center">@("G" + i)</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+          @for(i <- InternalGroups.Div2) {
               @isGroupMember(user, i)
-            }
-          </tr>
-        </tbody>
-        <thead>
-          <tr class="info">
-            <th></th>
-            @for(i <- InternalGroups.Half2nd) {
-              <th class="text-center">@("G" + i)</th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td></td>
-            @for(i <- InternalGroups.Half2nd) {
-                @isGroupMember(user, i)
-            }
-          </tr>
-        </tbody>
-      </table>
-    }
-  </div>
-  <div class="col-xs-12 col-sm-6">
-    @common._form_group_static("external_groups") {
-      <div>
-        <div class="list-group">
-          <a ng-href="/groups/{{grp.id}}" ng-repeat="grp in groups" class="list-group-item">
-            <i class="fa fa-group fa-fw"></i>
-            {{ grp.name }}
-          </a>
-        </div>
+          }
+        </tr>
+      </tbody>
+      <thead>
+        <tr class="info">
+          <th></th>
+          @for(i <- InternalGroups.Div3) {
+            <th class="text-center">@("G" + i)</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+          @for(i <- InternalGroups.Div3) {
+              @isGroupMember(user, i)
+          }
+        </tr>
+      </tbody>
+    </table>
+  }
+</div>
+<div class="col-xs-12 col-sm-6">
+  @common._form_group_static("external_groups") {
+    <div>
+      <div class="list-group">
+        <a ng-href="/groups/{{grp.id}}" ng-repeat="grp in groups" class="list-group-item ng-cloak">
+          <i class="fa fa-group fa-fw"></i>
+          {{ grp.name }}
+        </a>
       </div>
-    }
-  </div>
+    </div>
+  }
 </div>
 
 @isGroupMember(user:User, i:Int) = {

@@ -6,7 +6,7 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(Groups.vmsg("title")) {
 
-  <div ng-controller="AlertCtrl">
+  <div class="ng-cloak" ng-controller="AlertCtrl">
     <alert ng-repeat="alert in Alert.alerts" type="{{alert.type}}" close="Alert.dismiss($index)">{{alert.msg}}</alert>
   </div>
 
@@ -59,7 +59,7 @@ implicit req: UserRequest[_], lang: Lang)
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="usr in GroupUsersList.users">
+          <tr class="ng-cloak" ng-repeat="usr in GroupUsersList.users">
             <td>
               <a ng-href="/users/{{usr.id}}">
                 <i class="fa fa-user"></i>
