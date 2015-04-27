@@ -20,7 +20,7 @@ object AccessControls
 
   def index(q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      (ES.Search(q, p) in AccessControl).map { page =>
+      (ES.Search(q, p) in AccessControl future()).map { page =>
         Ok(page).withHeaders(
           linkHeader(page, routes.Groups.index(Nil, q, _))
         )

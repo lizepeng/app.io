@@ -40,7 +40,7 @@ object Users
           Ok(Json.toJson(usrs.map(_.toUserInfo)))
         }
       else
-        (ES.Search(q, p) in User).map { page =>
+        (ES.Search(q, p) in User future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.Users.index(Nil, q, _))
           )

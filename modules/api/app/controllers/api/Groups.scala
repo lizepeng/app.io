@@ -29,7 +29,7 @@ object Groups
           Ok(Json.toJson(grps))
         }
       else
-        (ES.Search(q, p) in Group).map { page =>
+        (ES.Search(q, p) in Group future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.Groups.index(Nil, q, _))
           )

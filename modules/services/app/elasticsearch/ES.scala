@@ -7,6 +7,7 @@ import models._
 import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.delete.DeleteResponse
 import org.elasticsearch.action.index.IndexResponse
+import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.action.update.UpdateResponse
 import org.elasticsearch.common.settings.ImmutableSettings
 import play.api.Play.current
@@ -18,9 +19,11 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object ES extends ModuleLike with AppConfig {
+trait ES extends ModuleLike with AppConfig {
 
-  lazy val Client = (
+  import ESyntax._
+
+  implicit lazy val Client = (
     for {
       settings <- config.getString("cluster.name").map { name =>
         ImmutableSettings
@@ -39,7 +42,7 @@ object ES extends ModuleLike with AppConfig {
     ElasticClient.local
   }
 
-  val indexName = domain
+  implicit val indexName = domain
 
   def Index[R <: HasID](r: R) = new IndexAction(r)
 
@@ -51,61 +54,100 @@ object ES extends ModuleLike with AppConfig {
 
   def Search(q: Option[String], p: Pager) = new SearchAction(q, p)
 
-  class SearchAction(q: Option[String], p: Pager) {
+  def Multi(defs: (ES => ReadySearchDefinition)*) =
+    new ReadyMultiSearchDefinition(Client)(
+      defs.map(_(ES).definition)
+    )
 
-    def in(t: Module[_]): Future[ESPage] = {
-      Client.execute {
+}
+
+object ES extends ES
+
+object ESyntax {
+
+  class ReadyMultiSearchDefinition(client: ElasticClient)(
+    val defs: Seq[SearchDefinition]
+  ) {
+
+    def future(): Future[MultiSearchResponse] = {
+      client.execute(multi(defs))
+    }
+  }
+
+  class SearchAction(q: Option[String], p: Pager)(
+    implicit client: ElasticClient, indexName: String
+  ) {
+
+    def in(t: Module[_]): ReadySearchDefinition = {
+      new ReadySearchDefinition(client, p)(
         Def(search in indexName / t.moduleName)
           .?(cond = true)(_ start p.start limit p.limit)
           .?(q.isDefined)(_ query q.get)
           .result
-      }.map(ESPage(p, _))
+      )
     }
   }
 
-  class IndexAction[R <: HasID](r: R) {
+  class ReadySearchDefinition(client: ElasticClient, pager: Pager)(
+    val definition: SearchDefinition
+  ) {
+
+    def future(): Future[ESPage] = {
+      client.execute(definition).map(ESPage(pager, _))
+    }
+  }
+
+  class IndexAction[R <: HasID](r: R)(
+    implicit client: ElasticClient, indexName: String
+  ) {
 
     def into(t: Module[R])(
       implicit converter: R => JsonDocSource
     ): Future[(JsValue, Future[IndexResponse])] = {
       val src = converter(r)
       Future.successful(
-        src.jsval, Client.execute {
+        src.jsval, client.execute {
           index into indexName / t.moduleName id r.id doc src
         }
       )
     }
   }
 
-  class DeleteAction[R <: HasID](r: R) {
+  class DeleteAction[R <: HasID](r: R)(
+    implicit client: ElasticClient, indexName: String
+  ) {
 
     def from(t: Module[R])(
       implicit converter: R => JsonDocSource
     ): Future[DeleteResponse] =
-      Client.execute {
+      client.execute {
         delete id r.id from s"$indexName/${t.moduleName}"
       }
   }
 
-  class UpdateAction[R <: HasID](r: R) {
+  class UpdateAction[R <: HasID](r: R)(
+    implicit client: ElasticClient, indexName: String
+  ) {
 
     def in(t: Module[R])(
       implicit converter: R => JsonDocSource
     ): Future[(JsValue, Future[UpdateResponse])] = {
       val src = converter(r)
       Future.successful(
-        src.jsval, Client.execute {
+        src.jsval, client.execute {
           update id r.id in s"$indexName/${t.moduleName}" doc r
         }
       )
     }
   }
 
-  class BulkIndexAction[R](rs: Seq[R]) {
+  class BulkIndexAction[R](rs: Seq[R])(
+    implicit client: ElasticClient, indexName: String
+  ) {
 
     def into(t: Module[R])(
       implicit converter: R => JsonDocSource
-    ): Future[BulkResponse] = Client.execute {
+    ): Future[BulkResponse] = client.execute {
       bulk(
         rs.map { r =>
           Def(index into s"$indexName/${t.moduleName}")
