@@ -10,8 +10,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Messages
-  extends Controller with PermissionCheckable {
+object Messages extends Controller with PermissionCheckable {
 
   override val moduleName = "messages"
 

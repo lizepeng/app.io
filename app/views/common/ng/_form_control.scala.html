@@ -1,14 +1,12 @@
 @(name: String, args: (Symbol,Any)*)(
 implicit lang: Lang)
 
-@argsMap = @{args.toMap}
-
+@argsMap   = @{args.toMap}
 @inputType = @{argsMap.get('_type).map(_.toString).getOrElse("text")}
 @formname  = @{argsMap.get('_formname).map(_.toString).getOrElse("form")}
 @label     = @{argsMap.get('_label).map(_.toString).getOrElse(MSG(name))}
 @inline    = @{argsMap.get('_inline).map(_ == true).getOrElse(true)}
-
-@htmlArgs = @{
+@htmlArgs  = @{
   args.filterNot(arg => arg._1.name.startsWith("_"))
       .filterNot(arg => arg._1 == 'id)
       .toMap

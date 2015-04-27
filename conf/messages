@@ -49,6 +49,8 @@ external_groups                                  =External Groups
 modules                                          =Modules
 description                                      =Description
 add.user                                         =Add User
+allow                                            =Allow
+deny                                             =Deny
 
 # action
 actions.nnew                                     =New

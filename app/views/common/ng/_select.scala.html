@@ -1,11 +1,9 @@
 @(name: String, args: (Symbol,Any)*)(
 implicit lang: Lang)
 
-@argsMap = @{args.toMap}
-
-@label     = @{argsMap.get('_label).map(_.toString).getOrElse(MSG(name))}
-@inline    = @{argsMap.get('_inline).map(_ == true).getOrElse(true)}
-
+@argsMap  = @{args.toMap}
+@label    = @{argsMap.get('_label).map(_.toString).getOrElse(MSG(name))}
+@inline   = @{argsMap.get('_inline).map(_ == true).getOrElse(true)}
 @htmlArgs = @{
   args.filterNot(arg => arg._1.name.startsWith("_"))
       .filterNot(arg => arg._1 == 'id)

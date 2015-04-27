@@ -2,6 +2,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+GET    /search                controllers.api.Search.index(typs:Seq[String],q:Option[String],p:Pager?=Pager.first)
+
 GET    /groups                controllers.api.Groups.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
 POST   /groups                controllers.api.Groups.create
 GET    /groups/:id            controllers.api.Groups.show(id:UUID)

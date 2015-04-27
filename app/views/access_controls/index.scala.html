@@ -30,12 +30,11 @@ implicit req: UserRequest[_], lang: Lang)
         <div class="panel-body">
 
           <form name="form" ng-controller="Ctrl1">
-            @ng._form_group("principal",
+            @ng._form_control("principal",
               '_inline      -> false,
-              'maxLength    -> 64,
-              'minLength    -> 2,
               'tabindex     -> 1,
               'placeholder  -> Groups.vmsg("name.placeholder"),
+              'typeahead    -> "user as user.email for user in getUsers($viewValue)",
               'autocomplete -> "off",
               Symbol("ng-model") -> "ac.principal"
             )
@@ -54,17 +53,33 @@ implicit req: UserRequest[_], lang: Lang)
               Symbol("ng-options") -> "act as act.label for act in actions"
             )
 
-            <div class="btn-group">
-              <label class="btn btn-default" ng-model="ac.granted" btn-radio="true">
-                <i class="fa fa-check-circle fa-lg text-success"></i>
-                @MSG("allow")
-              </label>
-              <label class="btn btn-default" ng-model="ac.granted" btn-radio="false">
-                <i class="fa fa-ban fa-lg text-danger"></i>
-                @MSG("deny")
-              </label>
-            </div>
+            @ng._form_group_static("type",
+              '_inline      -> false
+            ){
+              <div class="btn-group">
+                <label class="btn btn-default" ng-model="ac.is_group" btn-radio="true">
+                  <i class="fa fa-user fa-lg text-info"></i>
+                </label>
+                <label class="btn btn-default" ng-model="ac.is_group" btn-radio="false">
+                  <i class="fa fa-group fa-lg text-info"></i>
+                </label>
+              </div>
+            }
 
+            @ng._form_group_static("granted",
+              '_inline      -> false
+            ){
+              <div class="btn-group">
+                <label class="btn btn-default" ng-model="ac.granted" btn-radio="true">
+                  <i class="fa fa-check-circle fa-lg text-success"></i>
+                  @MSG("allow")
+                </label>
+                <label class="btn btn-default" ng-model="ac.granted" btn-radio="false">
+                  <i class="fa fa-ban fa-lg text-danger"></i>
+                  @MSG("deny")
+                </label>
+              </div>
+            }
             <p>
               {{ ac | json }}
             </p>
@@ -280,7 +295,7 @@ implicit req: UserRequest[_], lang: Lang)
         $scope.Alert = Alert;
       }])
 
-      .controller('Ctrl1',['$scope', function ($scope) {
+      .controller('Ctrl1',['$scope', '$http', function ($scope, $http) {
         $scope.resources = [@Secured.Modules.names.map{n =>
           { label: '@MSG(s"$n.name")', key: '@n' },
         }];
@@ -292,6 +307,16 @@ implicit req: UserRequest[_], lang: Lang)
         $scope.ac = {
           resource :$scope.resources[0],
           action   :$scope.actions[0]
+        };
+
+        $scope.getUsers = function(val) {
+          return $http.get('/api/users', {
+            params: {q: "*" + val + "*"}
+          }).then(function(response){
+            return response.data.map(function(item){
+              return item;
+            });
+          });
         };
       }])
 

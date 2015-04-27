@@ -25,7 +25,7 @@ implicit req: UserRequest[_], lang: Lang)
     <form name="form" class="form-inline col-sm-6 col-sm-offset-6 col-md-5 col-md-offset-7"
       ng-controller="NewEntryCtrl" novalidate>
 
-      @ng._form_group("email",
+      @ng._form_control("email",
         '_type        -> "email",
         'maxLength    -> 64,
         'email        -> None,
