@@ -116,7 +116,7 @@ implicit req: UserRequest[_], lang: Lang)
               <td>
                 <div class="btn-toolbar">
                   <div class="btn-group">
-                    <toggle-switch status="ac.granted"/>
+                    <toggle-switch status="ac.granted" ng-click="ACList.save(ac)"/>
                   </div>
                   <div class="btn-group" style="padding-top:3px">
                     <button type="button" class="btn btn-danger btn-xs" ng-click="ACList.delete(ac)">
@@ -201,10 +201,20 @@ implicit req: UserRequest[_], lang: Lang)
           };
 
           service.delete = function(data) {
-            data.$delete(
+            data.$delete(data,
               function(){
                 var idx = service.acs.indexOf(data);
                 service.acs.splice(idx, 1);
+              },
+              function(res){
+                Alert.push({type:'danger', msg:res.data.message});
+            });
+          };
+
+          service.save = function(data) {
+            console.log(data);
+            data.$save(data,
+              function(value){
               },
               function(res){
                 Alert.push({type:'danger', msg:res.data.message});

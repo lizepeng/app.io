@@ -1,11 +1,9 @@
 package models
 
-import java.util.UUID
-
 /**
  * @author zepeng.li@gmail.com
  */
-trait HasID {
+trait HasID[T] {
 
-  def id: UUID
+  def id: T
 }

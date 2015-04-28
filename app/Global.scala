@@ -1,4 +1,3 @@
-import controllers.api.JsonMessage
 import elasticsearch.ES
 import models._
 import models.cfs._
@@ -26,8 +25,6 @@ object Global
     )
   )
   with GlobalSettings {
-
-  private object ControlNothing extends Controller
 
   override def onStart(app: Application) = {
     Logger.info("System has started")
@@ -72,11 +69,19 @@ object Global
     request: RequestHeader,
     error: String
   ): Future[Result] = {
-    if (request.uri.startsWith("/api"))
-      Future.successful {
-        Results.BadRequest(JsonMessage(error)(ControlNothing.request2lang(request)))
-      }
+    if (request.uri.startsWith("/api")) {
+      Future.successful(Results.NotFound)
+    }
     else super.onBadRequest(request, error)
+  }
+
+  override def onHandlerNotFound(
+    request: RequestHeader
+  ): Future[Result] = {
+    if (request.uri.startsWith("/api")) {
+      Future.successful(Results.NotFound)
+    }
+    else super.onHandlerNotFound(request)
   }
 
   override def doFilter(next: EssentialAction): EssentialAction = {

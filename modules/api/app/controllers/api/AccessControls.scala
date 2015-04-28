@@ -37,7 +37,7 @@ object AccessControls
     }
 
   def create =
-    PermCheck(_.Create).async(parse.json) { implicit req =>
+    PermCheck(_.Create).async { implicit req =>
       BodyIsJsObject { obj => obj.validate[AccessControl].fold(
         failure => Future.successful(
           UnprocessableEntity(JsonClientErrors(failure))
@@ -72,32 +72,27 @@ object AccessControls
   def destroy(id: UUID, res: String, act: String) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
-        grp <- Group.find(id)
-        ___ <- Group.remove(id)
-        res <- ES.Delete(grp) from Group
+        ac <- AccessControl.find(id, res, act)
+        __ <- AccessControl.remove(id, res, act)
+        res <- ES.Delete(ac) from AccessControl
       } yield res).map { _ =>
         NoContent
       }.recover {
-        case e: Group.NotWritable =>
-          MethodNotAllowed(JsonMessage(e))
-        case e: Group.NotEmpty    =>
-          MethodNotAllowed(JsonMessage(e))
-        case e: Group.NotFound    =>
-          NotFound
+        case e: AccessControl.NotFound => NotFound
       }
     }
 
   def save(id: UUID, res: String, act: String) =
-    PermCheck(_.Save).async(parse.json) { implicit req =>
-      BodyIsJsObject { obj => obj.validate[Group].fold(
+    PermCheck(_.Save).async { implicit req =>
+      BodyIsJsObject { obj => obj.validate[AccessControl].fold(
         failure => Future.successful(
           UnprocessableEntity(JsonClientErrors(failure))
         ),
         success =>
           (for {
-            _____ <- Group.find(id)
+            _____ <- AccessControl.find(id, res, act)
             saved <- success.save
-            _resp <- ES.Update(saved) in Group
+            _resp <- ES.Update(saved) in AccessControl
           } yield _resp._1).map {
             Ok(_)
           }.recover {

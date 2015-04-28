@@ -44,13 +44,13 @@ trait ES extends ModuleLike with AppConfig {
 
   implicit val indexName = domain
 
-  def Index[R](r: R) = new IndexAction(r)
+  def Index[R <: HasID[_]](r: R) = new IndexAction(r)
 
-  def Delete[R <: HasID](r: R) = new DeleteAction(r)
+  def Delete[R <: HasID[_]](r: R) = new DeleteAction(r)
 
-  def Update[R <: HasID](r: R) = new UpdateAction(r)
+  def Update[R <: HasID[_]](r: R) = new UpdateAction(r)
 
-  def BulkIndex[R](rs: Seq[R]) = new BulkIndexAction(rs)
+  def BulkIndex[R <: HasID[_]](rs: Seq[R]) = new BulkIndexAction(rs)
 
   def Search(q: Option[String], p: Pager) = new SearchAction(q, p)
 
@@ -97,7 +97,7 @@ object ESyntax {
     }
   }
 
-  class IndexAction[R](r: R)(
+  class IndexAction[R <: HasID[_]](r: R)(
     implicit client: ElasticClient, indexName: String
   ) {
 
@@ -107,16 +107,13 @@ object ESyntax {
       val src = converter(r)
       Future.successful(
         src.jsval, client.execute {
-          Def(index into indexName / t.moduleName)
-            .?(r.isInstanceOf[HasID])(_ id r.asInstanceOf[HasID].id)
-            .?(cond = true)(_ doc src)
-            .result
+          index into indexName / t.moduleName id r.id doc src
         }
       )
     }
   }
 
-  class DeleteAction[R <: HasID](r: R)(
+  class DeleteAction[R <: HasID[_]](r: R)(
     implicit client: ElasticClient, indexName: String
   ) {
 
@@ -128,7 +125,7 @@ object ESyntax {
       }
   }
 
-  class UpdateAction[R <: HasID](r: R)(
+  class UpdateAction[R <: HasID[_]](r: R)(
     implicit client: ElasticClient, indexName: String
   ) {
 
@@ -144,7 +141,7 @@ object ESyntax {
     }
   }
 
-  class BulkIndexAction[R](rs: Seq[R])(
+  class BulkIndexAction[R <: HasID[_]](rs: Seq[R])(
     implicit client: ElasticClient, indexName: String
   ) {
 
@@ -153,10 +150,7 @@ object ESyntax {
     ): Future[BulkResponse] = client.execute {
       bulk(
         rs.map { r =>
-          Def(index into s"$indexName/${t.moduleName}")
-            .?(r.isInstanceOf[HasID])(_ id r.asInstanceOf[HasID].id)
-            .?(cond = true)(_ doc r)
-            .result
+          index into s"$indexName/${t.moduleName}" id r.id doc r
         }: _*
       )
     }

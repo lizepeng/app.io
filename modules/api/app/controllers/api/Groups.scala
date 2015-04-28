@@ -46,7 +46,7 @@ object Groups
     }
 
   def create =
-    PermCheck(_.Save).async(parse.json) { implicit req =>
+    PermCheck(_.Save).async { implicit req =>
       BodyIsJsObject { obj => (obj ++ Json.obj(
         "id" -> UUIDs.timeBased(),
         "is_internal" -> false
@@ -84,7 +84,7 @@ object Groups
     }
 
   def save(id: UUID) =
-    PermCheck(_.Save).async(parse.json) { implicit req =>
+    PermCheck(_.Save).async { implicit req =>
       BodyIsJsObject { obj => obj.validate[Group].fold(
         failure => Future.successful(
           UnprocessableEntity(JsonClientErrors(failure))
@@ -117,28 +117,30 @@ object Groups
     }
 
   def addUser(id: UUID) =
-    PermCheck(_.Save).async(parse.json) { implicit req =>
-      (req.body \ "id").validate[UUID].map(User.find)
-        .orElse(
-          (req.body \ "email").validate[String].map(User.find)
-        ).map {
-        _.flatMap { user =>
-          val info: UserInfo = user.toUserInfo
-          if (user.groups.contains(id)) Future.successful {
-            Ok(Json.toJson(info))
+    PermCheck(_.Save).async { implicit req =>
+      BodyIsJsObject { obj =>
+        (obj \ "id").validate[UUID].map(User.find)
+          .orElse(
+            (obj \ "email").validate[String].map(User.find)
+          ).map {
+          _.flatMap { user =>
+            val info: UserInfo = user.toUserInfo
+            if (user.groups.contains(id)) Future.successful {
+              Ok(Json.toJson(info))
+            }
+            else Group.addChild(id, user.id).map { _ =>
+              Created(Json.toJson(info))
+            }
           }
-          else Group.addChild(id, user.id).map { _ =>
-            Created(Json.toJson(info))
-          }
+        }.fold(
+            failure => Future.successful {
+              UnprocessableEntity(JsonClientErrors(failure))
+            },
+            success => success
+          )
+          .recover {
+          case e: User.NotFound => NotFound(JsonMessage(e))
         }
-      }.fold(
-          failure => Future.successful {
-            UnprocessableEntity(JsonClientErrors(failure))
-          },
-          success => success
-        )
-        .recover {
-        case e: User.NotFound => NotFound(JsonMessage(e))
       }
     }
 

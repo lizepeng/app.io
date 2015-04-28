@@ -8,7 +8,7 @@ import org.joda.time.DateTime
 /**
  * @author zepeng.li@gmail.com
  */
-trait TimeBased extends HasID {
+trait TimeBased extends HasID[UUID] {
 
   lazy val created_at = TimeBased.extractDatetime(id)
 }

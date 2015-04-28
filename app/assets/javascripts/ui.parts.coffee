@@ -2,27 +2,17 @@ angular.module 'ui.parts', [ 'ui.parts.toggle-switch' ]
 
 angular.module 'ui.parts.toggle-switch', [ 'ui.template/buttons/toggle-switch.html' ]
 
-  .controller 'ToggleSwitchController', [ '$scope', '$http', '$attrs', ($scope, $http, $attrs) ->
-    isRemote = 'postTo' of $attrs
-    $scope.status = $scope.$eval($attrs.status) == true
+  .controller 'ToggleSwitchController', [ '$scope', ($scope) ->
     $scope.toggle = ->
-      if isRemote
-        $http.post $attrs.postTo, value: !$scope.status
-          .success (data) ->
-            $scope.status = data.value
-            return
-          .error (data, status) ->
-            console.log status
-            console.log data
-            return
-      else
-        $scope.status = !$scope.status
+      $scope.status = !$scope.status
       return
     return
   ]
 
   .directive 'toggleSwitch', ->
       restrict    : 'E'
+      scope       :
+        status : '='
       controller  : 'ToggleSwitchController'
       templateUrl : 'ui.template/buttons/toggle-switch.html'
 
@@ -39,7 +29,6 @@ angular.module 'ui.template/buttons/toggle-switch.html', []
             ng-click="toggle()">
           </i>
         </div>
-        """
-      )
+        """)
       return
   ]

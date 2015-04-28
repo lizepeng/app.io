@@ -68,7 +68,7 @@ object AccessControls
     action: String,
     is_group: Boolean
   ) = PermCheck(_.Destroy).async { implicit req =>
-    AccessControl.remove(principal, resource, action, is_group).map { _ =>
+    AccessControl.remove(principal, resource, action).map { _ =>
       RedirectToPreviousURI
         .getOrElse(
           Redirect(routes.AccessControls.index())

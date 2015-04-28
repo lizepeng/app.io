@@ -26,7 +26,11 @@ case class AccessControl(
   principal: UUID,
   is_group: Boolean,
   granted: Boolean
-) extends Permission[UUID, String, String] {
+)
+  extends Permission[UUID, String, String]
+  with HasID[String] {
+
+  override def id = s"${principal.toString}/$resource/$action"
 
   def save = AccessControl.save(this)
 }
@@ -114,10 +118,6 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
       and reads_granted
     )(AccessControl.apply _)
 
-  def find(id: UUID): Future[Seq[AccessControl]] = CQL {
-    select.where(_.principal_id eqs id)
-  }.fetch()
-
   def find(ac: AccessControl): Future[AccessControl] =
     find(ac.principal, ac.resource, ac.action)
 
@@ -190,13 +190,11 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
   def remove(
     principal: UUID,
     resource: String,
-    action: String,
-    is_group: Boolean
+    action: String
   ): Future[ResultSet] = CQL {
     delete.where(_.principal_id eqs principal)
       .and(_.resource eqs resource)
       .and(_.action eqs action)
-      .and(_.is_group eqs is_group)
   }.future()
 
   def list(pager: Pager): Future[List[AccessControl]] = {
