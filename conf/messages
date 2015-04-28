@@ -201,8 +201,8 @@ controllers.access_controls.name                 =Access Control List
 controllers.access_controls.entry.deleted        =Access Control Entry deleted
 controllers.access_controls.entry.created        =Access Control Entry created
 
-views.access_controls.title                      =Access Control List
-views.access_controls.head                       =Access Control List
+views.access_controls.title                      =Access Control
+views.access_controls.head                       =Access Control
 views.access_controls.principal.placeholder      =Enter a User Email or Group Name
 
 log.models.access_controls.users.perm.undefined  = Undefined: [User,   {0}, {1}, {2}]
@@ -219,6 +219,9 @@ log.models.expirable_links.not.found             =Expirable Link {0} not found.
 msg.security.unauthorized                        =Authorization Failed.
 
 log.security.unauthorized                        =Authorization Failed.
+
+# search
+controllers.api.search.name                      =Search Engine
 
 # alert
 alert.success.title                              =Success!

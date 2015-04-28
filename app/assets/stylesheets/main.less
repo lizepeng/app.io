@@ -154,6 +154,25 @@ body {
   display: none !important;
 }
 
+select,
+textarea,
+input[type='text'],
+input[type='password'],
+input[type='datetime'],
+input[type='datetime-local'],
+input[type='date'],
+input[type='month'],
+input[type='time'],
+input[type='week'],
+input[type='number'],
+input[type='email'],
+input[type='url'],
+input[type='search'],
+input[type='tel'],
+input[type='color'] {
+  font-size: 16px;
+}
+
 /* RESPONSIVE CSS
 -------------------------------------------------- */
 /* Extra small mobile devices */
@@ -164,6 +183,7 @@ body {
 }
 /* Small mobile devices */
 @media (min-width: 540px) and (max-width: 767px) {
+
 }
 
 /* Mobile devices */
@@ -201,14 +221,22 @@ body {
       border-radius: 4px;
     }
   }
+
+  form .btn-wrapper {
+    padding-top: 25px;
+  }
 }
 
 /* Medium devices */
 @media (min-width: 992px) and (max-width: 1199px) {
-
+  form .btn-wrapper {
+    padding-top: 25px;
+  }
 }
 
 /* Large devices */
 @media (min-width: 1200px) {
-
+  form .btn-wrapper {
+    padding-top: 25px;
+  }
 }

@@ -33,7 +33,7 @@ implicit req: UserRequest[_], lang: Lang)
           '_inline      -> false,
           'tabindex     -> 2,
           Symbol("ng-model")   -> "ac.resource",
-          Symbol("ng-options") -> "res.label for res in resources track by res.key"
+          Symbol("ng-options") -> "k as v for (k,v) in ACList.resources"
         )
       </div>
 
@@ -42,7 +42,7 @@ implicit req: UserRequest[_], lang: Lang)
           '_inline      -> false,
           'tabindex     -> 3,
           Symbol("ng-model")   -> "ac.action",
-          Symbol("ng-options") -> "act as act.label for act in actions"
+          Symbol("ng-options") -> "k as v for (k,v) in ACList.actions"
         )
       </div>
 
@@ -63,21 +63,21 @@ implicit req: UserRequest[_], lang: Lang)
         }
       </div>
 
-      <div class="col-xs-12 col-sm-1 col-md-1" style="padding-top:25px;">
+      <div class="col-xs-12 col-sm-1 col-md-1 btn-wrapper">
         <button type="submit" class="btn btn-success pull-right" ng-click="create(ac)">
           <i class="fa fa-save fa-lg"></i>
           @MSG("create")
         </button>
       </div>
+
     </form>
 
   </div>
 
-
   <div ng-controller="ACCtrl">
     <div class="row">
       <div class="table-responsive">
-        <table class="table table-hover table-ellipsis">
+        <table class="table table-hover">
           <thead>
             <tr>
               <th class="col-xs-4  col-sm-4 ">
@@ -108,17 +108,17 @@ implicit req: UserRequest[_], lang: Lang)
                 </a>
               </td>
               <td>
-                {{ ac.resource }}
+                {{ ACList.resources[ac.resource] || ac.resource }}
               </td>
               <td>
-                {{ ac.action }}
+                {{ ACList.actions[ac.action] }}
               </td>
               <td>
-                <div class="btn-toolbar">
+                <div class="btn-toolbar pull-right">
                   <div class="btn-group">
                     <toggle-switch status="ac.granted" ng-click="ACList.save(ac)"/>
                   </div>
-                  <div class="btn-group" style="padding-top:3px">
+                  <div class="btn-group hidden-xs" style="padding-top:3px">
                     <button type="button" class="btn btn-danger btn-xs" ng-click="ACList.delete(ac)">
                       <i class="fa fa-trash-o"></i>
                       @MSG("delete")
@@ -182,6 +182,18 @@ implicit req: UserRequest[_], lang: Lang)
               });
             });
 
+          service.resources = {
+            @Secured.Modules.names.map{ n =>
+              '@n' : '@MSG(s"$n.name")',
+            }
+          };
+
+          service.actions = {
+            @Secured.Actions.names.map{ n =>
+              '@n' : '@MSG(s"actions.$n")',
+            }
+          };
+
           service.create = function(data, principal) {
             new AC(data).$save(function(value){
               if (data.is_group) {
@@ -239,18 +251,10 @@ implicit req: UserRequest[_], lang: Lang)
         function ($scope, $http, ACList) {
           $scope.ACList = ACList;
 
-          $scope.resources = [@Secured.Modules.names.map{n =>
-            { label: '@MSG(s"$n.name")', key: '@n' },
-          }];
-
-          $scope.actions = [@Secured.Actions.names.map{n =>
-            { label: '@MSG(s"actions.$n")', key: '@n' },
-          }];
-
           $scope.ac = {
             principal :'',
-            resource  :$scope.resources[0],
-            action    :$scope.actions[0],
+            resource  :_.keys(ACList.resources)[0],
+            action    :_.keys(ACList.actions)[0],
             granted   :true
           };
 
@@ -260,8 +264,8 @@ implicit req: UserRequest[_], lang: Lang)
             if (_.contains(types, ac.principal._type)) {
               ACList.create({
                 principal : ac.principal.id,
-                resource  : ac.resource.key,
-                action    : ac.action.key,
+                resource  : ac.resource,
+                action    : ac.action,
                 is_group  : ac.principal._type === 'groups',
                 granted   : ac.granted
               }, ac.principal._source);
