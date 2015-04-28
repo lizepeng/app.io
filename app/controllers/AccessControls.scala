@@ -43,8 +43,8 @@ object AccessControls
   )
 
   def index(pager: Pager) =
-    PermCheck(_.Index).async { implicit req =>
-      index0(pager, AccessControlFM)
+    PermCheck(_.Index).apply { implicit req =>
+      Ok(html.access_controls.index(pager))
     }
 
   def save(
@@ -105,7 +105,7 @@ object AccessControls
         .map(_.map(g => (g.id, g)).toMap)
     } yield (list, usrs, grps)).map { case (l, u, g) =>
       Ok(
-        html.access_controls.index(Page(pager, l), u, g, fm)
+        html.access_controls.index(pager)
       ).flashing(flash: _*)
     }.recover {
       case e: BaseException => NotFound

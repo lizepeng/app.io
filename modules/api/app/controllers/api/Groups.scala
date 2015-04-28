@@ -47,25 +47,20 @@ object Groups
 
   def create =
     PermCheck(_.Save).async(parse.json) { implicit req =>
-      req.body match {
-        case json: JsObject =>
-          (json ++ Json.obj(
-            "id" -> UUIDs.timeBased(),
-            "is_internal" -> false
-          )).validate[Group].fold(
-              failure => Future.successful(
-                UnprocessableEntity(JsonClientErrors(failure))
-              ),
-              success => for {
-                saved <- success.save
-                _resp <- ES.Index(saved) into Group
-              } yield {
-                  Created(_resp._1)
-                    .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
-                }
-            )
-        case _              => Future.successful(
-          BadRequest(WrongTypeOfJSON())
+      BodyIsJsObject { obj => (obj ++ Json.obj(
+        "id" -> UUIDs.timeBased(),
+        "is_internal" -> false
+      )).validate[Group].fold(
+          failure => Future.successful(
+            UnprocessableEntity(JsonClientErrors(failure))
+          ),
+          success => for {
+            saved <- success.save
+            _resp <- ES.Index(saved) into Group
+          } yield {
+              Created(_resp._1)
+                .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
+            }
         )
       }
     }
@@ -90,7 +85,7 @@ object Groups
 
   def save(id: UUID) =
     PermCheck(_.Save).async(parse.json) { implicit req =>
-      req.body.validate[Group].fold(
+      BodyIsJsObject { obj => obj.validate[Group].fold(
         failure => Future.successful(
           UnprocessableEntity(JsonClientErrors(failure))
         ),
@@ -105,6 +100,7 @@ object Groups
             case e: BaseException => NotFound
           }
       )
+      }
     }
 
   def users(id: UUID, pager: Pager) =

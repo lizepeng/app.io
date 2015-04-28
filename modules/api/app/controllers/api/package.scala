@@ -1,12 +1,14 @@
 package controllers
 
+import controllers.api.AccessControls._
 import helpers.BaseException
 import play.api.data.validation.ValidationError
 import play.api.http._
 import play.api.i18n.{Lang, Messages => MSG}
 import play.api.libs.json._
-import play.api.mvc.Codec
+import play.api.mvc._
 
+import scala.concurrent.Future
 import scala.language.implicitConversions
 
 /**
@@ -71,6 +73,18 @@ package object api {
 
     def apply()(implicit lang: Lang): JsObject =
       Json.obj("message" -> MSG("api.json.body.wrong.type"))
+  }
+
+  object BodyIsJsObject {
+
+    def apply[A](f: JsObject => Future[Result])(
+      implicit req: Request[A]
+    ): Future[Result] = {
+      req.body match {
+        case obj: JsObject => f(obj)
+        case _           => Future.successful(BadRequest(WrongTypeOfJSON()))
+      }
+    }
   }
 
 }

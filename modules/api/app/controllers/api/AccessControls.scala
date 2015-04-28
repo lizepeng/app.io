@@ -4,6 +4,7 @@ import java.util.UUID
 
 import elasticsearch._
 import helpers._
+import models.AccessControl.NotFound
 import models._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
@@ -37,44 +38,38 @@ object AccessControls
 
   def create =
     PermCheck(_.Create).async(parse.json) { implicit req =>
-      req.body match {
-        case json: JsObject =>
-          json.validate[AccessControl].fold(
-            failure => Future.successful(
-              UnprocessableEntity(JsonClientErrors(failure))
-            ),
-            success =>
-              AccessControl.find(success).map { found =>
-                Ok(Json.toJson(found))
-              }.recoverWith { case e: AccessControl.NotFound =>
-                (for {
-                  exists <-
-                  if (!success.is_group) User.exists(success.principal)
-                  else Group.exists(success.principal)
+      BodyIsJsObject { obj => obj.validate[AccessControl].fold(
+        failure => Future.successful(
+          UnprocessableEntity(JsonClientErrors(failure))
+        ),
+        success => AccessControl.find(success).map { found =>
+          Ok(Json.toJson(found))
+        }.recoverWith { case e: NotFound =>
+          (for {
+            exists <-
+            if (!success.is_group) User.exists(success.principal)
+            else Group.exists(success.principal)
 
-                  saved <- success.save
-                  _resp <- ES.Index(saved) into AccessControl
-                } yield (saved, _resp)).map { case (saved, _resp) =>
+            saved <- success.save
+            _resp <- ES.Index(saved) into AccessControl
+          } yield (saved, _resp)).map { case (saved, _resp) =>
 
-                  Created(_resp._1)
-                    .withHeaders(
-                      LOCATION -> routes.AccessControls.show(
-                        saved.principal, saved.resource, saved.action
-                      ).url
-                    )
-                }.recover {
-                  case e: User.NotFound  => BadRequest(JsonMessage(e))
-                  case e: Group.NotFound => BadRequest(JsonMessage(e))
-                }
-              }
-          )
-        case _              => Future.successful(
-          BadRequest(WrongTypeOfJSON())
-        )
+            Created(_resp._1)
+              .withHeaders(
+                LOCATION -> routes.AccessControls.show(
+                  saved.principal, saved.resource, saved.action
+                ).url
+              )
+          }.recover {
+            case e: User.NotFound  => BadRequest(JsonMessage(e))
+            case e: Group.NotFound => BadRequest(JsonMessage(e))
+          }
+        }
+      )
       }
     }
 
-  def destroy(id: UUID) =
+  def destroy(id: UUID, res: String, act: String) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
         grp <- Group.find(id)
@@ -92,9 +87,9 @@ object AccessControls
       }
     }
 
-  def save(id: UUID) =
+  def save(id: UUID, res: String, act: String) =
     PermCheck(_.Save).async(parse.json) { implicit req =>
-      req.body.validate[Group].fold(
+      BodyIsJsObject { obj => obj.validate[Group].fold(
         failure => Future.successful(
           UnprocessableEntity(JsonClientErrors(failure))
         ),
@@ -109,5 +104,6 @@ object AccessControls
             case e: BaseException => NotFound
           }
       )
+      }
     }
 }

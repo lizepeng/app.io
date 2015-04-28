@@ -31,13 +31,12 @@ libraryDependencies ++= Seq(
   filters,
   "org.webjars"       %  "bootstrap"         % "3.3.1",
   "org.webjars"       %  "font-awesome"      % "4.3.0",
-  "org.webjars"       %  "underscorejs"      % "1.4.4",
-  "org.webjars"       %  "backbonejs"        % "1.0.0",
   "org.webjars"       %  "holderjs"          % "2.4.0",
   "org.webjars"       %  "fuelux"            % "3.3.1",
   "org.webjars.bower" % "angular-xeditable"  % "0.1.9",
   "org.webjars.bower" % "angular-bootstrap"  % "0.12.1",
-  "org.webjars.bower" % "angular-resource"   % "1.3.15"
+  "org.webjars.bower" % "angular-resource"   % "1.3.15",
+  "org.webjars.bower" % "underscore"         % "1.8.3"
 )
 
 TwirlKeys.templateImports ++= Seq(

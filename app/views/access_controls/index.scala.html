@@ -1,4 +1,4 @@
-@(page: Page[AccessControl], usrs: Map[UUID, User], grps: Map[UUID, Group], fm: Form[_])(
+@(pager: Pager)(
 implicit req: UserRequest[_], lang: Lang)
 
 @import common._
@@ -15,145 +15,69 @@ implicit req: UserRequest[_], lang: Lang)
     </h2>
   </div>
 
-  <div ng-controller="NewEntryCtrl">
-    <div class="row">
-      <button class="btn btn-success pull-right"
-              ng-click="isCollapsed = !isCollapsed">
-        <i class="fa fa-plus fa-lg"></i>
-        @MSG("new.entry")
-      </button>
-    </div>
-
-    <div collapse="isCollapsed" class="row" style="margin-top:10px;">
-      <div class="panel panel-default">
-
-        <div class="panel-body">
-
-          <form name="form" ng-controller="Ctrl1">
-            @ng._form_control("principal",
-              '_inline      -> false,
-              'tabindex     -> 1,
-              'placeholder  -> Groups.vmsg("name.placeholder"),
-              'typeahead    -> "item as item.label for item in getItems($viewValue)",
-              'autocomplete -> "off",
-              Symbol("ng-model") -> "ac.principal"
-            )
-
-            @ng._select("resource",
-              '_inline      -> false,
-              'tabindex     -> 2,
-              Symbol("ng-model")   -> "ac.resource",
-              Symbol("ng-options") -> "res.label for res in resources track by res.key"
-            )
-
-            @ng._select("action",
-              '_inline      -> false,
-              'tabindex     -> 3,
-              Symbol("ng-model")   -> "ac.action",
-              Symbol("ng-options") -> "act as act.label for act in actions"
-            )
-
-            @ng._form_group_static("granted",
-              '_inline      -> false
-            ){
-              <div class="btn-group">
-                <label class="btn btn-default" ng-model="ac.granted" btn-radio="true">
-                  <i class="fa fa-check-circle fa-lg text-success"></i>
-                  @MSG("allow")
-                </label>
-                <label class="btn btn-default" ng-model="ac.granted" btn-radio="false">
-                  <i class="fa fa-ban fa-lg text-danger"></i>
-                  @MSG("deny")
-                </label>
-              </div>
-            }
-
-            <button type="submit" class="btn btn-success" ng-click="create(ac)">
-              <i class="fa fa-save fa-lg"></i>
-              @MSG("create")
-            </button>
-            <p>
-              {{ ac | json }}
-            </p>
-          </form>
-
-
-          @form(action = routes.AccessControls.create(page.pager)) {
-
-            <div class="row">
-              <div class="col-xs-9">
-                @{_input_text(fm("principal"),
-                  '_label      -> MSG("principal"),
-                  'placeholder -> AccessControls.vmsg("principal.placeholder"),
-                  'tabindex    -> 1
-                  )(_fc_form_group)
-                }
-              </div>
-
-              <div class="col-xs-3">
-                @{ng._input_radios_buttons(fm("is_group"),
-                  Seq(
-                    "false" -> ("", "fa fa-user fa-lg text-info"),
-                    "true"  -> ("", "fa fa-group fa-lg text-info")),
-                  '_label      -> MSG("type"),
-                  '_btnstyle  -> "btn-default",
-                  'tabindex    -> 2
-                  )(_fc_raw, _fc_form_group_static)
-                }
-              </div>
-
-            </div>
-
-            <div class="row">
-              <div class="col-xs-12 col-sm-6">
-                @{_select(fm("resource"),
-                  Secured.Modules.names.map{n => (n, MSG(s"$n.name"))},
-                  '_label      -> MSG("resource"),
-                  'tabindex    -> 3
-                  )(_fc_form_group)
-                }
-              </div>
-
-              <div class="col-xs-9 col-sm-3">
-                @{_select(fm("action"),
-                  Secured.Actions.names.map{n => (n, MSG(s"actions.$n"))},
-                  '_label      -> MSG("action"),
-                  'tabindex    -> 4
-                  )(_fc_form_group)
-                }
-              </div>
-
-              <div style="col-xs-4 col-sm-3">
-                @{ng._input_radios_buttons(fm("granted"),
-                  Seq(
-                    "true" -> (MSG("allow"), "fa fa-check fa-lg text-success"),
-                    "false"  -> (MSG("deny"), "fa fa-ban fa-lg text-danger")),
-                  '_label      -> MSG("granted"),
-                  '_btnstyle  -> "btn-default",
-                  'tabindex    -> 5
-                  )(_fc_raw, _fc_form_group_static)
-                }
-              </div>
-            </div>
-
-
-            <button type="submit" class="btn btn-success" tabindex="5">
-              <i class="fa fa-save fa-lg"></i>
-              @MSG("create")
-            </button>
-          }
-
-        </div>
-
+  <div class="row">
+    <form name="form" ng-controller="NewEntryCtrl">
+      <div class="col-xs-12 col-sm-6 col-md-4">
+        @ng._form_control("principal",
+          '_inline      -> false,
+          'tabindex     -> 1,
+          'placeholder  -> AccessControls.vmsg("principal.placeholder"),
+          'typeahead    -> "item as item.label for item in getItems($viewValue)",
+          'autocomplete -> "off",
+          Symbol("ng-model") -> "ac.principal"
+        )
       </div>
-    </div>
+
+      <div class="col-xs-12 col-sm-6 col-md-2">
+        @ng._select("resource",
+          '_inline      -> false,
+          'tabindex     -> 2,
+          Symbol("ng-model")   -> "ac.resource",
+          Symbol("ng-options") -> "res.label for res in resources track by res.key"
+        )
+      </div>
+
+      <div class="col-xs-12 col-sm-6 col-md-2">
+        @ng._select("action",
+          '_inline      -> false,
+          'tabindex     -> 3,
+          Symbol("ng-model")   -> "ac.action",
+          Symbol("ng-options") -> "act as act.label for act in actions"
+        )
+      </div>
+
+      <div class="col-xs-12 col-sm-5 col-md-3">
+        @ng._form_group_static("granted",
+          '_inline      -> false
+        ){
+          <div class="btn-group">
+            <label class="btn btn-default" ng-model="ac.granted" btn-radio="true">
+              <i class="fa fa-check-circle fa-lg text-success"></i>
+              @MSG("allow")
+            </label>
+            <label class="btn btn-default" ng-model="ac.granted" btn-radio="false">
+              <i class="fa fa-ban fa-lg text-danger"></i>
+              @MSG("deny")
+            </label>
+          </div>
+        }
+      </div>
+
+      <div class="col-xs-12 col-sm-1 col-md-1" style="padding-top:25px;">
+        <button type="submit" class="btn btn-success pull-right" ng-click="create(ac)">
+          <i class="fa fa-save fa-lg"></i>
+          @MSG("create")
+        </button>
+      </div>
+    </form>
 
   </div>
+
 
   <div ng-controller="ACCtrl">
     <div class="row">
       <div class="table-responsive">
-        <table class="table table-hover ">
+        <table class="table table-hover table-ellipsis">
           <thead>
             <tr>
               <th class="col-xs-4  col-sm-4 ">
@@ -195,7 +119,7 @@ implicit req: UserRequest[_], lang: Lang)
                     <toggle-switch status="ac.granted"/>
                   </div>
                   <div class="btn-group" style="padding-top:3px">
-                    <button type="button" class="btn btn-danger btn-xs">
+                    <button type="button" class="btn btn-danger btn-xs" ng-click="ACList.delete(ac)">
                       <i class="fa fa-trash-o"></i>
                       @MSG("delete")
                     </button>
@@ -239,12 +163,12 @@ implicit req: UserRequest[_], lang: Lang)
           service.links = LinkHeader.links;
 
           service.acs = AC.query({
-            page     :@page.pager.pageNum,
-            per_page :@page.pager.pageSize
+            page     :@pager.pageNum,
+            per_page :@pager.pageSize
             }, function(acs, headers){
               LinkHeader.updateLinks(
-                '@Html(routes.AccessControls.index(page.pager.next).toString)',
-                '@Html(routes.AccessControls.index(page.pager.prev).toString)',
+                '@Html(routes.AccessControls.index(pager.next).toString)',
+                '@Html(routes.AccessControls.index(pager.prev).toString)',
                 headers);
 
               Group.query({ids:AC.gids(acs).join(',')},
@@ -258,9 +182,21 @@ implicit req: UserRequest[_], lang: Lang)
               });
             });
 
-          service.create = function(data) {
+          service.create = function(data, principal) {
             new AC(data).$save(function(value){
-              service.acs.push(value);
+              if (data.is_group) {
+                service.groups[principal.id] = principal;
+              } else {
+                service.users[principal.id] = principal;
+              }
+
+              if(_.findIndex(service.acs, {
+                  principal:value.principal,
+                  resource: value.resource,
+                  action: value.action
+                }) === -1) {
+                service.acs.unshift(value);
+              }
             });
           };
 
@@ -278,16 +214,18 @@ implicit req: UserRequest[_], lang: Lang)
           return service;
       }])
 
-      .controller('ACCtrl', ['$scope', 'ACList',function ($scope, ACList) {
-          $scope.ACList = ACList;
-          $scope.jsRoutes  = jsRoutes;
+      .controller('ACCtrl', ['$scope', 'ACList',
+        function ($scope, ACList) {
+          $scope.ACList   = ACList;
+          $scope.jsRoutes = jsRoutes;
       }])
 
-      .controller('AlertCtrl',['$scope', 'Alert', function ($scope, Alert) {
-        $scope.Alert = Alert;
+      .controller('AlertCtrl',['$scope', 'Alert',
+        function ($scope, Alert) {
+          $scope.Alert = Alert;
       }])
 
-      .controller('Ctrl1',['$scope', '$http', 'ACList',
+      .controller('NewEntryCtrl', ['$scope', '$http', 'ACList',
         function ($scope, $http, ACList) {
           $scope.ACList = ACList;
 
@@ -310,16 +248,13 @@ implicit req: UserRequest[_], lang: Lang)
 
           $scope.create = function(ac){
             if (_.contains(types, ac.principal._type)) {
-              var aa = {
+              ACList.create({
                 principal : ac.principal.id,
                 resource  : ac.resource.key,
                 action    : ac.action.key,
                 is_group  : ac.principal._type === 'groups',
                 granted   : ac.granted
-              }
-              ACList.create(aa);
-            } else {
-              console.log("other");
+              }, ac.principal._source);
             }
           };
 
@@ -345,13 +280,6 @@ implicit req: UserRequest[_], lang: Lang)
               return response.data;
             });
           };
-      }])
-
-
-      .controller('NewEntryCtrl',['$scope', function ($scope) {
-        $scope.isCollapsed = false;
-        $scope.is_group = {value:"@{fm("is_group").value.map(_.toString).getOrElse("true")}"};
-        $scope.granted = {value:"@{fm("granted").value.map(_.toString).getOrElse("true")}"};
       }]);
 
     angular.module('app').requires.push('access_controls.list');

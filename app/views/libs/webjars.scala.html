@@ -42,18 +42,18 @@
       }
 
       case "backbone" => {
-        @js(
+        @*js(
           "lib/underscorejs/underscore.js",
-          "lib/underscorejs/underscore.min.js")
-        @js(
+          "lib/underscorejs/underscore.min.js")*@
+        @*js(
           "lib/backbonejs/backbone.js",
-          "lib/backbonejs/backbone.min.js")
+          "lib/backbonejs/backbone.min.js")*@
       }
 
       case "underscore" => {
         @js(
-          "lib/underscorejs/underscore.js",
-          "lib/underscorejs/underscore.min.js")
+          "lib/underscore/underscore.js",
+          "lib/underscore/underscore.min.js")
       }
 
       case "holder" => {

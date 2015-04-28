@@ -203,7 +203,7 @@ controllers.access_controls.entry.created        =Access Control Entry created
 
 views.access_controls.title                      =Access Control List
 views.access_controls.head                       =Access Control List
-views.access_controls.principal.placeholder      =Enter a User Id or Group Id
+views.access_controls.principal.placeholder      =Enter a User Email or Group Name
 
 log.models.access_controls.users.perm.undefined  = Undefined: [User,   {0}, {1}, {2}]
 log.models.access_controls.groups.perm.undefined = Undefined: [Groups, {0}, {1}, {2}]

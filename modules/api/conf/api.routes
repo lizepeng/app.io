@@ -19,5 +19,7 @@ GET    /users/:id/groups                 controllers.api.Users.groups(id:UUID,op
 GET    /access_controls                  controllers.api.AccessControls.index(q:Option[String],p:Pager?=Pager.first)
 POST   /access_controls                  controllers.api.AccessControls.create
 GET    /access_controls/:prin/:res/:act  controllers.api.AccessControls.show(prin:UUID,res,act)
+POST   /access_controls/:prin/:res/:act  controllers.api.AccessControls.save(prin:UUID,res,act)
+DELETE /access_controls/:prin/:res/:act  controllers.api.AccessControls.destroy(prin:UUID,res,act)
 
 GET    /messages                         controllers.api.Messages.index(keys:List[String])
