@@ -73,9 +73,7 @@ angular.module 'api.user', [ 'ngResource' ]
 angular.module 'api.access_control', [ 'ngResource' ]
 
   .factory 'AccessControl', [ '$resource', ($resource) ->
-    resource = $resource '/api/access_controls/:p/:r',
-      p         : '@principal'
-      r         : '@resource'
+    resource = $resource '/api/access_controls/:principal/:resource/:action'
 
     resource.gids = (acs) ->
       _.chain acs

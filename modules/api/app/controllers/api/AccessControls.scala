@@ -2,7 +2,6 @@ package controllers.api
 
 import java.util.UUID
 
-import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
 import models._
@@ -27,34 +26,48 @@ object AccessControls
       }
     }
 
-  def show(principal_id: UUID) =
+  def show(id: UUID, res: String, act: String) =
     PermCheck(_.Show).async { implicit req =>
-      AccessControl.find(principal_id).map { grp =>
-        Ok(Json.toJson(grp))
+      AccessControl.find(id, res, act).map { ac =>
+        Ok(Json.toJson(ac))
       }.recover {
         case e: BaseException => NotFound
       }
     }
 
   def create =
-    PermCheck(_.Save).async(parse.json) { implicit req =>
+    PermCheck(_.Create).async(parse.json) { implicit req =>
       req.body match {
         case json: JsObject =>
-          (json ++ Json.obj(
-            "id" -> UUIDs.timeBased(),
-            "is_internal" -> false
-          )).validate[Group].fold(
-              failure => Future.successful(
-                UnprocessableEntity(JsonClientErrors(failure))
-              ),
-              success => for {
-                saved <- success.save
-                _resp <- ES.Index(saved) into Group
-              } yield {
+          json.validate[AccessControl].fold(
+            failure => Future.successful(
+              UnprocessableEntity(JsonClientErrors(failure))
+            ),
+            success =>
+              AccessControl.find(success).map { found =>
+                Ok(Json.toJson(found))
+              }.recoverWith { case e: AccessControl.NotFound =>
+                (for {
+                  exists <-
+                  if (!success.is_group) User.exists(success.principal)
+                  else Group.exists(success.principal)
+
+                  saved <- success.save
+                  _resp <- ES.Index(saved) into AccessControl
+                } yield (saved, _resp)).map { case (saved, _resp) =>
+
                   Created(_resp._1)
-                    .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
+                    .withHeaders(
+                      LOCATION -> routes.AccessControls.show(
+                        saved.principal, saved.resource, saved.action
+                      ).url
+                    )
+                }.recover {
+                  case e: User.NotFound  => BadRequest(JsonMessage(e))
+                  case e: Group.NotFound => BadRequest(JsonMessage(e))
                 }
-            )
+              }
+          )
         case _              => Future.successful(
           BadRequest(WrongTypeOfJSON())
         )

@@ -111,6 +111,11 @@ sealed class Users
 
 object User extends Users with Cassandra with SysConfig with AppConfig {
 
+  /**
+   * Thrown when user is not found
+   *
+   * @param user email or uuid
+   */
   case class NotFound(user: String)
     extends BaseException(msg_key("not.found"))
 
@@ -155,6 +160,13 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
 
   lazy val root: UUID = Await.result(getUUID("root_id"), 10 seconds)
 
+  def exists(id: UUID): Future[Boolean] = CQL {
+    select(_.id).where(_.id eqs id)
+  }.one.map {
+    case None => throw NotFound(id.toString)
+    case _    => true
+  }
+
   def find(id: UUID): Future[User] = CQL {
     select.where(_.id eqs id)
   }.one().map {
@@ -168,7 +180,7 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
 
   def find(ids: TraversableOnce[UUID]): Future[Seq[User]] = CQL {
     select
-      .where(_.id in ids.toSet.toList)
+      .where(_.id in ids.toList.distinct)
   }.fetch()
 
   def checkEmail(email: String): Future[Boolean] = {

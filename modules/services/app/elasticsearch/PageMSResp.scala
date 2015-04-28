@@ -57,7 +57,6 @@ object PageMSResp {
 
         builder.endArray
         codec.encode(builder.string())
-        //        codec.encode(p.resp.toString)
       }
     )
   }

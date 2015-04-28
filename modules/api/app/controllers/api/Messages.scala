@@ -16,9 +16,9 @@ object Messages extends Controller with PermissionCheckable {
 
   def index(keys: List[String]) =
     PermCheck(_.Index).async { implicit req =>
-      val messages = keys.toSet[String].map {
+      val messages = keys.distinct.map {
         key => Array(key, MSG(key))
-      }.toSeq
+      }
 
       Future.successful(Ok(Json.toJson(messages)))
     }

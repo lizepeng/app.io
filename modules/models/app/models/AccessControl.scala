@@ -9,7 +9,9 @@ import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import play.api.Play.current
+import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 import scala.collection.TraversableOnce
@@ -69,6 +71,9 @@ sealed class AccessControls
 
 object AccessControl extends AccessControls with Cassandra with AppConfig {
 
+  case class NotFound(id: UUID, res: String, act: String)
+    extends BaseException(msg_key("not.found"))
+
   abstract class Undefined[P](
     action: String,
     resource: String,
@@ -94,56 +99,83 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
   )
 
   // Json Reads and Writes
-  implicit val access_control_writes = Json.writes[AccessControl]
+  val reads_principal = (__ \ "principal").read[UUID]
+  val reads_resource  = (__ \ "resource").read[String]
+  val reads_action    = (__ \ "action").read[String]
+  val reads_is_group  = (__ \ "is_group").read[Boolean]
+  val reads_granted   = (__ \ "granted").read[Boolean]
 
-  def find(
-    principal_id: UUID
-  ): Future[Seq[AccessControl]] = CQL {
-    select.
-      where(_.principal_id eqs principal_id)
+  implicit val access_control_writes = Json.writes[AccessControl]
+  implicit val access_control_reads  = (
+    reads_resource
+      and reads_action
+      and reads_principal
+      and reads_is_group
+      and reads_granted
+    )(AccessControl.apply _)
+
+  def find(id: UUID): Future[Seq[AccessControl]] = CQL {
+    select.where(_.principal_id eqs id)
   }.fetch()
 
+  def find(ac: AccessControl): Future[AccessControl] =
+    find(ac.principal, ac.resource, ac.action)
+
   def find(
-    resource: String,
-    action: String,
+    id: UUID,
+    res: String,
+    act: String
+  ): Future[AccessControl] = CQL {
+    select
+      .where(_.principal_id eqs id)
+      .and(_.resource eqs res)
+      .and(_.action eqs act)
+  }.one().map {
+    case Some(ac) => ac
+    case None     => throw NotFound(id, res, act)
+  }
+
+  def check(
+    res: String,
+    act: String,
     user_id: UUID
   ): Future[Granted[UUID]] = CQL {
     select(_.granted)
       .where(_.principal_id eqs user_id)
-      .and(_.resource eqs resource)
-      .and(_.action eqs action)
+      .and(_.resource eqs res)
+      .and(_.action eqs act)
       .and(_.is_group eqs false)
   }.one().map { r =>
     import User.AccessControl._
     r match {
       case None        =>
-        throw Undefined(user_id, action, resource)
+        throw Undefined(user_id, act, res)
       case Some(false) =>
-        throw Denied(user_id, action, resource)
+        throw Denied(user_id, act, res)
       case Some(true)  =>
-        Granted(user_id, action, resource)
+        Granted(user_id, act, res)
     }
   }
 
-  def find(
-    resource: String,
-    action: String,
+  def check(
+    res: String,
+    act: String,
     group_ids: TraversableOnce[UUID]
   ): Future[Granted[Set[UUID]]] = {
     val gids = group_ids.toSet
     CQL {
       select(_.granted)
         .where(_.principal_id in gids.toList)
-        .and(_.resource eqs resource)
-        .and(_.action eqs action)
+        .and(_.resource eqs res)
+        .and(_.action eqs act)
         .and(_.is_group eqs true)
     }.fetch().map { r =>
       import Group.AccessControl._
       if (r.isEmpty)
-        throw Undefined(gids, action, resource)
+        throw Undefined(gids, act, res)
       else if (r.contains(false))
-        throw Denied(gids, action, resource)
-      else Granted(gids, action, resource)
+        throw Denied(gids, act, res)
+      else Granted(gids, act, res)
     }
   }
 

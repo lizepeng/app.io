@@ -34,7 +34,7 @@ implicit req: UserRequest[_], lang: Lang)
               '_inline      -> false,
               'tabindex     -> 1,
               'placeholder  -> Groups.vmsg("name.placeholder"),
-              'typeahead    -> "user as user.email for user in getUsers($viewValue)",
+              'typeahead    -> "item as item.label for item in getItems($viewValue)",
               'autocomplete -> "off",
               Symbol("ng-model") -> "ac.principal"
             )
@@ -53,19 +53,6 @@ implicit req: UserRequest[_], lang: Lang)
               Symbol("ng-options") -> "act as act.label for act in actions"
             )
 
-            @ng._form_group_static("type",
-              '_inline      -> false
-            ){
-              <div class="btn-group">
-                <label class="btn btn-default" ng-model="ac.is_group" btn-radio="true">
-                  <i class="fa fa-user fa-lg text-info"></i>
-                </label>
-                <label class="btn btn-default" ng-model="ac.is_group" btn-radio="false">
-                  <i class="fa fa-group fa-lg text-info"></i>
-                </label>
-              </div>
-            }
-
             @ng._form_group_static("granted",
               '_inline      -> false
             ){
@@ -80,6 +67,11 @@ implicit req: UserRequest[_], lang: Lang)
                 </label>
               </div>
             }
+
+            <button type="submit" class="btn btn-success" ng-click="create(ac)">
+              <i class="fa fa-save fa-lg"></i>
+              @MSG("create")
+            </button>
             <p>
               {{ ac | json }}
             </p>
@@ -295,29 +287,64 @@ implicit req: UserRequest[_], lang: Lang)
         $scope.Alert = Alert;
       }])
 
-      .controller('Ctrl1',['$scope', '$http', function ($scope, $http) {
-        $scope.resources = [@Secured.Modules.names.map{n =>
-          { label: '@MSG(s"$n.name")', key: '@n' },
-        }];
+      .controller('Ctrl1',['$scope', '$http', 'ACList',
+        function ($scope, $http, ACList) {
+          $scope.ACList = ACList;
 
-        $scope.actions = [@Secured.Actions.names.map{n =>
-          { label: '@MSG(s"actions.$n")', key: '@n' },
-        }];
+          $scope.resources = [@Secured.Modules.names.map{n =>
+            { label: '@MSG(s"$n.name")', key: '@n' },
+          }];
 
-        $scope.ac = {
-          resource :$scope.resources[0],
-          action   :$scope.actions[0]
-        };
+          $scope.actions = [@Secured.Actions.names.map{n =>
+            { label: '@MSG(s"actions.$n")', key: '@n' },
+          }];
 
-        $scope.getUsers = function(val) {
-          return $http.get('/api/users', {
-            params: {q: "*" + val + "*"}
-          }).then(function(response){
-            return response.data.map(function(item){
-              return item;
+          $scope.ac = {
+            principal :'',
+            resource  :$scope.resources[0],
+            action    :$scope.actions[0],
+            granted   :true
+          };
+
+          var types = ['groups', 'users'];
+
+          $scope.create = function(ac){
+            if (_.contains(types, ac.principal._type)) {
+              var aa = {
+                principal : ac.principal.id,
+                resource  : ac.resource.key,
+                action    : ac.action.key,
+                is_group  : ac.principal._type === 'groups',
+                granted   : ac.granted
+              }
+              ACList.create(aa);
+            } else {
+              console.log("other");
+            }
+          };
+
+          $scope.getItems = function(val) {
+            return $http.get('/api/search', {
+              params: {
+                types : types.join(','),
+                q     : '*' + val + '*'
+              }
+            }).then(function(response){
+              _.chain(response.data)
+                .filter(function(item){return _.contains(types, item._type)})
+                .each(function(item){
+                  if (item._type === 'users') {
+                    item.label = item._source.email;
+                    item.id = item._source.id;
+                  }
+                  if (item._type === 'groups') {
+                    item.label = item._source.name;
+                    item.id = item._source.id;
+                  }
+                });
+              return response.data;
             });
-          });
-        };
+          };
       }])
 
 

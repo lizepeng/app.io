@@ -28,13 +28,13 @@ trait PermissionCheck
     val checked = for {
       b1 <- check(
         previous = None, act,
-        ac => AccessControl.find(
+        ac => AccessControl.check(
           resource.name, ac.name, u.groups
         )
       )
       b2 <- check(
         previous = b1, act,
-        ac => AccessControl.find(
+        ac => AccessControl.check(
           resource.name, ac.name, u.id
         )
       )

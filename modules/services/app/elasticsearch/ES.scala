@@ -44,7 +44,7 @@ trait ES extends ModuleLike with AppConfig {
 
   implicit val indexName = domain
 
-  def Index[R <: HasID](r: R) = new IndexAction(r)
+  def Index[R](r: R) = new IndexAction(r)
 
   def Delete[R <: HasID](r: R) = new DeleteAction(r)
 
@@ -97,7 +97,7 @@ object ESyntax {
     }
   }
 
-  class IndexAction[R <: HasID](r: R)(
+  class IndexAction[R](r: R)(
     implicit client: ElasticClient, indexName: String
   ) {
 
@@ -107,7 +107,10 @@ object ESyntax {
       val src = converter(r)
       Future.successful(
         src.jsval, client.execute {
-          index into indexName / t.moduleName id r.id doc src
+          Def(index into indexName / t.moduleName)
+            .?(r.isInstanceOf[HasID])(_ id r.asInstanceOf[HasID].id)
+            .?(cond = true)(_ doc src)
+            .result
         }
       )
     }

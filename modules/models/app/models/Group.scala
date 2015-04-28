@@ -113,7 +113,9 @@ object Group extends Groups with Cassandra with AppConfig {
 
   implicit val group_writes = Json.writes[Group]
   implicit val group_reads  = (
-    reads_id and reads_name and reads_description and reads_is_internal
+    reads_id and reads_name
+      and reads_description
+      and reads_is_internal
     )(Group.apply _)
 
   def createIfNotExist(group: Group): Future[Group] = CQL {
@@ -125,6 +127,13 @@ object Group extends Groups with Cassandra with AppConfig {
       .ifNotExists()
   }.future().map { rs =>
     if (rs.wasApplied()) group else fromRow(rs.one)
+  }
+
+  def exists(id: UUID): Future[Boolean] = CQL {
+    select(_.id).where(_.id eqs id)
+  }.one.map {
+    case None => throw NotFound(id)
+    case _    => true
   }
 
   def find(id: UUID): Future[Group] = CQL {
@@ -140,7 +149,7 @@ object Group extends Groups with Cassandra with AppConfig {
 
   def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
     distinct(_.id, _.name, _.description, _.is_internal)
-      .where(_.id in ids.toSet.toList)
+      .where(_.id in ids.toList.distinct)
   }.fetchEnumerator() &>
     Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
     Enumeratee.map(t => Group.apply _ tupled t)

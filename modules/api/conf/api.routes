@@ -2,22 +2,22 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET    /search                controllers.api.Search.index(typs:Seq[String],q:Option[String],p:Pager?=Pager.first)
+GET    /search                           controllers.api.Search.index(types:Seq[String],q:Option[String],p:Pager?=Pager.first)
 
-GET    /groups                controllers.api.Groups.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
-POST   /groups                controllers.api.Groups.create
-GET    /groups/:id            controllers.api.Groups.show(id:UUID)
-POST   /groups/:id            controllers.api.Groups.save(id:UUID)
-DELETE /groups/:id            controllers.api.Groups.destroy(id:UUID)
-GET    /groups/:id/users      controllers.api.Groups.users(id:UUID,p:Pager?=Pager.first)
-POST   /groups/:id/users      controllers.api.Groups.addUser(id:UUID)
-DELETE /groups/:id/users/:uid controllers.api.Groups.delUser(id:UUID, uid:UUID)
+GET    /groups                           controllers.api.Groups.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
+POST   /groups                           controllers.api.Groups.create
+GET    /groups/:id                       controllers.api.Groups.show(id:UUID)
+POST   /groups/:id                       controllers.api.Groups.save(id:UUID)
+DELETE /groups/:id                       controllers.api.Groups.destroy(id:UUID)
+GET    /groups/:id/users                 controllers.api.Groups.users(id:UUID,p:Pager?=Pager.first)
+POST   /groups/:id/users                 controllers.api.Groups.addUser(id:UUID)
+DELETE /groups/:id/users/:uid            controllers.api.Groups.delUser(id:UUID, uid:UUID)
 
-GET    /users                 controllers.api.Users.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
-GET    /users/:id/groups      controllers.api.Users.groups(id:UUID,options:Option[String])
+GET    /users                            controllers.api.Users.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
+GET    /users/:id/groups                 controllers.api.Users.groups(id:UUID,options:Option[String])
 
-GET    /access_controls       controllers.api.AccessControls.index(q:Option[String],p:Pager?=Pager.first)
-#POST   /access_controls       controllers.api.AccessControls.create
-#GET    /access_controls/:p    controllers.api.AccessControls.show(p:UUID)
+GET    /access_controls                  controllers.api.AccessControls.index(q:Option[String],p:Pager?=Pager.first)
+POST   /access_controls                  controllers.api.AccessControls.create
+GET    /access_controls/:prin/:res/:act  controllers.api.AccessControls.show(prin:UUID,res,act)
 
-GET    /messages              controllers.api.Messages.index(keys:List[String])
+GET    /messages                         controllers.api.Messages.index(keys:List[String])

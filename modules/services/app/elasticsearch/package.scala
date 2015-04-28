@@ -12,6 +12,7 @@ import play.api.http._
 import play.api.libs.json._
 import play.api.mvc.Codec
 
+import scala.collection.immutable.IndexedSeq
 import scala.language.implicitConversions
 
 /**
@@ -92,15 +93,22 @@ package object elasticsearch {
 
   implicit class RichPager(val p: Pager) extends AnyVal {
 
-    def /(n: Int) = p.copy(
-      start = Math.max(p.start / n, 0),
-      limit = Math.max(p.limit / n, 2)
-    )
-
-    def /!(n: Int) = p.copy(
-      start = Math.max(p.start / n + p.start % n, 0),
-      limit = Math.max(p.limit / n + p.limit % n, 2)
-    )
+    def /(n: Int): IndexedSeq[Pager] = {
+      if (n == 0)
+        IndexedSeq(p)
+      else {
+        val p1: Pager = p.copy(
+          start = Math.max(p.start / n, 0),
+          limit = Math.max(p.limit / n, 2)
+        )
+        val p2: Pager = p.copy(
+          start = Math.max(p.start / n + p.start % n, 0),
+          limit = Math.max(p.limit / n + p.limit % n, 2)
+        )
+        for (i <- 1 to n)
+          yield if (i == n) p2 else p1.copy()
+      }
+    }
   }
 
 }
