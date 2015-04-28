@@ -20,17 +20,11 @@ object Search
     PermCheck(_.Index).async { implicit req =>
       ES.Multi(
         _.Search(q, p / 2) in User,
-        _.Search(q, p / 2) in Group
-      ).future().map(ESMPage(p, _)).map { page =>
+        _.Search(q, p /! 2) in Group
+      ).future().map(PageMSResp(p, _)).map { page =>
         Ok(page).withHeaders(
-          linkHeader(page, routes.Users.index(Nil, q, _))
+          linkHeader(page, routes.Search.index(types, q, _))
         )
       }
     }
-
-  implicit class RichPager(val p: Pager) extends AnyVal {
-
-    def /(n: Int) = p.copy(start = p.start / n, limit = p.limit / n)
-  }
-
 }

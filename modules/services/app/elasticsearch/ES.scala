@@ -92,8 +92,8 @@ object ESyntax {
     val definition: SearchDefinition
   ) {
 
-    def future(): Future[ESPage] = {
-      client.execute(definition).map(ESPage(pager, _))
+    def future(): Future[PageSResp] = {
+      client.execute(definition).map(PageSResp(pager, _))
     }
   }
 
