@@ -58,6 +58,3 @@ GET  /email_templates/hisotry/:id           controllers.EmailTemplates.history(i
 POST /email_templates/destroy/:id           controllers.EmailTemplates.destroy(id:UUID,lang:Lang)
 
 GET  /access_controls                       controllers.AccessControls.index(p:Pager?=Pager.first)
-POST /access_controls                       controllers.AccessControls.create(p:Pager?=Pager.first)
-POST /access_controls/:p/:r/:a/:i           controllers.AccessControls.save(p:UUID,r,a,i:Boolean)
-POST /access_controls/destroy/:p/:r/:a/:i   controllers.AccessControls.destroy(p:UUID,r,a,i:Boolean)
