@@ -9,8 +9,6 @@ import models._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 
-import scala.concurrent.Future
-
 /**
  * @author zepeng.li@gmail.com
  */
@@ -38,11 +36,8 @@ object AccessControls
 
   def create =
     PermCheck(_.Create).async { implicit req =>
-      BodyIsJsObject { obj => obj.validate[AccessControl].fold(
-        failure => Future.successful(
-          UnprocessableEntity(JsonClientErrors(failure))
-        ),
-        success => AccessControl.find(success).map { found =>
+      BindJson().as[AccessControl] { success =>
+        AccessControl.find(success).map { found =>
           Ok(Json.toJson(found))
         }.recoverWith { case e: NotFound =>
           (for {
@@ -65,7 +60,6 @@ object AccessControls
             case e: Group.NotFound => BadRequest(JsonMessage(e))
           }
         }
-      )
       }
     }
 
@@ -84,21 +78,17 @@ object AccessControls
 
   def save(id: UUID, res: String, act: String) =
     PermCheck(_.Save).async { implicit req =>
-      BodyIsJsObject { obj => obj.validate[AccessControl].fold(
-        failure => Future.successful(
-          UnprocessableEntity(JsonClientErrors(failure))
-        ),
-        success =>
-          (for {
-            _____ <- AccessControl.find(id, res, act)
-            saved <- success.save
-            _resp <- ES.Update(saved) in AccessControl
-          } yield _resp._1).map {
-            Ok(_)
-          }.recover {
-            case e: BaseException => NotFound
-          }
-      )
+      BindJson().as[AccessControl] { ac =>
+        (for {
+          _____ <- AccessControl.find(id, res, act)
+          saved <- ac.save
+          _resp <- ES.Update(saved) in AccessControl
+        } yield _resp._1).map {
+          Ok(_)
+        }.recover {
+          case e: BaseException => NotFound
+        }
+
       }
     }
 }

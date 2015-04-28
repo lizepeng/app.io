@@ -70,7 +70,7 @@ package object api {
     }
   }
 
-  object WrongTypeOfJSON {
+  object WrongTypeOfJson {
 
     def apply()(implicit lang: Lang): JsObject =
       Json.obj("message" -> MSG("api.json.body.wrong.type"))
@@ -83,9 +83,31 @@ package object api {
     ): Future[Result] = {
       req.body.asJson match {
         case Some(obj: JsObject) => f(obj)
-        case _                   => Future.successful(BadRequest(WrongTypeOfJSON()))
+        case _                   => Future.successful(BadRequest(WrongTypeOfJson()))
       }
     }
+  }
+
+  object BindJson {
+
+    class Handling(part: Option[JsObject]) {
+
+      def as[T](f: T => Future[Result])(
+        implicit req: UserRequest[AnyContent], reads: Reads[T]
+      ): Future[Result] = BodyIsJsObject { obj =>
+        part.map(_ ++ obj).getOrElse(obj).validate[T].fold(
+          failure => Future.successful(
+            UnprocessableEntity(JsonClientErrors(failure))
+          ),
+          success => f(success)
+        )
+      }
+    }
+
+    def and(part: JsObject) = new Handling(Some(part))
+
+    def apply() = new Handling(None)
+
   }
 
 }

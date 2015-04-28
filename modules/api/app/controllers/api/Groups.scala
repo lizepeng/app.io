@@ -47,21 +47,20 @@ object Groups
 
   def create =
     PermCheck(_.Save).async { implicit req =>
-      BodyIsJsObject { obj => (obj ++ Json.obj(
-        "id" -> UUIDs.timeBased(),
-        "is_internal" -> false
-      )).validate[Group].fold(
-          failure => Future.successful(
-            UnprocessableEntity(JsonClientErrors(failure))
-          ),
-          success => for {
-            saved <- success.save
-            _resp <- ES.Index(saved) into Group
-          } yield {
-              Created(_resp._1)
-                .withHeaders(LOCATION -> routes.Groups.show(saved.id).url)
-            }
+      BindJson.and(
+        Json.obj(
+          "id" -> UUIDs.timeBased(),
+          "is_internal" -> false
         )
+      ).as[Group] {
+        success => for {
+          saved <- success.save
+          _resp <- ES.Index(saved) into Group
+        } yield
+          Created(_resp._1)
+            .withHeaders(
+              LOCATION -> routes.Groups.show(saved.id).url
+            )
       }
     }
 
@@ -85,21 +84,16 @@ object Groups
 
   def save(id: UUID) =
     PermCheck(_.Save).async { implicit req =>
-      BodyIsJsObject { obj => obj.validate[Group].fold(
-        failure => Future.successful(
-          UnprocessableEntity(JsonClientErrors(failure))
-        ),
-        success =>
-          (for {
-            _____ <- Group.find(id)
-            saved <- success.save
-            _resp <- ES.Update(saved) in Group
-          } yield _resp._1).map {
-            Ok(_)
-          }.recover {
-            case e: BaseException => NotFound
-          }
-      )
+      BindJson().as[Group] { grp =>
+        (for {
+          _____ <- Group.find(id)
+          saved <- grp.save
+          _resp <- ES.Update(saved) in Group
+        } yield _resp._1).map {
+          Ok(_)
+        }.recover {
+          case e: BaseException => NotFound
+        }
       }
     }
 
