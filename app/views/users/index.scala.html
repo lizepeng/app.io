@@ -43,13 +43,16 @@ implicit req: UserRequest[_], lang: Lang)
         <table class="table table-hover table-ellipsis">
           <thead>
             <tr>
-              <th class="hidden-xs col-sm-6">
+              <th class="hidden-xs col-sm-6  col-md-5">
                 @MSG("id")
               </th>
-              <th class="col-xs-8  col-sm-3">
+              <th class="col-xs-8  col-sm-3  col-md-3">
                 @MSG("email")
               </th>
-              <th class="col-xs-4  col-sm-3 text-right">
+              <th class="hidden-xs hidden-sm col-md-3">
+                @MSG("name")
+              </th>
+              <th class="col-xs-4  col-sm-3  col-md-1 text-right">
                 @MSG("action")
               </th>
             </tr>
@@ -68,6 +71,9 @@ implicit req: UserRequest[_], lang: Lang)
                 <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
                   {{ usr.email }}
                 </a>
+              </td>
+              <td class="hidden-xs hidden-sm">
+                {{ usr.name }}
               </td>
               <td>
                 <div class="pull-right">
