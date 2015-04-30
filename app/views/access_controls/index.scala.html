@@ -97,7 +97,7 @@ implicit req: UserRequest[_], lang: Lang)
             </tr>
           </thead>
           <tbody>
-            <tr class="ng-cloak" ng-repeat="ac in ACList.acs">
+            <tr class="ng-cloak" ng-repeat="ac in ACList.acs" ng-class="ac.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
               <td ng-if="ac.is_group">
                 <a ng-href="{{jsRoutes.controllers.Groups.show(ac.principal).url}}">
                   <i class="fa fa-group fa-lg fa-fw text-info"></i>
@@ -176,12 +176,12 @@ implicit req: UserRequest[_], lang: Lang)
                 headers);
 
               Group.query({ids:AC.gids(acs).join(',')},
-                function (grps, headers) {
+                function(grps, headers) {
                   service.groups = Group.toMap(grps);
               });
 
               User.query({ids:AC.uids(acs).join(',')},
-                function (usrs, headers) {
+                function(usrs, headers) {
                   service.users = User.toMap(usrs);
               });
             });
