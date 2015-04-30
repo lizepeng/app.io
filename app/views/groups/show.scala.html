@@ -22,28 +22,33 @@ implicit req: UserRequest[_], lang: Lang)
   </div>
 
   <div class="row">
-    <form name="form" class="form-inline col-sm-6 col-sm-offset-6 col-md-5 col-md-offset-7"
-      ng-controller="NewEntryCtrl" novalidate>
+    <div class="col-xs-12">
+      <form name="form" class="form-inline"
+        ng-controller="NewEntryCtrl" novalidate>
 
-      @ng._form_control("email",
-        '_type        -> "email",
-        'maxLength    -> 64,
-        'email        -> None,
-        'placeholder  -> Groups.vmsg("user.email.placeholder"),
-        'typeahead    -> "email for email in getUserEmails($viewValue)",
-        'autocomplete -> "off",
-        Symbol("ng-model") -> "user.email"
-      )
+        @ng._form_control("email",
+          '_type        -> "email",
+          'maxLength    -> 64,
+          'email        -> None,
+          'placeholder  -> Groups.vmsg("user.email.placeholder"),
+          'typeahead    -> "email for email in getUserEmails($viewValue)",
+          'autocomplete -> "off",
+          Symbol("ng-model") -> "user.email"
+        )
 
-      <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)" ng-disabled="form.$invalid">
-        <i class="fa fa-user-plus"></i>
-        @MSG("add.user")
-      </button>
-    </form>
+        <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)" ng-disabled="form.$invalid">
+          <i class="fa fa-user-plus"></i>
+          @MSG("add.user")
+        </button>
+      </form>
+    </div>
   </div>
 
-  <div class="row">
-    <div class="table-responsive" ng-controller="UserGroupsCtrl" data-id="@group.id">
+  <div class="row" ng-controller="UserGroupsCtrl" data-id="@group.id">
+
+    @ng._msg_confirm_delete("html")
+
+    <div class="table-responsive">
       <table class="table table-hover table-ellipsis">
         <thead>
           <tr>
@@ -71,7 +76,7 @@ implicit req: UserRequest[_], lang: Lang)
             </td>
             <td>
               <button type="button" class="btn btn-danger btn-xs pull-right"
-                ng-click="GroupUsersList.delete(usr)">
+                ng-click="confirm(usr)">
                 <i class="fa fa-user-times"></i>
                 @MSG("delete")
               </button>
@@ -87,6 +92,7 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "xeditable"),
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
+  ng._msg_confirm_delete("js"),
   controller
 )
 
@@ -141,9 +147,18 @@ implicit req: UserRequest[_], lang: Lang)
     }])
 
     .controller('UserGroupsCtrl',
-      ['$scope', '$attrs', 'GroupUsersList',
-      function ($scope, $attrs, GroupUsersList) {
+      ['$scope', '$attrs', '$modal', 'GroupUsersList',
+      function($scope, $attrs, $modal, GroupUsersList) {
         $scope.GroupUsersList = GroupUsersList.init($attrs.id);
+
+        $scope.confirm = function(usr) {
+          var instance = openConfirmDelete($modal);
+
+          instance.result.then(function() {
+            GroupUsersList.delete(usr);
+          }, function () {
+          });
+        };
     }])
     .controller('NewEntryCtrl',
       ['$scope', '$http', 'GroupUsersList',
@@ -160,9 +175,11 @@ implicit req: UserRequest[_], lang: Lang)
           });
         };
     }])
-    .controller('AlertCtrl',['$scope', 'Alert', function ($scope, Alert) {
+    .controller('AlertCtrl',['$scope', 'Alert', function($scope, Alert) {
       $scope.Alert = Alert;
     }]);
+
+    addConfirmDeleteCtrl(list);
 
     angular.module('app').requires.push('group.users.list');
   </script>

@@ -19,6 +19,8 @@ implicit req: UserRequest[_], lang: Lang)
 
   <div ng-controller="GroupsCtrl">
 
+    @ng._msg_confirm_delete("html")
+
     <div class="row">
       <div class="table-responsive">
         <table class="table table-hover table-ellipsis">
@@ -64,7 +66,7 @@ implicit req: UserRequest[_], lang: Lang)
               <td>
                 <button type="button" class="btn btn-danger btn-xs pull-right"
                   ng-show="!grp.is_internal"
-                  ng-click="GroupList.delete(grp)">
+                  ng-click="confirm(grp)">
                   <i class="fa fa-trash"></i>
                   @MSG("delete")
                 </button>
@@ -76,28 +78,30 @@ implicit req: UserRequest[_], lang: Lang)
     </div>
 
     <div class="row">
-      <form name="form" class="form-inline col-sm-offset-4 col-md-offset-6" novalidate>
+      <div class="col-xs-12">
+        <form name="form" class="form-inline" novalidate>
 
-        @ng._form_control("name",
-          'maxLength    -> 64,
-          'minLength    -> 2,
-          'tabindex     -> 1,
-          'placeholder  -> Groups.vmsg("name.placeholder"),
-          'autocomplete -> "off",
-          Symbol("ng-model") -> "group.name"
-        )
+          @ng._form_control("name",
+            'maxLength    -> 64,
+            'minLength    -> 2,
+            'tabindex     -> 1,
+            'placeholder  -> Groups.vmsg("name.placeholder"),
+            'autocomplete -> "off",
+            Symbol("ng-model") -> "group.name"
+          )
 
-        @ng._form_control("description",
-          'tabindex    -> 2,
-          'placeholder -> Groups.vmsg("description.placeholder"),
-          Symbol("ng-model") -> "group.description"
-        )
+          @ng._form_control("description",
+            'tabindex    -> 2,
+            'placeholder -> Groups.vmsg("description.placeholder"),
+            Symbol("ng-model") -> "group.description"
+          )
 
-        <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid">
-          <i class="fa fa-plus"></i>
-          @Groups.vmsg("new.group")
-        </button>
-      </form>
+          <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid">
+            <i class="fa fa-plus"></i>
+            @Groups.vmsg("new.group")
+          </button>
+        </form>
+      </div>
     </div>
 
     <div class="row">
@@ -110,6 +114,7 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
   libs.webjars("js", "xeditable"),
+  ng._msg_confirm_delete("js"),
   jsRoutes,
   controller
 )
@@ -166,8 +171,8 @@ implicit req: UserRequest[_], lang: Lang)
     }]);
 
     list.controller('GroupsCtrl',
-      ['$scope', '$http', '$q', 'ClientError', 'GroupList',
-      function ($scope, $http, $q, ClientError, GroupList) {
+      ['$scope', '$http', '$q', '$modal', 'ClientError', 'GroupList',
+      function($scope, $http, $q, $modal, ClientError, GroupList) {
         $scope.GroupList = GroupList;
         $scope.jsRoutes  = jsRoutes;
 
@@ -182,10 +187,22 @@ implicit req: UserRequest[_], lang: Lang)
             });
           return d.promise;
         };
+
+        $scope.confirm = function(grp) {
+
+          var instance = openConfirmDelete($modal);
+
+          instance.result.then(function() {
+            GroupList.delete(grp);
+          }, function () {
+          });
+        };
     }])
-    .controller('AlertCtrl',['$scope', 'Alert', function ($scope, Alert) {
+    .controller('AlertCtrl',['$scope', 'Alert', function($scope, Alert) {
       $scope.Alert = Alert;
     }]);
+
+    addConfirmDeleteCtrl(list);
 
     angular.module('app').requires.push('groups.list');
   </script>

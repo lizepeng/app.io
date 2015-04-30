@@ -75,6 +75,9 @@ implicit req: UserRequest[_], lang: Lang)
   </div>
 
   <div ng-controller="ACCtrl">
+
+    @ng._msg_confirm_delete("html")
+
     <div class="row">
       <div class="table-responsive">
         <table class="table table-hover">
@@ -119,7 +122,7 @@ implicit req: UserRequest[_], lang: Lang)
                     <toggle-switch status="ac.granted" ng-click="ACList.save(ac)"/>
                   </div>
                   <div class="btn-group hidden-xs" style="padding-top:3px">
-                    <button type="button" class="btn btn-danger btn-xs" ng-click="ACList.delete(ac)">
+                    <button type="button" class="btn btn-danger btn-xs" ng-click="confirm(ac)">
                       <i class="fa fa-trash-o"></i>
                       @MSG("delete")
                     </button>
@@ -139,6 +142,7 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
   libs.assets("js", "ui.parts"),
+  ng._msg_confirm_delete("js"),
   jsRoutes,
   controller
 )
@@ -152,11 +156,11 @@ implicit req: UserRequest[_], lang: Lang)
 
 @controller = {
   <script>
-    angular.module('access_controls.list',
+    var list = angular.module('access_controls.list',
       ['ui.bootstrap', 'ui.parts.toggle-switch',
        'api.access_control', 'api.group', 'api.user', 'api.helper'])
 
-      .factory('ACList',
+      list.factory('ACList',
         ['AccessControl', 'Group', 'User', 'LinkHeader', 'Alert',
         function(AC, Group, User, LinkHeader, Alert){
           var service = {};
@@ -236,10 +240,19 @@ implicit req: UserRequest[_], lang: Lang)
           return service;
       }])
 
-      .controller('ACCtrl', ['$scope', 'ACList',
-        function ($scope, ACList) {
+      .controller('ACCtrl', ['$scope', '$modal', 'ACList',
+        function($scope, $modal, ACList) {
           $scope.ACList   = ACList;
           $scope.jsRoutes = jsRoutes;
+
+          $scope.confirm = function(ac) {
+            var instance = openConfirmDelete($modal);
+
+            instance.result.then(function() {
+              ACList.delete(ac);
+            }, function () {
+            });
+          };
       }])
 
       .controller('AlertCtrl',['$scope', 'Alert',
@@ -295,6 +308,8 @@ implicit req: UserRequest[_], lang: Lang)
             });
           };
       }]);
+
+    addConfirmDeleteCtrl(list);
 
     angular.module('app').requires.push('access_controls.list');
   </script>

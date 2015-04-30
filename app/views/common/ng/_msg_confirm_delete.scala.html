@@ -1,0 +1,53 @@
+@(textType: String = "html")(
+implicit lang: Lang)
+
+@import helper._
+
+@common._part(textType){
+  <script type="text/ng-template" id="confirm_delete.html">
+    @confirm_delete
+  </script>
+}{
+}{
+  <script>
+    function openConfirmDelete($modal) {
+      return $modal.open({
+        templateUrl: 'confirm_delete.html',
+        controller: 'ConfirmDeleteCtrl'
+      });
+    };
+
+    function addConfirmDeleteCtrl(module) {
+      module.controller('ConfirmDeleteCtrl', function($scope, $modalInstance) {
+        $scope.ok = function () {
+          $modalInstance.close();
+        };
+        $scope.cancel = function () {
+          $modalInstance.dismiss('cancel');
+        };
+      });
+    };
+
+
+  </script>
+}
+
+@confirm_delete = {
+  <div class="modal-header">
+    <button type="button" class="close" aria-label="Close" ng-click="cancel()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title">@MSG("msg.confirm_delete.title")</h4>
+  </div>
+  <div class="modal-body">
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-danger" ng-click="ok()">
+      <i class="fa fa-trash"></i>
+      @MSG("delete")
+    </button>
+    <button class="btn btn-default" ng-click="cancel()">
+      @MSG("cancel")
+    </button>
+  </div>
+}
