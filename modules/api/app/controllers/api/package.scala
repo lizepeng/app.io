@@ -30,6 +30,10 @@ package object api {
   object JsonClientErrors {
 
     def apply(
+      jse: JsError
+    )(implicit lang: Lang): JsObject = apply(jse.errors)
+
+    def apply(
       errors: Seq[(JsPath, Seq[ValidationError])]
     )(implicit lang: Lang): JsObject = Json.obj(
       "message" -> MSG("api.json.validation.failed"),

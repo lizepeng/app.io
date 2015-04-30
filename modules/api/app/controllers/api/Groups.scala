@@ -7,9 +7,11 @@ import elasticsearch._
 import helpers._
 import models._
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 import scala.concurrent.Future
+import scala.language.postfixOps
 
 //* TODO authorization
 //* TODO Rate limit
@@ -113,9 +115,9 @@ object Groups
   def addUser(id: UUID) =
     PermCheck(_.Save).async { implicit req =>
       BodyIsJsObject { obj =>
-        (obj \ "id").validate[UUID].map(User.find)
+        obj.validate[UUID]((__ \ 'id).read[UUID]).map(User.find)
           .orElse(
-            (obj \ "email").validate[String].map(User.find)
+            obj.validate[String]((__ \ 'email).read[String]).map(User.find)
           ).map {
           _.flatMap { user =>
             val info: UserInfo = user.toUserInfo

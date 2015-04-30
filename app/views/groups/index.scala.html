@@ -96,7 +96,7 @@ implicit req: UserRequest[_], lang: Lang)
             Symbol("ng-model") -> "group.description"
           )
 
-          <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid">
+          <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid || !group.name || group.name === ''">
             <i class="fa fa-plus"></i>
             @Groups.vmsg("new.group")
           </button>

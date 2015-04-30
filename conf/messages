@@ -138,6 +138,9 @@ views.users.head                                 =Users
 views.users.title                                =Users
 views.users.search.label                         =Search Users
 views.users.search.placeholder                   =Search Users
+views.users.email.placeholder                    =Enter Email Address
+views.users.name.placeholder                     =Enter User Name
+views.users.new.user                             =New User
 
 msg.models.users.email.taken                     =Email is invalid or already taken
 msg.models.users.not.found                       =User {0} doesn''t exists

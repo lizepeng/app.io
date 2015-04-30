@@ -6,7 +6,9 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(Users.vmsg("title")) {
 
-  @common._flashing()
+  <div class="ng-cloak" ng-controller="AlertCtrl">
+    <alert ng-repeat="alert in Alert.alerts" type="{{alert.type}}" close="Alert.dismiss($index)">{{alert.msg}}</alert>
+  </div>
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
@@ -36,8 +38,8 @@ implicit req: UserRequest[_], lang: Lang)
       </div>
     </div>
 
-   <div class="row">
-      <div class="table-responsive" >
+    <div class="row">
+      <div class="table-responsive">
         <table class="table table-hover table-ellipsis">
           <thead>
             <tr>
@@ -75,12 +77,41 @@ implicit req: UserRequest[_], lang: Lang)
             </tr>
           </tbody>
         </table>
-
-        <div ng-hide="keyword !== ''">
-          @ng._pager("UserList.links")
-        </div>
-
       </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12">
+        <form name="form" class="form-inline" novalidate>
+
+          @ng._form_control("email",
+            '_type        -> "email",
+            'email        -> None,
+            'tabindex     -> 1,
+            'placeholder  -> Users.vmsg("email.placeholder"),
+            'autocomplete -> "off",
+            Symbol("ng-model") -> "user.email"
+          )
+
+          @ng._form_control("name",
+            'maxLength    -> 64,
+            'minLength    -> 2,
+            'tabindex    -> 2,
+            'placeholder -> Users.vmsg("name.placeholder"),
+            Symbol("ng-model") -> "user.name"
+          )
+
+          <button type="submit" class="btn btn-success" ng-click="UserList.create(user)"
+            ng-disabled="form.$invalid || !user.email || user.email === '' || !user.name || user.name === ''">
+            <i class="fa fa-user-plus"></i>
+            @Users.vmsg("new.user")
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="row" ng-hide="keyword !== ''">
+      @ng._pager("UserList.links")
     </div>
   </div>
 }()(
@@ -102,8 +133,8 @@ implicit req: UserRequest[_], lang: Lang)
       ['ui.bootstrap', 'api.user', 'api.helper']);
 
     list.factory('UserList',
-      ['User', 'LinkHeader', 'Alerts',
-      function(User, LinkHeader, Alerts){
+      ['User', 'LinkHeader', 'Alert',
+      function(User, LinkHeader, Alert){
         var service = {};
         service.links = LinkHeader.links;
 
@@ -113,7 +144,7 @@ implicit req: UserRequest[_], lang: Lang)
           service.users = User.query({
           page     :@pager.pageNum,
           per_page :@pager.pageSize,
-          q        :(q === undefined ? '' : '*' + q + '*')
+          q        :( !q ? '' : '*' + q + '*')
           }, function(value, headers){
             LinkHeader.updateLinks(
               '@Html(routes.Users.index(pager.next).toString)',
@@ -127,15 +158,12 @@ implicit req: UserRequest[_], lang: Lang)
         service.create = function(data) {
           new User(data).$save(function(value){
             service.users.unshift(value);
+          },function(res) {
+            Alert.push({type:'danger', msg:res.data.message});
           });
         };
 
         return service;
-    }])
-
-    .factory('Alerts', [
-      function() {
-        return [];
     }])
 
     .controller('UsersCtrl',
@@ -149,6 +177,9 @@ implicit req: UserRequest[_], lang: Lang)
         $scope.$watch('keyword', function(nv, ov) {
           UserList.reload(nv);
         });
+    }])
+    .controller('AlertCtrl',['$scope', 'Alert', function($scope, Alert) {
+      $scope.Alert = Alert;
     }]);
 
     angular.module('app').requires.push('users.list');

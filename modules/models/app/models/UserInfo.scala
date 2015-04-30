@@ -15,7 +15,16 @@ case class UserInfo(
   email: String,
   int_groups: Int,
   ext_groups: Set[UUID]
-)
+) {
+
+  def toUser: User = User(
+    id = id,
+    name = name,
+    email = email,
+    int_groups = InternalGroups(int_groups),
+    ext_groups = ext_groups
+  )
+}
 
 object UserInfo {
 

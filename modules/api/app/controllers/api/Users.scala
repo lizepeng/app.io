@@ -2,6 +2,7 @@ package controllers.api
 
 import java.util.UUID
 
+import com.datastax.driver.core.utils.UUIDs
 import elasticsearch.ES
 import helpers._
 import models._
@@ -45,5 +46,28 @@ object Users
             linkHeader(page, routes.Users.index(Nil, q, _))
           )
         }
+    }
+
+  def create =
+    PermCheck(_.Save).async { implicit req =>
+      BindJson.and(
+        Json.obj(
+          "id" -> UUIDs.timeBased(),
+          "int_groups" -> 0,
+          "ext_groups" -> JsArray()
+        )
+      ).as[UserInfo] {
+        success => (for {
+          saved <- success.toUser.save
+          _resp <- ES.Index(saved) into User
+        } yield (saved, _resp)).map { case (saved, _resp) =>
+          Created(_resp._1)
+            .withHeaders(
+              LOCATION -> routes.Groups.show(saved.id).url
+            )
+        }.recover {
+          case e: User.EmailTaken => MethodNotAllowed(JsonMessage(e))
+        }
+      }
     }
 }

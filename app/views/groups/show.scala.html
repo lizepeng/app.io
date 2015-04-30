@@ -36,7 +36,8 @@ implicit req: UserRequest[_], lang: Lang)
           Symbol("ng-model") -> "user.email"
         )
 
-        <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)" ng-disabled="form.$invalid">
+        <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)"
+          ng-disabled="form.$invalid || !user.email || user.email === ''">
           <i class="fa fa-user-plus"></i>
           @MSG("add.user")
         </button>

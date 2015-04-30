@@ -312,7 +312,7 @@ object UserByEmail extends UserByEmail with Cassandra {
   }.future().map(_.wasApplied())
 
   def find(email: String): Future[(String, UUID)] = {
-    if (email.isEmpty) throw User.NotFound(email)
+    if (email.isEmpty) Future.failed(User.NotFound(email))
     else CQL {
       select.where(_.email eqs email)
     }.one().map {

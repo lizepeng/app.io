@@ -14,6 +14,7 @@ POST   /groups/:id/users                 controllers.api.Groups.addUser(id:UUID)
 DELETE /groups/:id/users/:uid            controllers.api.Groups.delUser(id:UUID, uid:UUID)
 
 GET    /users                            controllers.api.Users.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
+POST   /users                            controllers.api.Users.create
 GET    /users/:id/groups                 controllers.api.Users.groups(id:UUID,options:Option[String])
 
 GET    /access_controls                  controllers.api.AccessControls.index(q:Option[String],p:Pager?=Pager.first)
