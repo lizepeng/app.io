@@ -15,48 +15,72 @@ implicit req: UserRequest[_], lang: Lang)
     </h2>
   </div>
 
-  <div class="row">
-    <div class="table-responsive" ng-controller="UsersCtrl">
-      <table class="table table-hover table-ellipsis">
-        <thead>
-          <tr>
-            <th class="hidden-xs col-sm-6">
-              @MSG("id")
-            </th>
-            <th class="col-xs-8  col-sm-3">
-              @MSG("email")
-            </th>
-            <th class="col-xs-4  col-sm-3 text-right">
-              @MSG("action")
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="ng-cloak" ng-repeat="usr in UserList.users">
-            <td class="hidden-xs">
-              <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
-                <code>{{ usr.id }}</code>
-              </a>
-            </td>
-            <td class="hidden-xs">
-              {{ usr.email }}
-            </td>
-            <td class="visible-xs">
-              <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
+  <div ng-controller="UsersCtrl">
+
+    <div class="row">
+      <div class="col-xs-8 col-xs-offset-4 col-sm-6 col-sm-offset-6">
+        <div class="form-group">
+          <label class="sr-only" for="search-users">
+            @Users.vmsg("search.label")
+          </label>
+          <div class="input-group">
+            <div class="input-group-addon">
+              <i class="fa fa-search"></i>
+            </div>
+            <input type="search" class="form-control" id="search-users"
+              placeholder="@Users.vmsg("search.label")"
+              autocomplete="off"
+              ng-model="keyword">
+          </div>
+        </div>
+      </div>
+    </div>
+
+   <div class="row">
+      <div class="table-responsive" >
+        <table class="table table-hover table-ellipsis">
+          <thead>
+            <tr>
+              <th class="hidden-xs col-sm-6">
+                @MSG("id")
+              </th>
+              <th class="col-xs-8  col-sm-3">
+                @MSG("email")
+              </th>
+              <th class="col-xs-4  col-sm-3 text-right">
+                @MSG("action")
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="ng-cloak" ng-repeat="usr in UserList.users">
+              <td class="hidden-xs">
+                <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
+                  <code>{{ usr.id }}</code>
+                </a>
+              </td>
+              <td class="hidden-xs">
                 {{ usr.email }}
-              </a>
-            </td>
-            <td>
-              <div class="pull-right">
-                <i class="fa fa-unlock-alt fa-lg fa-fw"></i>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+              <td class="visible-xs">
+                <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
+                  {{ usr.email }}
+                </a>
+              </td>
+              <td>
+                <div class="pull-right">
+                  <i class="fa fa-unlock-alt fa-lg fa-fw"></i>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-      @ng._pager("UserList.links")
+        <div ng-hide="keyword !== ''">
+          @ng._pager("UserList.links")
+        </div>
 
+      </div>
     </div>
   </div>
 }()(
@@ -83,15 +107,22 @@ implicit req: UserRequest[_], lang: Lang)
         var service = {};
         service.links = LinkHeader.links;
 
-        service.users = User.query({
+        service.users = {};
+
+        service.reload = function(q) {
+          service.users = User.query({
           page     :@pager.pageNum,
-          per_page :@pager.pageSize
+          per_page :@pager.pageSize,
+          q        :(q === undefined ? '' : '*' + q + '*')
           }, function(value, headers){
             LinkHeader.updateLinks(
               '@Html(routes.Users.index(pager.next).toString)',
               '@Html(routes.Users.index(pager.prev).toString)',
               headers);
           });
+        };
+
+        service.reload();
 
         service.create = function(data) {
           new User(data).$save(function(value){
@@ -112,6 +143,12 @@ implicit req: UserRequest[_], lang: Lang)
       function ($scope, UserList) {
         $scope.UserList = UserList;
         $scope.jsRoutes = jsRoutes;
+
+        $scope.keyword = '';
+
+        $scope.$watch('keyword', function(nv, ov) {
+          UserList.reload(nv);
+        });
     }]);
 
     angular.module('app').requires.push('users.list');

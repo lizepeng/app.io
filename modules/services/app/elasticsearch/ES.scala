@@ -82,7 +82,7 @@ object ESyntax {
       new ReadySearchDefinition(client, p)(
         Def(search in indexName / t.moduleName)
           .?(cond = true)(_ start p.start limit p.limit)
-          .?(q.isDefined)(_ query q.get)
+          .?(q.isDefined && q.get.nonEmpty)(_ query q.get)
           .result
       )
     }
