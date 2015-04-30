@@ -35,6 +35,8 @@ POST /signup_check/username                 controllers.Users.checkEmail
 POST /signup_check/password                 controllers.Users.checkPassword
 
 GET  /my/dashboard                          controllers.My.dashboard
+GET  /settings/admin                        controllers.My.admin
+POST /settings/admin                        controllers.My.changePassword
 
 GET  /users                                 controllers.Users.index(p:Pager?=Pager.first)
 GET  /users/:id                             controllers.Users.show(id:UUID)
@@ -43,7 +45,7 @@ GET  /groups                                controllers.Groups.index(p:Pager?=Pa
 POST /groups/check_name                     controllers.Groups.checkName
 GET  /groups/:id                            controllers.Groups.show(id:UUID)
 
-GET  /password_reset                        controllers.PasswordReset.nnew
+GET  /password_reset                        controllers.PasswordReset.nnew(email?="")
 POST /password_reset                        controllers.PasswordReset.create
 GET  /password_reset/:id                    controllers.PasswordReset.show(id)
 POST /password_reset/:id                    controllers.PasswordReset.save(id)

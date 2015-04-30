@@ -36,8 +36,8 @@ object PasswordReset
       .verifying("password.not.confirmed", _.isConfirmed)
   )
 
-  def nnew = MaybeUserAction { implicit req =>
-    Ok(html.password_reset.nnew(emailFM))
+  def nnew(email: String) = MaybeUserAction { implicit req =>
+    Ok(html.password_reset.nnew(emailFM.fill(email)))
   }
 
   /**

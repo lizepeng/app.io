@@ -115,6 +115,13 @@ sign.up.failed                                   =There were problems creating y
 
 sign.in.msg.error                                =TODO
 
+# Settings
+old_password                                     =Old password
+new_password.original                            =New password
+new_password.confirmation                        =Confirm new password
+password.update                                  =Update password
+password.forgot                                  =I forgot my password
+
 # groups
 controllers.api.groups.name                      =API: Groups
 controllers.groups.name                          =Groups
@@ -133,6 +140,8 @@ msg.models.groups.not.writable                   =Group is not writable
 # users
 controllers.api.users.name                       =API: Users
 controllers.users.name                           =Users
+controllers.users.password.changed               =Password changed successfully
+controllers.users.old.password.invalid           =Old Password is invalid
 
 views.users.head                                 =Users
 views.users.title                                =Users

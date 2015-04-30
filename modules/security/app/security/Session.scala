@@ -73,7 +73,6 @@ trait Session {
           user_id_key -> user.id.toString,
           user_salt_key -> user.salt
         )
-        .flashing("success" -> s"Logged in")
 
       if (!user.remember_me) resultWithSession
       else {
