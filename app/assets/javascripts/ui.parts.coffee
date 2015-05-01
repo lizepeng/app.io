@@ -14,6 +14,29 @@ angular.module 'ui.parts', [ 'ui.parts.toggle-switch' ]
     return
   ]
 
+  # Helper to make confirm message box easier to use
+  .factory 'ModalDialog', [
+    '$modal'
+    ($modal) ->
+      service  = {}
+      service.templateUrl = ''
+      service.open = -> $modal.open
+        templateUrl : service.templateUrl
+        controller  : 'ModalDialogCtrl'
+      service
+  ]
+
+  .controller 'ModalDialogCtrl', [
+    '$scope'
+    '$modalInstance'
+    ($scope, $modalInstance) ->
+      $scope.ok =
+        -> $modalInstance.close()
+      $scope.cancel =
+        -> $modalInstance.dismiss 'cancel'
+      return
+  ]
+
 angular.module 'ui.parts.toggle-switch', [ 'ui.template/buttons/toggle-switch.html' ]
 
   .controller 'ToggleSwitchController', [ '$scope', ($scope) ->
