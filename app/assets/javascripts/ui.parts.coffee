@@ -1,5 +1,19 @@
 angular.module 'ui.parts', [ 'ui.parts.toggle-switch' ]
 
+  # Helper to make alert easier to use
+  # msg format: {type:'danger', msg:'msg'}
+  .factory 'Alert', ->
+    alerts  : []
+    dismiss : (idx) ->
+      this.alerts.splice(idx, 1)
+    push    : (msg) ->
+      this.alerts.push(msg)
+
+  .controller 'AlertCtrl', ['$scope', 'Alert', ($scope, Alert) ->
+    $scope.Alert = Alert
+    return
+  ]
+
 angular.module 'ui.parts.toggle-switch', [ 'ui.template/buttons/toggle-switch.html' ]
 
   .controller 'ToggleSwitchController', [ '$scope', ($scope) ->

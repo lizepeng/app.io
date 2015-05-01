@@ -218,6 +218,7 @@ log.models.email_templates.not.found             =Email Template {0}, {1} not fo
 log.models.email_templates.updated.by.others     =Email Template has been edited by other users.
 
 # access_controls
+controllers.api.access_controls.name             =API: Access Control List
 controllers.access_controls.name                 =Access Control List
 controllers.access_controls.entry.deleted        =Access Control Entry deleted
 controllers.access_controls.entry.created        =Access Control Entry created

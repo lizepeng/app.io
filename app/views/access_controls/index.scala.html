@@ -6,6 +6,8 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(AccessControls.vmsg("title")) {
 
+  @ng._alert()
+
   @common._flashing()
 
   <div class="row" style="margin-top:10px">
@@ -157,7 +159,7 @@ implicit req: UserRequest[_], lang: Lang)
 @controller = {
   <script>
     var list = angular.module('access_controls.list',
-      ['ui.bootstrap', 'ui.parts.toggle-switch',
+      ['ui.bootstrap', 'ui.parts',
        'api.access_control', 'api.group', 'api.user', 'api.helper'])
 
       list.factory('ACList',
@@ -199,21 +201,25 @@ implicit req: UserRequest[_], lang: Lang)
           };
 
           service.create = function(data, principal) {
-            new AC(data).$save(function(value){
-              if (data.is_group) {
-                service.groups[principal.id] = principal;
-              } else {
-                service.users[principal.id] = principal;
-              }
+            new AC(data).$save(
+              function(value){
+                if (data.is_group) {
+                  service.groups[principal.id] = principal;
+                } else {
+                  service.users[principal.id] = principal;
+                }
 
-              if(_.findIndex(service.acs, {
-                  principal:value.principal,
-                  resource: value.resource,
-                  action: value.action
-                }) === -1) {
-                service.acs.unshift(value);
-              }
-            });
+                if(_.findIndex(service.acs, {
+                    principal:value.principal,
+                    resource: value.resource,
+                    action: value.action
+                  }) === -1) {
+                  service.acs.unshift(value);
+                }
+              },
+              function(res) {
+                Alert.push({type:'danger', msg:res.data.message});
+              });
           };
 
           service.delete = function(data) {
@@ -253,11 +259,6 @@ implicit req: UserRequest[_], lang: Lang)
             }, function () {
             });
           };
-      }])
-
-      .controller('AlertCtrl',['$scope', 'Alert',
-        function ($scope, Alert) {
-          $scope.Alert = Alert;
       }])
 
       .controller('NewEntryCtrl', ['$scope', '$http', 'ACList',

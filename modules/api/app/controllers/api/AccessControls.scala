@@ -13,7 +13,7 @@ import play.api.libs.json._
  * @author zepeng.li@gmail.com
  */
 object AccessControls
-  extends SecuredController(Group)
+  extends SecuredController(AccessControl)
   with ExHeaders {
 
   def index(q: Option[String], p: Pager) =

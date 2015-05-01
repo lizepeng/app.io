@@ -1,0 +1,12 @@
+@*
+ * In order to use this template, you should also include 'ui.parts'
+ *@
+@()
+
+<div class="row">
+  <div class="ng-cloak" ng-controller="AlertCtrl">
+    <alert ng-repeat="alert in Alert.alerts" type="{{alert.type}}" close="Alert.dismiss($index)">
+      {{ alert.msg || 'Empty Message' }}
+    </alert>
+  </div>
+</div>

@@ -6,9 +6,7 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(Groups.vmsg("title")) {
 
-  <div class="ng-cloak" ng-controller="AlertCtrl">
-    <alert ng-repeat="alert in Alert.alerts" type="{{alert.type}}" close="Alert.dismiss($index)">{{alert.msg}}</alert>
-  </div>
+  @ng._alert()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
@@ -87,21 +85,18 @@ implicit req: UserRequest[_], lang: Lang)
       </table>
     </div>
   </div>
-}(
-  libs.webjars("css", "xeditable")
-)(
-  libs.webjars("js", "xeditable"),
+}()(
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
+  libs.assets("js", "ui.parts"),
   ng._msg_confirm_delete("js"),
   controller
 )
 
 @controller = {
   <script>
-
     var list = angular.module('group.users.list',
-      ["xeditable", 'api.group', 'api.helper']);
+      ['api.group', 'api.helper', 'ui.parts']);
 
     list.factory('GroupUsersList',
       ['Group', 'Alert',
@@ -175,9 +170,6 @@ implicit req: UserRequest[_], lang: Lang)
             });
           });
         };
-    }])
-    .controller('AlertCtrl',['$scope', 'Alert', function($scope, Alert) {
-      $scope.Alert = Alert;
     }]);
 
     addConfirmDeleteCtrl(list);

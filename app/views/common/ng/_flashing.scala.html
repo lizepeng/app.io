@@ -1,0 +1,7 @@
+@(moduleName:String)(implicit req: MaybeUserRequest[_])
+
+@(moduleName).run(["Alert", function(Alert) {
+  @req.flash.data.map { case (level, msg) =>
+    Alert.push({type:'@level', msg:'@msg'});
+  }
+}]);

@@ -6,7 +6,7 @@ implicit req: UserRequest[_], lang: Lang)
 
 @layouts.base(Files.vmsg("title")) {
 
-  @common._flashing()
+  @ng._alert()
 
   <div class="row">
     <div class="col-xs-10 col-xs-offset-2">
@@ -97,5 +97,14 @@ implicit req: UserRequest[_], lang: Lang)
 }{
   @{_upload(path, "css")}
 }(
-  _upload(path, "js")
+  libs.assets("js", "ui.parts"),
+  controller
 )
+
+@controller = {
+  <script>
+    var list = angular.module('files.list', ['ui.parts']);
+    @ng._flashing("list")
+    angular.module('app').requires.push('files.list');
+  </script>
+}
