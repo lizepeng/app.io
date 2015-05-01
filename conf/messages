@@ -116,6 +116,13 @@ sign.up.failed                                   =There were problems creating y
 sign.in.msg.error                                =TODO
 
 # Settings
+settings.personal                                =Personal settings
+settings.profile                                 =Profile
+settings.account                                 =Account setting
+settings.email                                   =Emails
+settings.billing                                 =Billing
+settings.security                                =Security
+change.password                                  =Change Password
 old_password                                     =Old password
 new_password.original                            =New password
 new_password.confirmation                        =Confirm new password
