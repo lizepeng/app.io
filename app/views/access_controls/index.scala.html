@@ -78,7 +78,7 @@ implicit req: UserRequest[_], lang: Lang)
 
   <div ng-controller="ACCtrl">
 
-    @ng._msg_confirm_delete("html")
+    @ng._msg_confirm_delete()
 
     <div class="row">
       <div class="table-responsive">
@@ -144,7 +144,6 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
   libs.assets("js", "ui.parts"),
-  ng._msg_confirm_delete("js"),
   jsRoutes,
   controller
 )
@@ -246,13 +245,14 @@ implicit req: UserRequest[_], lang: Lang)
           return service;
       }])
 
-      .controller('ACCtrl', ['$scope', '$modal', 'ACList',
-        function($scope, $modal, ACList) {
+      .controller('ACCtrl', ['$scope', 'ACList', 'ModalDialog',
+        function($scope, ACList, ModalDialog) {
           $scope.ACList   = ACList;
           $scope.jsRoutes = jsRoutes;
+          ModalDialog.templateUrl = 'confirm_delete.html';
 
           $scope.confirm = function(ac) {
-            var instance = openConfirmDelete($modal);
+            var instance = ModalDialog.open();
 
             instance.result.then(function() {
               ACList.delete(ac);
@@ -309,8 +309,6 @@ implicit req: UserRequest[_], lang: Lang)
             });
           };
       }]);
-
-    addConfirmDeleteCtrl(list);
 
     angular.module('app').requires.push('access_controls.list');
   </script>

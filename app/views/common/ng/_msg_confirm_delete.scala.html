@@ -1,36 +1,8 @@
-@(textType: String = "html")(
-implicit lang: Lang)
+@()(implicit lang: Lang)
 
-@import helper._
-
-@common._part(textType){
-  <script type="text/ng-template" id="confirm_delete.html">
-    @confirm_delete
-  </script>
-}{
-}{
-  <script>
-    function openConfirmDelete($modal) {
-      return $modal.open({
-        templateUrl: 'confirm_delete.html',
-        controller: 'ConfirmDeleteCtrl'
-      });
-    };
-
-    function addConfirmDeleteCtrl(module) {
-      module.controller('ConfirmDeleteCtrl', function($scope, $modalInstance) {
-        $scope.ok = function () {
-          $modalInstance.close();
-        };
-        $scope.cancel = function () {
-          $modalInstance.dismiss('cancel');
-        };
-      });
-    };
-
-
-  </script>
-}
+<script type="text/ng-template" id="confirm_delete.html">
+  @confirm_delete
+</script>
 
 @confirm_delete = {
   <div class="modal-header">
