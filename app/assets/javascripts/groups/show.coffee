@@ -47,7 +47,7 @@ list.factory 'GroupUsersList', [
   'GroupUsersList'
   'ModalDialog'
   ($scope, $attrs, GroupUsersList, ModalDialog) ->
-    $scope.GroupUsersList = GroupUsersList.init $attrs.id
+    $scope.GroupUsersList   = GroupUsersList.init $attrs.id
     ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.confirm = (usr) ->

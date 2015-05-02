@@ -113,6 +113,7 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "xeditable"),
   libs.assets("js", "api"),
   libs.assets("js", "ui.parts"),
+  libs.assets("js", "groups/index"),
   jsRoutes,
   controller
 )
@@ -125,79 +126,13 @@ implicit req: UserRequest[_], lang: Lang)
 
 @controller = {
   <script>
-    var list = angular.module('groups.list',
-      ['xeditable', 'api.group', 'api.helper', 'ui.parts']);
-
-    list.run(function(editableOptions) {
-      editableOptions.theme = 'bs3';
-    });
-
-    list.factory('GroupList',
-      ['Group', 'LinkHeader', 'Alert',
-      function(Group, LinkHeader, Alert){
-        var service = {};
-        service.links = LinkHeader.links;
-
-        service.groups = Group.query({
-          page     :@pager.pageNum,
-          per_page :@pager.pageSize
-          }, function(value, headers){
-            LinkHeader.updateLinks(
-              '@Html(routes.Groups.index(pager.next).toString)',
-              '@Html(routes.Groups.index(pager.prev).toString)',
-              headers);
-          });
-
-        service.create = function(data) {
-          new Group(data).$save(function(value){
-            service.groups.push(value);
-          });
-        };
-
-        service.delete = function(data) {
-          data.$delete(
-            function(){
-              var idx = service.groups.indexOf(data);
-              service.groups.splice(idx, 1);
-            },
-            function(res){
-              Alert.push({type:'danger', msg:res.data.message});
-          });
-        };
-
-        return service;
+    views.groups.index.run(['GroupList', function(GroupList) {
+      GroupList.reload({
+        page     : @pager.pageNum,
+        pageSize : @pager.pageSize,
+        nextPage : '@Html(routes.Groups.index(pager.next).toString)',
+        prevPage : '@Html(routes.Groups.index(pager.prev).toString)'
+      });
     }]);
-
-    list.controller('GroupsCtrl',
-      ['$scope', '$http', '$q', 'ClientError', 'GroupList', 'ModalDialog',
-      function($scope, $http, $q, ClientError, GroupList, ModalDialog) {
-        $scope.GroupList = GroupList;
-        $scope.jsRoutes  = jsRoutes;
-        ModalDialog.templateUrl = 'confirm_delete.html';
-
-        $scope.checkName = function(data) {
-          var d = $q.defer();
-          $http.post('@routes.Groups.checkName', {name:data})
-            .success(function(res){
-              d.resolve();
-            })
-            .error(function(data, status) {
-              d.resolve(ClientError.firstMsg(data, status));
-            });
-          return d.promise;
-        };
-
-        $scope.confirm = function(grp) {
-
-          var instance = ModalDialog.open();
-
-          instance.result.then(function() {
-            GroupList.delete(grp);
-          }, function () {
-          });
-        };
-    }]);
-
-    angular.module('app').requires.push('groups.list');
   </script>
 }

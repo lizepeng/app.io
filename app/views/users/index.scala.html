@@ -122,6 +122,7 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
   libs.assets("js", "ui.parts"),
+  libs.assets("js", "users/index"),
   jsRoutes,
   controller
 )
@@ -134,56 +135,13 @@ implicit req: UserRequest[_], lang: Lang)
 
 @controller = {
   <script>
-    var list = angular.module('users.list',
-      ['ui.bootstrap', 'api.user', 'api.helper', 'ui.parts']);
-
-    list.factory('UserList',
-      ['User', 'LinkHeader', 'Alert',
-      function(User, LinkHeader, Alert){
-        var service = {};
-        service.links = LinkHeader.links;
-
-        service.users = {};
-
-        service.reload = function(q) {
-          service.users = User.query({
-          page     :@pager.pageNum,
-          per_page :@pager.pageSize,
-          q        :( !q ? '' : '*' + q + '*')
-          }, function(value, headers){
-            LinkHeader.updateLinks(
-              '@Html(routes.Users.index(pager.next).toString)',
-              '@Html(routes.Users.index(pager.prev).toString)',
-              headers);
-          });
-        };
-
-        service.reload();
-
-        service.create = function(data) {
-          new User(data).$save(function(value){
-            service.users.unshift(value);
-          },function(res) {
-            Alert.push({type:'danger', msg:res.data.message});
-          });
-        };
-
-        return service;
-    }])
-
-    .controller('UsersCtrl',
-      ['$scope', 'UserList',
-      function ($scope, UserList) {
-        $scope.UserList = UserList;
-        $scope.jsRoutes = jsRoutes;
-
-        $scope.keyword = '';
-
-        $scope.$watch('keyword', function(nv, ov) {
-          UserList.reload(nv);
-        });
+    views.users.index.run(['UserList', function(UserList) {
+      UserList.options = {
+        page     : @pager.pageNum,
+        pageSize : @pager.pageSize,
+        nextPage : '@Html(routes.Users.index(pager.next).toString)',
+        prevPage : '@Html(routes.Users.index(pager.prev).toString)'
+      };
     }]);
-
-    angular.module('app').requires.push('users.list');
   </script>
 }

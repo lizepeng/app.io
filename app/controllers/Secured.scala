@@ -1,5 +1,7 @@
 package controllers
 
+import play.api.i18n.Messages
+import play.api.libs.json._
 import security._
 
 /**
@@ -10,6 +12,14 @@ object Secured {
   object Modules {
 
     def names: Seq[String] = modules.map(_.CheckedModuleName.name)
+
+    def toJson = Json.prettyPrint(
+      JsObject(
+        names.map { name =>
+          (name, JsString(Messages(s"$name.name")))
+        }
+      )
+    )
 
     lazy val modules: Seq[PermissionCheckable] =
       Seq(
@@ -28,6 +38,14 @@ object Secured {
   object Actions {
 
     def names: Seq[String] = actions.map(_.name)
+
+    def toJson = Json.prettyPrint(
+      JsObject(
+        names.map { name =>
+          (name, JsString(Messages(s"actions$name")))
+        }
+      )
+    )
 
     lazy val actions: Seq[CheckedAction] = CheckedActions.ALL
   }

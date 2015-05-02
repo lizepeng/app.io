@@ -144,6 +144,7 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api"),
   libs.assets("js", "ui.parts"),
+  libs.assets("js", "access_controls/index"),
   jsRoutes,
   controller
 )
@@ -157,159 +158,15 @@ implicit req: UserRequest[_], lang: Lang)
 
 @controller = {
   <script>
-    var list = angular.module('access_controls.list',
-      ['ui.bootstrap', 'ui.parts',
-       'api.access_control', 'api.group', 'api.user', 'api.helper'])
-
-      list.factory('ACList',
-        ['AccessControl', 'Group', 'User', 'LinkHeader', 'Alert',
-        function(AC, Group, User, LinkHeader, Alert){
-          var service = {};
-          service.links = LinkHeader.links;
-
-          service.acs = AC.query({
-            page     :@pager.pageNum,
-            per_page :@pager.pageSize
-            }, function(acs, headers){
-              LinkHeader.updateLinks(
-                '@Html(routes.AccessControls.index(pager.next).toString)',
-                '@Html(routes.AccessControls.index(pager.prev).toString)',
-                headers);
-
-              Group.query({ids:AC.gids(acs).join(',')},
-                function(grps, headers) {
-                  service.groups = Group.toMap(grps);
-              });
-
-              User.query({ids:AC.uids(acs).join(',')},
-                function(usrs, headers) {
-                  service.users = User.toMap(usrs);
-              });
-            });
-
-          service.resources = {
-            @Secured.Modules.names.map{ n =>
-              '@n' : '@MSG(s"$n.name")',
-            }
-          };
-
-          service.actions = {
-            @Secured.Actions.names.map{ n =>
-              '@n' : '@MSG(s"actions.$n")',
-            }
-          };
-
-          service.create = function(data, principal) {
-            new AC(data).$save(
-              function(value){
-                if (data.is_group) {
-                  service.groups[principal.id] = principal;
-                } else {
-                  service.users[principal.id] = principal;
-                }
-
-                if(_.findIndex(service.acs, {
-                    principal:value.principal,
-                    resource: value.resource,
-                    action: value.action
-                  }) === -1) {
-                  service.acs.unshift(value);
-                }
-              },
-              function(res) {
-                Alert.push({type:'danger', msg:res.data.message});
-              });
-          };
-
-          service.delete = function(data) {
-            data.$delete(data,
-              function(){
-                var idx = service.acs.indexOf(data);
-                service.acs.splice(idx, 1);
-              },
-              function(res){
-                Alert.push({type:'danger', msg:res.data.message});
-            });
-          };
-
-          service.save = function(data) {
-            console.log(data);
-            data.$save(data,
-              function(value){
-              },
-              function(res){
-                Alert.push({type:'danger', msg:res.data.message});
-            });
-          };
-
-          return service;
-      }])
-
-      .controller('ACCtrl', ['$scope', 'ACList', 'ModalDialog',
-        function($scope, ACList, ModalDialog) {
-          $scope.ACList   = ACList;
-          $scope.jsRoutes = jsRoutes;
-          ModalDialog.templateUrl = 'confirm_delete.html';
-
-          $scope.confirm = function(ac) {
-            var instance = ModalDialog.open();
-
-            instance.result.then(function() {
-              ACList.delete(ac);
-            }, function () {
-            });
-          };
-      }])
-
-      .controller('NewEntryCtrl', ['$scope', '$http', 'ACList',
-        function ($scope, $http, ACList) {
-          $scope.ACList = ACList;
-
-          $scope.ac = {
-            principal :'',
-            resource  :_.keys(ACList.resources)[0],
-            action    :_.keys(ACList.actions)[0],
-            granted   :true
-          };
-
-          var types = ['groups', 'users'];
-
-          $scope.create = function(ac){
-            if (_.contains(types, ac.principal._type)) {
-              ACList.create({
-                principal : ac.principal.id,
-                resource  : ac.resource,
-                action    : ac.action,
-                is_group  : ac.principal._type === 'groups',
-                granted   : ac.granted
-              }, ac.principal._source);
-            }
-          };
-
-          $scope.getItems = function(val) {
-            return $http.get('/api/search', {
-              params: {
-                types : types.join(','),
-                q     : '*' + val + '*'
-              }
-            }).then(function(response){
-              _.chain(response.data)
-                .filter(function(item){return _.contains(types, item._type)})
-                .each(function(item){
-                  if (item._type === 'users') {
-                    item.label = item._source.email;
-                    item.id = item._source.id;
-                  }
-                  if (item._type === 'groups') {
-                    item.label = item._source.name;
-                    item.id = item._source.id;
-                  }
-                });
-              return response.data;
-            });
-          };
-      }]);
-
-    angular.module('app').requires.push('access_controls.list');
+    views.access_controls.index.run(['ACList', function(ACList) {
+      ACList.resources = @Html(Secured.Modules.toJson);
+      ACList.actions   = @Html(Secured.Actions.toJson);
+      ACList.reload({
+        page     : @pager.pageNum,
+        pageSize : @pager.pageSize,
+        nextPage : '@Html(routes.AccessControls.index(pager.next).toString)',
+        prevPage : '@Html(routes.AccessControls.index(pager.prev).toString)'
+      });
+    }]);
   </script>
 }
