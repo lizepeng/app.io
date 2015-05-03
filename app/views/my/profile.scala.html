@@ -33,15 +33,21 @@
           <div class="panel-body">
             @form(action = routes.My.changeProfile) {
               <div class="row">
-                <div class="col-xs-12 col-sm-9">
-                  @{_input_text(fm("name"),
+                <div class="col-xs-12 col-sm-6">
+                  @{_input_text(fm("first_name"),
                     'tabindex    -> 1
+                    )(_fc_form_group)
+                  }
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                  @{_input_text(fm("last_name"),
+                    'tabindex    -> 2
                     )(_fc_form_group)
                   }
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-success" tabindex="2">
+              <button type="submit" class="btn btn-success" tabindex="3">
                 <strong>@MSG("settings.profile.update")</strong>
               </button>
             }

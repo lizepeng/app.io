@@ -24,6 +24,7 @@ case class UserInfo(
     int_groups = InternalGroups(int_groups),
     ext_groups = ext_groups
   )
+
 }
 
 object UserInfo {
@@ -44,4 +45,12 @@ object UserInfo {
       and reads_int_groups
       and reads_ext_groups
     )(UserInfo.apply _)
+
+  def from(user: User) = UserInfo(
+    user.id,
+    user.name,
+    user.email,
+    user.int_groups.code,
+    user.ext_groups
+  )
 }

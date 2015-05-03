@@ -58,7 +58,7 @@ case class User(
 
   def save = User.save(this)
 
-  def toUserInfo = UserInfo(id, name, email, int_groups.code, ext_groups)
+  def toUserInfo = UserInfo.from(this)
 
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")

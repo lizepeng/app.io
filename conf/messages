@@ -51,6 +51,8 @@ description                                      =Description
 add.user                                         =Add User
 allow                                            =Allow
 deny                                             =Deny
+first_name                                       =First Name
+last_name                                        =Last Name
 
 # action
 actions.nnew                                     =New

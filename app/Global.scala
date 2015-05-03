@@ -45,6 +45,7 @@ object Global
     User.shutdown()
     UserByEmail.shutdown()
     Group.shutdown()
+    Person.shutdown()
 
     //CFS
     INode.shutdown()

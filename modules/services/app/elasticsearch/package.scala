@@ -34,6 +34,9 @@ package object elasticsearch {
   implicit def AccessControlToJsonDocSource(ac: AccessControl): JsonDocSource =
     JsonDocSource(Json.toJson(ac))
 
+  implicit def PersonToJsonDocSource(p: Person): JsonDocSource =
+    JsonDocSource(Json.toJson(p))
+
   /**
    * `Writable` for `SearchResponse` values - Json
    */

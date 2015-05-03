@@ -25,6 +25,7 @@ object Schemas extends Cassandra {
       User.create.future(),
       UserByEmail.create.future(),
       Group.create.future(),
+      Person.create.future(),
 
       //CFS
       INode.create.future(),

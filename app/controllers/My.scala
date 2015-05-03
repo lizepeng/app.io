@@ -3,7 +3,7 @@ package controllers
 import controllers.Users.{Password, Rules}
 import controllers.api.SecuredController
 import elasticsearch.ES
-import models.User
+import models.{Person, User}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -33,7 +33,12 @@ object My extends SecuredController(User) with Session {
     new_password: Password
   )
 
-  val ProfileFM = Form(single("name" -> nonEmptyText(minLength = 2)))
+  val ProfileFM = Form(
+    tuple(
+      "first_name" -> nonEmptyText(minLength = 1),
+      "last_name" -> nonEmptyText(minLength = 1)
+    )
+  )
 
   def dashboard =
     (MaybeUserAction >> AuthCheck) { implicit req =>
@@ -76,25 +81,39 @@ object My extends SecuredController(User) with Session {
     }
 
   def profile =
-    (MaybeUserAction >> AuthCheck) { implicit req =>
-      Ok(html.my.profile(ProfileFM.fill(req.user.name)))
+    (MaybeUserAction >> AuthCheck).async { implicit req =>
+      Person.find(req.user.id).map { p =>
+        Ok(html.my.profile(filledWith(p)))
+      }.recover {
+        case e: Person.NotFound =>
+          Ok(html.my.profile(ProfileFM))
+      }
     }
 
   def changeProfile =
     (MaybeUserAction >> AuthCheck).async { implicit req =>
       val bound = ProfileFM.bindFromRequest()
+
       bound.fold(
         failure =>
           Future.successful {
             BadRequest(html.my.profile(failure))
           },
-        success =>
+        _ match { case (first, last) =>
           for {
-            _ <- User.saveName(req.user.id, success)
-            _ <- ES.Index(req.user.copy(name = success)) into User
+            p <- Future.successful(Person(req.user.id, first, last))
+            _ <- Person.save(p)
+            _ <- ES.Index(p) into Person
           } yield {
-            Ok(html.my.profile(ProfileFM.fill(success)))
+            Ok(html.my.profile(filledWith(p)))
           }
+        }
       )
     }
+
+  def filledWith(p: Person) =
+    ProfileFM.fill(
+      p.first_name,
+      p.last_name
+    )
 }
