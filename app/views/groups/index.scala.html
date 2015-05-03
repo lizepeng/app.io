@@ -120,7 +120,8 @@ implicit req: UserRequest[_], lang: Lang)
 
 @jsRoutes = {
   @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Groups.show
+    routes.javascript.Groups.show,
+    routes.javascript.Groups.checkName
   )
 }
 

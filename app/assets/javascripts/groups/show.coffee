@@ -22,21 +22,16 @@ list.factory 'GroupUsersList', [
         (value) ->
           if _.findIndex(service.users, id:value.id) == -1
             service.users.unshift value
-          return
         (resp) ->
           Alert.push
             type : 'danger'
             msg  : resp.data.message
-          return
-      return
 
     service.remove = (data) ->
       Group.delUser service.group, uid: data.id,
         ->
           idx = service.users.indexOf(data)
           service.users.splice idx, 1
-          return
-      return
 
     service
 ]
@@ -51,14 +46,9 @@ list.factory 'GroupUsersList', [
     ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.confirm = (usr) ->
-      instance = ModalDialog.open()
-      instance.result.then(
-        ->
-          GroupUsersList.remove usr
-          return
-        ->
-          return)
-    return
+      ModalDialog.open().result.then(
+        -> GroupUsersList.remove usr
+        ->)
 ]
 
 .controller 'NewEntryCtrl', [
@@ -73,7 +63,6 @@ list.factory 'GroupUsersList', [
       .then(
         (resp) ->
           resp.data.map (u) -> u.email)
-    return
 ]
 
 angular.module('app').requires.push 'group.users.list'

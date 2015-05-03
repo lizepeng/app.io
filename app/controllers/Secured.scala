@@ -42,7 +42,7 @@ object Secured {
     def toJson = Json.prettyPrint(
       JsObject(
         names.map { name =>
-          (name, JsString(Messages(s"actions$name")))
+          (name, JsString(Messages(s"actions.$name")))
         }
       )
     )

@@ -26,20 +26,15 @@ views.users.index.factory 'UserList', [
         q        : """*#{q}*""",
         (value, headers) ->
           LinkHeader.updateLinks opt.nextPage, opt.prevPage, headers
-          return
-      return
 
     service.create = (data) ->
       new User(data).$save(
         (value) ->
           service.users.unshift value
-          return
         (res) ->
           Alert.push
             type : 'danger'
-            msg  : res.data.message
-          return)
-      return
+            msg  : res.data.message)
 
     service
 ]
@@ -54,8 +49,6 @@ views.users.index.factory 'UserList', [
 
     $scope.$watch 'keyword', (nv, ov) ->
       UserList.reload nv
-      return
-    return
 ]
 
 angular.module('app').requires.push 'users.list'
