@@ -74,7 +74,7 @@ trait Session {
           user_salt_key -> user.salt
         )
 
-      if (!user.remember_me) resultWithSession
+      if (!rememberMe) resultWithSession
       else {
         resultWithSession.withCookies(
           Cookie(user_id_key, user.id.toString, maxAge = maxAge),

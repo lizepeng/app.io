@@ -2,6 +2,7 @@ package controllers
 
 import controllers.Users.{Password, Rules}
 import controllers.api.SecuredController
+import elasticsearch.ES
 import models.User
 import play.api.data.Form
 import play.api.data.Forms._
@@ -32,14 +33,16 @@ object My extends SecuredController(User) with Session {
     new_password: Password
   )
 
+  val ProfileFM = Form(single("name" -> nonEmptyText(minLength = 2)))
+
   def dashboard =
     (MaybeUserAction >> AuthCheck) { implicit req =>
       Ok(html.my.dashboard())
     }
 
-  def admin =
+  def account =
     (MaybeUserAction >> AuthCheck) { implicit req =>
-      Ok(html.my.admin(ChangePasswordFM))
+      Ok(html.my.account(ChangePasswordFM))
     }
 
   def changePassword =
@@ -49,13 +52,13 @@ object My extends SecuredController(User) with Session {
       bound.fold(
         failure =>
           Future.successful {
-            BadRequest(html.my.admin(bound))
+            BadRequest(html.my.account(bound))
           },
         success => {
           if (!req.user.hasPassword(success.old_password))
             Future.successful {
               BadRequest(
-                html.my.admin(
+                html.my.account(
                   bound.withGlobalError(msg("old.password.invalid"))
                 )
               )
@@ -64,11 +67,34 @@ object My extends SecuredController(User) with Session {
             req.user.savePassword(
               success.new_password.original
             ).map { user =>
-              Redirect(routes.My.admin()).flashing {
+              Redirect(routes.My.account()).flashing {
                 AlertLevel.Info -> msg("password.changed")
               }.createSession(rememberMe = false)(user)
             }
         }
+      )
+    }
+
+  def profile =
+    (MaybeUserAction >> AuthCheck) { implicit req =>
+      Ok(html.my.profile(ProfileFM.fill(req.user.name)))
+    }
+
+  def changeProfile =
+    (MaybeUserAction >> AuthCheck).async { implicit req =>
+      val bound = ProfileFM.bindFromRequest()
+      bound.fold(
+        failure =>
+          Future.successful {
+            BadRequest(html.my.profile(failure))
+          },
+        success =>
+          for {
+            _ <- User.saveName(req.user.id, success)
+            _ <- ES.Index(req.user.copy(name = success)) into User
+          } yield {
+            Ok(html.my.profile(ProfileFM.fill(success)))
+          }
       )
     }
 }

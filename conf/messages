@@ -118,7 +118,10 @@ sign.in.msg.error                                =TODO
 # Settings
 settings.personal                                =Personal settings
 settings.profile                                 =Profile
-settings.account                                 =Account setting
+settings.profile.title                           =Your Profile
+settings.profile.head                            =Public profile
+settings.profile.update                          =Update profile
+settings.account                                 =Account settings
 settings.email                                   =Emails
 settings.billing                                 =Billing
 settings.security                                =Security

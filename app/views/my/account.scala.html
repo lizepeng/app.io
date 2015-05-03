@@ -3,7 +3,7 @@
 @import common._
 @import helper._
 
-@layouts.base(MSG("user")){
+@layouts.base(MSG("settings.account")){
 
 <div class="row">
   @common._flashing()
@@ -19,28 +19,7 @@
 
 <div class="row" style="padding:0px 6px">
   <div class="col-xs-12 col-sm-3">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <strong>@MSG("settings.personal")</strong>
-      </div>
-      <div class="list-group">
-        <a href="/users" class="list-group-item">
-          @MSG("settings.profile")
-        </a>
-        <a href="#" class="list-group-item list-group-item-info">
-          @MSG("settings.account")
-        </a>
-        <a href="#" class="list-group-item">
-          @MSG("settings.email")
-        </a>
-        <a href="#" class="list-group-item">
-          @MSG("settings.billing")
-        </a>
-        <a href="#" class="list-group-item">
-          @MSG("settings.security")
-        </a>
-      </div>
-    </div>
+    @{_personal_settings("account")}
   </div>
 
   <div class="col-xs-12 col-sm-9">

@@ -1,0 +1,29 @@
+@(key: String)(implicit req: UserRequest[_], lang: Lang)
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>@MSG("settings.personal")</strong>
+  </div>
+  <div class="list-group">
+    <a href="@routes.My.profile()"
+      class="list-group-item@if(key=="profile"){ list-group-item-info}">
+      @MSG("settings.profile")
+    </a>
+    <a href="@routes.My.account()"
+      class="list-group-item@if(key=="account"){ list-group-item-info}">
+      @MSG("settings.account")
+    </a>
+    <a href="#"
+      class="list-group-item@if(key=="email"){ list-group-item-info}">
+      @MSG("settings.email")
+    </a>
+    <a href="#"
+      class="list-group-item@if(key=="billing"){ list-group-item-info}">
+      @MSG("settings.billing")
+    </a>
+    <a href="#"
+      class="list-group-item@if(key=="security"){ list-group-item-info}">
+      @MSG("settings.security")
+    </a>
+  </div>
+</div>

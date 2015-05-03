@@ -35,8 +35,10 @@ POST /signup_check/username                 controllers.Users.checkEmail
 POST /signup_check/password                 controllers.Users.checkPassword
 
 GET  /my/dashboard                          controllers.My.dashboard
-GET  /settings/admin                        controllers.My.admin
-POST /settings/admin                        controllers.My.changePassword
+GET  /settings/account                      controllers.My.account
+POST /settings/account                      controllers.My.changePassword
+GET  /settings/profile                      controllers.My.profile
+POST /settings/profile                      controllers.My.changeProfile
 
 GET  /users                                 controllers.Users.index(p:Pager?=Pager.first)
 GET  /users/:id                             controllers.Users.show(id:UUID)
