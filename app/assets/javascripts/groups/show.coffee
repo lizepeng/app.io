@@ -1,10 +1,13 @@
-list = angular.module('group.users.list', [
+this.views ?= {}
+this.views.groups ?= {}
+
+views.groups.show = angular.module('group.users.list', [
   'api.group'
   'api.helper'
   'ui.parts'
 ])
 
-list.factory 'GroupUsersList', [
+views.groups.show.factory 'GroupUsersList', [
   'Group'
   'Alert'
   (Group, Alert) ->
@@ -59,7 +62,7 @@ list.factory 'GroupUsersList', [
     $scope.GroupUsersList = GroupUsersList
 
     $scope.getUserEmails = (val) ->
-      $http.get '/api/users', params : q : """*#{val}*"""
+      $http.get '/api/users', params : q : "*#{val}*"
       .then(
         (resp) ->
           resp.data.map (u) -> u.email)

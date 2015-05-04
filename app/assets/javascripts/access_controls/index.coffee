@@ -117,7 +117,7 @@ views.access_controls.index.factory 'ACList', [
         '/api/search'
         params:
           types : types.join ','
-          q     : """*#{val}*""")
+          q     : "*#{val}*")
       .then (response) ->
         _.chain response.data
           .filter (item) -> _.contains types, item._type

@@ -8,9 +8,6 @@ views.groups.index = angular.module 'groups.list', [
   'ui.parts'
 ]
 
-views.groups.index.run (editableOptions) ->
-  editableOptions.theme = 'bs3'
-
 views.groups.index.factory 'GroupList', [
   'Group'
   'LinkHeader'
@@ -43,7 +40,8 @@ views.groups.index.factory 'GroupList', [
 
     service
 ]
-views.groups.index.controller 'GroupsCtrl', [
+
+.controller 'GroupsCtrl', [
   '$scope'
   '$http'
   '$q'
@@ -67,5 +65,7 @@ views.groups.index.controller 'GroupsCtrl', [
         -> GroupList.delete grp
         ->)
 ]
+
+.run (editableOptions) -> editableOptions.theme = 'bs3'
 
 angular.module('app').requires.push 'groups.list'
