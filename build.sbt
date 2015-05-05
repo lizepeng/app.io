@@ -36,7 +36,8 @@ libraryDependencies ++= Seq(
   "org.webjars.bower" % "angular-xeditable"  % "0.1.9",
   "org.webjars.bower" % "angular-bootstrap"  % "0.12.1",
   "org.webjars.bower" % "angular-resource"   % "1.3.15",
-  "org.webjars.bower" % "underscore"         % "1.8.3"
+  "org.webjars.bower" % "underscore"         % "1.8.3",
+  "org.webjars"       % "ng-flow"            % "2.6.1"
 )
 
 TwirlKeys.templateImports ++= Seq(
