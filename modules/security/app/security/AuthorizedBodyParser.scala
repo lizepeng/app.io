@@ -13,15 +13,17 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-abstract class AuthorizedBodyParser[A](
-  onUnauthorized: RequestHeader => Result,
-  onException: RequestHeader => Result
-) extends BodyParser[A] with security.Session with Logging {
+trait AuthorizedBodyParser[A]
+  extends BodyParser[A] with security.Session with Logging {
+
+  def onUnauthorized: RequestHeader => Result
+
+  def onBaseException: RequestHeader => Result
 
   override def apply(req: RequestHeader): Iteratee[Array[Byte], Either[Result, A]] = {
     Iteratee.flatten {
       req.user.flatMap {
-        user => parser(req)(user)
+        user => invokeParser(req)(user)
       }.andThen {
         case Failure(e: BaseException) => Logger.trace(e.reason)
       }.recover {
@@ -30,10 +32,14 @@ abstract class AuthorizedBodyParser[A](
         case e: User.SaltNotMatch  =>
           parse.error(Future.successful(onUnauthorized(req)))
         case e: BaseException      =>
-          parse.error(Future.successful(onException(req)))
+          parse.error(Future.successful(onBaseException(req)))
       }.map(_.apply(req))
     }
   }
+
+  def invokeParser(req: RequestHeader)(
+    implicit user: User
+  ): Future[BodyParser[A]] = parser(req)(user)
 
   def parser(req: RequestHeader)(implicit user: User): Future[BodyParser[A]]
 }

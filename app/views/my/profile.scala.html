@@ -36,11 +36,11 @@
             '_inline      -> false
             ){
               <div class="row">
-                <div class="col-xs-2">
+                <div class="col-xs-4 col-sm-2">
                   <img data-src="holder.js/70x70/auto" alt="" class="img-rounded">
                 </div>
-                <div class="col-xs-8">
-                  <div flow-init="{target: '/api/cfs/', chunkSize: 1024*1024}"
+                <div class="col-xs-5 col-sm-8">
+                  <div flow-init="{target: '/api/cfs/'}"
                        flow-files-submitted="$flow.upload()"
                        flow-file-success="$file.msg = $message">
 
@@ -49,10 +49,10 @@
                     </span>
 
                     <table>
-                      <tr ng-repeat="file in $flow.files">
-                          <td>{{$index+1}}</td>
-                          <td>{{file.name}}</td>
-                          <td>{{file.msg}}</td>
+                      <tr class="ng-cloak" ng-repeat="file in $flow.files">
+                        <td>{{$index+1}}</td>
+                        <td>{{file.name}}</td>
+                        <td>{{file.msg}}</td>
                       </tr>
                     </table>
                   </div>
@@ -87,7 +87,13 @@
   </div>
 </div>
 
-}()(
+}{
+  <style>
+    .btn input[type='file'] {
+      width : 100%;
+    }
+  </style>
+}(
   libs.webjars("js", "holder"),
   libs.webjars("js", "ng-flow"),
   ctrl

@@ -8,14 +8,14 @@
       <p>@f.size_pp</p>
     </div>
     @if(f.video.?) {
-      <video src="@routes.Files.stream(path + f.name)"
+      <video src="@api.routes.Files.stream(path + f.name)"
       type="@f.mimeType"
       class="col-xs-12"
       autobuffer autoloop loop controls>
       </video>
     }
     @if(f.audio.?) {
-      <audio src="@routes.Files.stream(path + f.name)"
+      <audio src="@api.routes.Files.stream(path + f.name)"
       class="col-xs-12"
       autobuffer autoloop loop controls></audio>
     }

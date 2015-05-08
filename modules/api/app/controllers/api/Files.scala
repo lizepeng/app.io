@@ -1,7 +1,5 @@
 package controllers.api
 
-import java.util.UUID
-
 import controllers.api.Bandwidth._
 import helpers._
 import models._
@@ -13,13 +11,11 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
 import play.api.mvc.BodyParsers.parse.Multipart._
 import play.api.mvc.BodyParsers.parse._
-import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
-import security.{FilePermissions => FilePerm, _}
+import security.{FilePermission => FilePerm, _}
 
 import scala.concurrent.Future
 import scala.language.postfixOps
-import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -77,91 +73,71 @@ object Files
 
   def index(path: Path, pager: Pager) = TODO
 
-  //    PermCheck(_.Index).async { implicit req =>
-  //      (for {
-  //        home <- Home(req.user)
-  //        curr <- home.dir(path) if FilePermissions(curr).rx.?
-  //        list <- curr.list(pager)
-  //      } yield list).map { list =>
-  //        Ok(html.files.index(path, Page(pager, list)))
-  //      }.andThen {
-  //        case Failure(e: FilePermissions.Denied) => Logger.trace(e.reason)
-  //      }.recover {
-  //        case e: FilePermissions.Denied => Forbidden
-  //        case e: BaseException          => NotFound
-  //      }
-  //    }
-
   def show(path: Path) =
     PermCheck(_.Show).async { implicit req =>
       val flow = new Flow(req.queryString)
       (for {
         temp <- Home.temp
         file <- temp.file(flow.tempFileName())
-      } yield file)
-        .map { file =>
+      } yield file).map { file =>
         if (flow.currentChunkSize == file.size) Ok
         else NoContent
       }.recover {
         case e: Flow.MissingFlowArgument => NotFound
-        case e: File.NotFound            => NoContent
+        case e: Directory.ChildNotFound  => NoContent
       }
     }
 
-  def destroy(id: UUID): Action[AnyContent] = TODO
-
-  //    PermCheck(_.Destroy).async { implicit req =>
-  //      INode.find(id).map {
-  //        case None        => NotFound(msg("not.found", id))
-  //        case Some(inode) => File.purge(id)
-  //          RedirectToPreviousURI
-  //            .getOrElse(
-  //              Redirect(routes.Files.index(Path()))
-  //            ).flashing(
-  //              AlertLevel.Success -> msg("deleted", inode.name)
-  //            )
-  //      }
-  //    }
+  def destroy(path: Path) =
+    PermCheck(_.Destroy).async { implicit req =>
+      (for {
+        home <- Home(req.user)
+        file <- home.file(path)
+      } yield file).flatMap { f => f.purge()
+      }.map { _ => NoContent
+      }.recover {
+        case e: Directory.ChildNotFound => NotFound
+      }
+    }
 
   def create(path: Path) =
-    PermCheck(_.Create)(CheckedModuleName)(
-      new CFSBodyParser(path)
-    ) { implicit req =>
+    (MaybeUserAction >> AuthCheck).async(CFSBodyParser(path)) { implicit req =>
       val flow = new Flow(req.body.asFormUrlEncoded)
 
       def tempFiles(temp: Directory) =
         Enumerator[Int](1 to flow.totalChunks: _*) &>
           Enumeratee.map(flow.tempFileName) &>
-          Enumeratee.mapM(temp.file)
+          Enumeratee.mapM1(temp.file)
 
       def summarizer = Iteratee.fold((0, 0L))(
         (s, f: File) => (s._1 + 1, s._2 + f.size)
       )
 
-      req.body.file("file").map { file =>
-        (for {
-        //According to document of ng-flow,
-        //I should allow for the same chunk to be uploaded more than once
-          ____ <- file.ref.rename(flow.tempFileName(), force = true)
-          temp <- Home.temp
-          stat <- tempFiles(temp) |>>> summarizer
-        } yield stat).map { case (cnt, size) =>
-          if (flow.isLastChunk(cnt, size)) {
-            for {
-              temp <- Home.temp
-              home <- Home(req.user)
-              curr <- home.dir(path)
-              file <- tempFiles(temp) &>
-                Enumeratee.mapFlatten[File] { f =>
-                  f.read() &> Enumeratee.onIterateeDone(() => f.purge())
-                } |>>>
-                curr.save(flow.fileName)
-            } yield file
+      req.body.file("file") match {
+        case Some(file) =>
+          (for {
+            ____ <- file.ref.rename(flow.tempFileName(), force = true)
+            temp <- Home.temp
+            stat <- tempFiles(temp) |>>> summarizer
+          } yield stat).flatMap { case (cnt, size) =>
+            if (flow.isLastChunk(cnt, size)) {
+              (for {
+                curr <- Home(req.user).flatMap(_.dir(path))
+                file <- Home.temp.flatMap { t =>
+                  tempFiles(t) &>
+                    Enumeratee.mapFlatten[File] { f =>
+                      f.read() &> Enumeratee.onIterateeDone(() => f.purge())
+                    } |>>> curr.save(flow.fileName)
+                }
+              } yield file).map {
+                _ => Created
+              }.recover {
+                case e: Directory.ChildExists => Accepted
+              }
+            }
+            else Future.successful(Accepted)
           }
-        }
-        Ok("")
-      }.getOrElse {
-        NotFound("")
+        case None       => Future.successful(NotFound)
       }
     }
 
@@ -239,42 +215,45 @@ object Files
     MimeTypes.forFileName(inode.name).getOrElse(ContentTypes.BINARY)
   }
 
-  class CFSBodyParser(
+  def CFSBodyParser(
     path: Path,
     onUnauthorized: RequestHeader => Result = AuthCheck.onUnauthorized,
-    onException: RequestHeader => Result = req => NotFound,
+    onPermDenied: RequestHeader => Result = req => NotFound,
     onPathNotFound: RequestHeader => Result = req => NotFound,
-    onFilePermDenied: RequestHeader => Result = req => NotFound
-  ) extends AuthorizedBodyParser[MultipartFormData[File]](onUnauthorized, onException) {
+    onFilePermDenied: RequestHeader => Result = req => NotFound,
+    onBaseException: RequestHeader => Result = req => NotFound
+  )(implicit resource: CheckedResource): BodyParser[MultipartFormData[File]] = {
 
-    def parser(req: RequestHeader)(
-      implicit user: User
-    ): Future[BodyParser[MultipartFormData[File]]] = {
-      println("parsing body") //TODO check perm before parsing body
-      (for {
-        temp <- Home.temp(user)
-      } yield temp).map { case temp =>
-        multipartFormData(saveTo(temp)(user))
-      }.andThen {
-        case Failure(e: BaseException) => Logger.trace(e.reason)
-      }.recover {
-        case _: Directory.NotFound |
-             _: Directory.ChildNotFound =>
-          parse.error(Future.successful(onPathNotFound(req)))
-        case _: FilePerm.Denied         =>
-          parse.error(Future.successful(onFilePermDenied(req)))
-      }
-    }
-
-    private def saveTo(dir: Directory)
-        (implicit user: User): BodyParsers.parse.Multipart.PartHandler[FilePart[File]] = {
+    def saveTo(dir: Directory)(implicit user: User) = {
       handleFilePart {
         case FileInfo(partName, fileName, contentType) =>
           LimitTo(bandwidth_upload) &>> dir.save()
       }
     }
+
+    SecuredBodyParser(_.Create, onUnauthorized, onPermDenied, onBaseException) {
+      req => implicit user =>
+        (for {
+          home <- Home(user)
+          temp <- Home.temp(user)
+          dest <- home.dir(path) if FilePerm(dest).w ?
+        } yield temp).map { case temp =>
+          multipartFormData(saveTo(temp)(user))
+        }.recover {
+          case _: Directory.NotFound |
+               _: Directory.ChildNotFound =>
+            parse.error(Future.successful(onPathNotFound(req)))
+          case _: FilePerm.Denied         =>
+            parse.error(Future.successful(onFilePermDenied(req)))
+        }
+    }(resource)
   }
 
+  /**
+   * Helper for flow.js
+   *
+   * @param form queryString or data part in multipart/form
+   */
   class Flow(form: Map[String, Seq[String]]) {
 
     def id = flowParam("flowIdentifier", _.toString)

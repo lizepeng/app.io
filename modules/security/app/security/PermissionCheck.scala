@@ -1,52 +1,39 @@
 package security
 
 import helpers.Logging
-import models.AccessControl
+import models.{AccessControl, User}
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.mvc._
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 /**
  * @author zepeng.li@gmail.com
  */
-trait PermissionCheck
-  extends ActionFilter[UserRequest] with Logging {
+trait PermissionCheck extends Logging {
 
   def action: CheckedActions => CheckedAction
 
-  def onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
-
   def resource: CheckedResource
 
-  override protected def filter[A](
-    req: UserRequest[A]
-  ): Future[Option[Result]] = {
-    val u = req.user
-    val act = action(CheckedActions)
-
-    val checked = for {
-      b1 <- check(
-        previous = None, act,
+  def check[A](u: User): Future[Option[Boolean]] = {
+    for {
+      b1 <- thenCheck(
+        previous = None, action(CheckedActions),
         ac => AccessControl.check(
           resource.name, ac.name, u.groups
         )
       )
-      b2 <- check(
-        previous = b1, act,
+      b2 <- thenCheck(
+        previous = b1, action(CheckedActions),
         ac => AccessControl.check(
           resource.name, ac.name, u.id
         )
       )
     } yield b2
-
-    checked.map {
-      case Some(true) => None
-      case _          => Some(onDenied(resource, act, req))
-    }
   }
 
-  private def check[A](
+  private def thenCheck[A](
     previous: Option[Boolean],
     action: CheckedAction,
     tryToCheck: CheckedAction => Future[AccessControl.Granted[_]]
@@ -59,22 +46,20 @@ trait PermissionCheck
       else b1 match {
         case b@Some(false) => Future.successful(b)
         case None          => toOption(tryToCheck(action))
-        case b@Some(true)  => toOption(tryToCheck(action)).map {_.orElse(b)}
+        case b@Some(true)  => toOption(tryToCheck(action)).map(_.orElse(b))
       }
     } yield b2
   }
 
   private def toOption(f: => Future[AccessControl.Granted[_]]): Future[Option[Boolean]] =
-    f.map {
-      granted => Logger.debug(granted.reason); Some(granted.canAccess)
+    f.andThen {
+      case Success(granted)                       => Logger.debug(granted.reason)
+      case Failure(e: AccessControl.Denied[_])    => Logger.warn(e.reason)
+      case Failure(e: AccessControl.Undefined[_]) => Logger.trace(e.reason)
+    }.map {
+      granted => Some(granted.canAccess)
     }.recover {
-      case e: AccessControl.Undefined[_] => Logger.trace(e.reason); None
-      case e: AccessControl.Denied[_]    => Logger.warn(e.reason); Some(false)
+      case e: AccessControl.Denied[_]    => Some(false)
+      case e: AccessControl.Undefined[_] => None
     }
 }
-
-case class PermissionChecker(
-  action: CheckedActions => CheckedAction,
-  onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result,
-  resource: CheckedResource
-) extends PermissionCheck

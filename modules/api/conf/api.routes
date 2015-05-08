@@ -23,6 +23,9 @@ GET    /access_controls/:prin/:res/:act  controllers.api.AccessControls.show(pri
 POST   /access_controls/:prin/:res/:act  controllers.api.AccessControls.save(prin:UUID,res,act)
 DELETE /access_controls/:prin/:res/:act  controllers.api.AccessControls.destroy(prin:UUID,res,act)
 
+GET    /cfs/stream/$path<.*>             controllers.api.Files.stream(path:Path)
+GET    /cfs/download/$path<.*>           controllers.api.Files.download(path:Path,inline:Boolean?=false)
+POST   /cfs/destroy/$path<.*>            controllers.api.Files.destroy(path:Path)
 GET    /cfs/$path<.*>                    controllers.api.Files.show(path:Path)
 POST   /cfs/$path<.*>                    controllers.api.Files.create(path:Path)
 

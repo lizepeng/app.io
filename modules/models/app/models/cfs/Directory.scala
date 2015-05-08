@@ -57,16 +57,12 @@ case class Directory(
   def file(path: Path): Future[File] = {
     find(path.parts ++ path.filename).flatMap {
       case (n, i) => File.find(i)(_.copy(name = n))
-    }.recover{
-      case e:Directory.ChildNotFound => throw File.NotFound(path)
     }
   }
 
   def file(name: String): Future[File] = {
     Directory.findChild(id, name).flatMap {
       case (n, i) => File.find(i)(_.copy(name = n))
-    }.recover{
-      case e:Directory.ChildNotFound => throw File.NotFound(name)
     }
   }
 
@@ -128,10 +124,10 @@ object Directory extends Directories with Cassandra {
   case class NotFound(id: UUID)
     extends BaseException(CFS.msg_key("dir.not.found"))
 
-  case class ChildNotFound(name: String)
+  case class ChildNotFound(parent: Any, name: String)
     extends BaseException(CFS.msg_key("dir.child.not.found"))
 
-  case class ChildExists(name: String)
+  case class ChildExists(parent: Any, name: String)
     extends BaseException(CFS.msg_key("dir.child.exists"))
 
   def apply(
@@ -149,7 +145,7 @@ object Directory extends Directories with Cassandra {
       .where(_.inode_id eqs parent)
       .and(_.name eqs name)
   }.one().map {
-    case None     => throw ChildNotFound(name)
+    case None     => throw ChildNotFound(parent, name)
     case Some(id) => (name, id)
   }
 
@@ -173,7 +169,7 @@ object Directory extends Directories with Cassandra {
       .ifNotExists()
   }.future().map { rs =>
     if (rs.wasApplied()) dir
-    else throw ChildExists(inode.name)
+    else throw ChildExists(dir.id, inode.name)
   }
 
   def delChild(

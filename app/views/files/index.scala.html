@@ -9,8 +9,14 @@ implicit req: UserRequest[_], lang: Lang)
   @ng._alert()
 
   <div class="row">
-    <div class="col-xs-10 col-xs-offset-2">
-      @files._upload(path, "html", "files")
+    <div flow-init="{target: '/api/cfs/'}"
+         flow-files-submitted="$flow.upload()"
+         flow-file-success="$file.msg = $message"
+         class="pull-right">
+
+      <span class="btn btn-default" flow-btn>
+        <strong>Upload new file</strong>
+      </span>
     </div>
   </div>
   <div class="row" style="margin-top:10px">
@@ -55,7 +61,7 @@ implicit req: UserRequest[_], lang: Lang)
                 <td>
                   <i class="fa fa-lg @f.icon"></i>
                   @if(f.pdf.?) {
-                    <a href="@routes.Files.download(path + f.name, true)">
+                    <a href="@api.routes.Files.download(path + f.name, true)">
                       @f.name
                     </a>
                   } else {
@@ -74,12 +80,12 @@ implicit req: UserRequest[_], lang: Lang)
                 <td>
                   <div class="btn-toolbar pull-right">
                     <div class="btn-group">
-                      <a href="@routes.Files.download(path + f.name)">
+                      <a href="@api.routes.Files.download(path + f.name)">
                         <i class="fa fa-download fa-lg"></i>
                       </a>
                     </div>
                     <div class="btn-group">
-                      @form(routes.Files.destroy(path + f.name), 'class -> "form-inline") {
+                      @form(api.routes.Files.destroy(path + f.name), 'class -> "form-inline") {
                         @common._previous_uri()
                         <button type="submit" class="btn form-inline-btn">
                           <i class="fa fa-trash-o fa-lg text-danger"></i>
@@ -101,6 +107,7 @@ implicit req: UserRequest[_], lang: Lang)
   @{_upload(path, "css")}
 }(
   libs.assets("js", "ui.parts"),
+  libs.webjars("js", "ng-flow"),
   controller
 )
 
@@ -108,6 +115,6 @@ implicit req: UserRequest[_], lang: Lang)
   <script>
     var list = angular.module('files.list', ['ui.parts']);
     @ng._flashing("list")
-    angular.module('app').requires.push('files.list');
+    angular.module('app').requires.push('files.list', 'flow');
   </script>
 }

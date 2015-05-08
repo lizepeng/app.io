@@ -7,7 +7,7 @@ import models.cfs._
 /**
  * @author zepeng.li@gmail.com
  */
-case class FilePermissions(
+case class FilePermission(
   principal: User,
   action: Int,
   resource: INode
@@ -67,7 +67,7 @@ case class FilePermissions(
 
 }
 
-object FilePermissions {
+object FilePermission {
 
   case class Denied(
     principal: UserInfo,
@@ -91,16 +91,16 @@ object FilePermissions {
     inode: INode, user: User
   ) {
 
-    val r   = new PolarQuestion {def ? = check(FilePermissions.r)}
-    val w   = new PolarQuestion {def ? = check(FilePermissions.w)}
-    val x   = new PolarQuestion {def ? = check(FilePermissions.x)}
-    val rw  = new PolarQuestion {def ? = check(FilePermissions.rw)}
-    val rx  = new PolarQuestion {def ? = check(FilePermissions.rx)}
-    val wx  = new PolarQuestion {def ? = check(FilePermissions.wx)}
-    val rwx = new PolarQuestion {def ? = check(FilePermissions.rwx)}
+    val r   = new PolarQuestion {def ? = check(FilePermission.r)}
+    val w   = new PolarQuestion {def ? = check(FilePermission.w)}
+    val x   = new PolarQuestion {def ? = check(FilePermission.x)}
+    val rw  = new PolarQuestion {def ? = check(FilePermission.rw)}
+    val rx  = new PolarQuestion {def ? = check(FilePermission.rx)}
+    val wx  = new PolarQuestion {def ? = check(FilePermission.wx)}
+    val rwx = new PolarQuestion {def ? = check(FilePermission.rwx)}
 
     private def check(action: Int): Boolean = {
-      val perm: FilePermissions = FilePermissions(user, action, inode)
+      val perm: FilePermission = FilePermission(user, action, inode)
       if (perm.canAccess) true
       else throw Denied(perm.principal.toUserInfo, perm.action, perm.resource)
     }

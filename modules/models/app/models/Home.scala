@@ -1,7 +1,7 @@
 package models
 
 import models.cfs.{CFS, Directory}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 

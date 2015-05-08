@@ -19,11 +19,7 @@ POST /es/reindex                            controllers.Application.reindex
 GET  /assets/*file                          controllers.Assets.at(path="/public", file)
 
 GET  /cfs/show/$path<.*>                    controllers.Files.show(path:Path)
-GET  /cfs/stream/$path<.*>                  controllers.Files.stream(path:Path)
-GET  /cfs/download/$path<.*>                controllers.Files.download(path:Path,inline:Boolean?=false)
-POST /cfs/destroy/$path<.*>                 controllers.Files.destroy(path:Path)
 GET  /cfs/$path<.*>                         controllers.Files.index(path:Path,p:Pager?=Pager.first)
-POST /cfs/$path<.*>                         controllers.Files.create(path:Path)
 
 GET  /login                                 controllers.Sessions.nnew
 POST /login                                 controllers.Sessions.create

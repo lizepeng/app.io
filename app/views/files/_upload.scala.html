@@ -4,7 +4,7 @@ implicit req: UserRequest[_], lang: Lang)
 @import helper._
 
 @common._part(textType){
-  @form(action = routes.Files.create(path),
+  @form(action = api.routes.Files.create(path),
     'enctype -> "multipart/form-data") {
     <div class="input-group">
 
