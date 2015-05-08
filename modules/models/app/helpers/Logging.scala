@@ -13,7 +13,8 @@ trait Logging {
     play.api.Logger(
       if (loggerName.nonEmpty) loggerName
       //be careful, this can not be used with inner class above two level
-      else this.getClass.getCanonicalName
+      else
+        Option(this.getClass.getCanonicalName).getOrElse(this.getClass.getName)
     )
 
   def loggerName: String = ""

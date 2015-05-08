@@ -15,8 +15,7 @@ import play.api.libs.Crypto
 import play.api.libs.iteratee.Enumerator
 
 import scala.collection.TraversableOnce
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.language.postfixOps
 
 /**
@@ -158,7 +157,9 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
 
   }
 
-  lazy val root: UUID = Await.result(getUUID("root_id"), 10 seconds)
+  lazy val root: Future[User] = getUUID("root_id").map { uid =>
+    User(id = uid, name = "root")
+  }
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)

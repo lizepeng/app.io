@@ -17,19 +17,20 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class Directory(
-  id: UUID = UUIDs.timeBased(),
+  id: UUID,
   parent: UUID,
   owner_id: UUID,
-  permission: Long = 7L << 60,
-  attributes: Map[String, String] = Map(),
-  name: String = ""
+  permission: Long,
+  attributes: Map[String, String],
+  name: String
 ) extends INode with TimeBased {
 
   def is_directory: Boolean = true
 
-  def save(filename: String)(implicit user: User): Iteratee[BLK, File] = {
-    val f = File(parent = id, name = filename, owner_id = user.id)
-    Enumeratee.onIterateeDone(() => add(f)) &>> f.save()
+  def save(fileName: String = "")(implicit user: User): Iteratee[BLK, File] = {
+    val f = File(parent = id, owner_id = user.id)
+    val ff = if (fileName.isEmpty) f else f.copy(name = fileName)
+    Iteratee.flatten(add(ff).map(_ => ff.save()))
   }
 
   def save(): Future[Directory] = Directory.write(this)
@@ -42,7 +43,8 @@ case class Directory(
   private def find(path: Seq[String]): Future[(String, UUID)] = {
     Enumerator(path: _*) |>>>
       Iteratee.foldM((name, id)) {
-        case ((_, pi), cn) => Directory.findChild(pi, cn)
+        case ((_, parentId), childName) =>
+          Directory.findChild(parentId, childName)
       }
   }
 
@@ -55,19 +57,48 @@ case class Directory(
   def file(path: Path): Future[File] = {
     find(path.parts ++ path.filename).flatMap {
       case (n, i) => File.find(i)(_.copy(name = n))
+    }.recover{
+      case e:Directory.ChildNotFound => throw File.NotFound(path)
     }
+  }
+
+  def file(name: String): Future[File] = {
+    Directory.findChild(id, name).flatMap {
+      case (n, i) => File.find(i)(_.copy(name = n))
+    }.recover{
+      case e:Directory.ChildNotFound => throw File.NotFound(name)
+    }
+  }
+
+  def mkdir(name: String)(implicit user: User): Future[Directory] = {
+    Directory(parent = this.id, owner_id = user.id)
+      .copy(name = name).save()
+  }
+
+  def mkdir(name: String, uid: UUID): Future[Directory] = {
+    Directory(parent = this.id, owner_id = uid)
+      .copy(name = name).save()
   }
 
   def add(inode: INode): Future[Directory] = {
     Directory.addChild(this, inode)
   }
 
-  def dir(name: String): Future[Directory] = {
+  def del(inode: INode): Future[Directory] = {
+    Directory.delChild(this, inode)
+  }
+
+  def dir(name: String): Future[Directory] =
     Directory.findChild(id, name).flatMap {
       case (_, i) => Directory.find(i)(_.copy(name = name))
     }
-  }
 
+  def dir_!(name: String)(implicit user: User): Future[Directory] =
+    Directory.findChild(id, name).flatMap {
+      case (_, i) => Directory.find(i)(_.copy(name = name))
+    }.recoverWith {
+      case e: Directory.ChildNotFound => mkdir(name)
+    }
 }
 
 /**
@@ -100,6 +131,17 @@ object Directory extends Directories with Cassandra {
   case class ChildNotFound(name: String)
     extends BaseException(CFS.msg_key("dir.child.not.found"))
 
+  case class ChildExists(name: String)
+    extends BaseException(CFS.msg_key("dir.child.exists"))
+
+  def apply(
+    id: UUID = UUIDs.timeBased(),
+    parent: UUID,
+    owner_id: UUID,
+    permission: Long = 7L << 60,
+    attributes: Map[String, String] = Map()
+  ): Directory = Directory(id, parent, owner_id, permission, attributes, id.toString)
+
   def findChild(
     parent: UUID, name: String
   ): Future[(String, UUID)] = CQL {
@@ -128,36 +170,82 @@ object Directory extends Directories with Cassandra {
       .value(_.inode_id, dir.id)
       .value(_.name, inode.name)
       .value(_.child_id, inode.id)
+      .ifNotExists()
+  }.future().map { rs =>
+    if (rs.wasApplied()) dir
+    else throw ChildExists(inode.name)
+  }
+
+  def delChild(
+    dir: Directory, inode: INode
+  ): Future[Directory] = CQL {
+    delete
+      .where(_.inode_id eqs dir.id)
+      .and(_.name eqs inode.name)
   }.future().map(_ => dir)
+
+  /**
+   * TODO We will lost original file content by specifying force flag.
+   * But it is still there in DB like a fragment, so we'll need some
+   * batch job to remove these orphan files.
+   */
+  def renameChild(
+    dir: Directory,
+    inode: INode,
+    newName: String,
+    force: Boolean = false
+  ): Future[INode] = CQL {
+    BatchStatement()
+      .add {
+      delete
+        .where(_.inode_id eqs dir.id)
+        .and(_.name eqs inode.name)
+    }
+      .add {
+      val cql_insert = insert
+        .value(_.inode_id, dir.id)
+        .value(_.name, newName)
+        .value(_.child_id, inode.id)
+      if (force) cql_insert
+      else cql_insert.ifNotExists()
+    }
+  }.future().map(_ => inode)
 
   /**
    * write name in children list of its parent
    * @param dir
    * @return
    */
-  def write(dir: Directory): Future[Directory] = {
-    val batch = BatchStatement().add {
-      CQL {
-        insert
-          .value(_.inode_id, dir.id)
-          .value(_.name, ".")
-          .value(_.child_id, dir.id)
-          .value(_.parent, dir.parent)
-          .value(_.owner_id, dir.owner_id)
-          .value(_.permission, dir.permission)
-          .value(_.is_directory, true)
-          .value(_.attributes, dir.attributes)
-      }
-    }
-    if (dir.parent != dir.id) batch.add {
-      CQL {
+  def write(dir: Directory): Future[Directory] =
+    if (dir.parent == dir.id)
+      cql_write(dir).future().map(_ => dir)
+    else for {
+      prs <- CQL {
         insert
           .value(_.inode_id, dir.parent)
           .value(_.name, dir.name)
           .value(_.child_id, dir.id)
+          .ifNotExists()
+      }.future()
+      crs <- {
+        if (!prs.wasApplied()) {
+          Directory.find(child_id(prs.one()))
+        } else {
+          cql_write(dir).future().map(_ => dir)
+        }
       }
-    }
-    batch.future().map(_ => dir)
+    } yield crs
+
+  def cql_write(dir: Directory) = CQL {
+    insert
+      .value(_.inode_id, dir.id)
+      .value(_.parent, dir.parent)
+      .value(_.owner_id, dir.owner_id)
+      .value(_.permission, dir.permission)
+      .value(_.is_directory, true)
+      .value(_.attributes, dir.attributes)
+      .value(_.name, ".") // with itself as a child
+      .value(_.child_id, dir.id)
   }
 
   /**

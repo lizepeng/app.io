@@ -17,6 +17,8 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
 
 object Path {
 
+  def root = Path()
+
   def apply(filename: String): Path = Path(filename = Some(filename))
 
   implicit def bindablePath: PathBindable[Path] = new PathBindable[Path] {

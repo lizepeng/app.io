@@ -20,6 +20,7 @@ object Schemas extends Cassandra {
       SysConfig.create.future(),
       AccessControl.create.future(),
       SessionData.create.future(),
+      RateLimit.create.future(),
 
       //User
       User.create.future(),

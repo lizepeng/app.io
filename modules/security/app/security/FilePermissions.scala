@@ -3,7 +3,6 @@ package security
 import helpers.syntax.PolarQuestion
 import models._
 import models.cfs._
-import play.api.mvc.AnyContent
 
 /**
  * @author zepeng.li@gmail.com
@@ -71,10 +70,10 @@ case class FilePermissions(
 object FilePermissions {
 
   case class Denied(
-    principal: User,
+    principal: UserInfo,
     action: Int,
     resource: INode
-  ) extends Permission.Denied[User, Int, INode](CFS.fullModuleName)
+  ) extends Permission.Denied[UserInfo, Int, INode](CFS.fullModuleName)
 
   val r   = 4
   val w   = 2
@@ -85,11 +84,11 @@ object FilePermissions {
   val rwx = r | w | x
 
   def apply(inode: INode)(
-    implicit req: UserRequest[AnyContent]
-  ) = FilePermsBuilder(inode, req)
+    implicit user: User
+  ) = FilePermsBuilder(inode, user)
 
   case class FilePermsBuilder(
-    inode: INode, req: UserRequest[AnyContent]
+    inode: INode, user: User
   ) {
 
     val r   = new PolarQuestion {def ? = check(FilePermissions.r)}
@@ -101,9 +100,9 @@ object FilePermissions {
     val rwx = new PolarQuestion {def ? = check(FilePermissions.rwx)}
 
     private def check(action: Int): Boolean = {
-      val perm: FilePermissions = FilePermissions(req.user, action, inode)
+      val perm: FilePermissions = FilePermissions(user, action, inode)
       if (perm.canAccess) true
-      else throw Denied(perm.principal, perm.action, perm.resource)
+      else throw Denied(perm.principal.toUserInfo, perm.action, perm.resource)
     }
   }
 

@@ -23,4 +23,7 @@ GET    /access_controls/:prin/:res/:act  controllers.api.AccessControls.show(pri
 POST   /access_controls/:prin/:res/:act  controllers.api.AccessControls.save(prin:UUID,res,act)
 DELETE /access_controls/:prin/:res/:act  controllers.api.AccessControls.destroy(prin:UUID,res,act)
 
+GET    /cfs/$path<.*>                    controllers.api.Files.show(path:Path)
+POST   /cfs/$path<.*>                    controllers.api.Files.create(path:Path)
+
 GET    /messages                         controllers.api.Messages.index(keys:List[String])

@@ -7,8 +7,7 @@ import models.cfs.Directory.NotFound
 import models.sys.SysConfig
 import play.api.Play.current
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.Future
 import scala.language.postfixOps
 
 /**
@@ -21,13 +20,14 @@ object CFS extends ModuleLike with SysConfig with AppConfig {
   val streamFetchSize = fetchSize("stream")
   val listFetchSize   = fetchSize("list")
 
-  lazy val root: Directory = Await.result(
+  lazy val root: Future[Directory] =
     getUUID("root").flatMap { id =>
       Directory.find(id).recoverWith {
-        case ex: NotFound =>
-          Directory(id, id, User.root, name = "/").save()
+        case ex: NotFound => for {
+          ur <- User.root
+          fr <- Directory(id, id, ur.id).copy(name = "/").save()
+          __ <- fr.mkdir("tmp", ur.id)
+        } yield fr
       }
     }
-    , 10 seconds
-  )
 }

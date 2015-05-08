@@ -17,15 +17,15 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class File(
-  id: UUID = UUIDs.timeBased(),
+  id: UUID,
   parent: UUID,
-  size: Long = 0,
-  indirect_block_size: Int = 1024 * 32 * 1024 * 8,
-  block_size: Int = 1024 * 8,
+  size: Long,
+  indirect_block_size: Int,
+  block_size: Int,
   owner_id: UUID,
-  permission: Long = 7L << 60,
-  attributes: Map[String, String] = Map(),
-  name: String = ""
+  permission: Long,
+  attributes: Map[String, String],
+  name: String
 ) extends INode with TimeBased {
 
   def is_directory: Boolean = false
@@ -35,6 +35,10 @@ case class File(
     else IndirectBlock.read(this, offset)
 
   def save(): Iteratee[BLK, File] = File.streamWriter(this)
+
+  override def purge() = {
+    super.purge().andThen { case _ => File.purge(id) }
+  }
 }
 
 /**
@@ -64,8 +68,22 @@ sealed class Files
 
 object File extends Files with Cassandra {
 
-  case class NotFound(id: UUID)
+  case class NotFound(reference: Any)
     extends BaseException(CFS.msg_key("file.not.found"))
+
+  def apply(
+    id: UUID = UUIDs.timeBased(),
+    parent: UUID,
+    size: Long = 0,
+    indirect_block_size: Int = 1024 * 32 * 1024 * 8,
+    block_size: Int = 1024 * 8,
+    owner_id: UUID,
+    permission: Long = 6L << 60,
+    attributes: Map[String, String] = Map()
+  ): File = File(
+    id, parent, size, indirect_block_size, block_size,
+    owner_id, permission, attributes, id.toString
+  )
 
   def find(id: UUID)(
     implicit onFound: File => File

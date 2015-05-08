@@ -40,6 +40,7 @@ object Global
     SysConfig.shutdown()
     AccessControl.shutdown()
     SessionData.shutdown()
+    RateLimit.shutdown()
 
     //User
     User.shutdown()

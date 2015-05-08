@@ -10,10 +10,16 @@ import scala.concurrent.Future
  */
 object Home {
 
-  def apply(user: User): Future[Directory] = {
+  def apply(implicit user: User): Future[Directory] = {
     Directory.find(user.id).recoverWith {
       case Directory.NotFound(id) =>
-        Directory(id, CFS.root.id, user.id).save()
+        CFS.root.flatMap { root =>
+          Directory(id, root.id, user.id).save()
+        }
     }
+  }
+
+  def temp(implicit user: User): Future[Directory] = {
+    Home(user).flatMap(_.dir_!("temp"))
   }
 }

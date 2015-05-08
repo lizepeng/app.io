@@ -31,6 +31,7 @@ object Secured {
         controllers.api.Groups,
         controllers.api.Users,
         controllers.api.Search,
+        controllers.api.Files,
         controllers.api.AccessControls
       )
   }

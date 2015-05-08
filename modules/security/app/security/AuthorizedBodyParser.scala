@@ -21,7 +21,7 @@ abstract class AuthorizedBodyParser[A](
   override def apply(req: RequestHeader): Iteratee[Array[Byte], Either[Result, A]] = {
     Iteratee.flatten {
       req.user.flatMap {
-        user => parser(req, user)
+        user => parser(req)(user)
       }.andThen {
         case Failure(e: BaseException) => Logger.trace(e.reason)
       }.recover {
@@ -35,5 +35,5 @@ abstract class AuthorizedBodyParser[A](
     }
   }
 
-  def parser(req: RequestHeader, user: User): Future[BodyParser[A]]
+  def parser(req: RequestHeader)(implicit user: User): Future[BodyParser[A]]
 }

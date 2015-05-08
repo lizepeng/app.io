@@ -39,11 +39,14 @@ implicit req: UserRequest[_], lang: Lang)
             case d: Directory => {
               <tr>
                 <td>
-                  <i class="fa fa-lg fa-folder-o"></i>
+                  <i class="fa fa-lg fa-folder text-info"></i>
                   <a href="@routes.Files.index(path / d.name)">
                     @d.name
                   </a>
                 </td>
+                <td></td>
+                <td class="hidden-xs hidden-sm"></td>
+                <td></td>
               </tr>
             }
 
@@ -76,7 +79,7 @@ implicit req: UserRequest[_], lang: Lang)
                       </a>
                     </div>
                     <div class="btn-group">
-                      @form(routes.Files.destroy(f.id), 'class -> "form-inline") {
+                      @form(routes.Files.destroy(path + f.name), 'class -> "form-inline") {
                         @common._previous_uri()
                         <button type="submit" class="btn form-inline-btn">
                           <i class="fa fa-trash-o fa-lg text-danger"></i>

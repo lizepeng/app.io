@@ -1,7 +1,5 @@
 package controllers
 
-import java.util.UUID
-
 import controllers.Bandwidth._
 import controllers.api.SecuredController
 import helpers._
@@ -93,17 +91,23 @@ object Files
       serveFile(path) { file => Ok(html.files.show(path, file)) }
     }
 
-  def destroy(id: UUID): Action[AnyContent] =
+  def destroy(path: Path): Action[AnyContent] =
     PermCheck(_.Destroy).async { implicit req =>
-      INode.find(id).map {
-        case None        => NotFound(msg("not.found", id))
-        case Some(inode) => File.purge(id)
-          RedirectToPreviousURI
-            .getOrElse(
-              Redirect(routes.Files.index(Path()))
-            ).flashing(
-              AlertLevel.Success -> msg("deleted", inode.name)
-            )
+      (for {
+        home <- Home(req.user)
+        file <- home.file(path)
+      } yield file).map { file =>
+        file.purge()
+        file
+      }.map { file =>
+        RedirectToPreviousURI
+          .getOrElse(
+            Redirect(routes.Files.index(Path()))
+          ).flashing(
+            AlertLevel.Success -> msg("deleted", file.name)
+          )
+      }.recover {
+        case e: File.NotFound => NotFound(e.message)
       }
     }
 
@@ -191,9 +195,8 @@ object Files
       AuthCheck.onUnauthorized,
       req => NotFound
     ) {
-      override def parser(
-        req: RequestHeader,
-        user: User
+      override def parser(req: RequestHeader)(
+        implicit user: User
       ): Future[BodyParser[MultipartFormData[File]]] = (for {
         home <- Home(user)
         curr <- home.dir(path)

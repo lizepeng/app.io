@@ -26,6 +26,18 @@ trait INode extends TimeBased {
   def permission: Long
 
   def attributes: Map[String, String]
+
+  def rename(newName: String, force: Boolean = false): Future[INode] = {
+    Directory.find(parent).flatMap {
+      dir => Directory.renameChild(dir, this, newName, force)
+    }
+  }
+
+  def purge(): Future[Directory] = {
+    Directory.find(parent).flatMap {
+      parent => parent.del(this)
+    }
+  }
 }
 
 trait INodeKey[T <: CassandraTable[T, R], R] {
