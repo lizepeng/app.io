@@ -19,6 +19,10 @@
       class="col-xs-12"
       autobuffer autoloop loop controls></audio>
     }
+    @if(f.image.?) {
+      <img src="@api.routes.Files.stream(path + f.name)"
+      class="col-xs-12 col-sm-8 col-sm-offset-2" alt="">
+    }
   </div>
 
 }()()

@@ -13,7 +13,7 @@ package object files {
 
     def icon: String = {
       ext.map {
-        case ci"png"  | ci"jpg" | ci"gif"          => "fa-file-image-o"
+        case ext if image.?                        => "fa-file-image-o"
         case ext if audio.?                        => "fa-file-audio-o"
         case ci"txt"                               => "fa-file-text-o"
         case ext if pdf.?                          => "fa-file-pdf-o"
@@ -34,6 +34,13 @@ package object files {
 
     def ext: Option[String] = {
       f.name.split('.').takeRight(1).headOption
+    }
+
+    def image = new PolarQuestion {
+      def ? : Boolean = ext.exists {
+        case ci"png" | ci"jpg" | ci"gif" => true
+        case _                           => false
+      }
     }
 
     def pdf = new PolarQuestion {

@@ -45,7 +45,7 @@ implicit req: UserRequest[_], lang: Lang)
             case d: Directory => {
               <tr>
                 <td>
-                  <i class="fa fa-lg fa-folder text-info"></i>
+                  <i class="fa fa-2x fa-folder fa-fw text-info"></i>
                   <a href="@routes.Files.index(path / d.name)">
                     @d.name
                   </a>
@@ -59,7 +59,7 @@ implicit req: UserRequest[_], lang: Lang)
             case f: File => {
               <tr>
                 <td>
-                  <i class="fa fa-lg @f.icon"></i>
+                  <i class="fa fa-2x @f.icon fa-fw"></i>
                   @if(f.pdf.?) {
                     <a href="@api.routes.Files.download(path + f.name, true)">
                       @f.name
@@ -103,9 +103,9 @@ implicit req: UserRequest[_], lang: Lang)
       @{_pager(page, p => routes.Files.index(path, p))}
     </div>
   </div>
-}{
-  @{_upload(path, "css")}
 }(
+  _upload(path, "css")
+)(
   libs.assets("js", "ui.parts"),
   libs.webjars("js", "ng-flow"),
   controller
