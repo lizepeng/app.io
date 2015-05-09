@@ -1,26 +1,36 @@
 @(path:Path, f: File)(implicit req: UserRequest[_], lang: Lang)
 
+@import common._
+@import helper._
+
+@home = @{req.user.id.toString}
+
 @layouts.base(f.name){
+
+  @ng._alert()
+
+  <div class="row">
+    @{_breadcrumb(path)}
+  </div>
 
   <div class="row">
     <div class="col-xs-12">
-      <p>@f.name</p>
       <p>@f.size_pp</p>
     </div>
     @if(f.video.?) {
-      <video src="@api.routes.Files.stream(path + f.name)"
+      <video src="@api.routes.Files.stream(home /: path + f.name)"
       type="@f.mimeType"
       class="col-xs-12"
       autobuffer autoloop loop controls>
       </video>
     }
     @if(f.audio.?) {
-      <audio src="@api.routes.Files.stream(path + f.name)"
+      <audio src="@api.routes.Files.stream(home /: path + f.name)"
       class="col-xs-12"
       autobuffer autoloop loop controls></audio>
     }
     @if(f.image.?) {
-      <img src="@api.routes.Files.stream(path + f.name)"
+      <img src="@api.routes.Files.stream(home /: path + f.name)"
       class="col-xs-12 col-sm-8 col-sm-offset-2" alt="">
     }
   </div>

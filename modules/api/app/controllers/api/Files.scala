@@ -202,8 +202,8 @@ object Files
     implicit req: UserRequest[_]
   ): Future[Result] = {
     (for {
-      home <- Home(req.user)
-      file <- home.file(path)
+      root <- CFS.root
+      file <- root.file(path)
     } yield file).map {
       block(_)
     }.recover {

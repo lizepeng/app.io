@@ -1,0 +1,29 @@
+@(path:Path)
+
+<ol class="breadcrumb">
+  @path.subPaths.map { subPath =>
+    @if(subPath == path) {
+      <li class="active">
+        @pathLabel(subPath)
+      </li>
+    } else {
+      <li class="active">
+        <a href="@routes.Files.index(subPath)">
+          @pathLabel(subPath)
+        </a>
+      </li>
+    }
+  }
+</ol>
+
+@pathLabel(path:Path) = {
+  @{
+    if(path.filename.nonEmpty) {
+      path.filename
+    } else if (path.parts.isEmpty){
+      MSG("home")
+    } else {
+      path.parts.last
+    }
+  }
+}

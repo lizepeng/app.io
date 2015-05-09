@@ -12,7 +12,16 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
 
   def /(dir: String) = if (dir == ".") this else copy(parts ++ Seq(dir))
 
+  def /:(dir: String) = if (dir == ".") this else copy(Seq(dir) ++ parts)
+
   def +(filename: String) = copy(filename = Some(filename))
+
+  def subPaths = {
+    for (i <- 0 to parts.size)
+      yield Path(parts.take(i), None)
+  } ++ {
+    if (filename.nonEmpty) Seq(this) else Seq.empty
+  }
 }
 
 object Path {
