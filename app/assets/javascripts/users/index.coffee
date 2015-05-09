@@ -49,6 +49,7 @@ views.users.index.factory 'UserList', [
 
     $scope.$watch 'keyword', (nv, ov) ->
       UserList.reload nv
+    return
 ]
 
 angular.module('app').requires.push 'users.list'

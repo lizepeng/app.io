@@ -52,6 +52,7 @@ views.groups.show.factory 'GroupUsersList', [
       ModalDialog.open().result.then(
         -> GroupUsersList.remove usr
         ->)
+    return
 ]
 
 .controller 'NewEntryCtrl', [
@@ -66,6 +67,7 @@ views.groups.show.factory 'GroupUsersList', [
       .then(
         (resp) ->
           resp.data.map (u) -> u.email)
+    return
 ]
 
 angular.module('app').requires.push 'group.users.list'

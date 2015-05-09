@@ -64,6 +64,7 @@ views.groups.index.factory 'GroupList', [
       ModalDialog.open().result.then(
         -> GroupList.delete grp
         ->)
+    return
 ]
 
 .run (editableOptions) -> editableOptions.theme = 'bs3'

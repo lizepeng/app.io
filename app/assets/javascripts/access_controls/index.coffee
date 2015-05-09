@@ -86,6 +86,7 @@ views.access_controls.index.factory 'ACList', [
       ModalDialog.open().result.then(
         -> ACList.delete ac
         ->)
+    return
 ]
 
 .controller 'NewEntryCtrl', [
@@ -128,5 +129,6 @@ views.access_controls.index.factory 'ACList', [
             if item._type == 'groups'
               item.label = item._source.name
         response.data
+    return
 ]
 angular.module('app').requires.push 'access_controls.list'
