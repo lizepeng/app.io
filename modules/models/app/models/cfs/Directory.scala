@@ -10,6 +10,7 @@ import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
 import models.{TimeBased, User}
 import play.api.libs.iteratee._
+import play.api.libs.json.Json
 
 import scala.concurrent.Future
 
@@ -17,28 +18,27 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class Directory(
-  id: UUID,
+  id: UUID = UUIDs.timeBased(),
   parent: UUID,
   owner_id: UUID,
-  permission: Long,
-  attributes: Map[String, String],
-  name: String
+  permission: Long = 7L << 60,
+  attributes: Map[String, String] = Map(),
+  name: String,
+  is_directory: Boolean = true
 ) extends INode with TimeBased {
 
-  def is_directory: Boolean = true
-
   def save(fileName: String = "")(implicit user: User): Iteratee[BLK, File] = {
-    val f = File(parent = id, owner_id = user.id)
-    val ff = if (fileName.isEmpty) f else f.copy(name = fileName)
+    val f = File(parent = id, owner_id = user.id, name = fileName)
+    val ff = if (!fileName.isEmpty) f else f.copy(name = f.id.toString)
     Iteratee.flatten(add(ff).map(_ => ff.save()))
   }
 
   def save(): Future[Directory] = Directory.write(this)
 
-  def list(pager: Pager): Future[List[INode]] = {
+  def list(pager: Pager): Future[Page[INode]] = {
     Directory.list(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
-  }.map(_.toList)
+  }.map(_.toIterable).map(Page(pager, _))
 
   private def find(path: Seq[String]): Future[(String, UUID)] = {
     Enumerator(path: _*) |>>>
@@ -67,13 +67,11 @@ case class Directory(
   }
 
   def mkdir(name: String)(implicit user: User): Future[Directory] = {
-    Directory(parent = this.id, owner_id = user.id)
-      .copy(name = name).save()
+    Directory(parent = this.id, owner_id = user.id, name = name).save()
   }
 
   def mkdir(name: String, uid: UUID): Future[Directory] = {
-    Directory(parent = this.id, owner_id = uid)
-      .copy(name = name).save()
+    Directory(parent = this.id, owner_id = uid, name = name).save()
   }
 
   def add(inode: INode): Future[Directory] = {
@@ -114,7 +112,8 @@ sealed class Directories
       parent(r),
       owner_id(r),
       permission(r),
-      attributes(r)
+      attributes(r),
+      ""
     )
   }
 }
@@ -130,13 +129,8 @@ object Directory extends Directories with Cassandra {
   case class ChildExists(parent: Any, name: String)
     extends BaseException(CFS.msg_key("dir.child.exists"))
 
-  def apply(
-    id: UUID = UUIDs.timeBased(),
-    parent: UUID,
-    owner_id: UUID,
-    permission: Long = 7L << 60,
-    attributes: Map[String, String] = Map()
-  ): Directory = Directory(id, parent, owner_id, permission, attributes, id.toString)
+  // Json Reads and Writes
+  implicit val directory_writes = Json.writes[Directory]
 
   def findChild(
     parent: UUID, name: String

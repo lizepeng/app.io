@@ -14,7 +14,7 @@ object Home {
     Directory.find(user.id).recoverWith {
       case Directory.NotFound(id) =>
         CFS.root.flatMap { root =>
-          Directory(id, root.id, user.id).save()
+          Directory(id, root.id, user.id, name = id.toString).save()
         }
     }
   }

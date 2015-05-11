@@ -1,6 +1,7 @@
 package controllers.api
 
 import controllers.api.Bandwidth._
+import controllers.api.Groups._
 import helpers._
 import models._
 import models.cfs._
@@ -9,6 +10,7 @@ import play.api.http.ContentTypes
 import play.api.libs.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
+import play.api.libs.json.{JsArray, Json}
 import play.api.mvc.BodyParsers.parse.Multipart._
 import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
@@ -16,6 +18,7 @@ import security.{FilePermission => FilePerm, _}
 
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -71,7 +74,30 @@ object Files
       }
     }
 
-  def index(path: Path, pager: Pager) = TODO
+  def index(path: Path, pager: Pager) =
+    PermCheck(_.Index).async { implicit req =>
+      (for {
+        root <- CFS.root
+        curr <- root.dir(path) if FilePerm(curr).rx.?
+        page <- curr.list(pager)
+      } yield page).map { page =>
+        Ok(
+          JsArray(
+            page.collect {
+              case d: Directory => Json.toJson(d)
+              case f: File      => Json.toJson(f)
+            }.toSeq
+          )
+        ).withHeaders(
+            linkHeader(page, routes.Files.index(path, _))
+          )
+      }.andThen {
+        case Failure(e: FilePerm.Denied) => Logger.trace(e.reason)
+      }.recover {
+        case e: FilePerm.Denied => NotFound
+        case e: BaseException   => NotFound
+      }
+    }
 
   def show(path: Path) =
     PermCheck(_.Show).async { implicit req =>

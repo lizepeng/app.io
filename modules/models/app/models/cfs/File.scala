@@ -10,6 +10,7 @@ import models.TimeBased
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
+import play.api.libs.json._
 
 import scala.concurrent.Future
 
@@ -17,18 +18,17 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class File(
-  id: UUID,
+  id: UUID = UUIDs.timeBased(),
   parent: UUID,
-  size: Long,
-  indirect_block_size: Int,
-  block_size: Int,
+  size: Long = 0,
+  indirect_block_size: Int = 1024 * 32 * 1024 * 8,
+  block_size: Int = 1024 * 8,
   owner_id: UUID,
-  permission: Long,
-  attributes: Map[String, String],
-  name: String
+  permission: Long = 6L << 60,
+  attributes: Map[String, String] = Map(),
+  name: String,
+  is_directory: Boolean = false
 ) extends INode with TimeBased {
-
-  def is_directory: Boolean = false
 
   def read(offset: Long = 0): Enumerator[BLK] =
     if (offset == 0) IndirectBlock.read(id)
@@ -61,7 +61,8 @@ sealed class Files
       block_size(r),
       owner_id(r),
       permission(r),
-      attributes(r)
+      attributes(r),
+      ""
     )
   }
 }
@@ -71,19 +72,8 @@ object File extends Files with Cassandra {
   case class NotFound(id: UUID)
     extends BaseException(CFS.msg_key("file.not.found"))
 
-  def apply(
-    id: UUID = UUIDs.timeBased(),
-    parent: UUID,
-    size: Long = 0,
-    indirect_block_size: Int = 1024 * 32 * 1024 * 8,
-    block_size: Int = 1024 * 8,
-    owner_id: UUID,
-    permission: Long = 6L << 60,
-    attributes: Map[String, String] = Map()
-  ): File = File(
-    id, parent, size, indirect_block_size, block_size,
-    owner_id, permission, attributes, id.toString
-  )
+  // Json Reads and Writes
+  implicit val file_writes: Writes[File] = Json.writes[File]
 
   def find(id: UUID)(
     implicit onFound: File => File

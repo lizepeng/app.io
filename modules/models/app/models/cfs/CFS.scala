@@ -25,7 +25,7 @@ object CFS extends ModuleLike with SysConfig with AppConfig {
       Directory.find(id).recoverWith {
         case ex: NotFound => for {
           ur <- User.root
-          fr <- Directory(id, id, ur.id).copy(name = "/").save()
+          fr <- Directory(id, id, ur.id, name = "/").save()
           __ <- fr.mkdir("tmp", ur.id)
         } yield fr
       }

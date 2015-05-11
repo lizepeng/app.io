@@ -26,7 +26,8 @@ DELETE /access_controls/:prin/:res/:act  controllers.api.AccessControls.destroy(
 GET    /cfs/stream/$path<.*>             controllers.api.Files.stream(path:Path)
 GET    /cfs/download/$path<.*>           controllers.api.Files.download(path:Path,inline:Boolean?=false)
 POST   /cfs/destroy/$path<.*>            controllers.api.Files.destroy(path:Path)
-GET    /cfs/$path<.*>                    controllers.api.Files.show(path:Path)
+GET    /cfs/show/$path<.*>               controllers.api.Files.show(path:Path)
+GET    /cfs/$path<.*>                    controllers.api.Files.index(path:Path,p:Pager?=Pager.first)
 POST   /cfs/$path<.*>                    controllers.api.Files.create(path:Path)
 
 GET    /messages                         controllers.api.Messages.index(keys:List[String])
