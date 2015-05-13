@@ -100,7 +100,7 @@ object Files
       }
     }
 
-  def show(path: Path) =
+  def touch(path: Path) =
     PermCheck(_.Show).async { implicit req =>
       val flow = new Flow(req.queryString)
       (for {
@@ -118,8 +118,8 @@ object Files
   def destroy(path: Path) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
-        home <- Home(req.user)
-        file <- home.file(path)
+        root <- CFS.root
+        file <- root.file(path)
       } yield file).flatMap { f => f.purge()
       }.map { _ => NoContent
       }.recover {

@@ -110,7 +110,10 @@ angular.module 'api.cfs', []
     resource = {}
 
     resource.find = (path) ->
-      $http.get "/api/cfs/#{path.encode()}"
+      $http.get "/api/cfs/list/#{path.encode()}"
+
+    resource.delete = (path) ->
+      $http.delete "/api/cfs/#{path.encode()}"
 
     return resource
   ]

@@ -1,4 +1,4 @@
-@(path:Path, page: Page[INode])(
+@(path:Path, pager:Pager)(
 implicit req: UserRequest[_], lang: Lang)
 
 @import common._
@@ -15,6 +15,8 @@ implicit req: UserRequest[_], lang: Lang)
   </div>
 
   <div ng-controller="FilesCtrl">
+    @ng._msg_confirm_delete()
+
     <div class="row">
       <div class="table-responsive">
         <table class="table table-hover table-ellipsis">
@@ -29,110 +31,54 @@ implicit req: UserRequest[_], lang: Lang)
             </tr>
           </thead>
           <tbody>
-            @page.map {
-              case d: Directory if d.name == "." => {
-              }
-              case d: Directory => {
-                <tr>
-                  <td>
-                    <i class="fa fa-2x fa-folder fa-fw text-info"></i>
-                    <a href="@routes.Files.index(path / d.name)">
-                      @d.name
-                    </a>
-                  </td>
-                  <td></td>
-                  <td class="hidden-xs hidden-sm"></td>
-                  <td></td>
-                </tr>
-              }
-
-              case f: File => {
-                <tr>
-                  <td>
-                    <i class="fa fa-2x @f.icon fa-fw"></i>
-                    @if(f.pdf.?) {
-                      <a href="@api.routes.Files.download(path + f.name, true)">
-                        @f.name
-                      </a>
-                    } else {
-                      <a href="@routes.Files.show(path + f.name)">
-                        @f.name
-                      </a>
-                    }
-                  </td>
-                  <td class="text-right">
-                    @f.size_pp
-                  </td>
-                  <td class="text-right hidden-xs hidden-sm">
-                    @f.created_at.toString(MSG("datetime.format"))
-                  </td>
-
-                  <td>
-                    <div class="btn-toolbar pull-right">
-                      <div class="btn-group">
-                        <a href="@api.routes.Files.download(home /: path + f.name)">
-                          <i class="fa fa-download fa-lg"></i>
-                        </a>
-                      </div>
-                      <div class="btn-group">
-                        @form(api.routes.Files.destroy(path + f.name), 'class -> "form-inline") {
-                          @common._previous_uri()
-                          <button type="submit" class="btn form-inline-btn">
-                            <i class="fa fa-trash-o fa-lg text-danger"></i>
-                          </button>
-                        }
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              }
-            }
-            <tr class="ng-cloak" ng-repeat="file in FileList.files">
+            <tr class="ng-cloak" ng-repeat="inode in INodeList.inodes">
               <!-- Directory -->
-              <td ng-if="file.is_directory">
+              <td ng-if="inode.is_directory">
                 <i class="fa fa-2x fa-folder fa-fw text-info"></i>
-                <a ng-href="{{jsRoutes.controllers.Files.index(path.append(file.name)).url}}">
-                  {{ file.name }}
+                <a ng-href="{{jsRoutes.controllers.Files.index(path.append(inode.name)).url}}">
+                  {{ inode.name }}
                 </a>
               </td>
-              <td ng-if="file.is_directory">
+              <td ng-if="inode.is_directory">
               </td>
-              <td ng-if="file.is_directory" class="text-right hidden-xs hidden-sm">
+              <td ng-if="inode.is_directory" class="text-right hidden-xs hidden-sm">
               </td>
-              <td ng-if="file.is_directory">
+              <td ng-if="inode.is_directory">
               </td>
 
               <!-- File -->
-              <td ng-if="!file.is_directory">
+              <td ng-if="!inode.is_directory">
                 <i class="fa fa-2x fa-file-o fa-fw"></i>
-                <a ng-href="{{jsRoutes.controllers.Files.show(path.set(file.name)).url}}">
-                  {{ file.name }}
+                <a ng-href="{{jsRoutes.controllers.Files.show(path.set(inode.name)).url}}">
+                  {{ inode.name }}
                 </a>
               </td>
-              <td ng-if="!file.is_directory" class="text-right">
-                {{ file.size }}
+              <td ng-if="!inode.is_directory" class="text-right">
+                {{ inode.size }}
               </td>
-              <td ng-if="!file.is_directory" class="text-right hidden-xs hidden-sm">
-                {{ file.created_at }}
+              <td ng-if="!inode.is_directory" class="text-right hidden-xs hidden-sm">
+                {{ inode.created_at }}
               </td>
-              <td ng-if="!file.is_directory">
+              <td ng-if="!inode.is_directory">
                 <div class="btn-toolbar pull-right">
                   <div class="btn-group">
-                    <a ng-href="{{jsRoutes.controllers.api.Files.download(file.path).url}}">
+                    <a ng-href="{{jsRoutes.controllers.api.Files.download(inode.path).url}}">
                       <i class="fa fa-download fa-lg"></i>
                     </a>
                   </div>
                   <div class="btn-group">
-                    <i class="fa fa-trash fa-lg"></i>
+                    <i class="fa fa-trash fa-lg text-danger" ng-click="confirmDelete(inode)"></i>
                   </div>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
-
-        @{_pager(page, p => routes.Files.index(path, p))}
       </div>
+    </div>
+
+    <div class="row">
+      @ng._pager("GroupList.links")
     </div>
   </div>
 
@@ -171,12 +117,12 @@ implicit req: UserRequest[_], lang: Lang)
 
 @controller = {
   <script>
-    views.files.index.run(['FileList', function(FileList) {
-      FileList.reload({
-        page     : @page.pager.pageNum,
-        pageSize : @page.pager.pageSize,
-        nextPage : '@Html(routes.Files.index(path,page.pager.next).toString)',
-        prevPage : '@Html(routes.Files.index(path,page.pager.prev).toString)',
+    views.files.index.run(['INodeList', function(INodeList) {
+      INodeList.reload({
+        page     : @pager.pageNum,
+        pageSize : @pager.pageSize,
+        nextPage : '@Html(routes.Files.index(path,pager.next).toString)',
+        prevPage : '@Html(routes.Files.index(path,pager.prev).toString)',
         userId   : '@req.user.id',
         path     : @Html(path.toJson.toString)
       });

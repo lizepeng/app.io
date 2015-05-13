@@ -8,7 +8,7 @@ views.files.index = angular.module 'files.list', [
   'ui.parts'
 ]
 
-views.files.index.factory 'FileList', [
+views.files.index.factory 'INodeList', [
   'CFS'
   'Path'
   'LinkHeader'
@@ -16,7 +16,7 @@ views.files.index.factory 'FileList', [
   (CFS, Path, LinkHeader, Alert) ->
     service        = {}
     service.links  = LinkHeader.links
-    service.files  = []
+    service.inodes = []
     service.params = {}
 
     service.reload = (params) ->
@@ -29,24 +29,23 @@ views.files.index.factory 'FileList', [
 
       CFS.find(service.realPath)
         .success (data, status, headers, config) ->
-          service.files = data
+          service.inodes =
+            _.chain data
+              .map (inode) ->
+                inode.path = Path.create(inode.path)
+                inode
+              .value()
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers
-      # service.files = CFS.query
-      #   page     : params.page
-      #   per_page : params.pageSize
-      #   path     : "#{params.userId}/#{params.path}/"
-      #   (value, headers) ->
-      #     LinkHeader.updateLinks params.nextPage, params.prevPage, headers
 
-    service.delete = (data) ->
-      # data.$delete(
-      #   ->
-      #     idx = service.files.indexOf(data)
-      #     service.files.splice idx, 1
-      #   (res) ->
-      #     Alert.push
-      #       type : 'danger'
-      #       msg  : res.data.message)
+    service.delete = (file) ->
+      CFS.delete(file.path)
+        .success (data, status, headers, config) ->
+          idx = service.inodes.indexOf(file)
+          service.inodes.splice idx, 1
+        .error (data, status, headers, config) ->
+          Alert.push
+            type : 'danger'
+            msg  : data.message
 
     service
 ]
@@ -56,13 +55,13 @@ views.files.index.factory 'FileList', [
   '$http'
   '$q'
   'ClientError'
-  'FileList'
+  'INodeList'
   'ModalDialog'
-  ($scope, $http, $q, ClientError, FileList, ModalDialog) ->
-    $scope.FileList         = FileList
+  ($scope, $http, $q, ClientError, INodeList, ModalDialog) ->
+    $scope.INodeList        = INodeList
     $scope.jsRoutes         = jsRoutes
-    $scope.path             = FileList.path
-    $scope.realPath         = FileList.realPath
+    $scope.path             = INodeList.path
+    $scope.realPath         = INodeList.realPath
     ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.checkName = (data) ->
@@ -72,13 +71,13 @@ views.files.index.factory 'FileList', [
       .error (data, status) -> d.resolve ClientError.firstMsg(data, status)
       d.promise
 
-    $scope.confirm = (grp) ->
+    $scope.confirmDelete = (file) ->
       ModalDialog.open().result.then(
-        -> FileList.delete grp
+        -> INodeList.delete file
         ->)
     return
 ]
 
 .run (editableOptions) -> editableOptions.theme = 'bs3'
 
-angular.module('app').requires.push 'files.list'
+angular.module('app').requires.push 'files.list', 'flow'
