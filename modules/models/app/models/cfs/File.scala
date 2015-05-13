@@ -18,15 +18,16 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class File(
-  id: UUID = UUIDs.timeBased(),
+  name: String,
+  path: Path,
+  owner_id: UUID,
   parent: UUID,
+  id: UUID = UUIDs.timeBased(),
   size: Long = 0,
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
-  owner_id: UUID,
   permission: Long = 6L << 60,
   attributes: Map[String, String] = Map(),
-  name: String,
   is_directory: Boolean = false
 ) extends INode with TimeBased {
 
@@ -54,15 +55,16 @@ sealed class Files
 
   override def fromRow(r: Row): File = {
     File(
-      inode_id(r),
+      "",
+      Path(),
+      owner_id(r),
       parent(r),
+      inode_id(r),
       size(r),
       indirect_block_size(r),
       block_size(r),
-      owner_id(r),
       permission(r),
-      attributes(r),
-      ""
+      attributes(r)
     )
   }
 }

@@ -6,6 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
 import models._
+import models.json.JsUser
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
@@ -120,7 +121,7 @@ object Groups
             obj.validate[String]((__ \ 'email).read[String]).map(User.find)
           ).map {
           _.flatMap { user =>
-            val info: UserInfo = user.toUserInfo
+            val info: JsUser = user.toUserInfo
             if (user.groups.contains(id)) Future.successful {
               Ok(Json.toJson(info))
             }

@@ -5,6 +5,7 @@ import controllers.api.Groups._
 import helpers._
 import models._
 import models.cfs._
+import models.json._
 import play.api.Play.current
 import play.api.http.ContentTypes
 import play.api.libs.MimeTypes
@@ -85,7 +86,7 @@ object Files
           JsArray(
             page.collect {
               case d: Directory => Json.toJson(d)
-              case f: File      => Json.toJson(f)
+              case f: File      => f.toJson
             }.toSeq
           )
         ).withHeaders(

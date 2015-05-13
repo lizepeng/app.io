@@ -26,7 +26,7 @@ object Application
   }
 
   def wiki = MaybeUserAction { implicit req =>
-    val videoPath = config.getString("wiki.video").map(Path(_))
+    val videoPath = config.getString("wiki.video").map(fn => Path(filename = Some(fn)))
     Ok(html.static_pages.wiki(videoPath))
   }
 

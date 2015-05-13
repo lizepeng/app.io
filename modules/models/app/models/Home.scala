@@ -1,6 +1,6 @@
 package models
 
-import models.cfs.{CFS, Directory}
+import models.cfs._
 import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
@@ -14,7 +14,13 @@ object Home {
     Directory.find(user.id).recoverWith {
       case Directory.NotFound(id) =>
         CFS.root.flatMap { root =>
-          Directory(id, root.id, user.id, name = id.toString).save()
+          Directory(
+            id.toString,
+            Path.root / id.toString,
+            user.id,
+            root.id,
+            id
+          ).save()
         }
     }
   }

@@ -3,6 +3,7 @@ package security
 import helpers.syntax.PolarQuestion
 import models._
 import models.cfs._
+import models.json.JsUser
 
 /**
  * @author zepeng.li@gmail.com
@@ -70,10 +71,10 @@ case class FilePermission(
 object FilePermission {
 
   case class Denied(
-    principal: UserInfo,
+    principal: JsUser,
     action: Int,
     resource: INode
-  ) extends Permission.Denied[UserInfo, Int, INode](CFS.fullModuleName)
+  ) extends Permission.Denied[JsUser, Int, INode](CFS.fullModuleName)
 
   val r   = 4
   val w   = 2

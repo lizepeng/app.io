@@ -6,6 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import elasticsearch.ES
 import helpers._
 import models._
+import models.json.JsUser
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 
@@ -56,7 +57,7 @@ object Users
           "int_groups" -> 0,
           "ext_groups" -> JsArray()
         )
-      ).as[UserInfo] {
+      ).as[JsUser] {
         success => (for {
           saved <- success.toUser.save
           _resp <- ES.Index(saved) into User

@@ -18,18 +18,23 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class Directory(
-  id: UUID = UUIDs.timeBased(),
-  parent: UUID,
+  name: String,
+  path: Path,
   owner_id: UUID,
+  parent: UUID,
+  id: UUID = UUIDs.timeBased(),
   permission: Long = 7L << 60,
   attributes: Map[String, String] = Map(),
-  name: String,
   is_directory: Boolean = true
 ) extends INode with TimeBased {
 
-  def save(fileName: String = "")(implicit user: User): Iteratee[BLK, File] = {
-    val f = File(parent = id, owner_id = user.id, name = fileName)
-    val ff = if (!fileName.isEmpty) f else f.copy(name = f.id.toString)
+  def save(fileName: String = "")(
+    implicit user: User
+  ): Iteratee[BLK, File] = {
+    val f = File(fileName, path + fileName, user.id, id)
+    val ff =
+      if (!fileName.isEmpty) f
+      else f.copy(name = f.id.toString, path = path + f.id.toString)
     Iteratee.flatten(add(ff).map(_ => ff.save()))
   }
 
@@ -48,30 +53,37 @@ case class Directory(
       }
   }
 
-  def dir(path: Path): Future[Directory] = {
-    find(path.parts).flatMap {
-      case (n, i) => Directory.find(i)(_.copy(name = n))
+  def dir(path: Path): Future[Directory] =
+    if (path.filename.nonEmpty)
+      Future.failed(Directory.NotDirectory(path))
+    else find(path.parts).flatMap {
+      case (n, i) => Directory.find(i)(
+        _.copy(name = n, path = path)
+      )
     }
-  }
 
   def file(path: Path): Future[File] = {
     find(path.parts ++ path.filename).flatMap {
-      case (n, i) => File.find(i)(_.copy(name = n))
+      case (n, i) => File.find(i)(
+        _.copy(name = n, path = path)
+      )
     }
   }
 
   def file(name: String): Future[File] = {
     Directory.findChild(id, name).flatMap {
-      case (n, i) => File.find(i)(_.copy(name = n))
+      case (n, i) => File.find(i)(
+        _.copy(name = n, path = path + name)
+      )
     }
   }
 
   def mkdir(name: String)(implicit user: User): Future[Directory] = {
-    Directory(parent = this.id, owner_id = user.id, name = name).save()
+    Directory(name, path / name, user.id, id).save()
   }
 
   def mkdir(name: String, uid: UUID): Future[Directory] = {
-    Directory(parent = this.id, owner_id = uid, name = name).save()
+    Directory(name, path / name, uid, id).save()
   }
 
   def add(inode: INode): Future[Directory] = {
@@ -84,12 +96,16 @@ case class Directory(
 
   def dir(name: String): Future[Directory] =
     Directory.findChild(id, name).flatMap {
-      case (_, i) => Directory.find(i)(_.copy(name = name))
+      case (_, i) => Directory.find(i)(
+        _.copy(name = name, path = path / name)
+      )
     }
 
   def dir_!(name: String)(implicit user: User): Future[Directory] =
     Directory.findChild(id, name).flatMap {
-      case (_, i) => Directory.find(i)(_.copy(name = name))
+      case (_, i) => Directory.find(i)(
+        _.copy(name = name, path = path / name)
+      )
     }.recoverWith {
       case e: Directory.ChildNotFound => mkdir(name)
     }
@@ -108,12 +124,13 @@ sealed class Directories
 
   override def fromRow(r: Row): Directory = {
     Directory(
-      inode_id(r),
-      parent(r),
+      "",
+      Path(),
       owner_id(r),
+      parent(r),
+      inode_id(r),
       permission(r),
-      attributes(r),
-      ""
+      attributes(r)
     )
   }
 }
@@ -128,6 +145,9 @@ object Directory extends Directories with Cassandra {
 
   case class ChildExists(parent: Any, name: String)
     extends BaseException(CFS.msg_key("dir.child.exists"))
+
+  case class NotDirectory(path: Path)
+    extends BaseException(CFS.msg_key("dir.not.dir"))
 
   // Json Reads and Writes
   implicit val directory_writes = Json.writes[Directory]
@@ -250,9 +270,12 @@ object Directory extends Directories with Cassandra {
   }.fetchEnumerator() &>
     Enumeratee.mapM {
       case (name, id) => INode.find(id).map[Option[INode]] {
-        case Some(nd: File)      => Some(nd.copy(name = name))
-        case Some(nd: Directory) => Some(nd.copy(name = name))
-        case _                   => None
+        case Some(nd: File)      =>
+          Some(nd.copy(name = name, path = dir.path + name))
+        case Some(nd: Directory) =>
+          Some(nd.copy(name = name, path = dir.path / name))
+        case _                   =>
+          None
       }
     } &> Enumeratee.flattenOption
 

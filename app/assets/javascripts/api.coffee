@@ -1,7 +1,12 @@
+# -------------------------------------------------------- #
 # RESTful api client
+# -------------------------------------------------------- #
+
 angular.module 'api', [ 'api.group', 'api.user', 'api.access_control' ]
 
+# -------------------------------------------------------- #
 # Model Group
+# -------------------------------------------------------- #
 angular.module 'api.group', [ 'ngResource' ]
 
   .factory 'Group', [ '$resource', ($resource) ->
@@ -38,7 +43,9 @@ angular.module 'api.group', [ 'ngResource' ]
     return resource
   ]
 
+# -------------------------------------------------------- #
 # Model User
+# -------------------------------------------------------- #
 angular.module 'api.user', [ 'ngResource' ]
 
   .factory 'User', [ '$resource', ($resource) ->
@@ -69,7 +76,9 @@ angular.module 'api.user', [ 'ngResource' ]
     return resource
   ]
 
+# -------------------------------------------------------- #
 # Model AccessControl
+# -------------------------------------------------------- #
 angular.module 'api.access_control', [ 'ngResource' ]
 
   .factory 'AccessControl', [ '$resource', ($resource) ->
@@ -92,10 +101,28 @@ angular.module 'api.access_control', [ 'ngResource' ]
     return resource
   ]
 
+# -------------------------------------------------------- #
+# Model CFS
+# -------------------------------------------------------- #
+angular.module 'api.cfs', []
+
+  .factory 'CFS', [ '$http', ($http) ->
+    resource = {}
+
+    resource.find = (path) ->
+      $http.get "/api/cfs/#{path.encode()}"
+
+    return resource
+  ]
+
+# -------------------------------------------------------- #
 # Helpers
+# -------------------------------------------------------- #
 angular.module 'api.helper', []
 
+  #
   # Helper to display json error message
+  #
   .factory 'ClientError', ->
     service = {}
     service.firstMsg = (data, status) ->
@@ -105,7 +132,9 @@ angular.module 'api.helper', []
       else "Unknown Error"
     service
 
+  #
   # Helper to parse pagination link header
+  #
   .factory 'LinkHeader', ->
     service = {}
 
@@ -141,4 +170,39 @@ angular.module 'api.helper', []
         name = section[1].replace(/rel="(.*)"/, '$1').trim()
         links[name] = url
       links
+    service
+
+  #
+  # Helper to operate Path in javascript
+  #
+  .factory 'Path', ->
+    service = {}
+    service.create = (param) ->
+      parts       : param.parts
+      filename    : param.filename
+      set         : (filename) ->
+        @copy (that) ->
+          that.filename = filename
+      prepend     : (part) ->
+        @copy (that) ->
+          that.parts.unshift part
+      append      : (part) ->
+        @copy (that) ->
+          that.parts.push part
+      copy        : (fun) ->
+        that = angular.copy @
+        if fun?
+          fun(that)
+        that
+      # Content should be same as Path.javascriptUbind
+      encode      : ->
+        parts =
+          _.chain @parts
+            .map (part)-> "#{encodeURIComponent(part)}/"
+            .join ''
+            .value()
+        filename =
+          if !@filename? then ''
+          else encodeURIComponent(@filename)
+        "#{parts}#{filename}"
     service

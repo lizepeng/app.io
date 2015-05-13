@@ -1,5 +1,6 @@
 package models.cfs
 
+import play.api.libs.json.Json
 import play.api.mvc.PathBindable
 import play.utils.UriEncoding
 
@@ -26,9 +27,9 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
 
 object Path {
 
-  def root = Path()
+  implicit val path_writes = Json.writes[Path]
 
-  def apply(filename: String): Path = Path(filename = Some(filename))
+  def root = Path()
 
   implicit def bindablePath: PathBindable[Path] = new PathBindable[Path] {
 
@@ -48,6 +49,21 @@ object Path {
     def unbind(key: String, path: Path): String = {
       encodeDirs(path.parts) + encode(path.filename.getOrElse(""))
     }
+
+    /**
+     * Content should be same as function encode of Path defined in api.helper
+     */
+    override def javascriptUnbind =
+      """
+       |function(k,v) {
+       |  var fn, ps;
+       |  ps = _.chain(v.parts).map(function(p) {
+       |    return (encodeURIComponent(p)) + "/";
+       |  }).join('').value();
+       |  fn = v.filename == null ? '' : encodeURIComponent(v.filename);
+       |  return ps + fn;
+       |}
+      """.stripMargin
   }
 
   def decodeDirs(parts: String): Array[String] = {

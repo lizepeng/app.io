@@ -1,7 +1,8 @@
-package models
+package models.json
 
 import java.util.UUID
 
+import models._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
@@ -9,7 +10,7 @@ import play.api.libs.json._
 /**
  * @author zepeng.li@gmail.com
  */
-case class UserInfo(
+case class JsUser(
   id: UUID,
   name: String,
   email: String,
@@ -27,7 +28,7 @@ case class UserInfo(
 
 }
 
-object UserInfo {
+object JsUser {
 
   //TODO validation
   // Json Reads and Writes
@@ -37,16 +38,16 @@ object UserInfo {
   val reads_int_groups = (__ \ "int_groups").read[Int]
   val reads_ext_groups = (__ \ "ext_groups").read[Set[UUID]]
 
-  implicit val user_writes = Json.writes[UserInfo]
+  implicit val user_writes = Json.writes[JsUser]
   implicit val user_reads  = (
     reads_id
       and reads_name
       and reads_email
       and reads_int_groups
       and reads_ext_groups
-    )(UserInfo.apply _)
+    )(JsUser.apply _)
 
-  def from(user: User) = UserInfo(
+  def from(user: User) = JsUser(
     user.id,
     user.name,
     user.email,
