@@ -44,13 +44,13 @@ trait ES extends ModuleLike with AppConfig {
 
   implicit val indexName = domain
 
-  def Index[R <: HasID[_]](r: R) = new IndexAction(r)
+  def Index[T <: HasID[_]](r: T) = new IndexAction(r)
 
   def Delete[ID](r: ID) = new DeleteAction(r)
 
-  def Update[R <: HasID[_]](r: R) = new UpdateAction(r)
+  def Update[T <: HasID[_]](r: T) = new UpdateAction(r)
 
-  def BulkIndex[R <: HasID[_]](rs: Seq[R]) = new BulkIndexAction(rs)
+  def BulkIndex[T <: HasID[_]](rs: Seq[T]) = new BulkIndexAction(rs)
 
   def Search(q: Option[String], p: Pager) = new SearchAction(q, p)
 
@@ -97,12 +97,12 @@ object ESyntax {
     }
   }
 
-  class IndexAction[R <: HasID[_]](r: R)(
+  class IndexAction[T <: HasID[_]](r: T)(
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: Module[R])(
-      implicit converter: R => JsonDocSource
+    def into(t: Module[T])(
+      implicit converter: T => JsonDocSource
     ): Future[(JsValue, Future[IndexResponse])] = {
       val src = converter(r)
       Future.successful(
@@ -123,12 +123,12 @@ object ESyntax {
       }
   }
 
-  class UpdateAction[R <: HasID[_]](r: R)(
+  class UpdateAction[T <: HasID[_]](r: T)(
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def in(t: Module[R])(
-      implicit converter: R => JsonDocSource
+    def in(t: Module[T])(
+      implicit converter: T => JsonDocSource
     ): Future[(JsValue, Future[UpdateResponse])] = {
       val src = converter(r)
       Future.successful(
@@ -139,12 +139,12 @@ object ESyntax {
     }
   }
 
-  class BulkIndexAction[R <: HasID[_]](rs: Seq[R])(
+  class BulkIndexAction[T <: HasID[_]](rs: Seq[T])(
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: Module[R])(
-      implicit converter: R => JsonDocSource
+    def into(t: Module[T])(
+      implicit converter: T => JsonDocSource
     ): Future[BulkResponse] = client.execute {
       bulk(
         rs.map { r =>
