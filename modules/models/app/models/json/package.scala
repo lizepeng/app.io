@@ -1,6 +1,6 @@
 package models
 
-import models.cfs.{File, Path}
+import models.cfs._
 import play.api.libs.json.Json
 
 /**
@@ -11,6 +11,11 @@ package object json {
   implicit class ToJsFile(val f: File) extends AnyVal {
 
     def toJson = Json.toJson(JsFile.from(f))
+  }
+
+  implicit class ToJsDirectory(val d: Directory) extends AnyVal {
+
+    def toJson = Json.toJson(JsDirectory.from(d))
   }
 
   implicit class ToJsPath(val p: Path) extends AnyVal {

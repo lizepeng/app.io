@@ -10,7 +10,6 @@ import models.TimeBased
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
-import play.api.libs.json._
 
 import scala.concurrent.Future
 
@@ -73,9 +72,6 @@ object File extends Files with Cassandra {
 
   case class NotFound(id: UUID)
     extends BaseException(CFS.msg_key("file.not.found"))
-
-  // Json Reads and Writes
-  implicit val file_writes: Writes[File] = Json.writes[File]
 
   def find(id: UUID)(
     implicit onFound: File => File

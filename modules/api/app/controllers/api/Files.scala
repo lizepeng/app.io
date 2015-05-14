@@ -11,7 +11,7 @@ import play.api.http.ContentTypes
 import play.api.libs.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.JsArray
 import play.api.mvc.BodyParsers.parse.Multipart._
 import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
@@ -85,7 +85,7 @@ object Files
         Ok(
           JsArray(
             page.collect {
-              case d: Directory => Json.toJson(d)
+              case d: Directory => d.toJson
               case f: File      => f.toJson
             }.toSeq
           )

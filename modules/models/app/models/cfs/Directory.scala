@@ -10,7 +10,6 @@ import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
 import models.{TimeBased, User}
 import play.api.libs.iteratee._
-import play.api.libs.json.Json
 
 import scala.concurrent.Future
 
@@ -148,9 +147,6 @@ object Directory extends Directories with Cassandra {
 
   case class NotDirectory(path: Path)
     extends BaseException(CFS.msg_key("dir.not.dir"))
-
-  // Json Reads and Writes
-  implicit val directory_writes = Json.writes[Directory]
 
   def findChild(
     parent: UUID, name: String
