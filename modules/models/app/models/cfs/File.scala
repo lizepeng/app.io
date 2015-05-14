@@ -26,6 +26,7 @@ case class File(
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
   permission: Long = 6L << 60,
+  ext_permission: Map[UUID, Int] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = false
 ) extends INode with TimeBased {
@@ -63,6 +64,7 @@ sealed class Files
       indirect_block_size(r),
       block_size(r),
       permission(r),
+      ext_permission(r),
       attributes(r)
     )
   }
@@ -118,6 +120,7 @@ object File extends Files with Cassandra {
       .value(_.block_size, f.block_size)
       .value(_.owner_id, f.owner_id)
       .value(_.permission, f.permission)
+      .value(_.ext_permission, f.ext_permission)
       .value(_.attributes, f.attributes)
   }.future().map(_ => f)
 }

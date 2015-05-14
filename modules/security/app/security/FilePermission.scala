@@ -16,18 +16,25 @@ case class FilePermission(
 ) extends Permission[User, Int, INode] {
 
   override def canAccess: Boolean = {
+    def check(perm: Long, mask: Long) = (perm & mask) == mask
+
     //check owner permission
     if (principal.id == resource.owner_id) {
       val mask = action.toLong << 20 * 3
-      if ((resource.permission & mask) == mask) return true
+      if (check(resource.permission, mask)) return true
+    }
+    //check external group permission
+    for (gid <- principal.ext_groups) {
+      val perm = resource.ext_permission.getOrElse(gid, 0)
+      if (check(perm, action)) return true
     }
     //check internal group permission
     for (gid <- principal.int_groups.numbers) {
       val mask = action.toLong << (19 - gid) * 3
-      if ((resource.permission & mask) == mask) return true
+      if (check(resource.permission, mask)) return true
     }
     //check other permission
-    (resource.permission & action) == action
+    check(resource.permission, action)
   }
 
   private def pprintLine(length: Int) = (

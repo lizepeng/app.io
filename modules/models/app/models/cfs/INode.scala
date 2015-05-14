@@ -25,6 +25,8 @@ trait INode extends TimeBased {
 
   def permission: Long
 
+  def ext_permission: Map[UUID, Int]
+
   def attributes: Map[String, String]
 
   def rename(newName: String, force: Boolean = false): Future[INode] = {

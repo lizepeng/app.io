@@ -23,6 +23,7 @@ case class Directory(
   parent: UUID,
   id: UUID = UUIDs.timeBased(),
   permission: Long = 7L << 60,
+  ext_permission: Map[UUID, Int] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = true
 ) extends INode with TimeBased {
@@ -129,6 +130,7 @@ sealed class Directories
       parent(r),
       inode_id(r),
       permission(r),
+      ext_permission(r),
       attributes(r)
     )
   }
@@ -248,6 +250,7 @@ object Directory extends Directories with Cassandra {
       .value(_.parent, dir.parent)
       .value(_.owner_id, dir.owner_id)
       .value(_.permission, dir.permission)
+      .value(_.ext_permission, dir.ext_permission)
       .value(_.is_directory, true)
       .value(_.attributes, dir.attributes)
       .value(_.name, ".") // with itself as a child
