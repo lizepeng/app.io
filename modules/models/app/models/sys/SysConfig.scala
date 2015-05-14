@@ -27,12 +27,12 @@ trait SysConfig {
         fullModuleName, key, default
       )(serializer)
     }
-  }
 
-  def getUUID(key: String) = {
-    SysConfig.getOrElseUpdate(
-      fullModuleName, key, UUIDs.timeBased()
-    )(SysConfig.uuidSerializer)
+    def UUID(key: String) = {
+      SysConfig.getOrElseUpdate(
+        fullModuleName, key, UUIDs.timeBased()
+      )(SysConfig.uuidSerializer)
+    }
   }
 
 }

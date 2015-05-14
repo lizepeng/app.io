@@ -115,7 +115,7 @@ object PasswordReset
   }
 
   private lazy val mailer = for {
-    uid <- getUUID("user.id")
+    uid <- System.UUID("user.id")
     usr <- User.find(uid).recoverWith {
       case e: User.NotFound => User.save(
         User(
@@ -131,7 +131,7 @@ object PasswordReset
     implicit lang: Lang
   ): Future[EmailTemplate] =
     for {
-      uuid <- getUUID(key)
+      uuid <- System.UUID(key)
       user <- mailer
       tmpl <- EmailTemplate.find(uuid, lang)
         .recoverWith { case e: EmailTemplate.NotFound =>

@@ -21,7 +21,7 @@ object CFS extends ModuleLike with SysConfig with AppConfig {
   val listFetchSize   = fetchSize("list")
 
   lazy val root: Future[Directory] =
-    getUUID("root").flatMap { id =>
+    System.UUID("root").flatMap { id =>
       Directory.find(id).recoverWith {
         case ex: NotFound => for {
           ur <- User.root

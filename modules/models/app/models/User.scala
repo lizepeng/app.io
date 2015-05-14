@@ -155,7 +155,7 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
 
   }
 
-  lazy val root: Future[User] = getUUID("root_id").map { uid =>
+  lazy val root: Future[User] = System.UUID("root_id").map { uid =>
     User(id = uid, name = "root")
   }
 

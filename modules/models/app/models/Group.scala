@@ -275,7 +275,7 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
   def initialize = Future.sequence(
     ALL.map { n =>
       val key = s"internal_group_${"%02d".format(n)}"
-      getUUID(key).andThen {
+      System.UUID(key).andThen {
         case Success(id) =>
           Group(
             id,
