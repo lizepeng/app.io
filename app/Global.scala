@@ -1,3 +1,4 @@
+import controllers.Groups
 import elasticsearch.ES
 import models._
 import models.cfs._
@@ -27,8 +28,15 @@ object Global
   with GlobalSettings {
 
   override def onStart(app: Application) = {
-    Logger.info("System has started")
-    Schemas.create
+    Future.sequence(
+      Seq(
+        Schemas.create,
+        InternalGroups.initialize,
+        Groups.initialize
+      )
+    ).onSuccess {
+      case _ => Logger.info("System has started")
+    }
   }
 
   override def onStop(app: Application) = {

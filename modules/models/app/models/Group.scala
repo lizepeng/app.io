@@ -3,6 +3,7 @@ package models
 import java.util.UUID
 
 import com.datastax.driver.core.Row
+import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.batch.BatchStatement
@@ -17,8 +18,7 @@ import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 import scala.collection.TraversableOnce
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.Success
 
@@ -267,24 +267,37 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
   val Div3       = for (gid <- 13 to 18) yield gid
   val AnyoneMask = 1 << 18
   val Anyone     = 0
-  val AnyoneId   = Num2Id(Anyone)
 
-  private lazy val Num2Id = Await.result(
+  @volatile private var _num2Id  : Seq[UUID]      = Seq()
+  @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
+  @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-    Future.sequence(
-      ALL.map { n =>
-        val key = s"internal_group_${"%02d".format(n)}"
-        getUUID(key).andThen {
-          case Success(id) =>
-            Group(id, key, Some(key), is_internal = true).createIfNotExist
-        }
+  def initialize = Future.sequence(
+    ALL.map { n =>
+      val key = s"internal_group_${"%02d".format(n)}"
+      getUUID(key).andThen {
+        case Success(id) =>
+          Group(
+            id,
+            if (n == Anyone) "Anyone" else key,
+            Some(key),
+            is_internal = true
+          ).createIfNotExist
       }
-    ), 10 seconds
-  )
+    }
+  ).andThen {
+    case Success(seq) =>
+      _num2Id = seq
+      _anyoneId = seq(Anyone)
+      _id2num = seq.zipWithIndex.toMap
+      Logger.info("Internal Group Ids has been initialized.")
+  }
 
-  lazy val Id2Num = Num2Id.zipWithIndex.toMap
+  def AnyoneId = _anyoneId
+
+  def Id2Num = _id2num
 
   implicit def toGroupIdSet(igs: InternalGroups): Set[UUID] = {
-    igs.numbers.map(Num2Id).toSet
+    igs.numbers.map(_num2Id).toSet
   }
 }

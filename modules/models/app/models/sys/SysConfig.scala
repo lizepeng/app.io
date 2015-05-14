@@ -8,6 +8,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.{Logging, ModuleLike}
 import models.cassandra.{Cassandra, ExtCQL}
+import models.sys.SysConfig.Serializer
 
 import scala.concurrent.Future
 
@@ -16,6 +17,17 @@ import scala.concurrent.Future
  */
 trait SysConfig {
   self: ModuleLike =>
+
+  object System {
+
+    def config[T](key: String, default: T)(
+      implicit serializer: Serializer[T]
+    ) = {
+      SysConfig.getOrElseUpdate(
+        fullModuleName, key, default
+      )(serializer)
+    }
+  }
 
   def getUUID(key: String) = {
     SysConfig.getOrElseUpdate(
@@ -88,6 +100,12 @@ object SysConfig extends SysConfigs with Cassandra {
     def << = UUID.fromString
 
     def >>: = _.toString
+  }
+
+  implicit val stringSerializer = new Serializer[String] {
+    def << = s => s
+
+    def >>: = s => s
   }
 
 }
