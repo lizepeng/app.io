@@ -78,12 +78,13 @@ object SysConfig extends SysConfigs with Cassandra {
         .and(_.key eqs key)
     }.one().flatMap {
       case None        =>
+        val value: T = op
         CQL {
           update
             .where(_.module eqs module)
             .and(_.key eqs key)
-            .modify(_.value setTo (op >>: serializer))
-        }.future().map(_ => op)
+            .modify(_.value setTo (value >>: serializer))
+        }.future().map(_ => value)
       case Some(value) =>
         Future.successful(serializer << value)
     }
