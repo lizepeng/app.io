@@ -42,6 +42,7 @@ implicit req: UserRequest[_], lang: Lang)
               <td ng-if="inode.is_directory">
               </td>
               <td ng-if="inode.is_directory" class="text-right hidden-xs hidden-sm">
+                {{ inode.created_at | date:"yyyy-MM-dd hh:mma" }}
               </td>
               <td ng-if="inode.is_directory">
               </td>
@@ -54,10 +55,10 @@ implicit req: UserRequest[_], lang: Lang)
                 </a>
               </td>
               <td ng-if="!inode.is_directory" class="text-right">
-                {{ inode.size }}
+                {{ inode.size | filesize }}
               </td>
               <td ng-if="!inode.is_directory" class="text-right hidden-xs hidden-sm">
-                {{ inode.created_at }}
+                {{ inode.created_at | date:"yyyy-MM-dd hh:mma" }}
               </td>
               <td ng-if="!inode.is_directory">
                 <div class="btn-toolbar pull-right">
@@ -99,6 +100,7 @@ implicit req: UserRequest[_], lang: Lang)
   libs.webjars("js", "angular-resource"),
   libs.webjars("js", "ng-flow"),
   libs.webjars("js", "xeditable"),
+  libs.assets("js", "utility"),
   libs.assets("js", "api"),
   libs.assets("js", "ui.parts"),
   libs.assets("js", "files/index"),

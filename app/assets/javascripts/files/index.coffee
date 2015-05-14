@@ -8,7 +8,9 @@ views.files.index = angular.module 'files.list', [
   'ui.parts'
 ]
 
-views.files.index.factory 'INodeList', [
+views.files.index
+
+.factory 'INodeList', [
   'CFS'
   'Path'
   'LinkHeader'
@@ -31,9 +33,11 @@ views.files.index.factory 'INodeList', [
         .success (data, status, headers, config) ->
           service.inodes =
             _.chain data
+              .filter (inode) -> inode.name != '.'
               .map (inode) ->
                 inode.path = Path.create(inode.path)
                 inode
+              .sortBy (inode) -> !inode.is_directory
               .value()
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers
 
@@ -77,6 +81,23 @@ views.files.index.factory 'INodeList', [
         ->)
     return
 ]
+
+# -------------------------------------------------------- #
+# Need Math.round10 defined in utility.coffee
+# -------------------------------------------------------- #
+.filter 'filesize', ->
+  (input = 0) ->
+    k = 1000
+    if input < k
+      return "#{Math.round10(input, -3)} bytes"
+    if (input /= k) < k
+      return "#{Math.round10(input, -0)} KB"
+    if (input /= k) < k
+      return "#{Math.round10(input, -1)} MB"
+    if (input /= k) < k
+      return "#{Math.round10(input, -2)} GB"
+    input /= k
+    return   "#{Math.round10(input, -3)} TB"
 
 .run (editableOptions) -> editableOptions.theme = 'bs3'
 
