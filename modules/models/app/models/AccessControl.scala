@@ -30,7 +30,7 @@ case class AccessControl(
   extends Permission[UUID, String, String]
   with HasID[String] {
 
-  override def id = s"${principal.toString}/$resource/$action"
+  override def id = AccessControl.genId(resource, action, principal)
 
   def save = AccessControl.save(this)
 }
@@ -117,6 +117,12 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
       and reads_is_group
       and reads_granted
     )(AccessControl.apply _)
+
+  def genId(
+    resource: String,
+    action: String,
+    principal: UUID
+  ) = s"${principal.toString}/$resource/$action"
 
   def find(ac: AccessControl): Future[AccessControl] =
     find(ac.principal, ac.resource, ac.action)
@@ -209,4 +215,6 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
       select.setFetchSize(fetchSize())
     }.fetchEnumerator
   }
+
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
 }

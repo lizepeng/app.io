@@ -1,4 +1,4 @@
-import controllers.Groups
+import controllers.{AccessControls, Groups}
 import elasticsearch.ES
 import models._
 import models.cfs._
@@ -32,7 +32,8 @@ object Global
       Seq(
         Schemas.create,
         InternalGroups.initialize,
-        Groups.initialize
+        Groups.initialize,
+        AccessControls.initialize
       )
     ).onSuccess {
       case _ => Logger.info("System has started")

@@ -66,9 +66,9 @@ object AccessControls
   def destroy(id: UUID, res: String, act: String) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
+        __ <- ES.Delete(AccessControl.genId(res, act, id)) from AccessControl
         ac <- AccessControl.find(id, res, act)
         __ <- AccessControl.remove(id, res, act)
-        res <- ES.Delete(ac) from AccessControl
       } yield res).map { _ =>
         NoContent
       }.recover {

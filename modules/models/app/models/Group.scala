@@ -27,9 +27,9 @@ import scala.util.Success
  */
 case class Group(
   id: UUID,
-  name: String,
-  description: Option[String],
-  is_internal: Boolean
+  name: String = "",
+  description: Option[String] = None,
+  is_internal: Boolean = false
 ) extends TimeBased {
 
   def createIfNotExist = Group.createIfNotExist(this)

@@ -70,10 +70,10 @@ object Groups
   def destroy(id: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
+        ___ <- ES.Delete(id) from Group
         grp <- Group.find(id)
         ___ <- Group.remove(id)
-        res <- ES.Delete(grp) from Group
-      } yield res).map { _ =>
+      } yield grp).map { _ =>
         NoContent
       }.recover {
         case e: Group.NotWritable =>

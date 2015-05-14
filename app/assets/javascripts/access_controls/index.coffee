@@ -55,7 +55,7 @@ views.access_controls.index.factory 'ACList', [
 
     service.delete = (data) ->
       data.$delete data,
-              ->
+        () ->
           idx = service.acs.indexOf(data)
           service.acs.splice idx, 1
         (res) ->

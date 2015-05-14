@@ -46,7 +46,7 @@ trait ES extends ModuleLike with AppConfig {
 
   def Index[R <: HasID[_]](r: R) = new IndexAction(r)
 
-  def Delete[R <: HasID[_]](r: R) = new DeleteAction(r)
+  def Delete[ID](r: ID) = new DeleteAction(r)
 
   def Update[R <: HasID[_]](r: R) = new UpdateAction(r)
 
@@ -113,15 +113,13 @@ object ESyntax {
     }
   }
 
-  class DeleteAction[R <: HasID[_]](r: R)(
+  class DeleteAction[ID](id: ID)(
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def from(t: Module[R])(
-      implicit converter: R => JsonDocSource
-    ): Future[DeleteResponse] =
+    def from[T <: HasID[ID]](t: Module[T]): Future[DeleteResponse] =
       client.execute {
-        delete id r.id from s"$indexName/${t.moduleName}"
+        delete id id from s"$indexName/${t.moduleName}"
       }
   }
 
