@@ -20,7 +20,6 @@ import play.api.libs.json._
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
 import scala.language.postfixOps
-import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
@@ -118,16 +117,14 @@ object Group extends Groups with Cassandra with AppConfig {
       and reads_is_internal
     )(Group.apply _)
 
-  def createIfNotExist(group: Group): Future[Group] = CQL {
+  def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
       .value(_.id, group.id)
       .value(_.name, group.name)
       .value(_.description, group.description)
       .value(_.is_internal, Some(group.is_internal).filter(_ == true))
       .ifNotExists()
-  }.future().map { rs =>
-    if (rs.wasApplied()) group else fromRow(rs.one)
-  }
+  }.future().map(_.wasApplied())
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -208,6 +205,8 @@ object Group extends Groups with Cassandra with AppConfig {
       .add(User.cql_del_group(child_id, id))
   }.future()
 
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
+
   def cql_add_child(id: UUID, child_id: UUID) = CQL {
     insert
       .value(_.id, id)
@@ -219,6 +218,7 @@ object Group extends Groups with Cassandra with AppConfig {
       .where(_.id eqs id)
       .and(_.child_id eqs child_id)
   }
+
 }
 
 case class InternalGroups(code: Int) {
@@ -272,25 +272,24 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  def initialize = Future.sequence(
+  def initialize: Future[Boolean] = Future.sequence(
     ALL.map { n =>
       val key = s"internal_group_${"%02d".format(n)}"
-      System.UUID(key).andThen {
-        case Success(id) =>
-          Group(
-            id,
-            if (n == Anyone) "Anyone" else key,
-            Some(key),
-            is_internal = true
-          ).createIfNotExist
+      System.UUID(key).flatMap { id =>
+        Group(
+          id,
+          if (n == Anyone) "Anyone" else key,
+          Some(key),
+          is_internal = true
+        ).createIfNotExist.map((id, _))
       }
     }
-  ).andThen {
-    case Success(seq) =>
-      _num2Id = seq
-      _anyoneId = seq(Anyone)
-      _id2num = seq.zipWithIndex.toMap
-      Logger.info("Internal Group Ids has been initialized.")
+  ).map { seq =>
+    _num2Id = seq.map(_._1)
+    _anyoneId = _num2Id(Anyone)
+    _id2num = _num2Id.zipWithIndex.toMap
+    Logger.info("Internal Group Ids has been initialized.")
+    (true /: seq)(_ && _._2)
   }
 
   def AnyoneId = _anyoneId

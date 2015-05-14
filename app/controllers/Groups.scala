@@ -5,8 +5,8 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import controllers.api.{JsonClientErrors, SecuredController}
 import helpers._
+import models._
 import models.sys.SysConfig
-import models.{Group, InternalGroups}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.concurrent.Execution.Implicits._

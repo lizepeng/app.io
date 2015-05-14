@@ -10,11 +10,6 @@ GET  /                                      controllers.Application.index
 GET  /wiki                                  controllers.Application.wiki
 GET  /about                                 controllers.Application.about
 
-#TODO BEIGIN remove this line
-POST /schemas/recreate                      controllers.Application.recreate
-POST /es/reindex                            controllers.Application.reindex
-#TODO END
-
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file                          controllers.Assets.at(path="/public", file)
 

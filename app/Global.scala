@@ -1,4 +1,4 @@
-import controllers.{AccessControls, Groups}
+import controllers.{AccessControls, Groups, _}
 import elasticsearch.ES
 import models._
 import models.cfs._
@@ -31,7 +31,13 @@ object Global
     Future.sequence(
       Seq(
         Schemas.create,
-        InternalGroups.initialize,
+        api.Users.dropIndexIfEmpty,
+        api.Groups.dropIndexIfEmpty,
+        api.AccessControls.dropIndexIfEmpty,
+        InternalGroups.initialize.flatMap { done =>
+          if (done) api.Groups.reindex
+          else Future.successful(false)
+        },
         Groups.initialize,
         AccessControls.initialize
       )

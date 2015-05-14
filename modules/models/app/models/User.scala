@@ -249,6 +249,8 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
     }.fetchEnumerator
   }
 
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
+
   def cql_add_group(id: UUID, gid: UUID) = CQL {
     update
       .where(_.id eqs id)

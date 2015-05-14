@@ -10,6 +10,8 @@ import models.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 
+import scala.concurrent.Future
+
 /**
  * @author zepeng.li@gmail.com
  */
@@ -71,4 +73,16 @@ object Users
         }
       }
     }
+
+  def dropIndexIfEmpty: Future[Boolean] = for {
+    _empty <- User.isEmpty
+    result <-
+    if (_empty) {
+      Logger.info(s"Clean elasticsearch index $moduleName")
+      (ES.Delete from User).map(_ => true)
+    }
+    else
+      Future.successful(false)
+  } yield result
+
 }

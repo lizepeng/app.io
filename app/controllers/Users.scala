@@ -4,6 +4,7 @@ import java.util.UUID
 
 import controllers.Sessions._
 import controllers.api.SecuredController
+import elasticsearch.ES
 import helpers._
 import models._
 import play.api.data.Form
@@ -78,15 +79,17 @@ object Users
           }
         }
       },
-      success => User.checkEmail(success.email).flatMap { _ =>
-        User(
+      success => (for {
+        exist <- User.checkEmail(success.email)
+        saved <- User(
           email = success.email,
           password = success.password.original
-        ).save.map { u =>
-          Redirect {
-            routes.My.dashboard()
-          }.createSession(rememberMe = false)(u)
-        }
+        ).save
+        _____ <- ES.Index(saved) into User
+      } yield saved).map { case saved =>
+        Redirect {
+          routes.My.dashboard()
+        }.createSession(rememberMe = false)(saved)
       }.recover {
         case e: User.EmailTaken =>
           BadRequest {

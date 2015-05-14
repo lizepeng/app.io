@@ -2,6 +2,7 @@ package controllers.api
 
 import java.util.UUID
 
+import batches.ReIndex
 import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
@@ -144,4 +145,23 @@ object Groups
     PermCheck(_.Destroy).async { implicit req =>
       Group.delChild(id, uid).map { _ => NoContent }
     }
+
+  def dropIndexIfEmpty: Future[Boolean] = for {
+    _empty <- Group.isEmpty
+    result <-
+    if (_empty) {
+      Logger.info(s"Clean elasticsearch index $moduleName")
+      (ES.Delete from Group).map(_ => true)
+    }
+    else
+      Future.successful(false)
+  } yield result
+
+  def reindex: Future[Boolean] = {
+    new ReIndex[Group](
+      Group.all,
+      list => (ES.BulkIndex(list) into Group)
+        .map { res => Logger.info(res.getTook.toString) }
+    )(10).start().map(_ => true)
+  }
 }

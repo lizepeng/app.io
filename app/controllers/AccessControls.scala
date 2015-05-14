@@ -34,7 +34,7 @@ object AccessControls
           InternalGroups.AnyoneId,
           is_group = true,
           granted = true
-        ).save.map { saved =>
+        ).save.flatMap { saved =>
           ES.Index(saved) into AccessControl
         }
       }

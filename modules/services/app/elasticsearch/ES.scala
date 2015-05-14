@@ -4,6 +4,7 @@ import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s._
 import helpers._
 import models._
+import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingResponse
 import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.delete.DeleteResponse
 import org.elasticsearch.action.index.IndexResponse
@@ -47,6 +48,8 @@ trait ES extends ModuleLike with AppConfig {
   def Index[T <: HasID[_]](r: T) = new IndexAction(r)
 
   def Delete[ID](r: ID) = new DeleteAction(r)
+
+  def Delete = new DeleteMappingAction
 
   def Update[T <: HasID[_]](r: T) = new UpdateAction(r)
 
@@ -120,6 +123,16 @@ object ESyntax {
     def from[T <: HasID[ID]](t: Module[T]): Future[DeleteResponse] =
       client.execute {
         delete id id from s"$indexName/${t.moduleName}"
+      }
+  }
+
+  class DeleteMappingAction(
+    implicit client: ElasticClient, indexName: String
+  ) {
+
+    def from[T <: HasID[_]](t: Module[T]): Future[DeleteMappingResponse] =
+      client.execute {
+        delete mapping indexName / t.moduleName
       }
   }
 
