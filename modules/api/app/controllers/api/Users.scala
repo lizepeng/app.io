@@ -6,7 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import elasticsearch.ES
 import helpers._
 import models._
-import models.json.JsUser
+import models.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 
@@ -39,7 +39,7 @@ object Users
     PermCheck(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         User.find(ids).map { usrs =>
-          Ok(Json.toJson(usrs.map(_.toUserInfo)))
+          Ok(JsArray(usrs.map(_.toJson)))
         }
       else
         (ES.Search(q, p) in User future()).map { page =>

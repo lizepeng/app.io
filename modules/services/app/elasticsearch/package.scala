@@ -3,6 +3,7 @@ import java.io.IOException
 import com.sksamuel.elastic4s.source._
 import helpers.Pager
 import models._
+import models.json._
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.bytes.BytesReference
 import org.elasticsearch.common.compress.CompressorFactory
@@ -29,7 +30,7 @@ package object elasticsearch {
     JsonDocSource(Json.toJson(g))
 
   implicit def UserToJsonDocSource(u: User): JsonDocSource =
-    JsonDocSource(Json.toJson(u.toUserInfo))
+    JsonDocSource(u.toJson)
 
   implicit def AccessControlToJsonDocSource(ac: AccessControl): JsonDocSource =
     JsonDocSource(Json.toJson(ac))

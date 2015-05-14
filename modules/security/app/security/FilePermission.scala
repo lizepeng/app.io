@@ -1,9 +1,10 @@
 package security
 
+import java.util.UUID
+
 import helpers.syntax.PolarQuestion
 import models._
 import models.cfs._
-import models.json.JsUser
 
 /**
  * @author zepeng.li@gmail.com
@@ -71,10 +72,10 @@ case class FilePermission(
 object FilePermission {
 
   case class Denied(
-    principal: JsUser,
+    principal: UUID,
     action: Int,
     resource: INode
-  ) extends Permission.Denied[JsUser, Int, INode](CFS.fullModuleName)
+  ) extends Permission.Denied[UUID, Int, INode](CFS.fullModuleName)
 
   val r   = 4
   val w   = 2
@@ -103,7 +104,7 @@ object FilePermission {
     private def check(action: Int): Boolean = {
       val perm: FilePermission = FilePermission(user, action, inode)
       if (perm.canAccess) true
-      else throw Denied(perm.principal.toUserInfo, perm.action, perm.resource)
+      else throw Denied(perm.principal.id, perm.action, perm.resource)
     }
   }
 

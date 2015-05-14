@@ -8,7 +8,6 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
-import models.json.JsUser
 import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.Play.current
@@ -57,8 +56,6 @@ case class User(
   }
 
   def save = User.save(this)
-
-  def toUserInfo = JsUser.from(this)
 
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")

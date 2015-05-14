@@ -2,7 +2,6 @@ package controllers
 
 import controllers.api.SecuredController
 import helpers._
-import models._
 import models.cfs._
 import play.api.libs.concurrent.Execution.Implicits._
 import views._

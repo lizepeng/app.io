@@ -1,6 +1,6 @@
-package models
+package models.cfs
 
-import models.cfs._
+import models.User
 import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future

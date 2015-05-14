@@ -6,7 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
 import models._
-import models.json.JsUser
+import models.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
@@ -106,7 +106,7 @@ object Groups
         page <- Group.children(id, pager)
         usrs <- User.find(page)
       } yield (page, usrs)).map { case (page, usrs) =>
-        Ok(Json.toJson(usrs.map(_.toUserInfo)))
+        Ok(JsArray(usrs.map(_.toJson)))
           .withHeaders(linkHeader(page, routes.Groups.users(id, _)))
       }.recover {
         case e: BaseException => NotFound
@@ -121,12 +121,11 @@ object Groups
             obj.validate[String]((__ \ 'email).read[String]).map(User.find)
           ).map {
           _.flatMap { user =>
-            val info: JsUser = user.toUserInfo
             if (user.groups.contains(id)) Future.successful {
-              Ok(Json.toJson(info))
+              Ok(user.toJson)
             }
             else Group.addChild(id, user.id).map { _ =>
-              Created(Json.toJson(info))
+              Created(user.toJson)
             }
           }
         }.fold(

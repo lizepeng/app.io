@@ -18,4 +18,9 @@ package object json {
     def toJson = Json.toJson(p)
   }
 
+  implicit class ToJsUser(val u: User) extends AnyVal {
+
+    def toJson = Json.toJson(JsUser.from(u))
+  }
+
 }
