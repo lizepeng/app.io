@@ -7,7 +7,7 @@ import models._
 import models.cfs._
 import models.json._
 import play.api.Play.current
-import play.api.http.ContentTypes
+import play.api.http.{ContentTypes, dateFormat}
 import play.api.libs.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
@@ -231,8 +231,18 @@ object Files
     (for {
       root <- CFS.root
       file <- root.file(path)
-    } yield file).map {
-      block(_)
+    } yield file).map { file =>
+      val created_at = file.created_at.withMillisOfSecond(0)
+
+      req.headers.get(IF_MODIFIED_SINCE)
+        .map(dateFormat.parseDateTime) match {
+        case Some(d) if !d.isBefore(created_at) =>
+          NotModified
+        case _                                  =>
+          block(file).withHeaders(
+            LAST_MODIFIED -> dateFormat.print(created_at)
+          )
+      }
     }.recover {
       case e: BaseException => NotFound(e.reason)
     }

@@ -175,6 +175,7 @@ log.models.users.auth.failed                     =TODO
 log.models.users.no.credentials                  =TODO
 
 # files
+controllers.api.files.name                       =API: File System
 controllers.files.name                           =File System
 controllers.files.missing                        =Missing File
 controllers.files.uploaded                       ={0} Uploaded

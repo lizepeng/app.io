@@ -16,7 +16,6 @@ package object helpers {
 
   implicit def extendCrypto(c: Crypto.type): ExtCrypto.type = ExtCrypto
 
-  //TODO override javascriptUnbind
   implicit object bindableQueryLang extends Parsing[Lang](
     Lang(_), _.code, (
     key: String,
