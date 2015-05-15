@@ -2,7 +2,6 @@ package controllers.api
 
 import java.util.UUID
 
-import com.datastax.driver.core.utils.UUIDs
 import elasticsearch.ES
 import helpers._
 import models._
@@ -53,13 +52,7 @@ object Users
 
   def create =
     PermCheck(_.Save).async { implicit req =>
-      BindJson.and(
-        Json.obj(
-          "id" -> UUIDs.timeBased(),
-          "int_groups" -> 0,
-          "ext_groups" -> JsArray()
-        )
-      ).as[JsUser] {
+      BindJson().as[JsUser] {
         success => (for {
           saved <- success.toUser.save
           _resp <- ES.Index(saved) into User

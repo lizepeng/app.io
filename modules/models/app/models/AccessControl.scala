@@ -9,9 +9,7 @@ import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import play.api.Play.current
-import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 import scala.collection.TraversableOnce
@@ -103,20 +101,7 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
   )
 
   // Json Reads and Writes
-  val reads_principal = (__ \ "principal").read[UUID]
-  val reads_resource  = (__ \ "resource").read[String]
-  val reads_action    = (__ \ "action").read[String]
-  val reads_is_group  = (__ \ "is_group").read[Boolean]
-  val reads_granted   = (__ \ "granted").read[Boolean]
-
-  implicit val access_control_writes = Json.writes[AccessControl]
-  implicit val access_control_reads  = (
-    reads_resource
-      and reads_action
-      and reads_principal
-      and reads_is_group
-      and reads_granted
-    )(AccessControl.apply _)
+  implicit val access_control_format = Json.format[AccessControl]
 
   def genId(
     resource: String,

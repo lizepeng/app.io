@@ -12,7 +12,10 @@ import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.Play.current
 import play.api.libs.Crypto
+import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json.Reads._
+import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
@@ -79,20 +82,53 @@ sealed class Users
   object id
     extends UUIDColumn(this)
     with PartitionKey[UUID]
+    with JsonReadable[UUID] {
 
-  object name extends StringColumn(this)
+    def reads = (__ \ "id").read[UUID]
+  }
 
-  object salt extends StringColumn(this)
+  object name
+    extends StringColumn(this)
+    with JsonReadable[String] {
 
-  object encrypted_password extends StringColumn(this)
+    def reads = (__ \ "name").read[String](
+      minLength[String](2) keepAnd maxLength[String](255)
+    )
+  }
 
-  object email extends StringColumn(this)
+  object salt
+    extends StringColumn(this)
 
-  object internal_groups extends IntColumn(this)
+  object encrypted_password
+    extends StringColumn(this)
 
-  object external_groups extends SetColumn[Users, User, UUID](this)
+  object email
+    extends StringColumn(this)
+    with JsonReadable[String] {
 
-  object updated_at extends DateTimeColumn(this)
+    def reads = (__ \ "email").read[String](Reads.email)
+  }
+
+  object internal_groups
+    extends IntColumn(this)
+    with JsonReadable[Int] {
+
+    def reads = (__ \ "int_groups").read[Int]
+  }
+
+  object external_groups
+    extends SetColumn[Users, User, UUID](this)
+    with JsonReadable[Set[UUID]] {
+
+    def reads = (__ \ "ext_groups").read[Set[UUID]]
+  }
+
+  object updated_at
+    extends DateTimeColumn(this)
+    with JsonReadable[DateTime] {
+
+    def reads = always(DateTime.now)
+  }
 
   override def fromRow(r: Row): User = {
     User(

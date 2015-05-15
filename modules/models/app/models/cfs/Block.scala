@@ -34,7 +34,8 @@ sealed class Blocks extends CassandraTable[Blocks, Block] {
     extends LongColumn(this)
     with ClusteringOrder[Long] with Ascending
 
-  object data extends BlobColumn(this)
+  object data
+    extends BlobColumn(this)
 
   override def fromRow(r: Row): Block = {
     Block(indirect_block_id(r), offset(r), data(r))

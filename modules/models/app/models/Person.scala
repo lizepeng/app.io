@@ -35,11 +35,14 @@ sealed class Persons
     extends UUIDColumn(this)
     with PartitionKey[UUID]
 
-  object first_name extends StringColumn(this)
+  object first_name
+    extends StringColumn(this)
 
-  object last_name extends StringColumn(this)
+  object last_name
+    extends StringColumn(this)
 
-  object updated_at extends DateTimeColumn(this)
+  object updated_at
+    extends DateTimeColumn(this)
 
   override def fromRow(r: Row): Person = {
     Person(

@@ -39,9 +39,11 @@ sealed class IndirectBlocks
     extends LongColumn(this)
     with ClusteringOrder[Long] with Ascending
 
-  object length extends LongColumn(this)
+  object length
+    extends LongColumn(this)
 
-  object indirect_block_id extends TimeUUIDColumn(this)
+  object indirect_block_id
+    extends TimeUUIDColumn(this)
 
   override def fromRow(r: Row): IndirectBlock = {
     IndirectBlock(inode_id(r), offset(r), length(r), indirect_block_id(r))

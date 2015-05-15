@@ -49,22 +49,44 @@ sealed class Groups
   object id
     extends UUIDColumn(this)
     with PartitionKey[UUID]
+    with JsonReadable[UUID] {
+
+    def reads = (__ \ "id").read[UUID]
+  }
 
   object name
     extends StringColumn(this)
     with StaticColumn[String]
+    with JsonReadable[String] {
+
+    def reads = (__ \ "name").read[String](
+      minLength[String](2) keepAnd maxLength[String](255)
+    )
+  }
 
   object description
     extends OptionalStringColumn(this)
     with StaticColumn[Option[String]]
+    with JsonReadable[Option[String]] {
+
+    def reads = (__ \ "description").readNullable[String]
+  }
 
   object is_internal
     extends OptionalBooleanColumn(this)
     with StaticColumn[Option[Boolean]]
+    with JsonReadable[Boolean] {
+
+    def reads = (__ \ "is_internal").read[Boolean]
+  }
 
   object updated_at
     extends DateTimeColumn(this)
     with StaticColumn[DateTime]
+    with JsonReadable[DateTime] {
+
+    def reads = always(DateTime.now)
+  }
 
   object child_id
     extends UUIDColumn(this)
@@ -117,18 +139,13 @@ object Group extends Groups with Cassandra with AppConfig {
   }
 
   // Json Reads and Writes
-  val reads_name        = (__ \ "name").read[String](minLength[String](2) keepAnd maxLength[String](255))
-  val reads_id          = (__ \ "id").read[UUID]
-  val reads_description = (__ \ "description").readNullable[String]
-  val reads_is_internal = (__ \ "is_internal").read[Boolean]
-  val reads_updated_at  = (__ \ "updated_at").read[DateTime]
-
   implicit val group_writes = Json.writes[Group]
   implicit val group_reads  = (
-    reads_id and reads_name
-      and reads_description
-      and reads_is_internal
-      and reads_updated_at
+    id.reads
+      and name.reads
+      and description.reads
+      and is_internal.reads
+      and updated_at.reads
     )(Group.apply _)
 
   def createIfNotExist(group: Group): Future[Boolean] = CQL {

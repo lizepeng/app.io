@@ -41,7 +41,7 @@ object Groups
   def checkName =
     PermCheck(_.Show).async(parse.json) { implicit req =>
       Future.successful {
-        req.body.validate(Group.reads_name).fold(
+        req.body.validate(Group.name.reads).fold(
           failure => UnprocessableEntity(JsonClientErrors(failure)),
           success => Ok
         )
