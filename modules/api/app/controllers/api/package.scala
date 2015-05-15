@@ -1,7 +1,7 @@
 package controllers
 
-import controllers.api.AccessControls._
 import helpers.BaseException
+import models.TimeBased
 import play.api.data.validation.ValidationError
 import play.api.http._
 import play.api.i18n.{Lang, Messages => MSG}
@@ -87,7 +87,8 @@ package object api {
     ): Future[Result] = {
       req.body.asJson match {
         case Some(obj: JsObject) => f(obj)
-        case _                   => Future.successful(BadRequest(WrongTypeOfJson()))
+        case _                   =>
+          Future.successful(Results.BadRequest(WrongTypeOfJson()))
       }
     }
   }
@@ -101,7 +102,7 @@ package object api {
       ): Future[Result] = BodyIsJsObject { obj =>
         part.map(_ ++ obj).getOrElse(obj).validate[T].fold(
           failure => Future.successful(
-            UnprocessableEntity(JsonClientErrors(failure))
+            Results.UnprocessableEntity(JsonClientErrors(failure))
           ),
           success => f(success)
         )
@@ -112,6 +113,24 @@ package object api {
 
     def apply() = new Handling(None)
 
+  }
+
+  object NotModifiedOrElse extends HeaderNames {
+
+    def apply[T <: TimeBased](block: T => Result)(
+      implicit req: RequestHeader
+    ): T => Result = { entity =>
+      val updated_at = entity.updated_at.withMillisOfSecond(0)
+      req.headers.get(IF_MODIFIED_SINCE)
+        .map(dateFormat.parseDateTime) match {
+        case Some(d) if !d.isBefore(updated_at) =>
+          Results.NotModified
+        case _                                  =>
+          block(entity).withHeaders(
+            LAST_MODIFIED -> dateFormat.print(updated_at)
+          )
+      }
+    }
   }
 
 }

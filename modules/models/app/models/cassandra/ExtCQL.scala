@@ -119,4 +119,30 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
       r => (c1(r), c2(r), c3(r), c4(r))
     )
   }
+
+  def distinct[A, B, C, D, E](
+    f1: T => SelectColumn[A],
+    f2: T => SelectColumn[B],
+    f3: T => SelectColumn[C],
+    f4: T => SelectColumn[D],
+    f5: T => SelectColumn[E]
+  ): SelectQuery[T, (A, B, C, D, E)] = {
+    val t = this.asInstanceOf[T]
+    val c1 = f1(t)
+    val c2 = f2(t)
+    val c3 = f3(t)
+    val c4 = f4(t)
+    val c5 = f5(t)
+    new SelectQuery[T, (A, B, C, D, E)](
+      t, QueryBuilder.select.distinct()
+        .column(c1.col.name)
+        .column(c2.col.name)
+        .column(c3.col.name)
+        .column(c4.col.name)
+        .column(c5.col.name)
+        .from(tableName),
+      r => (c1(r), c2(r), c3(r), c4(r), c5(r))
+    )
+  }
+
 }

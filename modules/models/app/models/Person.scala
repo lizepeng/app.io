@@ -7,8 +7,7 @@ import com.websudos.phantom.Implicits._
 import helpers._
 import models.cassandra._
 import models.sys.SysConfig
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
+import org.joda.time.DateTime
 import play.api.libs.json._
 
 import scala.concurrent.Future
@@ -20,8 +19,9 @@ import scala.language.postfixOps
 case class Person(
   id: UUID,
   first_name: String = "",
-  last_name: String = ""
-) extends TimeBased
+  last_name: String = "",
+  updated_at: DateTime = DateTime.now
+) extends HasUUID
 
 sealed class Persons
   extends CassandraTable[Persons, Person]
@@ -39,11 +39,14 @@ sealed class Persons
 
   object last_name extends StringColumn(this)
 
+  object updated_at extends DateTimeColumn(this)
+
   override def fromRow(r: Row): Person = {
     Person(
       id(r),
       first_name(r),
-      last_name(r)
+      last_name(r),
+      updated_at(r)
     )
   }
 }
@@ -54,16 +57,7 @@ object Person extends Persons with Cassandra with SysConfig with AppConfig {
     extends BaseException(msg_key("not.found"))
 
   // Json Reads and Writes
-  val reads_id         = (__ \ "id").read[UUID]
-  val reads_first_name = (__ \ "first_name").read[String](minLength[String](1) keepAnd maxLength[String](255))
-  val reads_last_name  = (__ \ "last_name").read[String](minLength[String](1) keepAnd maxLength[String](255))
-
-  implicit val person_writes = Json.writes[Person]
-  implicit val person_reads  = (
-    reads_id
-      and reads_first_name
-      and reads_last_name
-    )(Person.apply _)
+  implicit val person_format = Json.format[Person]
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -84,5 +78,6 @@ object Person extends Persons with Cassandra with SysConfig with AppConfig {
       .where(_.id eqs p.id)
       .modify(_.first_name setTo p.first_name)
       .and(_.last_name setTo p.last_name)
+      .and(_.updated_at setTo DateTime.now)
   }.future()
 }

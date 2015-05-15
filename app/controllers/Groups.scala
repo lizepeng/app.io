@@ -2,12 +2,10 @@ package controllers
 
 import java.util.UUID
 
-import com.datastax.driver.core.utils.UUIDs
 import controllers.api.{JsonClientErrors, SecuredController}
 import helpers._
 import models._
 import models.sys.SysConfig
-import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Iteratee
@@ -25,15 +23,6 @@ object Groups
   with ViewMessages with SysConfig {
 
   val mapping_name = "name" -> nonEmptyText(2, 255)
-
-  val GroupFM = Form[Group](
-    mapping(
-      "id" -> default(of[UUID], UUIDs.timeBased()),
-      mapping_name,
-      "description" -> optional(text(1, 255)),
-      "isInternal" -> default(boolean, false)
-    )(Group.apply)(Group.unapply)
-  )
 
   def index(pager: Pager) =
     PermCheck(_.Index).apply { implicit req =>

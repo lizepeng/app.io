@@ -30,8 +30,9 @@ case class User(
   int_groups: InternalGroups = InternalGroups(0),
   ext_groups: Set[UUID] = Set(),
   password: String = "",
-  remember_me: Boolean = false
-) extends TimeBased {
+  remember_me: Boolean = false,
+  updated_at: DateTime = DateTime.now
+) extends HasUUID {
 
   lazy val groups: Set[UUID] = ext_groups union int_groups
 
@@ -91,6 +92,8 @@ sealed class Users
 
   object external_groups extends SetColumn[Users, User, UUID](this)
 
+  object updated_at extends DateTimeColumn(this)
+
   override def fromRow(r: Row): User = {
     User(
       id(r),
@@ -101,7 +104,8 @@ sealed class Users
       InternalGroups(internal_groups(r)),
       external_groups(r),
       "",
-      remember_me = false
+      remember_me = false,
+      updated_at(r)
     )
   }
 }
@@ -207,6 +211,7 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
           .value(_.email, u.email)
           .value(_.internal_groups, u.int_groups.code | InternalGroups.AnyoneMask)
           .value(_.external_groups, Set[UUID]())
+          .value(_.updated_at, u.updated_at)
       }.future().map(_ => u)
       else throw EmailTaken(u.email)
     } yield user
@@ -219,6 +224,7 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
         .where(_.id eqs u.id)
         .modify(_.salt setTo u.salt)
         .and(_.encrypted_password setTo u.encrypted_password)
+        .and(_.updated_at setTo DateTime.now)
     }.future().map(_ => u)
   }
 
@@ -226,6 +232,7 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
     update
       .where(_.id eqs id)
       .modify(_.name setTo name)
+      .and(_.updated_at setTo DateTime.now)
   }.future()
 
   def remove(id: UUID): Future[ResultSet] = {
@@ -261,6 +268,12 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
     update
       .where(_.id eqs id)
       .modify(_.external_groups remove gid)
+  }
+
+  def cql_updated_at(id: UUID) = CQL {
+    update
+      .where(_.id eqs id)
+      .modify(_.updated_at setTo DateTime.now)
   }
 
   ////////////////////////////////////////////////////////////////

@@ -5,15 +5,16 @@ import java.util.UUID
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.Logging
-import models.TimeBased
+import models.HasUUID
 import models.cassandra.{Cassandra, ExtCQL}
+import org.joda.time.DateTime
 
 import scala.concurrent.Future
 
 /**
  * @author zepeng.li@gmail.com
  */
-trait INode extends TimeBased {
+trait INode extends HasUUID {
 
   def name: String
 
@@ -28,6 +29,8 @@ trait INode extends TimeBased {
   def ext_permission: Map[UUID, Int]
 
   def attributes: Map[String, String]
+
+  lazy val updated_at: DateTime = created_at
 
   def rename(newName: String, force: Boolean = false): Future[INode] = {
     Directory.find(parent).flatMap {

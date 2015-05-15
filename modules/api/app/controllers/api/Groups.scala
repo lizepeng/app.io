@@ -40,8 +40,10 @@ object Groups
 
   def show(id: UUID) =
     PermCheck(_.Show).async { implicit req =>
-      Group.find(id).map { grp =>
-        Ok(Json.toJson(grp))
+      Group.find(id).map {
+        NotModifiedOrElse { grp =>
+          Ok(Json.toJson(grp))
+        }
       }.recover {
         case e: BaseException => NotFound
       }

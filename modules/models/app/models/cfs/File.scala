@@ -6,7 +6,6 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
 import helpers.syntax._
 import helpers.{BaseException, Logging}
-import models.TimeBased
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
@@ -29,7 +28,7 @@ case class File(
   ext_permission: Map[UUID, Int] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = false
-) extends INode with TimeBased {
+) extends INode {
 
   def read(offset: Long = 0): Enumerator[BLK] =
     if (offset == 0) IndirectBlock.read(id)

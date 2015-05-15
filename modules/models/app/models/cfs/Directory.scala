@@ -6,9 +6,9 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
+import models.User
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
-import models.{TimeBased, User}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -26,7 +26,7 @@ case class Directory(
   ext_permission: Map[UUID, Int] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = true
-) extends INode with TimeBased {
+) extends INode {
 
   def save(fileName: String = "")(
     implicit user: User

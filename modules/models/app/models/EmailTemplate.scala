@@ -26,7 +26,7 @@ case class EmailTemplate(
   updated_at: DateTime,
   updated_by: UUID,
   created_by: UUID
-) extends TimeBased {
+) extends HasUUID {
 
   def save = EmailTemplate.save(this)
 }
@@ -39,7 +39,7 @@ case class EmailTemplateHistory(
   text: String,
   updated_at: DateTime,
   updated_by: UUID
-) extends TimeBased
+) extends HasUUID
 
 import models.{EmailTemplate => ET, EmailTemplateHistory => ETH}
 

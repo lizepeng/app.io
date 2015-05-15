@@ -11,6 +11,7 @@ import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig
+import org.joda.time.DateTime
 import play.api.Play.current
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee._
@@ -28,8 +29,9 @@ case class Group(
   id: UUID,
   name: String = "",
   description: Option[String] = None,
-  is_internal: Boolean = false
-) extends TimeBased {
+  is_internal: Boolean = false,
+  updated_at: DateTime
+) extends HasUUID {
 
   def createIfNotExist = Group.createIfNotExist(this)
 
@@ -60,12 +62,22 @@ sealed class Groups
     extends OptionalBooleanColumn(this)
     with StaticColumn[Option[Boolean]]
 
+  object updated_at
+    extends DateTimeColumn(this)
+    with StaticColumn[DateTime]
+
   object child_id
     extends UUIDColumn(this)
     with ClusteringOrder[UUID]
 
   override def fromRow(r: Row): Group = {
-    Group(id(r), name(r), description(r), is_internal(r).contains(true))
+    Group(
+      id(r),
+      name(r),
+      description(r),
+      is_internal(r).contains(true),
+      updated_at(r)
+    )
   }
 }
 
@@ -109,12 +121,14 @@ object Group extends Groups with Cassandra with AppConfig {
   val reads_id          = (__ \ "id").read[UUID]
   val reads_description = (__ \ "description").readNullable[String]
   val reads_is_internal = (__ \ "is_internal").read[Boolean]
+  val reads_updated_at  = (__ \ "updated_at").read[DateTime]
 
   implicit val group_writes = Json.writes[Group]
   implicit val group_reads  = (
     reads_id and reads_name
       and reads_description
       and reads_is_internal
+      and reads_updated_at
     )(Group.apply _)
 
   def createIfNotExist(group: Group): Future[Boolean] = CQL {
@@ -123,6 +137,7 @@ object Group extends Groups with Cassandra with AppConfig {
       .value(_.name, group.name)
       .value(_.description, group.description)
       .value(_.is_internal, Some(group.is_internal).filter(_ == true))
+      .value(_.updated_at, group.updated_at)
       .ifNotExists()
   }.future().map(_.wasApplied())
 
@@ -145,7 +160,7 @@ object Group extends Groups with Cassandra with AppConfig {
   }
 
   def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
-    distinct(_.id, _.name, _.description, _.is_internal)
+    distinct(_.id, _.name, _.description, _.is_internal, _.updated_at)
       .where(_.id in ids.toList.distinct)
   }.fetchEnumerator() &>
     Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
@@ -157,6 +172,7 @@ object Group extends Groups with Cassandra with AppConfig {
       .modify(_.name setTo group.name)
       .and(_.description setTo group.description)
       .and(_.is_internal setTo Some(group.is_internal).filter(_ == true))
+      .and(_.updated_at setTo DateTime.now)
   }.future().map(_ => group)
 
   def remove(id: UUID): Future[ResultSet] =
@@ -195,12 +211,16 @@ object Group extends Groups with Cassandra with AppConfig {
 
   def addChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     BatchStatement()
+      .add(Group.cql_updated_at(id))
+      .add(User.cql_updated_at(child_id))
       .add(Group.cql_add_child(id, child_id))
       .add(User.cql_add_group(child_id, id))
   }.future()
 
   def delChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     BatchStatement()
+      .add(Group.cql_updated_at(id))
+      .add(User.cql_updated_at(child_id))
       .add(Group.cql_del_child(id, child_id))
       .add(User.cql_del_group(child_id, id))
   }.future()
@@ -217,6 +237,12 @@ object Group extends Groups with Cassandra with AppConfig {
     delete
       .where(_.id eqs id)
       .and(_.child_id eqs child_id)
+  }
+
+  def cql_updated_at(id: UUID) = CQL {
+    update
+      .where(_.id eqs id)
+      .modify(_.updated_at setTo DateTime.now)
   }
 
 }
@@ -280,7 +306,8 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
           id,
           if (n == Anyone) "Anyone" else key,
           Some(key),
-          is_internal = true
+          is_internal = true,
+          DateTime.now
         ).createIfNotExist.map((id, _))
       }
     }
