@@ -16,15 +16,13 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 
 //* TODO authorization
-//* TODO Rate limit
-//* TODO ETag
 
 /**
  * @author zepeng.li@gmail.com
  */
 object Groups
   extends SecuredController(Group)
-  with ExHeaders {
+  with LinkHeader {
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>

@@ -65,8 +65,8 @@ package object api {
       generate(e.message)
     }
 
-    def apply(key: String)(implicit lang: Lang): JsObject = {
-      generate(MSG(key))
+    def apply(key: String, args: Any*)(implicit lang: Lang): JsObject = {
+      generate(MSG(key, args))
     }
 
     private def generate(msg: String): JsObject = {

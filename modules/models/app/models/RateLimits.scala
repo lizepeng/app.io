@@ -7,6 +7,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import helpers.Logging
 import models.cassandra._
+import org.joda.time.DateTime
 
 import scala.concurrent.Future
 
@@ -18,15 +19,19 @@ sealed class RateLimits
   with ExtCQL[RateLimits, UUID]
   with Logging {
 
-  override val tableName = "rate_limit"
+  override val tableName = "rate_limits"
 
   object user_id
     extends UUIDColumn(this)
     with PartitionKey[UUID]
 
-  object key
+  object resource
     extends StringColumn(this)
     with PrimaryKey[String]
+
+  object datetime
+    extends DateTimeColumn(this)
+    with PrimaryKey[DateTime]
 
   object value
     extends CounterColumn(this)
@@ -36,24 +41,29 @@ sealed class RateLimits
 
 object RateLimit extends RateLimits with Cassandra {
 
-  def get(key: String)(
+  def get(
+    resource: String,
+    datetime: DateTime
+  )(
     implicit user: User
   ): Future[Long] = CQL {
     select(_.value)
       .where(_.user_id eqs user.id)
-      .and(_.key eqs key)
+      .and(_.resource eqs resource)
+      .and(_.datetime eqs datetime)
   }.one().map(_.getOrElse(0L))
 
-  def inc(key: String, value: Long = 1L)(
+  def inc(
+    resource: String,
+    datetime: DateTime,
+    value: Long = 1L
+  )(
     implicit user: User
   ): Future[ResultSet] = CQL {
     update
       .where(_.user_id eqs user.id)
-      .and(_.key eqs key)
+      .and(_.resource eqs resource)
+      .and(_.datetime eqs datetime)
       .modify(_.value increment value)
   }.future()
-
-  def inc_get(key: String, value: Long = 1L)(
-    implicit user: User
-  ): Future[Long] = inc(key, value).flatMap(_ => get(key))
 }

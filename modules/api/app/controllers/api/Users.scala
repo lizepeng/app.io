@@ -17,7 +17,7 @@ import scala.concurrent.Future
  */
 object Users
   extends SecuredController(User)
-  with ExHeaders {
+  with LinkHeader {
 
   def groups(id: UUID, options: Option[String]) =
     PermCheck(_.Show).async { implicit req =>

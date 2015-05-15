@@ -15,14 +15,14 @@ import scala.concurrent.Future
  */
 object Search
   extends Controller
-  with ExHeaders with PermissionCheckable {
+  with LinkHeader with PermissionCheckable {
 
   override val moduleName = "search"
 
   def index(types: Seq[String], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
       val indexTypes = types.distinct
-      
+
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
         case (Users.moduleName, _p)  =>
           Some((es: ES) => es.Search(q, _p) in User)

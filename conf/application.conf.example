@@ -69,8 +69,11 @@ cassandra.fetch-size=0
 elasticsearch.client.uri="elasticsearch://127.0.0.1:9300"
 elasticsearch.cluster.name=elasticsearch_name
 
-helpers.bandwidth.max=5M
-helpers.bandwidth.min=200K
+controllers.api.rate_limit.limit=5000
+controllers.api.rate_limit.span=15
+
+controllers.api.bandwidth.max=5M
+controllers.api.bandwidth.min=200K
 
 controllers.files.bandwidth.upload=1.5M
 controllers.files.bandwidth.download=1M

@@ -16,7 +16,7 @@ import scala.concurrent.Future
  */
 object AccessControls
   extends SecuredController(AccessControl)
-  with ExHeaders {
+  with LinkHeader {
 
   def index(q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>

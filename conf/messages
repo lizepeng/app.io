@@ -270,6 +270,7 @@ address.building                                 =Building
 # api
 api.json.validation.failed                       =Validation Failed
 api.json.body.wrong.type                         =Body should be a JSON object
+api.rate_limit.exceeded                          =API rate limit exceeded
 
 # TODO
 msg.confirm.delete                               =TODO
