@@ -14,7 +14,7 @@ package object actors {
   case class JsonParseError(e: Seq[(JsPath, Seq[ValidationError])])
     extends BaseException("json.parse.error")
 
-  def classFrame[A: Format]: FrameFormatter[Try[A]] =
+  def jsonFrame[A: Format]: FrameFormatter[Try[A]] =
     FrameFormatter.stringFrame.transform[Try[A]](
       _ match {
         case Success(a)                => Json.stringify(Json.toJson(a))

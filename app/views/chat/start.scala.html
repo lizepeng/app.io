@@ -3,29 +3,31 @@
 @layouts.base(MSG("Start Chat")){
 
   <div class="row" ng-controller="ChatCtrl">
-    <div class="input-group">
-      <input type="text" class="form-control" required ng-model="message">
-      <span class="input-group-btn">
-        <button class="btn btn-primary" type="button"
-          ng-click="send(message)">
-          Send
-        </button>
-      </span>
+    <div class="form-group col-xs-12 col-sm-6">
+      <label for="">@MSG("Send To")</label>
+      <input type="text" class="form-control" required ng-model="message.to">
     </div>
 
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-      <ul>
-        <li ng-repeat="msg in sent track by $index">
-          <div>{{ msg }}</div>
-        </li>
-      </ul>
+    <div class="form-group col-xs-12 col-sm-6">
+      <label for="">@MSG("Text")</label>
+      <div class="input-group">
+        <input type="text" class="form-control" required ng-model="message.text">
+        <span class="input-group-btn">
+          <button class="btn btn-primary" type="button"
+            ng-click="send(message)">
+            Send
+          </button>
+        </span>
+      </div>
     </div>
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-      <ul>
-        <li ng-repeat="msg in inbox track by $index">
-          <div class="pull-right">{{ msg }}</div>
-        </li>
-      </ul>
+
+    <div class="row" ng-repeat="record in history track by $index">
+      <div ng-if="record.to != null" class="col-sm-6">
+        <pre class="pull-left">{{ record | json }}</pre>
+      </div>
+      <div ng-if="record.from != null" class="col-sm-6 col-sm-offset-6">
+        <pre class="pull-right">{{ record | json }}</pre>
+      </div>
     </div>
   </div>
 }()(
@@ -38,18 +40,18 @@
     var exampleSocket = new WebSocket("@sockets.routes.Chat.connect.webSocketURL()");
     angular.module('chat', [])
     .controller('ChatCtrl', ['$scope', function($scope) {
-      $scope.sent = [];
-      $scope.inbox = [];
+      $scope.history = [];
+      $scope.message = { to : "", text : "" };
 
       exampleSocket.onmessage = function (event) {
         console.log(event.data);
-        $scope.inbox.push(event.data);
+        $scope.history.push(JSON.parse(event.data));
         $scope.$apply();
       };
 
       $scope.send = function(msg) {
-        exampleSocket.send(msg);
-        $scope.sent.push(msg);
+        exampleSocket.send(JSON.stringify(msg));
+        $scope.history.push(angular.copy(msg));
       };
     }]);
     angular.module('app').requires.push('chat');

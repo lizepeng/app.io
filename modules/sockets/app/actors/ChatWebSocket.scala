@@ -22,7 +22,7 @@ object ChatWebSocket {
   case class Received(from: UUID, text: String)
 
   implicit val in_fmt        = Json.format[Send]
-  implicit val in_frame_fmt  = classFrame[Send]
+  implicit val in_frame_fmt  = jsonFrame[Send]
   implicit val out_fmt       = Json.format[Received]
   implicit val out_frame_fmt = FrameFormatter.jsonFrame[Received]
 }
@@ -41,6 +41,5 @@ class ChatWebSocket(out: ActorRef, uid: UUID) extends Actor {
 
     case ChatActor.Message(_, text, from) =>
       out ! ChatWebSocket.Received(from, text)
-
   }
 }
