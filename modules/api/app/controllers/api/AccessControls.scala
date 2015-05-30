@@ -8,6 +8,7 @@ import models.AccessControl.NotFound
 import models._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
+import protocols.JsonProtocol._
 
 import scala.concurrent.Future
 

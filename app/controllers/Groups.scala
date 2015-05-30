@@ -2,13 +2,14 @@ package controllers
 
 import java.util.UUID
 
-import controllers.api.{JsonClientErrors, SecuredController}
+import controllers.api.SecuredController
 import helpers._
 import models._
 import models.sys.SysConfig
 import play.api.data.Forms._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Iteratee
+import protocols.JsonProtocol._
 import views._
 
 import scala.concurrent.Future

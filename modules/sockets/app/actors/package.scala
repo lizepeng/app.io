@@ -2,6 +2,7 @@ import helpers.BaseException
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.mvc.WebSocket.FrameFormatter
+import protocols.JsonProtocol._
 
 import scala.util._
 
@@ -16,8 +17,9 @@ package object actors {
   def classFrame[A: Format]: FrameFormatter[Try[A]] =
     FrameFormatter.stringFrame.transform[Try[A]](
       _ match {
-        case Success(a)            => Json.stringify(Json.toJson(a))
-        case Failure(e: Throwable) => Json.stringify(Json.obj("error" -> e.getMessage))
+        case Success(a)                => Json.stringify(Json.toJson(a))
+        case Failure(e: BaseException) => Json.stringify(JsonMessage(e))
+        case Failure(e: Throwable)     => Json.stringify(JsonMessage(e.getMessage))
       },
       in => Try(Json.parse(in)) match {
         case Success(json)         => Json.fromJson[A](json).fold(

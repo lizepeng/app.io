@@ -11,6 +11,7 @@ import models.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
+import protocols.JsonProtocol._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
