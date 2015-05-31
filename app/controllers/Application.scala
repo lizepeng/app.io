@@ -25,5 +25,4 @@ object Application
     val videoPath = config.getString("wiki.video").map(fn => Path(filename = Some(fn)))
     Ok(html.static_pages.wiki(videoPath))
   }
-
 }

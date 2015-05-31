@@ -16,6 +16,6 @@ dist
 /RUNNING_PID
 /.settings
 projectFilesBackup*
-/conf/application.conf
+/conf/application*.conf
 /conf/logger.xml
 /data

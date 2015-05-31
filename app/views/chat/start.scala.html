@@ -1,0 +1,57 @@
+@()(implicit req: MaybeUserRequest[_], lang: Lang)
+
+@layouts.base(MSG("Start Chat")){
+
+  <div class="row" ng-controller="ChatCtrl">
+    <div class="input-group">
+      <input type="text" class="form-control" required ng-model="message">
+      <span class="input-group-btn">
+        <button class="btn btn-primary" type="button"
+          ng-click="send(message)">
+          Send
+        </button>
+      </span>
+    </div>
+
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+      <ul>
+        <li ng-repeat="msg in sent track by $index">
+          <div>{{ msg }}</div>
+        </li>
+      </ul>
+    </div>
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+      <ul>
+        <li ng-repeat="msg in inbox track by $index">
+          <div class="pull-right">{{ msg }}</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+}()(
+  controller
+)
+
+@controller = {
+  <script>
+
+    var exampleSocket = new WebSocket("@sockets.routes.Chat.connect.webSocketURL()");
+    angular.module('chat', [])
+    .controller('ChatCtrl', ['$scope', function($scope) {
+      $scope.sent = [];
+      $scope.inbox = [];
+
+      exampleSocket.onmessage = function (event) {
+        console.log(event.data);
+        $scope.inbox.push(event.data);
+        $scope.$apply();
+      };
+
+      $scope.send = function(msg) {
+        exampleSocket.send(msg);
+        $scope.sent.push(msg);
+      };
+    }]);
+    angular.module('app').requires.push('chat');
+  </script>
+}

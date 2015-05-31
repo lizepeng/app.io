@@ -4,11 +4,14 @@
 
 # API routes
 ->   /api                                   api.Routes
+->   /sockets                               sockets.Routes
 
 # Home page
 GET  /                                      controllers.Application.index
 GET  /wiki                                  controllers.Application.wiki
 GET  /about                                 controllers.Application.about
+
+GET  /chat                                  controllers.Chat.chat
 
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file                          controllers.Assets.at(path="/public", file)

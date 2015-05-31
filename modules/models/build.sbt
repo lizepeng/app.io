@@ -1,6 +1,6 @@
-name := "app-io.models"
-
 Common.settings
+
+name := s"${Common.appName}.models"
 
 scalacOptions += "-feature"
 

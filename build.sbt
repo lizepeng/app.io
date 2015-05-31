@@ -1,6 +1,6 @@
-name := "app-io"
-
 Common.settings
+
+name := s"${Common.appName}"
 
 scalacOptions += "-feature"
 
@@ -23,9 +23,13 @@ lazy val api      = (project in file("modules/api"))
                     .enablePlugins(PlayScala)
                     .dependsOn(security, services).aggregate(security, services)
 
+lazy val sockets  = (project in file("modules/sockets"))
+                    .enablePlugins(PlayScala)
+                    .dependsOn(security, services).aggregate(security, services)
+
 lazy val root     = (project in file("."))
                     .enablePlugins(PlayScala)
-                    .dependsOn(api).aggregate(api)
+                    .dependsOn(api, sockets).aggregate(api, sockets)
 
 libraryDependencies ++= Seq(
   filters,

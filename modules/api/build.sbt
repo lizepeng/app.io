@@ -1,6 +1,6 @@
-name := "app-io.api"
-
 Common.settings
+
+name := s"${Common.appName}.api"
 
 scalacOptions += "-feature"
 

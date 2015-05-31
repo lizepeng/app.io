@@ -1,9 +1,12 @@
 import controllers.{AccessControls, Groups, _}
 import elasticsearch.ES
+import messages.ChatActor
 import models._
 import models.cfs._
 import models.sys.SysConfig
+import play.api.Play.current
 import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import play.api.{Application, _}
@@ -28,6 +31,7 @@ object Global
   with GlobalSettings {
 
   override def onStart(app: Application) = {
+    ChatActor.startRegion(Akka.system)
     Future.sequence(
       Seq(
         Schemas.create,
