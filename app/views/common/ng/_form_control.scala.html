@@ -1,5 +1,5 @@
 @(name: String, args: (Symbol,Any)*)(
-implicit lang: Lang)
+implicit message: Messages)
 
 @argsMap   = @{args.toMap}
 @inputType = @{argsMap.get('_type).map(_.toString).getOrElse("text")}

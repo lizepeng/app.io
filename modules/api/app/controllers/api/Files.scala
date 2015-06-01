@@ -12,9 +12,9 @@ import play.api.libs.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
 import play.api.libs.json.JsArray
-import play.api.mvc.BodyParsers.parse.Multipart._
 import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
+import play.core.parsers.Multipart._
 import security.{FilePermission => FilePerm, _}
 
 import scala.concurrent.Future

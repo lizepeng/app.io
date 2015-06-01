@@ -1,6 +1,6 @@
 @(field: Field, options: Seq[(String,(String,String))], args: (Symbol,Any)*)(
 fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
-implicit lang: Lang)
+implicit messages: Messages)
 
 @helper.input(field, args:_*) { (id, name, value, htmlArgs) =>
   <div class="btn-group" data-toggle="buttons">
@@ -23,4 +23,4 @@ implicit lang: Lang)
       }
     }
   </div>
-}(ChainedFieldConstructor(fc, fcs:_*), lang)
+}(ChainedFieldConstructor(fc, fcs:_*), messages)

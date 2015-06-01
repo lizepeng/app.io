@@ -1,4 +1,4 @@
-@(name:String,args: (Symbol,Any)*)(html:Html)(implicit lang: Lang)
+@(name:String,args: (Symbol,Any)*)(html:Html)(implicit messages: Messages)
 
 @argsMap = @{args.toMap}
 @label   = @{argsMap.get('_label).map(_.toString).getOrElse(MSG(name))}

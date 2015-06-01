@@ -1,6 +1,6 @@
 @(field: Field, args: (Symbol,Any)*)(
 fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
-implicit lang: Lang)
+implicit messages: Messages)
 
 @boxValue = @{ args.toMap.get('value).getOrElse("true") }
 
@@ -16,4 +16,4 @@ implicit lang: Lang)
       @args.toMap.get('_text)
     </label>
   </div>
-}(ChainedFieldConstructor(fc, fcs:_*), lang)
+}(ChainedFieldConstructor(fc, fcs:_*), messages)

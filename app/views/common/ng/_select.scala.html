@@ -1,5 +1,5 @@
 @(name: String, args: (Symbol,Any)*)(
-implicit lang: Lang)
+implicit messages: Messages)
 
 @argsMap  = @{args.toMap}
 @label    = @{argsMap.get('_label).map(_.toString).getOrElse(MSG(name))}

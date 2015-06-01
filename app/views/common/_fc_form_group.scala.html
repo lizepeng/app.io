@@ -3,7 +3,7 @@
 <div class="form-group@if(elements.hasErrors){ has-error has-feedback}">
 
   <label class="control-label" for="@elements.id">
-    @elements.label(elements.lang)
+    @elements.label
   </label>
 
   @elements.input
@@ -14,7 +14,7 @@
     </span>
   }
 
-  @elements.errors(elements.lang).map { error =>
+  @elements.errors.map { error =>
     <span class="help-block">@error</span>
   }
 

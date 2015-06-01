@@ -1,6 +1,6 @@
 @(field: Field, options: Seq[(String,String)], args: (Symbol,Any)*)(
 fc:helper.FieldConstructor, fcs: helper.FieldConstructor*)(
-implicit lang: Lang)
+implicit messages: Messages)
 
 @helper.input(
   field,
@@ -25,4 +25,4 @@ implicit lang: Lang)
       }
     }
   }
-}(ChainedFieldConstructor(fc, fcs:_*), lang)
+}(ChainedFieldConstructor(fc, fcs:_*), messages)

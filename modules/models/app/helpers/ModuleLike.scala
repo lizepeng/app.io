@@ -8,6 +8,9 @@ import play.api.i18n._
 trait ModuleLike extends Logging {
   self =>
 
+  import Messages.Implicits._
+  import play.api.Play.current
+
   /**
    * if empty specified then leave package name as full module name
    *

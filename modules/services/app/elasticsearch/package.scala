@@ -10,6 +10,7 @@ import org.elasticsearch.common.compress.CompressorFactory
 import org.elasticsearch.common.io.Streams
 import org.elasticsearch.common.xcontent._
 import play.api.http._
+import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc.Codec
 

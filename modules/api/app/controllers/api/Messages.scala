@@ -1,5 +1,7 @@
 package controllers.api
 
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 import play.api.i18n.{Messages => MSG}
 import play.api.libs.json._
 import play.api.mvc.Controller

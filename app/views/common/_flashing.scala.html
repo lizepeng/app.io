@@ -1,4 +1,4 @@
-@()(implicit req: MaybeUserRequest[_], lang: Lang)
+@()(implicit req: MaybeUserRequest[_], messages: Messages)
 
 @req.flash.data.map {
   case ("info", v) => {

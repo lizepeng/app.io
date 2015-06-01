@@ -1,5 +1,7 @@
 package controllers
 
+import javax.inject.Inject
+
 import controllers.Users.{Password, Rules}
 import helpers._
 import models._
@@ -7,7 +9,7 @@ import models.sys.SysConfig
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.Lang
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.{Controller, Result}
 import security._
@@ -19,11 +21,16 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object PasswordReset
+class PasswordReset @Inject()(val messagesApi: MessagesApi)
   extends Controller
-  with ModuleLike with ViewMessages with SysConfig with AppConfig {
+  with ModuleLike
+  with ViewMessages
+  with SysConfig
+  with AppConfig
+  with I18nSupport {
 
   override val moduleName = "password_reset"
+
   val emailFM = Form(
     single("email" -> text.verifying(Rules.email))
   )
@@ -155,4 +162,11 @@ object PasswordReset
       bound.withGlobalError(msg_key(key))
     }
   }
+}
+
+object PasswordReset
+  extends ModuleLike
+  with ViewMessages {
+
+  override val moduleName = "password_reset"
 }

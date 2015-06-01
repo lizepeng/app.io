@@ -9,7 +9,7 @@ import play.api.i18n._
 trait ViewMessages {
   self: ModuleLike =>
 
-  def vmsg(key: String, args: Any*)(implicit lang: Lang) = {
+  def vmsg(key: String, args: Any*)(implicit messages: Messages) = {
     Messages(s"views.$moduleName.$key", args: _*)
   }
 }

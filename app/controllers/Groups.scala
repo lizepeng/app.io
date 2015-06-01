@@ -1,12 +1,14 @@
 package controllers
 
 import java.util.UUID
+import javax.inject.Inject
 
 import controllers.api.SecuredController
 import helpers._
 import models._
 import models.sys.SysConfig
 import play.api.data.Forms._
+import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Iteratee
 import protocols.JsonProtocol._
@@ -19,9 +21,8 @@ import scala.util.Success
 /**
  * @author zepeng.li@gmail.com
  */
-object Groups
-  extends SecuredController(Group)
-  with ViewMessages with SysConfig {
+class Groups @Inject()(val messagesApi: MessagesApi)
+  extends SecuredController(Group) with I18nSupport {
 
   val mapping_name = "name" -> nonEmptyText(2, 255)
 
@@ -48,6 +49,12 @@ object Groups
         )
       }
     }
+
+}
+
+object Groups
+  extends SecuredController(Group)
+  with ViewMessages with SysConfig {
 
   import html.layouts._
 

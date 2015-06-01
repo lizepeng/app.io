@@ -1,15 +1,19 @@
 package controllers
 
 import java.util.UUID
+import javax.inject.Inject
 
-import controllers.Sessions._
+import controllers.Users.{Password, Rules}
 import controllers.api.SecuredController
 import elasticsearch.ES
 import helpers._
 import models._
+import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation._
+import play.api.i18n.Messages.Implicits._
+import play.api.i18n.MessagesApi
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -21,8 +25,9 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Users
+class Users @Inject()(val messagesApi: MessagesApi)
   extends SecuredController(User)
+  with security.Session
   with ViewMessages {
 
   val signUpFM = Form[SignUpFD](
@@ -40,14 +45,6 @@ object Users
     email: String,
     password: Password
   )
-
-  case class Password(
-    original: String,
-    confirmation: String
-  ) {
-
-    def isConfirmed = original == confirmation
-  }
 
   def show(id: UUID) =
     PermCheck(_.Show).async { implicit req =>
@@ -123,6 +120,21 @@ object Users
       failure => Forbidden(failure.errorsAsJson),
       success => Ok("")
     )
+  }
+
+}
+
+object Users
+  extends SecuredController(User)
+  with security.Session
+  with ViewMessages {
+
+  case class Password(
+    original: String,
+    confirmation: String
+  ) {
+
+    def isConfirmed = original == confirmation
   }
 
   object Rules {

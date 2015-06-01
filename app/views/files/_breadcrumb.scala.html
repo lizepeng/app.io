@@ -1,4 +1,4 @@
-@(path:Path)
+@(path:Path)(implicit messages: Messages)
 
 <ol class="breadcrumb">
   @path.subPaths.map { subPath =>

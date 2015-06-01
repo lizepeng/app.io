@@ -1,6 +1,7 @@
 package controllers
 
 import java.util.UUID
+import javax.inject.Inject
 
 import com.datastax.driver.core.utils.UUIDs
 import controllers.api.SecuredController
@@ -10,7 +11,7 @@ import models._
 import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.Lang
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import security._
 import views._
@@ -18,9 +19,9 @@ import views._
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-object EmailTemplates
+class EmailTemplates @Inject()(val messagesApi: MessagesApi)
   extends SecuredController(EmailTemplate)
-  with ViewMessages {
+  with ViewMessages with I18nSupport {
 
   val TemplateFM = Form[TemplateFD](
     mapping(
@@ -189,3 +190,7 @@ object EmailTemplates
 
   private def key_editing(id: UUID) = s"$fullModuleName - $id - version"
 }
+
+object EmailTemplates
+  extends SecuredController(EmailTemplate)
+  with ViewMessages

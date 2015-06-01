@@ -4,7 +4,7 @@ name := s"${Common.appName}.api"
 
 scalacOptions += "-feature"
 
-PlayKeys.routesImport ++= Seq(
+routesImport ++= Seq(
   "helpers._",
   "java.util.UUID",
   "org.joda.time.DateTime",

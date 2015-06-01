@@ -31,6 +31,8 @@ lazy val root     = (project in file("."))
                     .enablePlugins(PlayScala)
                     .dependsOn(api, sockets).aggregate(api, sockets)
 
+routesGenerator := InjectedRoutesGenerator
+
 libraryDependencies ++= Seq(
   filters,
   "org.webjars"       %  "bootstrap"         % "3.3.1",
@@ -54,7 +56,7 @@ TwirlKeys.templateImports ++= Seq(
   "security._"
 )
 
-PlayKeys.routesImport ++= Seq(
+routesImport ++= Seq(
   "helpers._",
   "java.util.UUID",
   "org.joda.time.DateTime",

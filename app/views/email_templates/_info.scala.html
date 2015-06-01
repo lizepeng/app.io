@@ -1,5 +1,5 @@
 @(tmpl: EmailTemplate, updated_by:User, created_by:User)(
-implicit lang: Lang)
+implicit messages: Messages)
 
 @common._form_group_static("id"){
   @tmpl.id

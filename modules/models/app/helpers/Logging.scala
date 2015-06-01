@@ -22,6 +22,9 @@ trait Logging {
 
 trait Loggable extends Product {
 
+  import Messages.Implicits._
+  import play.api.Play.current
+
   def code: String
 
   def message(implicit lang: Lang): String = message("msg")

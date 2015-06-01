@@ -1,9 +1,12 @@
 package controllers
 
+import javax.inject.Inject
+
 import controllers.api.SecuredController
 import elasticsearch.ES
 import helpers._
 import models._
+import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.concurrent.Execution.Implicits._
 import security.CheckedActions
 import views._
@@ -14,14 +17,20 @@ import scala.util.Success
 /**
  * @author zepeng.li@gmail.com
  */
-object AccessControls
+class AccessControls @Inject()(val messagesApi: MessagesApi)
   extends SecuredController(AccessControl)
-  with ViewMessages {
+  with I18nSupport {
 
   def index(pager: Pager) =
     PermCheck(_.Index).apply { implicit req =>
       Ok(html.access_controls.index(pager))
     }
+
+}
+
+object AccessControls
+  extends SecuredController(AccessControl)
+  with ViewMessages {
 
   def initialize: Future[Boolean] = for {
     _empty <- AccessControl.isEmpty
