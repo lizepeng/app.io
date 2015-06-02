@@ -1,5 +1,7 @@
 import helpers.BaseException
+import play.api.Play.current
 import play.api.data.validation.ValidationError
+import play.api.i18n.Messages.Implicits._
 import play.api.libs.json._
 import play.api.mvc.WebSocket.FrameFormatter
 import protocols.JsonProtocol._

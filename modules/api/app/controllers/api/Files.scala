@@ -1,13 +1,14 @@
 package controllers.api
 
 import controllers.api.Bandwidth._
-import controllers.api.Groups._
 import helpers._
 import models._
 import models.cfs._
 import models.json._
 import play.api.Play.current
 import play.api.http.ContentTypes
+import play.api.i18n.Messages
+import play.api.i18n.Messages.Implicits._
 import play.api.libs.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
@@ -26,6 +27,7 @@ import scala.util.Failure
  */
 object Files
   extends SecuredController(CFS)
+  with LinkHeader
   with AppConfig {
 
   lazy val bandwidth_upload  : Int =
@@ -226,15 +228,15 @@ object Files
   )
 
   private def under(path: Path)(block: File => Result)(
-    implicit req: UserRequest[_]
+    implicit req: UserRequest[_], messages: Messages
   ): Future[Result] = {
     (for {
       root <- CFS.root
       file <- root.file(path)
     } yield file).map {
-      NotModifiedOrElse(block)(req)
+      NotModifiedOrElse(block)(req, messages)
     }.recover {
-      case e: BaseException => NotFound(e.reason)
+      case e: BaseException => NotFound(e.reason(messages))
     }
   }
 

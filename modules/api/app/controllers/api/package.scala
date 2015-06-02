@@ -2,6 +2,7 @@ package controllers
 
 import models.TimeBased
 import play.api.http._
+import play.api.i18n.Messages
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc._
@@ -26,7 +27,7 @@ package object api {
   object BodyIsJsObject {
 
     def apply(f: JsObject => Future[Result])(
-      implicit req: UserRequest[AnyContent]
+      implicit req: UserRequest[AnyContent], messages: Messages
     ): Future[Result] = {
       req.body.asJson match {
         case Some(obj: JsObject) => f(obj)
@@ -41,7 +42,9 @@ package object api {
     class Handling(part: Option[JsObject]) {
 
       def as[T](f: T => Future[Result])(
-        implicit req: UserRequest[AnyContent], reads: Reads[T]
+        implicit req: UserRequest[AnyContent],
+        reads: Reads[T],
+        messages: Messages
       ): Future[Result] = BodyIsJsObject { obj =>
         part.map(_ ++ obj).getOrElse(obj).validate[T].fold(
           failure => Future.successful(
@@ -61,7 +64,7 @@ package object api {
   object NotModifiedOrElse extends HeaderNames {
 
     def apply[T <: TimeBased](block: T => Result)(
-      implicit req: RequestHeader
+      implicit req: RequestHeader, messages: Messages
     ): T => Result = { entity =>
       val updated_at = entity.updated_at.withMillisOfSecond(0)
       req.headers.get(IF_MODIFIED_SINCE)

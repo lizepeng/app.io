@@ -6,5 +6,5 @@ package helpers
 abstract class BaseException(val code: String)
   extends Exception with Loggable {
 
-  override def getMessage = reason
+  override def getMessage = code
 }

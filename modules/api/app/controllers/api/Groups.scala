@@ -8,6 +8,8 @@ import elasticsearch._
 import helpers._
 import models._
 import models.json._
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Reads._
 import play.api.libs.json._

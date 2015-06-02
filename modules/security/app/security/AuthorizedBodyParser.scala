@@ -2,6 +2,8 @@ package security
 
 import helpers._
 import models.User
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Iteratee
 import play.api.mvc.BodyParsers.parse

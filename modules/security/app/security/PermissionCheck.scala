@@ -2,6 +2,8 @@ package security
 
 import helpers.Logging
 import models.{AccessControl, User}
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future

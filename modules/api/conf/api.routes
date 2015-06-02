@@ -29,5 +29,3 @@ GET    /cfs/list/$path<.*>               controllers.api.Files.index(path:Path,p
 GET    /cfs/$path<.*>                    controllers.api.Files.touch(path:Path)
 POST   /cfs/$path<.*>                    controllers.api.Files.create(path:Path)
 DELETE /cfs/$path<.*>                    controllers.api.Files.destroy(path:Path)
-
-GET    /messages                         controllers.api.Messages.index(keys:List[String])

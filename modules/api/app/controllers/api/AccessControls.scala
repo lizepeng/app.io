@@ -6,6 +6,8 @@ import elasticsearch._
 import helpers._
 import models.AccessControl.NotFound
 import models._
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import protocols.JsonProtocol._

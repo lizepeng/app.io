@@ -1,6 +1,6 @@
 package helpers
 
-import play.api.i18n.{Lang, Messages}
+import play.api.i18n._
 
 import scala.collection.mutable
 
@@ -22,23 +22,18 @@ trait Logging {
 
 trait Loggable extends Product {
 
-  import Messages.Implicits._
-  import play.api.Play.current
-
   def code: String
 
-  def message(implicit lang: Lang): String = message("msg")
+  def message(implicit messages: Messages): String = generate("msg")
 
-  def reason: String = message("log")(Lang.defaultLang)
+  def reason(implicit messages: Messages): String = generate("log")
 
-  def message(key: String)(implicit lang: Lang): String = {
-    Messages(
+  private def generate(key: String)(implicit messages: Messages): String = {
+    messages(
       s"$key.$code",
       productIterator.map(_.toString).toList: _*
     )
   }
-
-  def log(implicit logger: play.api.Logger, lang: Lang) = ???
 }
 
 trait TimeLogging extends Logging {

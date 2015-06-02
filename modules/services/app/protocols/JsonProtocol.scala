@@ -1,10 +1,8 @@
 package protocols
 
 import helpers.BaseException
-import play.api.Play.current
 import play.api.data.validation.ValidationError
-import play.api.i18n.Messages.Implicits._
-import play.api.i18n.{Lang, Messages}
+import play.api.i18n.Messages
 import play.api.libs.json._
 
 /**
@@ -19,12 +17,12 @@ object JsonProtocol {
 
     def apply(
       jse: JsError
-    )(implicit lang: Lang): JsObject = apply(jse.errors)
+    )(implicit messages: Messages): JsObject = apply(jse.errors)
 
     def apply(
       errors: Seq[(JsPath, Seq[ValidationError])]
-    )(implicit lang: Lang): JsObject = Json.obj(
-      "message" -> Messages("api.json.validation.failed"),
+    )(implicit messages: Messages): JsObject = Json.obj(
+      "message" -> messages("api.json.validation.failed"),
       "errors" -> JsArray {
         errors.map { case (path, errs) =>
           Json.obj(
@@ -36,7 +34,7 @@ object JsonProtocol {
               errs.map { err =>
                 Json.obj(
                   "code" -> err.message,
-                  "message" -> Messages(err.message, err.args: _*)
+                  "message" -> messages(err.message, err.args: _*)
                 )
               }
             }
@@ -49,12 +47,13 @@ object JsonProtocol {
 
   object JsonMessage {
 
-    def apply(e: BaseException)(implicit lang: Lang): JsObject = {
+    def apply(e: BaseException)(implicit messages: Messages): JsObject = {
       generate(e.message)
     }
 
-    def apply(key: String, args: Any*)(implicit lang: Lang): JsObject = {
-      generate(Messages(key, args))
+    def apply(key: String, args: Any*)
+        (implicit messages: Messages): JsObject = {
+      generate(messages(key, args))
     }
 
     private def generate(msg: String): JsObject = {
@@ -64,7 +63,7 @@ object JsonProtocol {
 
   object WrongTypeOfJson {
 
-    def apply()(implicit lang: Lang): JsObject =
+    def apply()(implicit messages: Messages): JsObject =
       JsonMessage.apply("api.json.body.wrong.type")
   }
 

@@ -22,5 +22,7 @@ object PermCheck {
   )(
     implicit resource: CheckedResource
   ): ActionBuilder[UserRequest] =
-    MaybeUserAction andThen AuthCheck andThen PermissionChecker(action, onDenied, resource)
+    MaybeUserAction andThen
+      AuthCheck andThen
+      PermissionChecker(action, onDenied, resource)
 }
