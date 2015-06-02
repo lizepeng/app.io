@@ -3,7 +3,7 @@ package models.cfs
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import helpers.syntax._
 import helpers.{BaseException, Logging}
 import models.cassandra.{Cassandra, ExtCQL}

@@ -5,8 +5,8 @@ name := s"${Common.appName}.models"
 scalacOptions += "-feature"
 
 libraryDependencies ++= Seq(
-  "com.websudos"      %% "phantom-dsl"       % "1.5.0",
-  "com.websudos"      %% "phantom-zookeeper" % "1.5.0"
+  "com.websudos" %% "phantom-dsl"       % "1.8.12",
+  "com.websudos" %% "phantom-zookeeper" % "1.8.12"
 )
 
 resolvers ++= Seq(

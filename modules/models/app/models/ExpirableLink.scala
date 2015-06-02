@@ -2,7 +2,7 @@ package models
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import helpers.{Logging, _}
 import models.cassandra.{Cassandra, ExtCQL}
 import play.api.libs.Crypto

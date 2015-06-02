@@ -3,7 +3,7 @@ package models
 import java.util.UUID
 
 import com.datastax.driver.core.Row
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
 import models.sys.SysConfig

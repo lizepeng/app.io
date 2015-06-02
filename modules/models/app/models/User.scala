@@ -4,13 +4,12 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.datastax.driver.core.{ResultSet, Row}
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
 import models.sys.SysConfig
 import org.joda.time.DateTime
-import play.api.Play.current
 import play.api.libs.Crypto
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
@@ -146,7 +145,7 @@ sealed class Users
   }
 }
 
-object User extends Users with Cassandra with SysConfig with AppConfig {
+object User extends Users with Cassandra with SysConfig {
 
   /**
    * Thrown when user is not found
@@ -273,23 +272,21 @@ object User extends Users with Cassandra with SysConfig with AppConfig {
 
   def remove(id: UUID): Future[ResultSet] = {
     find(id).flatMap { user =>
-      BatchStatement()
-        .add(UserByEmail.cql_del(user.email))
-        .add(CQL {delete.where(_.id eqs id)}).future()
+      CQL {
+        Batch.logged
+          .add(UserByEmail.cql_del(user.email))
+          .add(delete.where(_.id eqs id))
+      }.future()
     }
   }
 
   def list(pager: Pager): Future[Page[User]] = {
-    CQL {
-      select.setFetchSize(fetchSize())
-    }.fetchEnumerator |>>>
+    CQL(select).fetchEnumerator |>>>
       PIteratee.slice[User](pager.start, pager.limit)
   }.map(_.toIterable).map(Page(pager, _))
 
   def all: Enumerator[User] = {
-    CQL {
-      select.setFetchSize(fetchSize())
-    }.fetchEnumerator
+    CQL(select).fetchEnumerator
   }
 
   def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)

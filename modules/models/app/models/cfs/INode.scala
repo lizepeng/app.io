@@ -3,7 +3,7 @@ package models.cfs
 import java.util.UUID
 
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import helpers.Logging
 import models.HasUUID
 import models.cassandra.{Cassandra, ExtCQL}

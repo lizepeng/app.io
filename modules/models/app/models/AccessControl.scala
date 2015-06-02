@@ -4,11 +4,10 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
-import play.api.Play.current
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 
@@ -71,7 +70,7 @@ sealed class AccessControls
   }
 }
 
-object AccessControl extends AccessControls with Cassandra with AppConfig {
+object AccessControl extends AccessControls with Cassandra {
 
   case class NotFound(id: UUID, res: String, act: String)
     extends BaseException(msg_key("not.found"))
@@ -116,37 +115,40 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
     id: UUID,
     res: String,
     act: String
-  ): Future[AccessControl] = CQL {
-    select
-      .where(_.principal_id eqs id)
-      .and(_.resource eqs res)
-      .and(_.action eqs act)
-  }.one().map {
-    case Some(ac) => ac
-    case None     => throw NotFound(id, res, act)
+  ): Future[AccessControl] = {
+    CQL {
+      select
+        .where(_.principal_id eqs id)
+        .and(_.resource eqs res)
+        .and(_.action eqs act)
+    }.one().map {
+      case Some(ac) => ac
+      case None     => throw NotFound(id, res, act)
+    }
   }
 
   def check(
     res: String,
     act: String,
     user_id: UUID
-  ): Future[Granted[UUID]] = CQL {
-    select(_.granted)
-      .where(_.principal_id eqs user_id)
-      .and(_.resource eqs res)
-      .and(_.action eqs act)
-      .and(_.is_group eqs false)
-  }.one().map { r =>
-    import User.AccessControl._
-    r match {
-      case None        =>
-        throw Undefined(user_id, act, res)
-      case Some(false) =>
-        throw Denied(user_id, act, res)
-      case Some(true)  =>
-        Granted(user_id, act, res)
+  ): Future[Granted[UUID]] =
+    CQL {
+      select(_.granted)
+        .where(_.principal_id eqs user_id)
+        .and(_.resource eqs res)
+        .and(_.action eqs act)
+        .and(_.is_group eqs false)
+    }.one().map { r =>
+      import User.AccessControl._
+      r match {
+        case None        =>
+          throw Undefined(user_id, act, res)
+        case Some(false) =>
+          throw Denied(user_id, act, res)
+        case Some(true)  =>
+          Granted(user_id, act, res)
+      }
     }
-  }
 
   def check(
     res: String,
@@ -170,36 +172,34 @@ object AccessControl extends AccessControls with Cassandra with AppConfig {
     }
   }
 
-  def save(ac: AccessControl): Future[AccessControl] = CQL {
-    update.where(_.principal_id eqs ac.principal)
-      .and(_.resource eqs ac.resource)
-      .and(_.action eqs ac.action)
-      .and(_.is_group eqs ac.is_group)
-      .modify(_.granted setTo ac.granted)
-  }.future().map { _ => ac }
+  def save(ac: AccessControl): Future[AccessControl] =
+    CQL {
+      update.where(_.principal_id eqs ac.principal)
+        .and(_.resource eqs ac.resource)
+        .and(_.action eqs ac.action)
+        .and(_.is_group eqs ac.is_group)
+        .modify(_.granted setTo ac.granted)
+    }.future().map { _ => ac }
 
   def remove(
     principal: UUID,
     resource: String,
     action: String
-  ): Future[ResultSet] = CQL {
-    delete.where(_.principal_id eqs principal)
-      .and(_.resource eqs resource)
-      .and(_.action eqs action)
-  }.future()
+  ): Future[ResultSet] =
+    CQL {
+      delete.where(_.principal_id eqs principal)
+        .and(_.resource eqs resource)
+        .and(_.action eqs action)
+    }.future()
 
   def list(pager: Pager): Future[List[AccessControl]] = {
-    CQL {
-      select.setFetchSize(fetchSize())
-    }.fetchEnumerator |>>>
+    CQL(select).fetchEnumerator |>>>
       PIteratee.slice[AccessControl](pager.start, pager.limit)
   }.map(_.toList)
 
-  def all: Enumerator[AccessControl] = {
-    CQL {
-      select.setFetchSize(fetchSize())
-    }.fetchEnumerator
-  }
+  def all: Enumerator[AccessControl] =
+    CQL(select).fetchEnumerator
 
-  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
+  def isEmpty: Future[Boolean] =
+    CQL(select).one.map(_.isEmpty)
 }

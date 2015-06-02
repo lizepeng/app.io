@@ -5,8 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits._
-import com.websudos.phantom.batch.BatchStatement
+import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
@@ -177,7 +176,8 @@ object Group extends Groups with Cassandra with AppConfig {
   }
 
   def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
-    distinct(_.id, _.name, _.description, _.is_internal, _.updated_at)
+    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
+      .distinct
       .where(_.id in ids.toList.distinct)
   }.fetchEnumerator() &>
     Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
@@ -207,7 +207,7 @@ object Group extends Groups with Cassandra with AppConfig {
       }
 
   def all: Enumerator[Group] = CQL {
-    distinct(_.id).setFetchSize(fetchSize())
+    select(_.id).distinct
   }.fetchEnumerator &>
     Enumeratee.grouped {
       Enumeratee.take(Math.max(fetchSize() / 10, 100)) &>>
@@ -218,7 +218,6 @@ object Group extends Groups with Cassandra with AppConfig {
     CQL {
       select(_.child_id)
         .where(_.id eqs id)
-        .setFetchSize(fetchSize())
     }.fetchEnumerator() |>>>
       PIteratee.slice[UUID](pager.start, pager.limit)
   }.map(_.toIterable)
@@ -227,7 +226,7 @@ object Group extends Groups with Cassandra with AppConfig {
     .map(Page(pager, _))
 
   def addChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
-    BatchStatement()
+    Batch.logged
       .add(Group.cql_updated_at(id))
       .add(User.cql_updated_at(child_id))
       .add(Group.cql_add_child(id, child_id))
@@ -235,7 +234,7 @@ object Group extends Groups with Cassandra with AppConfig {
   }.future()
 
   def delChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
-    BatchStatement()
+    Batch.logged
       .add(Group.cql_updated_at(id))
       .add(User.cql_updated_at(child_id))
       .add(Group.cql_del_child(id, child_id))

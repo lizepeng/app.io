@@ -17,24 +17,24 @@ object Schemas extends Cassandra {
   def create: Future[Seq[ResultSet]] = Future.sequence(
     Seq(
       //System
-      SysConfig.create.future(),
-      AccessControl.create.future(),
-      SessionData.create.future(),
-      RateLimit.create.future(),
+      SysConfig.create.ifNotExists.future(),
+      AccessControl.create.ifNotExists.future(),
+      SessionData.create.ifNotExists.future(),
+      RateLimit.create.ifNotExists.future(),
 
       //User
-      User.create.future(),
-      UserByEmail.create.future(),
-      Group.create.future(),
-      Person.create.future(),
+      User.create.ifNotExists.future(),
+      UserByEmail.create.ifNotExists.future(),
+      Group.create.ifNotExists.future(),
+      Person.create.ifNotExists.future(),
 
       //CFS
-      INode.create.future(),
-      IndirectBlock.create.future(),
-      Block.create.future(),
+      INode.create.ifNotExists.future(),
+      IndirectBlock.create.ifNotExists.future(),
+      Block.create.ifNotExists.future(),
 
-      ExpirableLink.create.future(),
-      EmailTemplate.create.future()
+      ExpirableLink.create.ifNotExists.future(),
+      EmailTemplate.create.ifNotExists.future()
     )
   )
 }

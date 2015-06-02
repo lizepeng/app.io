@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import helpers.Logging
 import models.cassandra._
 import org.joda.time.DateTime

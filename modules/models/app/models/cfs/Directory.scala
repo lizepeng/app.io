@@ -3,7 +3,7 @@ package models.cfs
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.User
@@ -203,7 +203,7 @@ object Directory extends Directories with Cassandra {
     newName: String,
     force: Boolean = false
   ): Future[INode] = CQL {
-    BatchStatement()
+    Batch.logged
       .add {
       delete
         .where(_.inode_id eqs dir.id)
@@ -265,7 +265,6 @@ object Directory extends Directories with Cassandra {
   def list(dir: Directory): Enumerator[INode] = CQL {
     select(_.name, _.child_id)
       .where(_.inode_id eqs dir.id)
-      .setFetchSize(CFS.listFetchSize)
   }.fetchEnumerator() &>
     Enumeratee.mapM {
       case (name, id) => INode.find(id).map[Option[INode]] {

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import helpers.Logging
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block._
@@ -55,7 +55,6 @@ object IndirectBlock extends IndirectBlocks with Cassandra {
   def read(id: UUID): Enumerator[BLK] = {
     select(_.indirect_block_id)
       .where(_.inode_id eqs id)
-      .setFetchSize(CFS.streamFetchSize)
       .fetchEnumerator() &>
       Enumeratee.mapFlatten[UUID](Block.read)
   }
@@ -74,7 +73,6 @@ object IndirectBlock extends IndirectBlocks with Cassandra {
         select(_.indirect_block_id)
           .where(_.inode_id eqs file.id)
           .and(_.offset gt offset - offset % file.indirect_block_size)
-          .setFetchSize(CFS.streamFetchSize)
           .fetchEnumerator() &>
           Enumeratee.mapFlatten[UUID](Block.read))
     }
@@ -92,7 +90,6 @@ object IndirectBlock extends IndirectBlocks with Cassandra {
   def purge(id: UUID) = {
     select(_.indirect_block_id)
       .where(_.inode_id eqs id)
-      .setFetchSize(CFS.listFetchSize)
       .fetchEnumerator() &>
       Enumeratee.onIterateeDone { () =>
         CQL {delete.where(_.inode_id eqs id)}.future()

@@ -2,13 +2,11 @@ package models
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
-import com.websudos.phantom.query.SelectWhere
 import helpers.{Logging, _}
 import models.cassandra._
 import org.joda.time.DateTime
-import play.api.Play.current
 import play.api.i18n.Lang
 import play.api.libs.iteratee.Enumeratee
 
@@ -153,13 +151,18 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
     updated_at: Option[DateTime]
   ): Future[ET] =
     CQL {
-      val cql: SelectWhere[EmailTemplates, ET] = select
-        .where(_.id eqs id)
-        .and(_.lang eqs lang)
 
       updated_at
-        .map(d => cql.and(_.updated_at eqs d))
-        .getOrElse(cql)
+        .map(
+          d => select
+            .where(_.id eqs id)
+            .and(_.lang eqs lang).and(_.updated_at eqs d)
+        )
+        .getOrElse(
+          select
+            .where(_.id eqs id)
+            .and(_.lang eqs lang)
+        )
     }.one().map {
       case None       => throw NotFound(id, lang)
       case Some(tmpl) => tmpl
@@ -189,7 +192,7 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
           .and(_.text setTo tmpl.text)
           .and(_.last_updated_at setTo curr)
           .and(_.updated_by setTo tmpl.updated_by)
-          .onlyIf(_.last_updated_at eqs tmpl.updated_at)
+          .onlyIf(_.last_updated_at is tmpl.updated_at)
       }.future().map { r =>
         if (r.wasApplied()) tmpl.copy(updated_at = curr)
         else throw UpdatedByOther()
@@ -198,9 +201,7 @@ object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
   } yield tmpl
 
   def list(pager: Pager): Future[List[ET]] = {
-    CQL {
-      distinct(_.id, _.lang).setFetchSize(fetchSize())
-    }.fetchEnumerator &>
+    CQL {select(_.id, _.lang).distinct}.fetchEnumerator &>
       Enumeratee.mapM { case (id, lang) => find(id, lang, None) } |>>>
       PIteratee.slice[ET](pager.start, pager.limit)
   }.map(_.toList)
@@ -238,7 +239,6 @@ AppConfig {
       select
         .where(_.id eqs id)
         .and(_.lang eqs lang.code)
-        .setFetchSize(fetchSize())
     }.fetchEnumerator |>>>
       PIteratee.slice(pager.start, pager.limit)
   }.map(_.toList)

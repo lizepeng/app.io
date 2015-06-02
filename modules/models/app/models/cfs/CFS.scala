@@ -1,6 +1,6 @@
 package models.cfs
 
-import com.websudos.phantom.Implicits._
+import com.websudos.phantom.dsl._
 import helpers._
 import models._
 import models.cfs.Directory.NotFound

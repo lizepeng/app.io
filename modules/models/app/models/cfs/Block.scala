@@ -6,8 +6,8 @@ import java.util.UUID
 import com.datastax.driver.core.utils.Bytes
 import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits._
 import com.websudos.phantom.column.TimeUUIDColumn
+import com.websudos.phantom.dsl._
 import models.cassandra.Cassandra
 import play.api.libs.iteratee._
 
@@ -49,7 +49,6 @@ object Block extends Blocks with Cassandra {
   def read(ind_blk_id: UUID): Enumerator[BLK] = {
     select(_.data)
       .where(_.indirect_block_id eqs ind_blk_id)
-      .setFetchSize(CFS.streamFetchSize)
       .fetchEnumerator().map(Bytes.getArray)
   }
 
@@ -67,7 +66,6 @@ object Block extends Blocks with Cassandra {
         _ >>> select(_.data)
           .where(_.indirect_block_id eqs ind_blk_id)
           .and(_.offset gt offset - offset % blk_sz)
-          .setFetchSize(CFS.streamFetchSize)
           .fetchEnumerator().map(Bytes.getArray)
       }
     )
