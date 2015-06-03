@@ -6,8 +6,8 @@ import elasticsearch.ES
 import helpers._
 import models._
 import models.json._
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
+import play.api.Configuration
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import protocols.JsonProtocol._
@@ -17,9 +17,13 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Users
+class Users(
+  val basicPlayApi: BasicPlayApi
+)
   extends SecuredController(User)
-  with LinkHeader {
+  with LinkHeader
+  with BasicPlayComponents
+  with I18nSupport {
 
   def groups(id: UUID, options: Option[String]) =
     PermCheck(_.Show).async { implicit req =>
@@ -82,3 +86,5 @@ object Users
   } yield result
 
 }
+
+object Users extends SecuredController(User)

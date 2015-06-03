@@ -2,8 +2,12 @@ package controllers.api
 
 import helpers.{AppConfig, ModuleLike}
 import org.joda.time.DateTime
+import play.api.Configuration
 import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
+import play.api.i18n.{I18nSupport, MessagesApi}
+
+//import play.api.i18n.Messages.Implicits._
+
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import protocols.JsonProtocol._
@@ -14,24 +18,21 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object RateLimit extends ModuleLike with AppConfig {
+case class RateLimit(resource: CheckedResource)(
+  implicit
+  val messagesApi: MessagesApi,
+  val configuration: Configuration
+)
+  extends ActionFunction[UserRequest, UserRequest]
+  with ExHeaders
+  with ModuleLike
+  with AppConfig
+  with I18nSupport {
 
   override val moduleName = "rate_limit"
 
-  def apply(resource: CheckedResource): RateLimit = new RateLimit(
-    config.getInt("limit").getOrElse(50),
-    config.getInt("span").getOrElse(15),
-    moduleName,
-    resource
-  )
-}
-
-class RateLimit(
-  limit: Int,
-  span: Int,
-  moduleName: String,
-  resource: CheckedResource
-) extends ActionFunction[UserRequest, UserRequest] with ExHeaders {
+  val limit = config.getInt("limit").getOrElse(50)
+  val span  = config.getInt("span").getOrElse(15)
 
   override def invokeBlock[A](
     req: UserRequest[A],

@@ -1,7 +1,6 @@
 package controllers
 
 import java.util.UUID
-import javax.inject.Inject
 
 import com.datastax.driver.core.utils.UUIDs
 import controllers.api.SecuredController
@@ -19,9 +18,13 @@ import views._
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-class EmailTemplates @Inject()(val messagesApi: MessagesApi)
+class EmailTemplates(
+  val basicPlayApi: BasicPlayApi
+)
   extends SecuredController(EmailTemplate)
-  with ViewMessages with I18nSupport {
+  with ViewMessages
+  with BasicPlayComponents
+  with I18nSupport {
 
   val TemplateFM = Form[TemplateFD](
     mapping(

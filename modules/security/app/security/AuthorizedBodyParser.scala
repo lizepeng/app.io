@@ -2,8 +2,7 @@ package security
 
 import helpers._
 import models.User
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Iteratee
 import play.api.mvc.BodyParsers.parse
@@ -16,11 +15,16 @@ import scala.util.Failure
  * @author zepeng.li@gmail.com
  */
 trait AuthorizedBodyParser[A]
-  extends BodyParser[A] with security.Session with Logging {
+  extends BodyParser[A]
+  with security.Session with Logging {
 
   def onUnauthorized: RequestHeader => Result
 
   def onBaseException: RequestHeader => Result
+
+  implicit def langs: Langs
+
+  implicit def messagesApi: MessagesApi
 
   override def apply(req: RequestHeader): Iteratee[Array[Byte], Either[Result, A]] = {
     Iteratee.flatten {

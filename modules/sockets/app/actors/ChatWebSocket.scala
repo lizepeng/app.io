@@ -4,10 +4,12 @@ import java.util.UUID
 
 import akka.actor._
 import messages.ChatActor
+import play.api.i18n.Messages
 import play.api.libs.json._
 import play.api.mvc.WebSocket.FrameFormatter
 
-import scala.util.Success
+import scala.language.implicitConversions
+import scala.util.{Success, Try}
 
 /**
  * @author zepeng.li@gmail.com
@@ -21,8 +23,11 @@ object ChatWebSocket {
 
   case class Received(from: UUID, text: String)
 
+  implicit def in_frame_fmt(
+    implicit message: Messages
+  ): FrameFormatter[Try[Send]] = jsonFrame[Send]
+
   implicit val in_fmt        = Json.format[Send]
-  implicit val in_frame_fmt  = jsonFrame[Send]
   implicit val out_fmt       = Json.format[Received]
   implicit val out_frame_fmt = FrameFormatter.jsonFrame[Received]
 }

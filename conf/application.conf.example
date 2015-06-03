@@ -60,7 +60,7 @@ app.hostname="http://127.0.0.1:9000"
 
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
 play.akka.actor.default-dispatcher.fork-join-executor.parallelism-min=8
-mailer-context.fork-join-executor.parallelism-max=4
+actor.mailer-dispatcher.fork-join-executor.parallelism-max=4
 traffic-shaper-context.fork-join-executor.parallelism-max=4
 
 cassandra.cql.log=[batch,insert,update,delete]

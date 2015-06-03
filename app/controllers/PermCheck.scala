@@ -1,5 +1,6 @@
 package controllers
 
+import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
 import security._
 
@@ -11,8 +12,14 @@ object PermCheck {
   def apply(
     resource: String,
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
+  )(
+    implicit
+    langs: Langs,
+    messagesApi: MessagesApi
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
-    apply(_.Anything, onDenied)(CheckedResource(resource))
+    apply(_.Anything, onDenied)(
+      CheckedResource(resource), langs, messagesApi
+    )
   }
 
   def apply(
@@ -20,7 +27,10 @@ object PermCheck {
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
     = (_, _, _) => Results.NotFound
   )(
-    implicit resource: CheckedResource
+    implicit
+    resource: CheckedResource,
+    langs: Langs,
+    messagesApi: MessagesApi
   ): ActionBuilder[UserRequest] =
     MaybeUserAction andThen
       AuthCheck andThen

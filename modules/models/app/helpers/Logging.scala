@@ -24,9 +24,18 @@ trait Loggable extends Product {
 
   def code: String
 
-  def message(implicit messages: Messages): String = generate("msg")
+  def message(
+    implicit messages: Messages
+  ): String = generate("msg")
 
-  def reason(implicit messages: Messages): String = generate("log")
+  def reason(
+    implicit langs: Langs, messagesApi: MessagesApi
+  ): String = generate("log")(
+    Messages(
+      langs.availables.headOption.getOrElse(Lang.defaultLang),
+      messagesApi
+    )
+  )
 
   private def generate(key: String)(implicit messages: Messages): String = {
     messages(

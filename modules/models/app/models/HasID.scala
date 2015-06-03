@@ -42,7 +42,7 @@ trait JsonReadable[T] {
 trait Module[R] extends ModuleLike {
   self: CassandraTable[_, R] =>
 
-  override def moduleName = tableName
+  override lazy val moduleName = tableName
 }
 
 object TimeBased {

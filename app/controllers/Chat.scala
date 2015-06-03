@@ -1,8 +1,7 @@
 package controllers
 
-import javax.inject.Inject
-
-import play.api.i18n.{I18nSupport, MessagesApi}
+import helpers.{BasicPlayApi, BasicPlayComponents}
+import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
 import security.MaybeUserAction
 import views.html
@@ -10,8 +9,12 @@ import views.html
 /**
  * @author zepeng.li@gmail.com
  */
-class Chat @Inject()(val messagesApi: MessagesApi)
-  extends Controller with I18nSupport {
+class Chat(
+  val basicPlayApi: BasicPlayApi
+)
+  extends Controller
+  with BasicPlayComponents
+  with I18nSupport {
 
   def chat = MaybeUserAction { implicit req =>
     Ok(html.chat.start())

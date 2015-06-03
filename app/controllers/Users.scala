@@ -1,19 +1,16 @@
 package controllers
 
 import java.util.UUID
-import javax.inject.Inject
 
 import controllers.Users.{Password, Rules}
 import controllers.api.SecuredController
 import elasticsearch.ES
 import helpers._
 import models._
-import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation._
-import play.api.i18n.Messages.Implicits._
-import play.api.i18n.MessagesApi
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -25,10 +22,14 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class Users @Inject()(val messagesApi: MessagesApi)
+class Users(
+  val basicPlayApi: BasicPlayApi
+)
   extends SecuredController(User)
   with security.Session
-  with ViewMessages {
+  with ViewMessages
+  with BasicPlayComponents
+  with I18nSupport {
 
   val signUpFM = Form[SignUpFD](
     mapping(

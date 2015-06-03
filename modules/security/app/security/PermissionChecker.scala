@@ -1,5 +1,6 @@
 package security
 
+import play.api.i18n.{Langs, MessagesApi}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 
@@ -12,7 +13,12 @@ case class PermissionChecker(
   action: CheckedActions => CheckedAction,
   onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result,
   resource: CheckedResource
-) extends ActionFilter[UserRequest] with PermissionCheck {
+)(
+  implicit
+  val langs: Langs,
+  val messagesApi: MessagesApi
+)
+  extends ActionFilter[UserRequest] with PermissionCheck {
 
   override protected def filter[A](
     req: UserRequest[A]

@@ -1,15 +1,19 @@
 package controllers
 
-import play.api.Play.current
-import play.api.i18n.Messages
-import play.api.i18n.Messages.Implicits._
+import javax.inject.{Inject, Singleton}
+
+import play.api.i18n.MessagesApi
 import play.api.libs.json._
 import security._
 
 /**
  * @author zepeng.li@gmail.com
  */
-object Secured {
+@Singleton
+class Secured @Inject()(
+  val messagesApi: MessagesApi,
+  val modules: Seq[PermissionCheckable]
+) {
 
   object Modules {
 
@@ -18,24 +22,10 @@ object Secured {
     def toJson = Json.prettyPrint(
       JsObject(
         names.map { name =>
-          (name, JsString(Messages(s"$name.name")))
+          (name, JsString(messagesApi(s"$name.name")))
         }
       )
     )
-
-    lazy val modules: Seq[PermissionCheckable] =
-      Seq(
-        Files,
-        Groups,
-        Users,
-        EmailTemplates,
-        AccessControls,
-        controllers.api.Groups,
-        controllers.api.Users,
-        controllers.api.Search,
-        controllers.api.Files,
-        controllers.api.AccessControls
-      )
   }
 
   object Actions {
@@ -45,7 +35,7 @@ object Secured {
     def toJson = Json.prettyPrint(
       JsObject(
         names.map { name =>
-          (name, JsString(Messages(s"actions.$name")))
+          (name, JsString(messagesApi(s"actions.$name")))
         }
       )
     )

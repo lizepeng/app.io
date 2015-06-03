@@ -1,11 +1,9 @@
 package controllers
 
-import javax.inject.Inject
-
 import controllers.api.SecuredController
 import helpers._
 import models.cfs._
-import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import views._
 
@@ -14,9 +12,13 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-class Files @Inject()(val messagesApi: MessagesApi)
+class Files(
+  val basicPlayApi: BasicPlayApi
+)
   extends SecuredController(CFS)
-  with ViewMessages with I18nSupport {
+  with ViewMessages
+  with BasicPlayComponents
+  with I18nSupport {
 
   def index(path: Path, pager: Pager) =
     PermCheck(_.Index).apply { implicit req =>

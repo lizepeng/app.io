@@ -4,6 +4,8 @@ name := s"${Common.appName}.api"
 
 scalacOptions += "-feature"
 
+routesGenerator := InjectedRoutesGenerator
+
 routesImport ++= Seq(
   "helpers._",
   "java.util.UUID",

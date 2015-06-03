@@ -1,14 +1,13 @@
 package controllers
 
-import javax.inject.Inject
-
 import controllers.Users.{Password, Rules}
 import controllers.api.SecuredController
 import elasticsearch.ES
+import helpers.{BasicPlayApi, BasicPlayComponents}
 import models.{Person, User}
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.i18n.I18nSupport
 import play.api.libs.concurrent.Execution.Implicits._
 import security._
 import views._
@@ -18,8 +17,13 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class My @Inject()(val messagesApi: MessagesApi)
-  extends SecuredController(User) with Session with I18nSupport {
+class My(
+  val basicPlayApi: BasicPlayApi
+)
+  extends SecuredController(User)
+  with Session
+  with BasicPlayComponents
+  with I18nSupport {
 
   val ChangePasswordFM = Form[ChangePasswordFD](
     mapping(

@@ -1,6 +1,7 @@
 package security
 
 import models.User
+import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
 
 import scala.concurrent.Future
@@ -14,7 +15,10 @@ case class SecuredBodyParser[A](
   onPermDenied: RequestHeader => Result = req => Results.NotFound,
   onBaseException: RequestHeader => Result = req => Results.NotFound
 )(bodyParser: RequestHeader => User => Future[BodyParser[A]])(
-  implicit val resource: CheckedResource
+  implicit
+  val resource: CheckedResource,
+  val langs: Langs,
+  val messagesApi: MessagesApi
 ) extends PermissionCheckedBodyParser[A] {
 
   override def parser(req: RequestHeader)(

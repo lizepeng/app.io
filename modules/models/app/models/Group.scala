@@ -299,7 +299,7 @@ object InternalGroups extends helpers.ModuleLike with SysConfig {
   import scala.Predef._
   import scala.language.implicitConversions
 
-  override val moduleName = Group.moduleName
+  override lazy val moduleName = Group.moduleName
 
   val ALL        = for (gid <- 0 to 18) yield gid
   val Half1st    = for (gid <- 0 to 9) yield gid

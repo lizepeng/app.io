@@ -32,22 +32,6 @@ object Global
 
   override def onStart(app: Application) = {
     ChatActor.startRegion(Akka.system)
-    Future.sequence(
-      Seq(
-        Schemas.create,
-        api.Users.dropIndexIfEmpty,
-        api.Groups.dropIndexIfEmpty,
-        api.AccessControls.dropIndexIfEmpty,
-        InternalGroups.initialize.flatMap { done =>
-          if (done) api.Groups.reindex
-          else Future.successful(false)
-        },
-        Groups.initialize,
-        AccessControls.initialize
-      )
-    ).onSuccess {
-      case _ => Logger.info("System has started")
-    }
   }
 
   override def onStop(app: Application) = {

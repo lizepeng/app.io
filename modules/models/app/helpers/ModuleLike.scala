@@ -8,9 +8,6 @@ import play.api.i18n._
 trait ModuleLike extends Logging {
   self =>
 
-  import Messages.Implicits._
-  import play.api.Play.current
-
   /**
    * if empty specified then leave package name as full module name
    *
@@ -24,8 +21,8 @@ trait ModuleLike extends Logging {
 
   override def loggerName = fullModuleName
 
-  def msg(key: String, args: Any*)(implicit lang: Lang) = {
-    Messages(msg_key(key), args: _*)
+  def msg(key: String, args: Any*)(implicit messages: Messages) = {
+    messages(msg_key(key), args: _*)
   }
 
   def msg_key(key: String) = s"$fullModuleName.$key"

@@ -8,8 +8,7 @@ import elasticsearch._
 import helpers._
 import models._
 import models.json._
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
@@ -23,9 +22,13 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object Groups
+class Groups(
+  val basicPlayApi: BasicPlayApi
+)
   extends SecuredController(Group)
-  with LinkHeader {
+  with LinkHeader
+  with BasicPlayComponents
+  with I18nSupport {
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
@@ -168,3 +171,5 @@ object Groups
     )(10).start().map(_ => true)
   }
 }
+
+object Groups extends SecuredController(Group)

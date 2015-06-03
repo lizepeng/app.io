@@ -7,8 +7,7 @@ import models.cfs._
 import models.json._
 import play.api.Play.current
 import play.api.http.ContentTypes
-import play.api.i18n.Messages
-import play.api.i18n.Messages.Implicits._
+import play.api.i18n._
 import play.api.libs.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
@@ -25,10 +24,14 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-object Files
+class Files(
+  val basicPlayApi: BasicPlayApi
+)
   extends SecuredController(CFS)
   with LinkHeader
-  with AppConfig {
+  with AppConfig
+  with BasicPlayComponents
+  with I18nSupport {
 
   lazy val bandwidth_upload  : Int =
     getBandwidth("upload").getOrElse(1.5 MBps)
@@ -236,7 +239,7 @@ object Files
     } yield file).map {
       NotModifiedOrElse(block)(req, messages)
     }.recover {
-      case e: BaseException => NotFound(e.reason(messages))
+      case e: BaseException => NotFound(e.reason)
     }
   }
 
@@ -251,7 +254,7 @@ object Files
     onPathNotFound: RequestHeader => Result = req => NotFound,
     onFilePermDenied: RequestHeader => Result = req => NotFound,
     onBaseException: RequestHeader => Result = req => NotFound
-  )(implicit resource: CheckedResource): BodyParser[MultipartFormData[File]] = {
+  ): BodyParser[MultipartFormData[File]] = {
 
     def saveTo(dir: Directory)(implicit user: User) = {
       handleFilePart {
@@ -275,7 +278,7 @@ object Files
           case _: FilePerm.Denied         =>
             parse.error(Future.successful(onFilePermDenied(req)))
         }
-    }(resource)
+    }
   }
 
   /**
@@ -323,3 +326,5 @@ object Files
   }
 
 }
+
+object Files extends SecuredController(CFS)

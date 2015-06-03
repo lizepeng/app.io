@@ -1,18 +1,22 @@
 package controllers
 
-import javax.inject.Inject
-
-import helpers.{AppConfig, ModuleLike}
+import helpers._
 import models.cfs.Path
 import play.api.Play.current
-import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
 import security._
 import views._
 
-class Application @Inject()(val messagesApi: MessagesApi)
+class Application(
+  val basicPlayApi: BasicPlayApi
+)
   extends Controller
-  with ModuleLike with ViewMessages with AppConfig with I18nSupport {
+  with ModuleLike
+  with ViewMessages
+  with AppConfig
+  with BasicPlayComponents
+  with I18nSupport {
 
   override val moduleName = "app"
 

@@ -5,7 +5,6 @@ import helpers._
 import models._
 import models.cfs.Directory.NotFound
 import models.sys.SysConfig
-import play.api.Play.current
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -16,9 +15,6 @@ import scala.language.postfixOps
 object CFS extends ModuleLike with SysConfig with AppConfig {
 
   override val moduleName = "files"
-
-  val streamFetchSize = fetchSize("stream")
-  val listFetchSize   = fetchSize("list")
 
   lazy val root: Future[Directory] =
     System.UUID("root").flatMap { id =>

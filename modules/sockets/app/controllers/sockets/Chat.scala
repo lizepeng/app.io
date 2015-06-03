@@ -5,12 +5,18 @@ import java.util.UUID
 import actors.ChatWebSocket
 import actors.ChatWebSocket._
 import play.api.Play.current
+import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Controller, _}
 
 import scala.concurrent.Future
 import scala.util.Try
 
-object Chat extends Controller {
+class Chat(
+  implicit
+  val messagesApi: MessagesApi
+)
+  extends Controller
+  with I18nSupport {
 
   def connect: WebSocket[Try[Send], Received] =
     WebSocket.tryAcceptWithActor[Try[Send], Received] { implicit req =>

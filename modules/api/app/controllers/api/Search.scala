@@ -3,6 +3,7 @@ package controllers.api
 import elasticsearch._
 import helpers._
 import models._
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.api.mvc.Controller
@@ -13,22 +14,25 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Search
+class Search(
+  val basicPlayApi: BasicPlayApi
+)
   extends Controller
-  with LinkHeader with PermissionCheckable {
-
-  override val moduleName = "search"
+  with LinkHeader
+  with PermissionCheckable
+  with BasicPlayComponents
+  with I18nSupport {
 
   def index(types: Seq[String], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
-        case (Users.moduleName, _p)  =>
+        case (User.moduleName, _p)  =>
           Some((es: ES) => es.Search(q, _p) in User)
-        case (Groups.moduleName, _p) =>
+        case (Group.moduleName, _p) =>
           Some((es: ES) => es.Search(q, _p) in Group)
-        case _                       => None
+        case _                      => None
       }
 
       if (defs.isEmpty)
@@ -41,4 +45,9 @@ object Search
           )
         }
     }
+}
+
+object Search extends PermissionCheckable {
+
+  override val moduleName = "search"
 }

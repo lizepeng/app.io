@@ -1,12 +1,10 @@
 package controllers
 
-import javax.inject.Inject
-
 import helpers._
 import models._
 import play.api.data.Forms._
 import play.api.data._
-import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import security._
@@ -18,9 +16,12 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  *
  **/
-class Sessions @Inject()(val messagesApi: MessagesApi)
+class Sessions(
+  val basicPlayApi: BasicPlayApi
+)
   extends Controller
   with security.Session
+  with BasicPlayComponents
   with I18nSupport
   with Logging {
 

@@ -2,8 +2,7 @@ package security
 
 import helpers.Logging
 import models.{AccessControl, User}
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
@@ -12,11 +11,17 @@ import scala.util.{Failure, Success}
 /**
  * @author zepeng.li@gmail.com
  */
-trait PermissionCheck extends Logging {
+trait PermissionCheck
+  extends Logging
+  with I18nSupport {
 
   def action: CheckedActions => CheckedAction
 
   def resource: CheckedResource
+
+  implicit def langs: Langs
+
+  implicit def messagesApi: MessagesApi
 
   def check[A](u: User): Future[Option[Boolean]] = {
     for {

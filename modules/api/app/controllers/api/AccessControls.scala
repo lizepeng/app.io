@@ -6,8 +6,7 @@ import elasticsearch._
 import helpers._
 import models.AccessControl.NotFound
 import models._
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
+import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import protocols.JsonProtocol._
@@ -17,8 +16,12 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object AccessControls
+class AccessControls(
+  val basicPlayApi: BasicPlayApi
+)
   extends SecuredController(AccessControl)
+  with BasicPlayComponents
+  with I18nSupport
   with LinkHeader {
 
   def index(q: Option[String], p: Pager) =
@@ -108,3 +111,5 @@ object AccessControls
       Future.successful(false)
   } yield result
 }
+
+object AccessControls extends SecuredController(AccessControl)

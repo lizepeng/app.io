@@ -1,5 +1,5 @@
 @(pager: Pager)(
-implicit req: UserRequest[_], messages: Messages)
+implicit req: UserRequest[_], messages: Messages, secured: Secured)
 
 @import common._
 @import helper._
@@ -159,8 +159,8 @@ implicit req: UserRequest[_], messages: Messages)
 @controller = {
   <script>
     views.access_controls.index.run(['ACList', function(ACList) {
-      ACList.resources = @Html(Secured.Modules.toJson);
-      ACList.actions   = @Html(Secured.Actions.toJson);
+      ACList.resources = @Html(secured.Modules.toJson);
+      ACList.actions   = @Html(secured.Actions.toJson);
       ACList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,

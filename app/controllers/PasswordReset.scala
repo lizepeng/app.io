@@ -1,7 +1,5 @@
 package controllers
 
-import javax.inject.Inject
-
 import controllers.Users.{Password, Rules}
 import helpers._
 import models._
@@ -21,12 +19,17 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class PasswordReset @Inject()(val messagesApi: MessagesApi)
+class PasswordReset(
+  val basicPlayApi: BasicPlayApi
+)(
+  implicit val mailService: MailService
+)
   extends Controller
   with ModuleLike
   with ViewMessages
   with SysConfig
   with AppConfig
+  with BasicPlayComponents
   with I18nSupport {
 
   override val moduleName = "password_reset"
@@ -62,7 +65,7 @@ class PasswordReset @Inject()(val messagesApi: MessagesApi)
         link <- ExpirableLink.nnew(fullModuleName)(user)
         tmpl <- getEmailTemplate(s"$moduleName.email1")
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
-        Mailer.schedule("noreply", tmpl, u, "link" -> id)
+        mailService.schedule("noreply", tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
       }.recover {
         case e: User.NotFound          =>
@@ -110,7 +113,7 @@ class PasswordReset @Inject()(val messagesApi: MessagesApi)
         user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
         tmpl <- getEmailTemplate(s"$moduleName.email2")
       } yield (user, tmpl)).map { case (user, tmpl) =>
-        Mailer.schedule("support", tmpl, user)
+        mailService.schedule("support", tmpl, user)
         Redirect(routes.Sessions.nnew()).flashing(
           AlertLevel.Info -> msg("password.changed")
         )
