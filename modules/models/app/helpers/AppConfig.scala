@@ -1,7 +1,7 @@
 package helpers
 
 import helpers.AppConfig.Required
-import play.api.{Application, Configuration}
+import play.api.Configuration
 
 /**
  * @author zepeng.li@gmail.com
@@ -9,14 +9,15 @@ import play.api.{Application, Configuration}
 trait AppConfig {
   self: CanonicalNamed =>
 
-  def appConfig(implicit app: Application) = app.configuration
+  def config(implicit configuration: Configuration): Configuration =
+    configuration.getConfig(canonicalName)
+      .getOrElse(Configuration.empty)
 
-  def config(implicit app: Application): Configuration =
-    appConfig.getConfig(canonicalName).getOrElse(Configuration.empty)
+  def domain(implicit configuration: Configuration) =
+    getEssentialString("app.domain")
 
-  def domain(implicit app: Application) = getEssentialString("app.domain")
-
-  def hostname(implicit app: Application) = getEssentialString("app.hostname")
+  def hostname(implicit configuration: Configuration) =
+    getEssentialString("app.hostname")
 
   /**
    *
@@ -24,8 +25,10 @@ trait AppConfig {
    * @return
    * @throws Required if corresponding value not exists
    */
-  private def getEssentialString(key: String)(implicit app: Application) = {
-    appConfig.getString(key).getOrElse(throw new Required(key))
+  private def getEssentialString(key: String)(
+    implicit configuration: Configuration
+  ) = {
+    configuration.getString(key).getOrElse(throw new Required(key))
   }
 
   /**
@@ -38,10 +41,12 @@ trait AppConfig {
    *   module_name.fetch-size=3000
    * }}}
    *
-   * @param app application instance
+   * @param configuration injected Configuration
    * @return defined fetch-size or default value
    */
-  def fetchSize(key: String = "")(implicit app: Application) =
+  def fetchSize(key: String = "")(
+    implicit configuration: Configuration
+  ) =
     config.getInt(
       if (key.isEmpty) "fetch-size"
       else s"$key-fetch-size"
@@ -57,11 +62,11 @@ trait AppConfig {
    * {{{
    *   cassandra.fetch-size=2000
    * }}}
-   * @param app application instance
+   * @param configuration injected Configuration
    * @return defined fetch-size or 0
    */
-  def defaultFetchSize(implicit app: Application) =
-    appConfig.getInt("cassandra.fetch-size").getOrElse(0)
+  def defaultFetchSize(implicit configuration: Configuration) =
+    configuration.getInt("cassandra.fetch-size").getOrElse(0)
 }
 
 object AppConfig {

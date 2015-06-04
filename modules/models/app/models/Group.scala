@@ -11,7 +11,6 @@ import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig
 import org.joda.time.DateTime
-import play.api.Play.current
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee._
 import play.api.libs.json.Reads._
@@ -103,7 +102,7 @@ sealed class Groups
   }
 }
 
-object Group extends Groups with Cassandra with AppConfig {
+object Group extends Groups with Cassandra {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
@@ -211,7 +210,7 @@ object Group extends Groups with Cassandra with AppConfig {
     select(_.id).distinct
   }.fetchEnumerator &>
     Enumeratee.grouped {
-      Enumeratee.take(Math.max(fetchSize() / 10, 100)) &>>
+      Enumeratee.take(1000) &>>
         Iteratee.getChunks
     } &> Enumeratee.mapFlatten(stream)
 

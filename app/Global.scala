@@ -1,5 +1,3 @@
-import controllers.{AccessControls, Groups, _}
-import elasticsearch.ES
 import messages.ChatActor
 import models._
 import models.cfs._
@@ -65,7 +63,8 @@ object Global
 
     Logger.info("Shutting down elastic search...")
 
-    ES.Client.close()
+    //TODO lifecycle
+    //    ES.Client.close()
 
     Logger.info("System shutdown...")
   }

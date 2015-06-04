@@ -1,11 +1,9 @@
 package controllers.api
 
-import controllers.api.Bandwidth._
 import helpers._
 import models._
 import models.cfs._
 import models.json._
-import play.api.Play.current
 import play.api.http.ContentTypes
 import play.api.i18n._
 import play.api.libs.MimeTypes
@@ -16,6 +14,8 @@ import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
 import play.core.parsers.Multipart._
 import security.{FilePermission => FilePerm, _}
+import services.BandwidthService
+import services.BandwidthService._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -25,7 +25,8 @@ import scala.util.Failure
  * @author zepeng.li@gmail.com
  */
 class Files(
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val bandwidthService: BandwidthService
 )
   extends Secured(Files)
   with Controller
@@ -217,7 +218,7 @@ class Files(
       ),
       file.read(first) &>
         Enumeratee.take((end - first + 1).toInt) &>
-        LimitTo(bandwidth_stream)
+        bandwidthService.LimitTo(bandwidth_stream)
 
     )
   }
@@ -230,7 +231,7 @@ class Files(
         CONTENT_LENGTH -> s"${file.size}"
       )
     ),
-    file.read() &> LimitTo(bandwidth_download)
+    file.read() &> bandwidthService.LimitTo(bandwidth_download)
   )
 
   private def under(path: Path)(block: File => Result)(
@@ -262,7 +263,7 @@ class Files(
     def saveTo(dir: Directory)(implicit user: User) = {
       handleFilePart {
         case FileInfo(partName, fileName, contentType) =>
-          LimitTo(bandwidth_upload) &>> dir.save()
+          bandwidthService.LimitTo(bandwidth_upload) &>> dir.save()
       }
     }
 

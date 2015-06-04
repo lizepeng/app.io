@@ -55,7 +55,7 @@ sealed class Persons
   }
 }
 
-object Person extends Persons with Cassandra with SysConfig with AppConfig {
+object Person extends Persons with Cassandra with SysConfig {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))

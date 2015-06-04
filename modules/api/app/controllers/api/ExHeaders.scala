@@ -1,14 +1,13 @@
 package controllers.api
 
 import helpers._
-import play.api.Play.current
 import play.api.mvc.Call
 
 /**
  * @author zepeng.li@gmail.com
  */
 trait LinkHeader extends AppConfig with ExHeaders {
-  self: CanonicalNamed =>
+  self: CanonicalNamed with BasicPlayComponents =>
 
   /**
    * Create link header for pagination.

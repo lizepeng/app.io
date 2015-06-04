@@ -1,8 +1,8 @@
-@(fm: Form[_])(implicit req: UserRequest[_], messages: Messages)
+@(fm: Form[_])(
+implicit req: UserRequest[_], messages: Messages, langs: Langs)
 
 @import common._
 @import helper._
-@import play.api.Play.current
 
 @layouts.base(EmailTemplates.vmsg("title")){
 
@@ -34,7 +34,7 @@
 
             <div class="col-xs-12 col-sm-3">
               @{_select(fm("lang"),
-                Lang.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
+                langs.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
                 'tabindex    -> 2
                 )(_fc_form_group)
               }

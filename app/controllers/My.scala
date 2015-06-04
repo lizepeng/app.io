@@ -2,7 +2,7 @@ package controllers
 
 import controllers.Users.{Password, Rules}
 import controllers.api.Secured
-import elasticsearch.ES
+import elasticsearch.ElasticSearch
 import helpers._
 import models.{Person, User}
 import play.api.data.Form
@@ -19,7 +19,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class My(
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val ES: ElasticSearch
 )
   extends Secured(User)
   with Controller

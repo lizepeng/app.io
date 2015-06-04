@@ -112,7 +112,9 @@ sealed class EmailTemplates
   )
 }
 
-object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
+object EmailTemplate
+  extends EmailTemplates
+  with Cassandra {
 
   case class NotFound(id: UUID, lang: String)
     extends BaseException(error_code("not.found"))
@@ -232,8 +234,9 @@ sealed class EmailTemplateHistories
   )
 }
 
-object EmailTemplateHistory extends EmailTemplateHistories with Cassandra with
-AppConfig {
+object EmailTemplateHistory
+  extends EmailTemplateHistories
+  with Cassandra {
 
   def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {
     CQL {

@@ -1,10 +1,9 @@
-package controllers.api
+package services
 
-import concurrent.Contexts.trafficShaperContext
+import akka.actor.ActorSystem
 import helpers._
 import models.cfs.Block._
 import org.joda.time.DateTime
-import play.api.Play.current
 import play.api.libs.concurrent.Promise
 import play.api.libs.iteratee.Enumeratee.CheckDone
 import play.api.libs.iteratee._
@@ -16,7 +15,14 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object Bandwidth {
+case class BandwidthService(
+  basicPlayApi: BasicPlayApi,
+  actorSystem: ActorSystem
+) extends BasicPlayComponents {
+
+  implicit private val executor = actorSystem.dispatchers.lookup("traffic-shaper-context")
+
+  import BandwidthService._
 
   private object Config extends CanonicalNamed with AppConfig {
 
@@ -26,9 +32,9 @@ object Bandwidth {
     lazy val min = config.getBytes("min").map(_.toInt).getOrElse(200 KBps)
   }
 
-  import Config._
-
   object LimitTo {
+
+    import Config._
 
     def apply(rate: Int = 1 MBps): Enumeratee[BLK, BLK] = limitTo(
       if (rate < min) min
@@ -85,6 +91,10 @@ object Bandwidth {
   }
 
   private def now = DateTime.now.getMillis
+
+}
+
+object BandwidthService {
 
   implicit class Int2Rate(val i: Int) extends AnyVal {
 

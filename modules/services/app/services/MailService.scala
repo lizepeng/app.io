@@ -4,7 +4,6 @@ import akka.actor.{ActorSystem, Cancellable}
 import helpers._
 import models._
 import org.apache.commons.mail.{HtmlEmail, MultiPartEmail}
-import play.api.Play.current
 import play.api._
 import play.api.i18n._
 import play.api.libs.mailer._
@@ -16,11 +15,11 @@ import scala.concurrent.duration._
  * @author zepeng.li@gmail.com
  */
 case class MailService(
-  messagesApi: MessagesApi,
-  configuration: Configuration,
+  basicPlayApi: BasicPlayApi,
   actorSystem: ActorSystem
 )
   extends CanonicalNamed
+  with BasicPlayComponents
   with AppConfig
   with I18nSupport {
 

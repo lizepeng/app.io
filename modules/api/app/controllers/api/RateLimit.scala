@@ -3,11 +3,7 @@ package controllers.api
 import helpers._
 import org.joda.time.DateTime
 import play.api.Configuration
-import play.api.Play.current
 import play.api.i18n.{I18nSupport, MessagesApi}
-
-//import play.api.i18n.Messages.Implicits._
-
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import protocols.JsonProtocol._

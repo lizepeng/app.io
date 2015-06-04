@@ -24,7 +24,8 @@ import scala.language.postfixOps
  * @author zepeng.li@gmail.com
  */
 class Groups(
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val ES: ElasticSearch
 )
   extends Secured(Groups)
   with Controller

@@ -11,7 +11,6 @@ import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.action.update.UpdateResponse
 import org.elasticsearch.common.settings.ImmutableSettings
-import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.JsValue
 
@@ -20,8 +19,11 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-trait ES
+case class ElasticSearch(
+  basicPlayApi: BasicPlayApi
+)
   extends AppConfig
+  with BasicPlayComponents
   with Logging {
 
   import ESyntax._
@@ -59,14 +61,12 @@ trait ES
 
   def Search(q: Option[String], p: Pager) = new SearchAction(q, p)
 
-  def Multi(defs: (ES => ReadySearchDefinition)*) =
+  def Multi(defs: (ElasticSearch => ReadySearchDefinition)*) =
     new ReadyMultiSearchDefinition(Client)(
-      defs.map(_(ES).definition)
+      defs.map(_(this).definition)
     )
 
 }
-
-object ES extends ES
 
 object ESyntax {
 

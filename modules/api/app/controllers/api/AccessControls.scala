@@ -18,7 +18,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class AccessControls(
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val ES: ElasticSearch
 )
   extends Secured(AccessControls)
   with Controller

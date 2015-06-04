@@ -14,8 +14,7 @@ import scala.language.postfixOps
  */
 object CFS
   extends CanonicalNamed
-  with SysConfig
-  with AppConfig {
+  with SysConfig {
 
   override val basicName = "files"
 

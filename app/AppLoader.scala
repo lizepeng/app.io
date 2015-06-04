@@ -6,7 +6,7 @@ import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.i18n._
 import router.Routes
-import services.MailService
+import services.{BandwidthService, MailService}
 
 import scala.concurrent.Future
 
@@ -25,11 +25,14 @@ class Components(context: Context)
   with I18nComponents {
 
   val basicPlayApi  = BasicPlayApi(langs, messagesApi, configuration)
-  val mailService   = MailService(messagesApi, configuration, actorSystem)
+  val bandwidth     = BandwidthService(basicPlayApi, actorSystem)
+  val mailService   = MailService(basicPlayApi, actorSystem)
+  val elasticSearch = elasticsearch.ElasticSearch(basicPlayApi)
   val secured       = buildSecured
   val apiRouter     = buildApiRouter
   val socketsRouter = buildSocketsRouter
-  val router        = buildRouter
+
+  lazy val router = buildRouter
 
   Play.start(application)
   lazy     val myComponent = new MyComponent(messagesApi)
@@ -39,11 +42,11 @@ class Components(context: Context)
     Seq(
       Schemas.create,
       //TODO
-      new api.Users(basicPlayApi).dropIndexIfEmpty,
-      new api.Groups(basicPlayApi).dropIndexIfEmpty,
-      new api.AccessControls(basicPlayApi).dropIndexIfEmpty,
+      new api.Users(basicPlayApi, elasticSearch).dropIndexIfEmpty,
+      new api.Groups(basicPlayApi, elasticSearch).dropIndexIfEmpty,
+      new api.AccessControls(basicPlayApi, elasticSearch).dropIndexIfEmpty,
       InternalGroups.initialize.flatMap { done =>
-        if (done) new api.Groups(basicPlayApi).reindex
+        if (done) new api.Groups(basicPlayApi, elasticSearch).reindex
         else Future.successful(false)
       },
       Groups.initialize,
@@ -73,11 +76,11 @@ class Components(context: Context)
 
   private def buildApiRouter = new _root_.api.Routes(
     httpErrorHandler,
-    new api.Search(basicPlayApi),
-    new api.Groups(basicPlayApi),
-    new api.Users(basicPlayApi),
-    new api.AccessControls(basicPlayApi),
-    new api.Files(basicPlayApi)
+    new api.Search(basicPlayApi, elasticSearch),
+    new api.Groups(basicPlayApi, elasticSearch),
+    new api.Users(basicPlayApi, elasticSearch),
+    new api.AccessControls(basicPlayApi, elasticSearch),
+    new api.Files(basicPlayApi, bandwidth)
   )
 
   private def buildSocketsRouter = new _root_.sockets.Routes(
@@ -94,8 +97,8 @@ class Components(context: Context)
     new Assets(httpErrorHandler),
     new Files(basicPlayApi),
     new Sessions(basicPlayApi),
-    new Users(basicPlayApi),
-    new My(basicPlayApi),
+    new Users(basicPlayApi, elasticSearch),
+    new My(basicPlayApi, elasticSearch),
     new Groups(basicPlayApi),
     new PasswordReset(basicPlayApi)(mailService),
     new EmailTemplates(basicPlayApi),

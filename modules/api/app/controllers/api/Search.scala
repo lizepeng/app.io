@@ -14,7 +14,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class Search(
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val ES: ElasticSearch
 )
   extends Secured(Search)
   with Controller
@@ -28,9 +29,9 @@ class Search(
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
         case (User.`basicName`, _p)  =>
-          Some((es: ES) => es.Search(q, _p) in User)
+          Some((es: ElasticSearch) => es.Search(q, _p) in User)
         case (Group.`basicName`, _p) =>
-          Some((es: ES) => es.Search(q, _p) in Group)
+          Some((es: ElasticSearch) => es.Search(q, _p) in Group)
         case _                       => None
       }
 

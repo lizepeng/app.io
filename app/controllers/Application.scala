@@ -2,7 +2,6 @@ package controllers
 
 import helpers._
 import models.cfs.Path
-import play.api.Play.current
 import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
 import security._

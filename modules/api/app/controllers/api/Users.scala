@@ -2,7 +2,7 @@ package controllers.api
 
 import java.util.UUID
 
-import elasticsearch.ES
+import elasticsearch.ElasticSearch
 import helpers._
 import models._
 import models.json._
@@ -18,7 +18,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class Users(
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val ES: ElasticSearch
 )
   extends Secured(Users)
   with Controller
