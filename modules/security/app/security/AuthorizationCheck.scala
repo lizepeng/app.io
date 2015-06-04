@@ -1,6 +1,5 @@
 package security
 
-import helpers._
 import play.api.mvc._
 
 import scala.concurrent.Future
@@ -9,8 +8,7 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 trait AuthorizationCheck
-  extends ActionRefiner[MaybeUserRequest, UserRequest]
-  with ModuleLike {
+  extends ActionRefiner[MaybeUserRequest, UserRequest] {
 
   /**
    * when access denied

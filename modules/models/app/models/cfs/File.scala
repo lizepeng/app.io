@@ -5,7 +5,8 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers.syntax._
-import helpers.{BaseException, Logging}
+import helpers._
+import models.CanonicalNamedModel
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
@@ -49,7 +50,9 @@ sealed class Files
   with INodeKey[Files, File]
   with INodeColumns[Files, File]
   with FileColumns[Files, File]
+  with CanonicalNamedModel[File]
   with ExtCQL[Files, File]
+  with ExceptionDefining
   with Logging {
 
   override def fromRow(r: Row): File = {
@@ -72,7 +75,7 @@ sealed class Files
 object File extends Files with Cassandra {
 
   case class NotFound(id: UUID)
-    extends BaseException(CFS.msg_key("file.not.found"))
+    extends BaseException(error_code("file.not.found"))
 
   def find(id: UUID)(
     implicit onFound: File => File

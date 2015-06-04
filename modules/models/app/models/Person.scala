@@ -26,7 +26,8 @@ case class Person(
 sealed class Persons
   extends CassandraTable[Persons, Person]
   with ExtCQL[Persons, Person]
-  with Module[Person]
+  with CanonicalNamedModel[Person]
+  with ExceptionDefining
   with Logging {
 
   override val tableName = "persons"
@@ -57,7 +58,7 @@ sealed class Persons
 object Person extends Persons with Cassandra with SysConfig with AppConfig {
 
   case class NotFound(id: UUID)
-    extends BaseException(msg_key("not.found"))
+    extends BaseException(error_code("not.found"))
 
   // Json Reads and Writes
   implicit val person_format = Json.format[Person]

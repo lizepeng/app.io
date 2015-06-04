@@ -8,7 +8,7 @@ import play.api.mvc.Call
  * @author zepeng.li@gmail.com
  */
 trait LinkHeader extends AppConfig with ExHeaders {
-  self: ModuleLike =>
+  self: CanonicalNamed =>
 
   /**
    * Create link header for pagination.

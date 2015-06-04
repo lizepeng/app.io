@@ -18,9 +18,9 @@ import scala.language.postfixOps
  */
 object Bandwidth {
 
-  private object Config extends ModuleLike with AppConfig {
+  private object Config extends CanonicalNamed with AppConfig {
 
-    override val moduleName = "bandwidth"
+    override val basicName = "bandwidth"
 
     lazy val max = config.getBytes("max").map(_.toInt).getOrElse(5 MBps)
     lazy val min = config.getBytes("min").map(_.toInt).getOrElse(200 KBps)

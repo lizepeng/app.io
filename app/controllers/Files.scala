@@ -1,10 +1,11 @@
 package controllers
 
-import controllers.api.SecuredController
+import controllers.api.Secured
 import helpers._
 import models.cfs._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.mvc.Controller
 import views._
 
 import scala.language.postfixOps
@@ -15,8 +16,8 @@ import scala.language.postfixOps
 class Files(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(CFS)
-  with ViewMessages
+  extends Secured(Files)
+  with Controller
   with BasicPlayComponents
   with I18nSupport {
 
@@ -38,6 +39,4 @@ class Files(
     }
 }
 
-object Files
-  extends SecuredController(CFS)
-  with ViewMessages
+object Files extends Secured(CFS) with ViewMessages

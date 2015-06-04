@@ -1,14 +1,15 @@
 package controllers
 
 import controllers.Users.{Password, Rules}
-import controllers.api.SecuredController
+import controllers.api.Secured
 import elasticsearch.ES
-import helpers.{BasicPlayApi, BasicPlayComponents}
+import helpers._
 import models.{Person, User}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.mvc.Controller
 import security._
 import views._
 
@@ -20,9 +21,11 @@ import scala.concurrent.Future
 class My(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(User)
+  extends Secured(User)
+  with Controller
   with Session
   with BasicPlayComponents
+  with CanonicalNameBasedMessages
   with I18nSupport {
 
   val ChangePasswordFM = Form[ChangePasswordFD](

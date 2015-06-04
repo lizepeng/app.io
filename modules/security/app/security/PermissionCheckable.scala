@@ -1,12 +1,13 @@
 package security
 
-import helpers.ModuleLike
+import helpers.CanonicalNamed
 
 /**
  * @author zepeng.li@gmail.com
  */
 
-trait PermissionCheckable extends ModuleLike {
+trait PermissionCheckable {
+  self: CanonicalNamed =>
 
-  implicit lazy val CheckedModuleName = CheckedResource(fullModuleName)
+  implicit lazy val CheckedModuleName = CheckedResource(canonicalName)
 }

@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import controllers.Users.{Password, Rules}
-import controllers.api.SecuredController
+import controllers.api.Secured
 import elasticsearch.ES
 import helpers._
 import models._
@@ -25,9 +25,9 @@ import scala.concurrent.Future
 class Users(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(User)
+  extends Secured(Users)
+  with Controller
   with security.Session
-  with ViewMessages
   with BasicPlayComponents
   with I18nSupport {
 
@@ -126,8 +126,7 @@ class Users(
 }
 
 object Users
-  extends SecuredController(User)
-  with security.Session
+  extends Secured(User)
   with ViewMessages {
 
   case class Password(

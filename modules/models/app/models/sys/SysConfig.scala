@@ -6,7 +6,7 @@ import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
-import helpers.{Logging, ModuleLike}
+import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import models.sys.SysConfig.Serializer
 
@@ -16,7 +16,7 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 trait SysConfig {
-  self: ModuleLike =>
+  self: CanonicalNamed =>
 
   object System {
 
@@ -24,13 +24,13 @@ trait SysConfig {
       implicit serializer: Serializer[T]
     ) = {
       SysConfig.getOrElseUpdate(
-        fullModuleName, key, default
+        canonicalName, key, default
       )(serializer)
     }
 
     def UUID(key: String) = {
       SysConfig.getOrElseUpdate(
-        fullModuleName, key, UUIDs.timeBased()
+        canonicalName, key, UUIDs.timeBased()
       )(SysConfig.uuidSerializer)
     }
   }

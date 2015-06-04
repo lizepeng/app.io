@@ -7,12 +7,12 @@ import play.api.{Application, Configuration}
  * @author zepeng.li@gmail.com
  */
 trait AppConfig {
-  self: ModuleLike =>
+  self: CanonicalNamed =>
 
   def appConfig(implicit app: Application) = app.configuration
 
   def config(implicit app: Application): Configuration =
-    appConfig.getConfig(fullModuleName).getOrElse(Configuration.empty)
+    appConfig.getConfig(canonicalName).getOrElse(Configuration.empty)
 
   def domain(implicit app: Application) = getEssentialString("app.domain")
 

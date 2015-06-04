@@ -20,7 +20,9 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-trait ES extends ModuleLike with AppConfig {
+trait ES
+  extends AppConfig
+  with Logging {
 
   import ESyntax._
 
@@ -81,9 +83,9 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def in(t: Module[_]): ReadySearchDefinition = {
+    def in(t: CanonicalNamedModel[_]): ReadySearchDefinition = {
       new ReadySearchDefinition(client, p)(
-        Def(search in indexName / t.moduleName)
+        Def(search in indexName / t.basicName)
           .?(cond = true)(_ start p.start limit p.limit)
           .?(q.isDefined && q.get.nonEmpty)(_ query q.get)
           .result
@@ -104,13 +106,13 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: Module[T])(
+    def into(t: CanonicalNamedModel[T])(
       implicit converter: T => JsonDocSource
     ): Future[(JsValue, Future[IndexResponse])] = {
       val src = converter(r)
       Future.successful(
         src.jsval, client.execute {
-          index into indexName / t.moduleName id r.id doc src
+          index into indexName / t.basicName id r.id doc src
         }
       )
     }
@@ -120,9 +122,9 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def from[T <: HasID[ID]](t: Module[T]): Future[DeleteResponse] =
+    def from[T <: HasID[ID]](t: CanonicalNamedModel[T]): Future[DeleteResponse] =
       client.execute {
-        delete id id from s"$indexName/${t.moduleName}"
+        delete id id from s"$indexName/${t.basicName}"
       }
   }
 
@@ -130,9 +132,9 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def from[T <: HasID[_]](t: Module[T]): Future[DeleteMappingResponse] =
+    def from[T <: HasID[_]](t: CanonicalNamedModel[T]): Future[DeleteMappingResponse] =
       client.execute {
-        delete mapping indexName / t.moduleName
+        delete mapping indexName / t.basicName
       }
   }
 
@@ -140,13 +142,13 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def in(t: Module[T])(
+    def in(t: CanonicalNamedModel[T])(
       implicit converter: T => JsonDocSource
     ): Future[(JsValue, Future[UpdateResponse])] = {
       val src = converter(r)
       Future.successful(
         src.jsval, client.execute {
-          update id r.id in s"$indexName/${t.moduleName}" doc r
+          update id r.id in s"$indexName/${t.basicName}" doc r
         }
       )
     }
@@ -156,12 +158,12 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: Module[T])(
+    def into(t: CanonicalNamedModel[T])(
       implicit converter: T => JsonDocSource
     ): Future[BulkResponse] = client.execute {
       bulk(
         rs.map { r =>
-          index into s"$indexName/${t.moduleName}" id r.id doc r
+          index into s"$indexName/${t.basicName}" id r.id doc r
         }: _*
       )
     }

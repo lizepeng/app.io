@@ -96,7 +96,8 @@ sealed class EmailTemplates
   with EmailTemplateColumns[EmailTemplates, ET]
   with EmailTemplateHistoryColumns[EmailTemplates, ET]
   with ExtCQL[EmailTemplates, ET]
-  with Module[ET]
+  with CanonicalNamedModel[ET]
+  with ExceptionDefining
   with Logging {
 
   override def fromRow(r: Row): ET = ET(
@@ -114,10 +115,10 @@ sealed class EmailTemplates
 object EmailTemplate extends EmailTemplates with Cassandra with AppConfig {
 
   case class NotFound(id: UUID, lang: String)
-    extends BaseException(msg_key("not.found"))
+    extends BaseException(error_code("not.found"))
 
   case class UpdatedByOther()
-    extends BaseException(msg_key("updated.by.others"))
+    extends BaseException(error_code("updated.by.others"))
 
   def apply(
     id: UUID,
@@ -217,7 +218,7 @@ sealed class EmailTemplateHistories
   with EmailTemplateKey[EmailTemplateHistories, ETH]
   with EmailTemplateHistoryColumns[EmailTemplateHistories, ETH]
   with ExtCQL[EmailTemplateHistories, ETH]
-  with Module[ETH]
+  with CanonicalNamedModel[ETH]
   with Logging {
 
   override def fromRow(r: Row): ETH = ETH(

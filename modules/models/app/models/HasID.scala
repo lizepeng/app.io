@@ -3,8 +3,6 @@ package models
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.CassandraTable
-import helpers.ModuleLike
 import org.joda.time.DateTime
 import play.api.libs.json._
 
@@ -37,12 +35,6 @@ trait JsonReadable[T] {
   def always(default: => T) = new Reads[T] {
     def reads(json: JsValue) = JsSuccess(default)
   }
-}
-
-trait Module[R] extends ModuleLike {
-  self: CassandraTable[_, R] =>
-
-  override lazy val moduleName = tableName
 }
 
 object TimeBased {

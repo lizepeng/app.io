@@ -40,7 +40,8 @@ case class Group(
 sealed class Groups
   extends CassandraTable[Groups, Group]
   with ExtCQL[Groups, Group]
-  with Module[Group]
+  with CanonicalNamedModel[Group]
+  with ExceptionDefining
   with Logging {
 
   override val tableName = "groups"
@@ -105,13 +106,13 @@ sealed class Groups
 object Group extends Groups with Cassandra with AppConfig {
 
   case class NotFound(id: UUID)
-    extends BaseException(msg_key("not.found"))
+    extends BaseException(error_code("not.found"))
 
   case class NotWritable(id: UUID)
-    extends BaseException(msg_key("not.writable"))
+    extends BaseException(error_code("not.writable"))
 
   case class NotEmpty(id: UUID)
-    extends BaseException(msg_key("not.empty"))
+    extends BaseException(error_code("not.empty"))
 
   object AccessControl {
 
@@ -121,19 +122,19 @@ object Group extends Groups with Cassandra with AppConfig {
       principal: Set[UUID],
       action: String,
       resource: String
-    ) extends AC.Undefined[Set[UUID]](action, resource, moduleName)
+    ) extends AC.Undefined[Set[UUID]](action, resource, basicName)
 
     case class Denied(
       principal: Set[UUID],
       action: String,
       resource: String
-    ) extends AC.Denied[Set[UUID]](action, resource, moduleName)
+    ) extends AC.Denied[Set[UUID]](action, resource, basicName)
 
     case class Granted(
       principal: Set[UUID],
       action: String,
       resource: String
-    ) extends AC.Granted[Set[UUID]](action, resource, moduleName)
+    ) extends AC.Granted[Set[UUID]](action, resource, basicName)
 
   }
 
@@ -294,12 +295,15 @@ case class InternalGroups(code: Int) {
      """
 }
 
-object InternalGroups extends helpers.ModuleLike with SysConfig {
+object InternalGroups
+  extends CanonicalNamed
+  with SysConfig
+  with Logging {
+
+  override lazy val basicName = Group.basicName
 
   import scala.Predef._
   import scala.language.implicitConversions
-
-  override lazy val moduleName = Group.moduleName
 
   val ALL        = for (gid <- 0 to 18) yield gid
   val Half1st    = for (gid <- 0 to 9) yield gid

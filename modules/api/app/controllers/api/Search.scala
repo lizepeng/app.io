@@ -7,7 +7,6 @@ import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.api.mvc.Controller
-import security.PermissionCheckable
 
 import scala.concurrent.Future
 
@@ -17,9 +16,9 @@ import scala.concurrent.Future
 class Search(
   val basicPlayApi: BasicPlayApi
 )
-  extends Controller
+  extends Secured(Search)
+  with Controller
   with LinkHeader
-  with PermissionCheckable
   with BasicPlayComponents
   with I18nSupport {
 
@@ -28,11 +27,11 @@ class Search(
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
-        case (User.moduleName, _p)  =>
+        case (User.`basicName`, _p)  =>
           Some((es: ES) => es.Search(q, _p) in User)
-        case (Group.moduleName, _p) =>
+        case (Group.`basicName`, _p) =>
           Some((es: ES) => es.Search(q, _p) in Group)
-        case _                      => None
+        case _                       => None
       }
 
       if (defs.isEmpty)
@@ -47,7 +46,4 @@ class Search(
     }
 }
 
-object Search extends PermissionCheckable {
-
-  override val moduleName = "search"
-}
+object Search extends Secured("search")

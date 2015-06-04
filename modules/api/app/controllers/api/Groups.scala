@@ -12,6 +12,7 @@ import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
+import play.api.mvc.Controller
 import protocols.JsonProtocol._
 
 import scala.concurrent.Future
@@ -25,10 +26,12 @@ import scala.language.postfixOps
 class Groups(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(Group)
+  extends Secured(Groups)
+  with Controller
   with LinkHeader
   with BasicPlayComponents
-  with I18nSupport {
+  with I18nSupport
+  with Logging {
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
@@ -156,7 +159,7 @@ class Groups(
     _empty <- Group.isEmpty
     result <-
     if (_empty) {
-      Logger.info(s"Clean elasticsearch index $moduleName")
+      Logger.info(s"Clean elasticsearch index $basicName")
       (ES.Delete from Group).map(_ => true)
     }
     else
@@ -172,4 +175,4 @@ class Groups(
   }
 }
 
-object Groups extends SecuredController(Group)
+object Groups extends Secured(Group)

@@ -6,9 +6,9 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
-import models.User
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
+import models.{CanonicalNamedModel, User}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -119,7 +119,9 @@ sealed class Directories
   with INodeKey[Directories, Directory]
   with INodeColumns[Directories, Directory]
   with DirectoryColumns[Directories, Directory]
+  with CanonicalNamedModel[Directory]
   with ExtCQL[Directories, Directory]
+  with ExceptionDefining
   with Logging {
 
   override def fromRow(r: Row): Directory = {
@@ -136,19 +138,21 @@ sealed class Directories
   }
 }
 
-object Directory extends Directories with Cassandra {
+object Directory
+  extends Directories
+  with Cassandra {
 
   case class NotFound(id: UUID)
-    extends BaseException(CFS.msg_key("dir.not.found"))
+    extends BaseException(error_code("dir.not.found"))
 
   case class ChildNotFound(parent: Any, name: String)
-    extends BaseException(CFS.msg_key("dir.child.not.found"))
+    extends BaseException(error_code("dir.child.not.found"))
 
   case class ChildExists(parent: Any, name: String)
-    extends BaseException(CFS.msg_key("dir.child.exists"))
+    extends BaseException(error_code("dir.child.exists"))
 
   case class NotDirectory(path: Path)
-    extends BaseException(CFS.msg_key("dir.not.dir"))
+    extends BaseException(error_code("dir.not.dir"))
 
   def findChild(
     parent: UUID, name: String

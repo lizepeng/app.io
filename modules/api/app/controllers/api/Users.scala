@@ -6,10 +6,10 @@ import elasticsearch.ES
 import helpers._
 import models._
 import models.json._
-import play.api.Configuration
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
+import play.api.mvc.Controller
 import protocols.JsonProtocol._
 
 import scala.concurrent.Future
@@ -20,10 +20,12 @@ import scala.concurrent.Future
 class Users(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(User)
+  extends Secured(Users)
+  with Controller
   with LinkHeader
   with BasicPlayComponents
-  with I18nSupport {
+  with I18nSupport
+  with Logging {
 
   def groups(id: UUID, options: Option[String]) =
     PermCheck(_.Show).async { implicit req =>
@@ -78,7 +80,7 @@ class Users(
     _empty <- User.isEmpty
     result <-
     if (_empty) {
-      Logger.info(s"Clean elasticsearch index $moduleName")
+      Logger.info(s"Clean elasticsearch index $basicName")
       (ES.Delete from User).map(_ => true)
     }
     else
@@ -87,4 +89,4 @@ class Users(
 
 }
 
-object Users extends SecuredController(User)
+object Users extends Secured(User)

@@ -1,15 +1,15 @@
 package controllers
 
-import helpers.ModuleLike
+import helpers.CanonicalNamed
 import play.api.i18n._
 
 /**
  * @author zepeng.li@gmail.com
  */
 trait ViewMessages {
-  self: ModuleLike =>
+  self: CanonicalNamed =>
 
   def vmsg(key: String, args: Any*)(implicit messages: Messages) = {
-    Messages(s"views.$moduleName.$key", args: _*)
+    messages(s"views.$basicName.$key", args: _*)
   }
 }

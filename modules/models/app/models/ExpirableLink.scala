@@ -21,7 +21,8 @@ case class ExpirableLink(
 sealed class ExpirableLinks
   extends CassandraTable[ExpirableLinks, ExpirableLink]
   with ExtCQL[ExpirableLinks, ExpirableLink]
-  with Module[ExpirableLink]
+  with CanonicalNamedModel[ExpirableLink]
+  with ExceptionDefining
   with Logging {
 
   override val tableName = "expirable_links"
@@ -43,7 +44,7 @@ sealed class ExpirableLinks
 object ExpirableLink extends ExpirableLinks with Cassandra {
 
   case class NotFound(id: String)
-    extends BaseException(msg_key("not.found"))
+    extends BaseException(error_code("not.found"))
 
   def find(id: String): Future[ExpirableLink] =
     CQL {

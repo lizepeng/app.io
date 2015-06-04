@@ -20,11 +20,11 @@ case class MailService(
   configuration: Configuration,
   actorSystem: ActorSystem
 )
-  extends ModuleLike
+  extends CanonicalNamed
   with AppConfig
   with I18nSupport {
 
-  override val moduleName: String = "mailer"
+  override val basicName: String = "mailer"
 
   val plugin = new MAMailerPlugin(configuration, actorSystem)
 

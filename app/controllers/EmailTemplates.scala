@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.api.SecuredController
+import controllers.api.Secured
 import helpers._
 import models.EmailTemplate.NotFound
 import models._
@@ -12,6 +12,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.mvc.Controller
 import security._
 import views._
 
@@ -21,8 +22,9 @@ import scala.language.implicitConversions
 class EmailTemplates(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(EmailTemplate)
-  with ViewMessages
+  extends Secured(EmailTemplates)
+  with Controller
+  with CanonicalNameBasedMessages
   with BasicPlayComponents
   with I18nSupport {
 
@@ -191,9 +193,7 @@ class EmailTemplates(
 
     }
 
-  private def key_editing(id: UUID) = s"$fullModuleName - $id - version"
+  private def key_editing(id: UUID) = s"$canonicalName - $id - version"
 }
 
-object EmailTemplates
-  extends SecuredController(EmailTemplate)
-  with ViewMessages
+object EmailTemplates extends Secured(EmailTemplate) with ViewMessages

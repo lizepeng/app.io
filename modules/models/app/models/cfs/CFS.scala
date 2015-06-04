@@ -12,9 +12,12 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-object CFS extends ModuleLike with SysConfig with AppConfig {
+object CFS
+  extends CanonicalNamed
+  with SysConfig
+  with AppConfig {
 
-  override val moduleName = "files"
+  override val basicName = "files"
 
   lazy val root: Future[Directory] =
     System.UUID("root").flatMap { id =>

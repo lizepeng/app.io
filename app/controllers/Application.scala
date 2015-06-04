@@ -12,13 +12,13 @@ class Application(
   val basicPlayApi: BasicPlayApi
 )
   extends Controller
-  with ModuleLike
+  with CanonicalNamed
   with ViewMessages
   with AppConfig
   with BasicPlayComponents
   with I18nSupport {
 
-  override val moduleName = "app"
+  override val basicName = "app"
 
   def index = MaybeUserAction { implicit req =>
     Ok(html.welcome.index())

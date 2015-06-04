@@ -27,11 +27,14 @@ import scala.util.Failure
 class Files(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(CFS)
+  extends Secured(Files)
+  with Controller
   with LinkHeader
   with AppConfig
   with BasicPlayComponents
-  with I18nSupport {
+  with ExceptionDefining
+  with I18nSupport
+  with Logging {
 
   lazy val bandwidth_upload  : Int =
     getBandwidth("upload").getOrElse(1.5 MBps)
@@ -320,11 +323,12 @@ class Files(
 
   object Flow {
 
+    //TODO how extends ExceptionDefining here
     case class MissingFlowArgument(key: String)
-      extends BaseException(msg_key("missing.flow.argument"))
+      extends BaseException(error_code("missing.flow.argument"))
 
   }
 
 }
 
-object Files extends SecuredController(CFS)
+object Files extends Secured(CFS)

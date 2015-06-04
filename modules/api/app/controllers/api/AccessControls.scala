@@ -9,6 +9,7 @@ import models._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
+import play.api.mvc.Controller
 import protocols.JsonProtocol._
 
 import scala.concurrent.Future
@@ -19,10 +20,12 @@ import scala.concurrent.Future
 class AccessControls(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(AccessControl)
+  extends Secured(AccessControls)
+  with Controller
   with BasicPlayComponents
   with I18nSupport
-  with LinkHeader {
+  with LinkHeader
+  with Logging {
 
   def index(q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
@@ -104,7 +107,7 @@ class AccessControls(
     _empty <- AccessControl.isEmpty
     result <-
     if (_empty) {
-      Logger.info(s"Clean elasticsearch index $moduleName")
+      Logger.info(s"Clean elasticsearch index $basicName")
       (ES.Delete from AccessControl).map(_ => true)
     }
     else
@@ -112,4 +115,4 @@ class AccessControls(
   } yield result
 }
 
-object AccessControls extends SecuredController(AccessControl)
+object AccessControls extends Secured(AccessControl)

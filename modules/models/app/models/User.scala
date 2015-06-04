@@ -73,7 +73,8 @@ case class User(
 sealed class Users
   extends CassandraTable[Users, User]
   with ExtCQL[Users, User]
-  with Module[User]
+  with CanonicalNamedModel[User]
+  with ExceptionDefining
   with Logging {
 
   override val tableName = "users"
@@ -153,22 +154,22 @@ object User extends Users with Cassandra with SysConfig {
    * @param user email or uuid
    */
   case class NotFound(user: String)
-    extends BaseException(msg_key("not.found"))
+    extends BaseException(error_code("not.found"))
 
   case class WrongPassword(email: String)
-    extends BaseException(msg_key("wrong.password"))
+    extends BaseException(error_code("wrong.password"))
 
   case class SaltNotMatch(id: UUID)
-    extends BaseException(msg_key("salt.not.match"))
+    extends BaseException(error_code("salt.not.match"))
 
   case class AuthFailed()
-    extends BaseException(msg_key("auth.failed"))
+    extends BaseException(error_code("auth.failed"))
 
   case class NoCredentials()
-    extends BaseException(msg_key("no.credentials"))
+    extends BaseException(error_code("no.credentials"))
 
   case class EmailTaken(email: String)
-    extends BaseException(msg_key("email.taken"))
+    extends BaseException(error_code("email.taken"))
 
   object AccessControl {
 
@@ -178,19 +179,19 @@ object User extends Users with Cassandra with SysConfig {
       principal: UUID,
       action: String,
       resource: String
-    ) extends AC.Undefined[UUID](action, resource, moduleName)
+    ) extends AC.Undefined[UUID](action, resource, basicName)
 
     case class Denied(
       principal: UUID,
       action: String,
       resource: String
-    ) extends AC.Denied[UUID](action, resource, moduleName)
+    ) extends AC.Denied[UUID](action, resource, basicName)
 
     case class Granted(
       principal: UUID,
       action: String,
       resource: String
-    ) extends AC.Granted[UUID](action, resource, moduleName)
+    ) extends AC.Granted[UUID](action, resource, basicName)
 
   }
 

@@ -1,6 +1,6 @@
 package controllers.api
 
-import helpers.{AppConfig, ModuleLike}
+import helpers._
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.Play.current
@@ -25,11 +25,11 @@ case class RateLimit(resource: CheckedResource)(
 )
   extends ActionFunction[UserRequest, UserRequest]
   with ExHeaders
-  with ModuleLike
+  with CanonicalNamed
   with AppConfig
   with I18nSupport {
 
-  override val moduleName = "rate_limit"
+  override val basicName = "rate_limit"
 
   val limit = config.getInt("limit").getOrElse(50)
   val span  = config.getInt("span").getOrElse(15)
@@ -52,7 +52,7 @@ case class RateLimit(resource: CheckedResource)(
       .flatMap { counter =>
       if (counter >= limit) Future.successful {
         Results.TooManyRequest {
-          JsonMessage(s"api.$moduleName.exceeded")
+          JsonMessage(s"api.$basicName.exceeded")
         }.withHeaders(
             X_RATE_LIMIT_LIMIT -> limit.toString,
             X_RATE_LIMIT_REMAINING -> "0",

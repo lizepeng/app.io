@@ -1,7 +1,5 @@
 package controllers
 
-import javax.inject.{Inject, Singleton}
-
 import play.api.i18n.MessagesApi
 import play.api.libs.json._
 import security._
@@ -9,8 +7,7 @@ import security._
 /**
  * @author zepeng.li@gmail.com
  */
-@Singleton
-class Secured @Inject()(
+class RegisteredSecured(
   val messagesApi: MessagesApi,
   val modules: Seq[PermissionCheckable]
 ) {

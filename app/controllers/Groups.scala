@@ -2,7 +2,7 @@ package controllers
 
 import java.util.UUID
 
-import controllers.api.SecuredController
+import controllers.api.Secured
 import helpers._
 import models._
 import models.sys.SysConfig
@@ -10,6 +10,7 @@ import play.api.data.Forms._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Iteratee
+import play.api.mvc.Controller
 import protocols.JsonProtocol._
 import views._
 
@@ -23,7 +24,8 @@ import scala.util.Success
 class Groups(
   val basicPlayApi: BasicPlayApi
 )
-  extends SecuredController(Group)
+  extends Secured(Groups)
+  with Controller
   with BasicPlayComponents
   with I18nSupport {
 
@@ -56,8 +58,10 @@ class Groups(
 }
 
 object Groups
-  extends SecuredController(Group)
-  with ViewMessages with SysConfig {
+  extends Secured(Group)
+  with ViewMessages
+  with SysConfig
+  with Logging {
 
   import html.layouts._
 

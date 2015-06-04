@@ -82,7 +82,7 @@ object FilePermission {
     principal: UUID,
     action: Int,
     resource: INode
-  ) extends Permission.Denied[UUID, Int, INode](CFS.fullModuleName)
+  ) extends Permission.Denied[UUID, Int, INode](CFS.canonicalName)
 
   val r   = 4
   val w   = 2

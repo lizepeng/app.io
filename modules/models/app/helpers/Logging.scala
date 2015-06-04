@@ -7,17 +7,13 @@ import scala.collection.mutable
 /**
  * @author zepeng.li@gmail.com
  */
-trait Logging {
+trait Logging extends CanonicalNamed {
 
   implicit lazy val Logger =
-    play.api.Logger(
-      if (loggerName.nonEmpty) loggerName
-      //be careful, this can not be used with inner class above two level
-      else
-        Option(this.getClass.getCanonicalName).getOrElse(this.getClass.getName)
-    )
-
-  def loggerName: String = ""
+    if (basicName.nonEmpty)
+      play.api.Logger(canonicalName)
+    else
+      play.api.Logger(this.getClass)
 }
 
 trait Loggable extends Product {

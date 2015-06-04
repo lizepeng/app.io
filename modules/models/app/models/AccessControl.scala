@@ -35,7 +35,8 @@ case class AccessControl(
 sealed class AccessControls
   extends CassandraTable[AccessControls, AccessControl]
   with ExtCQL[AccessControls, AccessControl]
-  with Module[AccessControl]
+  with CanonicalNamedModel[AccessControl]
+  with ExceptionDefining
   with Logging {
 
   override val tableName = "access_controls"
@@ -73,14 +74,14 @@ sealed class AccessControls
 object AccessControl extends AccessControls with Cassandra {
 
   case class NotFound(id: UUID, res: String, act: String)
-    extends BaseException(msg_key("not.found"))
+    extends BaseException(error_code("not.found"))
 
   abstract class Undefined[P](
     action: String,
     resource: String,
     sub_key: String
   ) extends Permission.Undefined[P, String, String](
-    s"$fullModuleName.$sub_key"
+    s"$canonicalName.$sub_key"
   )
 
   abstract class Denied[P](
@@ -88,7 +89,7 @@ object AccessControl extends AccessControls with Cassandra {
     resource: String,
     sub_key: String
   ) extends Permission.Denied[P, String, String](
-    s"$fullModuleName.$sub_key"
+    s"$canonicalName.$sub_key"
   )
 
   abstract class Granted[P](
@@ -96,7 +97,7 @@ object AccessControl extends AccessControls with Cassandra {
     resource: String,
     sub_key: String
   ) extends Permission.Granted[P, String, String](
-    s"$fullModuleName.$sub_key"
+    s"$canonicalName.$sub_key"
   )
 
   // Json Reads and Writes

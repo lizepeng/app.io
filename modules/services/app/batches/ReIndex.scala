@@ -1,6 +1,6 @@
 package batches
 
-import helpers.ModuleLike
+import helpers.Logging
 import org.joda.time.Interval
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
@@ -15,9 +15,10 @@ class ReIndex[T](
   forEachChunk: List[T] => Future[_],
   onDone: => Unit = () => Unit
 )(chunkSize: Int, val total: Option[Int] = None)
-  extends Batch[Int] with ModuleLike {
+  extends Batch[Int]
+  with Logging {
 
-  override val moduleName = "reindex"
+  override val basicName = "reindex"
 
   def start() = {
     Logger.info("Start indexing into elastic search.")

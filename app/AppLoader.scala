@@ -53,8 +53,8 @@ class Components(context: Context)
     case _ => Logger.info("System has started")
   }
 
-  private def buildSecured: Secured = {
-    new Secured(
+  private def buildSecured: RegisteredSecured = {
+    new RegisteredSecured(
       messagesApi,
       Seq(
         Files,

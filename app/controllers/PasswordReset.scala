@@ -1,6 +1,7 @@
 package controllers
 
 import controllers.Users.{Password, Rules}
+import controllers.api.Secured
 import helpers._
 import models._
 import models.sys.SysConfig
@@ -24,15 +25,14 @@ class PasswordReset(
 )(
   implicit val mailService: MailService
 )
-  extends Controller
-  with ModuleLike
-  with ViewMessages
+  extends Secured(PasswordReset)
+  with Controller
+  with CanonicalNameBasedMessages
   with SysConfig
   with AppConfig
   with BasicPlayComponents
-  with I18nSupport {
-
-  override val moduleName = "password_reset"
+  with I18nSupport
+  with Logging {
 
   val emailFM = Form(
     single("email" -> text.verifying(Rules.email))
@@ -62,8 +62,8 @@ class PasswordReset(
       },
       success => (for {
         user <- User.find(success)
-        link <- ExpirableLink.nnew(fullModuleName)(user)
-        tmpl <- getEmailTemplate(s"$moduleName.email1")
+        link <- ExpirableLink.nnew(canonicalName)(user)
+        tmpl <- getEmailTemplate(s"$basicName.email1")
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
         mailService.schedule("noreply", tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
@@ -87,7 +87,7 @@ class PasswordReset(
    */
   def show(id: String) = MaybeUserAction.async { implicit req =>
     ExpirableLink.find(id).map { ln =>
-      if (ln.module != fullModuleName)
+      if (ln.module != canonicalName)
         onError(emailFM, "invalid.reset.link")
       else
         Ok(html.password_reset.show(id)(resetFM))
@@ -111,7 +111,7 @@ class PasswordReset(
       success => (for {
         link <- ExpirableLink.find(id).andThen { case _ => ExpirableLink.remove(id) }
         user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
-        tmpl <- getEmailTemplate(s"$moduleName.email2")
+        tmpl <- getEmailTemplate(s"$basicName.email2")
       } yield (user, tmpl)).map { case (user, tmpl) =>
         mailService.schedule("support", tmpl, user)
         Redirect(routes.Sessions.nnew()).flashing(
@@ -130,8 +130,8 @@ class PasswordReset(
       case e: User.NotFound => User.save(
         User(
           id = uid,
-          name = moduleName,
-          email = s"$moduleName@$domain"
+          name = basicName,
+          email = s"$basicName@$domain"
         )
       )
     }
@@ -167,9 +167,7 @@ class PasswordReset(
   }
 }
 
-object PasswordReset
-  extends ModuleLike
-  with ViewMessages {
+object PasswordReset extends CanonicalNamed with ViewMessages {
 
-  override val moduleName = "password_reset"
+  override val basicName = "password_reset"
 }

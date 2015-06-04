@@ -1,9 +1,10 @@
 package controllers
 
-import controllers.api.SecuredController
+import controllers.api.Secured
 import helpers._
 import models._
 import play.api.i18n._
+import play.api.mvc.Controller
 import views._
 
 import scala.concurrent.Future
@@ -14,9 +15,10 @@ import scala.concurrent.Future
 class AccessControls(
   val basicPlayApi: BasicPlayApi
 )(
-  implicit val secured: Secured
+  implicit val secured: RegisteredSecured
 )
-  extends SecuredController(AccessControl)
+  extends Secured(AccessControls)
+  with Controller
   with BasicPlayComponents
   with I18nSupport {
 
@@ -28,7 +30,7 @@ class AccessControls(
 }
 
 object AccessControls
-  extends SecuredController(AccessControl)
+  extends Secured(AccessControl)
   with ViewMessages {
 
   def initialize: Future[Boolean] = Future.successful(true)
