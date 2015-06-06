@@ -29,7 +29,7 @@ case class Directory(
 ) extends INode {
 
   def save(fileName: String = "")(
-    implicit user: User, Directory: Directories, File: Files
+    implicit user: User, cfs: CFS
   ): Iteratee[BLK, File] = {
     val f = new File(fileName, path + fileName, user.id, id)
     val ff =
@@ -38,86 +38,79 @@ case class Directory(
     Iteratee.flatten(add(ff).map(_ => ff.save()))
   }
 
-  def save()
-      (implicit Directory: Directories): Future[Directory] = Directory.write(this)
+  def save()(implicit cfs: CFS): Future[Directory] =
+    cfs.directories.write(this)
 
-  def list(pager: Pager)
-      (implicit Directory: Directories): Future[Page[INode]] = {
-    Directory.list(this) |>>>
+  def list(pager: Pager)(implicit cfs: CFS): Future[Page[INode]] = {
+    cfs.directories.list(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
   }.map(_.toIterable).map(Page(pager, _))
 
-  private def find(path: Seq[String])
-      (implicit Directory: Directories): Future[(String, UUID)] = {
+  private def find(path: Seq[String])(
+    implicit cfs: CFS
+  ): Future[(String, UUID)] = {
     Enumerator(path: _*) |>>>
       Iteratee.foldM((name, id)) {
         case ((_, parentId), childName) =>
-          Directory.findChild(parentId, childName)
+          cfs.directories.findChild(parentId, childName)
       }
   }
 
-  def dir(path: Path)(implicit Directory: Directories): Future[Directory] =
+  def dir(path: Path)(implicit cfs: CFS): Future[Directory] =
     if (path.filename.nonEmpty)
       Future.failed(models.cfs.Directory.NotDirectory(path))
     else find(path.parts).flatMap {
-      case (n, i) => Directory.find(i)(
+      case (n, i) => cfs.directories.find(i)(
         _.copy(name = n, path = path)
       )
     }
 
-  def file(path: Path)
-      (implicit Directory: Directories, File: Files): Future[File] = {
+  def file(path: Path)(implicit cfs: CFS): Future[File] =
     find(path.parts ++ path.filename).flatMap {
-      case (n, i) => File.find(i)(
+      case (n, i) => cfs.files.find(i)(
         _.copy(name = n, path = path)
       )
     }
-  }
 
-  def file(name: String)
-      (implicit Directory: Directories, File: Files): Future[File] = {
-    Directory.findChild(id, name).flatMap {
-      case (n, i) => File.find(i)(
+  def file(name: String)(implicit cfs: CFS): Future[File] =
+    cfs.directories.findChild(id, name).flatMap {
+      case (n, i) => cfs.files.find(i)(
         _.copy(name = n, path = path + name)
       )
     }
-  }
 
-  def mkdir(name: String)
-      (implicit user: User, Directory: Directories): Future[Directory] = {
-    new Directory(name, path / name, user.id, id).save()
-  }
+  def mkdir(name: String)(
+    implicit user: User, cfs: CFS
+  ): Future[Directory] =
+    Directory(name, path / name, user.id, id).save()
 
-  def mkdir(name: String, uid: UUID)
-      (implicit Directory: Directories): Future[Directory] = {
-    new Directory(name, path / name, uid, id).save()
-  }
+  def mkdir(name: String, uid: UUID)(
+    implicit cfs: CFS
+  ): Future[Directory] =
+    Directory(name, path / name, uid, id).save()
 
-  def add(inode: INode)
-      (implicit Directory: Directories): Future[Directory] = {
-    Directory.addChild(this, inode)
-  }
+  def add(inode: INode)(implicit cfs: CFS): Future[Directory] =
+    cfs.directories.addChild(this, inode)
 
-  def del(inode: INode)
-      (implicit Directory: Directories): Future[Directory] = {
-    Directory.delChild(this, inode)
-  }
+  def del(inode: INode)(implicit cfs: CFS): Future[Directory] =
+    cfs.directories.delChild(this, inode)
 
-  def dir(name: String)(implicit Directory: Directories): Future[Directory] =
-    Directory.findChild(id, name).flatMap {
-      case (_, i) => Directory.find(i)(
+  def dir(name: String)(implicit cfs: CFS): Future[Directory] =
+    cfs.directories.findChild(id, name).flatMap {
+      case (_, i) => cfs.directories.find(i)(
         _.copy(name = name, path = path / name)
       )
     }
 
-  def dir_!(name: String)
-      (implicit user: User, Directory: Directories): Future[Directory] =
-    Directory.findChild(id, name).flatMap {
-      case (_, i) => Directory.find(i)(
+  def dir_!(name: String)(
+    implicit user: User, cfs: CFS
+  ): Future[Directory] =
+    cfs.directories.findChild(id, name).flatMap {
+      case (_, i) => cfs.directories.find(i)(
         _.copy(name = name, path = path / name)
       )
     }.recoverWith {
-      case e: models.cfs.Directory.ChildNotFound => mkdir(name)
+      case e: Directory.ChildNotFound => mkdir(name)
     }
 }
 
@@ -165,9 +158,8 @@ object Directory
 }
 
 class Directories(
-  implicit
-  val INode: INodes,
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val INode: INodes
 )
   extends DirectoryTable
   with ExtCQL[DirectoryTable, Directory]

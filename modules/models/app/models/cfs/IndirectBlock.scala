@@ -52,9 +52,8 @@ sealed class IndirectBlockTable
 object IndirectBlock extends IndirectBlockTable
 
 class IndirectBlocks(
-  implicit
-  val Block: Blocks,
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val Block: Blocks
 )
   extends IndirectBlockTable
   with ExtCQL[IndirectBlockTable, IndirectBlock]

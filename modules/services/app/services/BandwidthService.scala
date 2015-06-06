@@ -1,16 +1,18 @@
 package services
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
 import helpers._
 import models.cfs.Block._
 import org.joda.time.DateTime
-import play.api.libs.concurrent.Promise
 import play.api.libs.iteratee.Enumeratee.CheckDone
 import play.api.libs.iteratee._
 
+import scala.concurrent._
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
+import scala.util.Try
 
 /**
  * @author zepeng.li@gmail.com
@@ -64,7 +66,7 @@ case class BandwidthService(
             val cont = Cont(step(rate / 4, now)(k))
             Iteratee.flatten {
               if (spent > 500) Future.successful(cont)
-              else Promise.timeout(cont, 500 - spent, MILLISECONDS)(ec)
+              else timeout(cont, 500 - spent, MILLISECONDS)(ec)
             }
           }
         } &> k(in)
@@ -92,6 +94,19 @@ case class BandwidthService(
 
   private def now = DateTime.now.getMillis
 
+  private def timeout[A](
+    message: => A,
+    duration: Long,
+    unit: TimeUnit = TimeUnit.MILLISECONDS
+  )(
+    implicit ec: ExecutionContext
+  ): Future[A] = {
+    val p = Promise[A]()
+    actorSystem.scheduler.scheduleOnce(FiniteDuration(duration, unit)){
+      p.complete(Try(message))
+    }
+    p.future
+  }
 }
 
 object BandwidthService {

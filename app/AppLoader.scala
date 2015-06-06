@@ -30,14 +30,7 @@ class Components(context: Context)
 
   implicit val basicPlayApi = BasicPlayApi(langs, messagesApi, configuration)
 
-  implicit val inodeRepo                = new INodes
-  implicit val blockRepo                = new Blocks
-  implicit val indirectBlockRepo        = new IndirectBlocks
-  implicit val fileRepo                 = new Files
-  implicit val directoryRepo            = new Directories
   implicit val sysConfigRepo            = new SysConfigs
-  implicit val CFS                      = new CFS()
-  implicit val Home                     = new Home(CFS)
   implicit val internalGroupsRepo       = new InternalGroupsMapping()
   implicit val emailTemplateRepo        = new EmailTemplates
   implicit val emailTemplateHistoryRepo = new EmailTemplateHistories
@@ -48,6 +41,7 @@ class Components(context: Context)
   implicit val userRepo                 = new Users()
   implicit val groupRepo                = new Groups
   implicit val accessControlRepo        = new AccessControls
+  implicit val CFS                      = new CFS()
 
   implicit val secured = buildSecured
   val bandwidth     = BandwidthService(basicPlayApi, actorSystem)

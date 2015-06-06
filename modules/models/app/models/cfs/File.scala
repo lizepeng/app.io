@@ -31,16 +31,15 @@ case class File(
   is_directory: Boolean = false
 ) extends INode {
 
-  def read(offset: Long = 0)(implicit IndirectBlock: IndirectBlocks): Enumerator[BLK] =
-    if (offset == 0) IndirectBlock.read(id)
-    else IndirectBlock.read(this, offset)
+  def read(offset: Long = 0)(implicit cfs: CFS): Enumerator[BLK] =
+    if (offset == 0) cfs.indirectBlocks.read(id)
+    else cfs.indirectBlocks.read(this, offset)
 
-  def save()(
-    implicit File: Files
-  ): Iteratee[BLK, File] = File.streamWriter(this)
+  def save()(implicit cfs: CFS): Iteratee[BLK, File] =
+    cfs.files.streamWriter(this)
 
-  override def purge()(implicit Directory: Directories, File: Files) = {
-    super.purge().andThen { case _ => File.purge(id) }
+  override def purge()(implicit cfs: CFS) = {
+    super.purge().andThen { case _ => cfs.files.purge(id) }
   }
 }
 
@@ -82,10 +81,9 @@ object File
 }
 
 class Files(
- implicit
-  val IndirectBlock: IndirectBlocks,
+  val basicPlayApi: BasicPlayApi,
   val Block: Blocks,
-  val basicPlayApi: BasicPlayApi
+  val IndirectBlock: IndirectBlocks
 )
   extends FileTable
   with ExtCQL[FileTable, File]

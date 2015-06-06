@@ -20,10 +20,8 @@ class CFSCtrl(
   implicit
   val accessControlRepo: AccessControls,
   val userRepo: Users,
-  internalGroupsRepo: InternalGroupsMapping,
-  Home: Home,
-  Directory: Directories,
-  File: Files
+  val internalGroupsRepo: InternalGroupsMapping,
+  val cfs: CFS
 )
   extends Secured(CFSCtrl)
   with Controller
@@ -38,7 +36,7 @@ class CFSCtrl(
   def show(path: Path) =
     PermCheck(_.Show).async { implicit req =>
       (for {
-        home <- Home(req.user)
+        home <- cfs.home(req.user)
         file <- home.file(path)
       } yield file).map { file =>
         Ok(html.cfs.show(path, file))

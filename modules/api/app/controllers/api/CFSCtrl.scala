@@ -32,12 +32,8 @@ class CFSCtrl(
   accessControlRepo: AccessControls,
   userRepo: Users,
   rateLimitRepo: RateLimits,
-  CFS: CFS,
-  Home: Home,
   internalGroupsRepo: InternalGroupsMapping,
-  directoryRepo: Directories,
-  fileRepo: Files,
-  IndirectBlock: IndirectBlocks
+  cfs: CFS
 )
   extends Secured(CFSCtrl)
   with Controller
@@ -98,7 +94,7 @@ class CFSCtrl(
   def index(path: Path, pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
       (for {
-        root <- CFS.root
+        root <- cfs.root
         curr <- root.dir(path) if FilePerm(curr).rx.?
         page <- curr.list(pager)
       } yield page).map { page =>
@@ -124,7 +120,7 @@ class CFSCtrl(
     PermCheck(_.Show).async { implicit req =>
       val flow = new Flow(req.queryString)
       (for {
-        temp <- Home.temp
+        temp <- cfs.temp
         file <- temp.file(flow.tempFileName())
       } yield file).map { file =>
         if (flow.currentChunkSize == file.size) Ok
@@ -138,7 +134,7 @@ class CFSCtrl(
   def destroy(path: Path) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
-        root <- CFS.root
+        root <- cfs.root
         file <- root.file(path)
       } yield file).flatMap { f => f.purge()
       }.map { _ => NoContent
@@ -164,13 +160,13 @@ class CFSCtrl(
         case Some(file) =>
           (for {
             ____ <- file.ref.rename(flow.tempFileName(), force = true)
-            temp <- Home.temp
+            temp <- cfs.temp
             stat <- tempFiles(temp) |>>> summarizer
           } yield stat).flatMap { case (cnt, size) =>
             if (flow.isLastChunk(cnt, size)) {
               (for {
-                curr <- Home(req.user).flatMap(_.dir(path))
-                file <- Home.temp.flatMap { t =>
+                curr <- cfs.home(req.user).flatMap(_.dir(path))
+                file <- cfs.temp.flatMap { t =>
                   tempFiles(t) &>
                     Enumeratee.mapFlatten[File] { f =>
                       f.read() &> Enumeratee.onIterateeDone(() => f.purge())
@@ -190,7 +186,7 @@ class CFSCtrl(
 
   def mkdir(path: Path)(implicit user: User): Future[Directory] =
     Enumerator(path.parts: _*) |>>>
-      Iteratee.fold1(CFS.root) { case (p, cn) =>
+      Iteratee.fold1(cfs.root) { case (p, cn) =>
         (for (c <- p.dir(cn) if FilePerm(p).rx ?) yield c)
           .recoverWith {
           case e: Directory.ChildNotFound =>
@@ -249,7 +245,7 @@ class CFSCtrl(
     implicit req: UserRequest[_], messages: Messages
   ): Future[Result] = {
     (for {
-      root <- CFS.root
+      root <- cfs.root
       file <- root.file(path)
     } yield file).map {
       NotModifiedOrElse(block)(req, messages)
@@ -286,8 +282,8 @@ class CFSCtrl(
     ) {
       req => implicit user =>
         (for {
-          home <- Home(user)
-          temp <- Home.temp(user)
+          home <- cfs.home(user)
+          temp <- cfs.temp(user)
           dest <- home.dir(path) if FilePerm(dest).w ?
         } yield temp).map { case temp =>
           multipartFormData(saveTo(temp)(user))
