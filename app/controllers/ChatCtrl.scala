@@ -1,7 +1,7 @@
 package controllers
 
 import helpers.{BasicPlayApi, BasicPlayComponents}
-import models.UserRepo
+import models.Users
 import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
 import security.MaybeUserAction
@@ -14,7 +14,7 @@ class ChatCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
-  val userRepo: UserRepo
+  val userRepo: Users
 )
   extends Controller
   with BasicPlayComponents

@@ -26,7 +26,7 @@ case class EmailTemplate(
   created_by: UUID
 ) extends HasUUID {
 
-  def save(implicit emailTemplateRepo: EmailTemplateRepo) = emailTemplateRepo.save(this)
+  def save(implicit emailTemplateRepo: EmailTemplates) = emailTemplateRepo.save(this)
 }
 
 case class EmailTemplateHistory(
@@ -90,11 +90,11 @@ trait EmailTemplateHistoryColumns[T <: CassandraTable[T, R], R] {
 
 }
 
-sealed class EmailTemplates
-  extends CassandraTable[EmailTemplates, ET]
-  with EmailTemplateKey[EmailTemplates, ET]
-  with EmailTemplateColumns[EmailTemplates, ET]
-  with EmailTemplateHistoryColumns[EmailTemplates, ET]
+sealed class EmailTemplateTable
+  extends CassandraTable[EmailTemplateTable, ET]
+  with EmailTemplateKey[EmailTemplateTable, ET]
+  with EmailTemplateColumns[EmailTemplateTable, ET]
+  with EmailTemplateHistoryColumns[EmailTemplateTable, ET]
   with CanonicalNamedModel[ET]
   with ExceptionDefining
   with Logging {
@@ -112,7 +112,7 @@ sealed class EmailTemplates
 }
 
 object EmailTemplate
-  extends EmailTemplates
+  extends EmailTemplateTable
 with ExceptionDefining {
   case class NotFound(id: UUID, lang: String)
     extends BaseException(error_code("not.found"))
@@ -121,11 +121,11 @@ with ExceptionDefining {
     extends BaseException(error_code("updated.by.others"))
 }
 
-class EmailTemplateRepo(
+class EmailTemplates(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends EmailTemplates
-  with ExtCQL[EmailTemplates, ET]
+  extends EmailTemplateTable
+  with ExtCQL[EmailTemplateTable, ET]
   with BasicPlayComponents
   with Cassandra {
 
@@ -224,10 +224,10 @@ class EmailTemplateRepo(
 
 }
 
-sealed class EmailTemplateHistories
-  extends CassandraTable[EmailTemplateHistories, ETH]
-  with EmailTemplateKey[EmailTemplateHistories, ETH]
-  with EmailTemplateHistoryColumns[EmailTemplateHistories, ETH]
+sealed class EmailTemplateHistoryTable
+  extends CassandraTable[EmailTemplateHistoryTable, ETH]
+  with EmailTemplateKey[EmailTemplateHistoryTable, ETH]
+  with EmailTemplateHistoryColumns[EmailTemplateHistoryTable, ETH]
   with CanonicalNamedModel[ETH]
   with Logging {
 
@@ -243,13 +243,13 @@ sealed class EmailTemplateHistories
 }
 
 object EmailTemplateHistory
-  extends EmailTemplateHistories
+  extends EmailTemplateHistoryTable
 
-class EmailTemplateHistoryRepo(
+class EmailTemplateHistories(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends EmailTemplateHistories
-  with ExtCQL[EmailTemplateHistories, ETH]
+  extends EmailTemplateHistoryTable
+  with ExtCQL[EmailTemplateHistoryTable, ETH]
   with BasicPlayComponents
   with Cassandra {
 

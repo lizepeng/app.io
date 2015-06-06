@@ -20,7 +20,7 @@ class SessionsCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
-  val userRepo: UserRepo
+  val userRepo: Users
 )
   extends Controller
   with security.Session

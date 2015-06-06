@@ -21,11 +21,11 @@ object Schemas extends Cassandra {
       SysConfig.create.ifNotExists.future(),
       AccessControl.create.ifNotExists.future(),
       SessionData.create.ifNotExists.future(),
-      RateLimitRepo.create.ifNotExists.future(),
+      RateLimits.create.ifNotExists.future(),
 
       //User
       User.create.ifNotExists.future(),
-      UserByEmail.create.ifNotExists.future(),
+      UserByEmailIndex.create.ifNotExists.future(),
       Group.create.ifNotExists.future(),
       Person.create.ifNotExists.future(),
 

@@ -3,7 +3,7 @@ import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
 import models.cfs._
-import models.sys.SysConfigRepo
+import models.sys.SysConfigs
 import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.i18n._
@@ -30,24 +30,24 @@ class Components(context: Context)
 
   implicit val basicPlayApi = BasicPlayApi(langs, messagesApi, configuration)
 
-  implicit val inodeRepo                = new INodeRepo
-  implicit val blockRepo                = new BlockRepo
-  implicit val indirectBlockRepo        = new IndirectBlockRepo
-  implicit val fileRepo                 = new FileRepo
-  implicit val directoryRepo            = new DirectoryRepo
-  implicit val sysConfigRepo            = new SysConfigRepo
+  implicit val inodeRepo                = new INodes
+  implicit val blockRepo                = new Blocks
+  implicit val indirectBlockRepo        = new IndirectBlocks
+  implicit val fileRepo                 = new Files
+  implicit val directoryRepo            = new Directories
+  implicit val sysConfigRepo            = new SysConfigs
   implicit val CFS                      = new CFS()
   implicit val Home                     = new Home(CFS)
-  implicit val internalGroupsRepo       = new InternalGroupsRepo()
-  implicit val emailTemplateRepo        = new EmailTemplateRepo
-  implicit val emailTemplateHistoryRepo = new EmailTemplateHistoryRepo
-  implicit val personRepo               = new PersonRepo
-  implicit val sessionDataDAO           = new SessionDataDAO
-  implicit val rateLimitRepo            = new RateLimitRepo
-  implicit val expirableLinkRepo        = new ExpirableLinkRepo
-  implicit val userRepo                 = new UserRepo()
-  implicit val groupRepo                = new GroupRepo
-  implicit val accessControlRepo        = new AccessControlRepo
+  implicit val internalGroupsRepo       = new InternalGroupsMapping()
+  implicit val emailTemplateRepo        = new EmailTemplates
+  implicit val emailTemplateHistoryRepo = new EmailTemplateHistories
+  implicit val personRepo               = new Persons
+  implicit val sessionDataDAO           = new SessionData
+  implicit val rateLimitRepo            = new RateLimits
+  implicit val expirableLinkRepo        = new ExpirableLinks
+  implicit val userRepo                 = new Users()
+  implicit val groupRepo                = new Groups
+  implicit val accessControlRepo        = new AccessControls
 
   implicit val secured = buildSecured
   val bandwidth     = BandwidthService(basicPlayApi, actorSystem)

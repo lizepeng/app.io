@@ -27,9 +27,9 @@ case class IndirectBlock(
   def +(length: Int) = IndirectBlock(inode_id, offset, this.length + length, id)
 }
 
-sealed class IndirectBlocks
-  extends CassandraTable[IndirectBlocks, IndirectBlock]
-  with INodeKey[IndirectBlocks, IndirectBlock]
+sealed class IndirectBlockTable
+  extends CassandraTable[IndirectBlockTable, IndirectBlock]
+  with INodeKey[IndirectBlockTable, IndirectBlock]
   with Logging {
 
   override val tableName = "indirect_blocks"
@@ -49,15 +49,15 @@ sealed class IndirectBlocks
   }
 }
 
-object IndirectBlock extends IndirectBlocks
+object IndirectBlock extends IndirectBlockTable
 
-class IndirectBlockRepo(
+class IndirectBlocks(
   implicit
-  val Block: BlockRepo,
+  val Block: Blocks,
   val basicPlayApi: BasicPlayApi
 )
-  extends IndirectBlocks
-  with ExtCQL[IndirectBlocks, IndirectBlock]
+  extends IndirectBlockTable
+  with ExtCQL[IndirectBlockTable, IndirectBlock]
   with BasicPlayComponents
   with Cassandra {
 

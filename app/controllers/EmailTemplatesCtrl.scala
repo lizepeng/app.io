@@ -23,12 +23,12 @@ class EmailTemplatesCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
-  val accessControlRepo: AccessControlRepo,
-  val User: UserRepo,
-  val sessionDataDAO: SessionDataDAO,
-  val EmailTemplate: EmailTemplateRepo,
-  val EmailTemplateHistory: EmailTemplateHistoryRepo,
-  internalGroupsRepo: InternalGroupsRepo
+  val accessControlRepo: AccessControls,
+  val User: Users,
+  val sessionDataDAO: SessionData,
+  val EmailTemplate: EmailTemplates,
+  val EmailTemplateHistory: EmailTemplateHistories,
+  internalGroupsRepo: InternalGroupsMapping
 )
   extends Secured(EmailTemplatesCtrl)
   with Controller

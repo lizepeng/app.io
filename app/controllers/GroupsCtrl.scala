@@ -5,7 +5,7 @@ import java.util.UUID
 import controllers.api.Secured
 import helpers._
 import models._
-import models.sys.{SysConfig, SysConfigRepo}
+import models.sys.{SysConfig, SysConfigs}
 import play.api.data.Forms._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -25,10 +25,10 @@ class GroupsCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
-  val accessControlRepo: AccessControlRepo,
-  val groupRepo: GroupRepo,
-  val userRepo: UserRepo,
-  internalGroupsRepo: InternalGroupsRepo
+  val accessControlRepo: AccessControls,
+  val groupRepo: Groups,
+  val userRepo: Users,
+  internalGroupsRepo: InternalGroupsMapping
 )
   extends Secured(GroupsCtrl)
   with Controller
@@ -77,9 +77,9 @@ object GroupsCtrl
   @volatile private var _gid2layouts: Map[UUID, String] = Map()
 
   def initialize(
-    implicit groupRepo: GroupRepo,
-  internalGroupsRepo: InternalGroupsRepo,
-  sysConfigRepo: SysConfigRepo): Future[Map[UUID, String]] = {
+    implicit groupRepo: Groups,
+  internalGroupsRepo: InternalGroupsMapping,
+  sysConfigRepo: SysConfigs): Future[Map[UUID, String]] = {
     groupRepo.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
       for (
         conf <-

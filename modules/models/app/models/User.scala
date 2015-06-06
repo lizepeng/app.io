@@ -8,7 +8,7 @@ import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
-import models.sys.{SysConfig, SysConfigRepo}
+import models.sys.{SysConfig, SysConfigs}
 import org.joda.time.DateTime
 import play.api.libs.Crypto
 import play.api.libs.functional.syntax._
@@ -34,7 +34,7 @@ case class User(
   password: String = "",
   remember_me: Boolean = false,
   updated_at: DateTime = DateTime.now
-)(implicit val internalGroupsRepo: InternalGroupsRepo) extends HasUUID {
+)(implicit val internalGroupsRepo: InternalGroupsMapping) extends HasUUID {
 
   def groups: Set[UUID] =
     ext_groups union internalGroupsRepo.toGroupIdSet(int_groups)
@@ -56,12 +56,12 @@ case class User(
   }
 
   def savePassword(newPassword: String)(
-    implicit User: UserRepo
+    implicit User: Users
   ): Future[User] = {
     User.savePassword(this, newPassword)
   }
 
-  def save(implicit User: UserRepo) = User.save(this)
+  def save(implicit User: Users) = User.save(this)
 
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")
@@ -73,8 +73,8 @@ case class User(
 /**
  *
  */
-sealed class Users
-  extends CassandraTable[Users, User]
+sealed class UserTable
+  extends CassandraTable[UserTable, User]
 
   with CanonicalNamedModel[User]
   with CanonicalModel[User]
@@ -120,7 +120,7 @@ sealed class Users
   }
 
   object external_groups
-    extends SetColumn[Users, User, UUID](this)
+    extends SetColumn[UserTable, User, UUID](this)
     with JsonReadable[Set[UUID]] {
 
     def reads = (__ \ "ext_groups").read[Set[UUID]]
@@ -138,7 +138,7 @@ sealed class Users
 }
 
 object User
-  extends Users
+  extends UserTable
   with ExceptionDefining {
 
   /**
@@ -192,14 +192,14 @@ object User
 
 }
 
-class UserRepo(
+class Users(
   implicit
-  val sysConfig: SysConfigRepo,
-  val internalGroupsRepo: InternalGroupsRepo,
+  val sysConfig: SysConfigs,
+  val internalGroupsRepo: InternalGroupsMapping,
   val basicPlayApi: BasicPlayApi
 )
-  extends Users
-  with ExtCQL[Users, User]
+  extends UserTable
+  with ExtCQL[UserTable, User]
   with BasicPlayComponents
   with Cassandra
   with SysConfig {
@@ -221,7 +221,7 @@ class UserRepo(
 
   import User._
 
-  val UserByEmail = new UserByEmailRepo
+  val UserByEmail = new UserByEmail
 
   lazy val root: Future[User] = System.UUID("root_id").map { uid =>
     User(id = uid, name = "root")
@@ -361,8 +361,8 @@ class UserRepo(
 }
 
 //TODO rename to *Table
-sealed class UserByEmail
-  extends CassandraTable[UserByEmail, (String, UUID)]
+sealed class UserByEmailIndex
+  extends CassandraTable[UserByEmailIndex, (String, UUID)]
 
   with Logging {
 
@@ -377,13 +377,13 @@ sealed class UserByEmail
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
 }
 
-object UserByEmail extends UserByEmail
+object UserByEmailIndex extends UserByEmailIndex
 
-class UserByEmailRepo(
+class UserByEmail(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends UserByEmail
-  with ExtCQL[UserByEmail, (String, UUID)]
+  extends UserByEmailIndex
+  with ExtCQL[UserByEmailIndex, (String, UUID)]
   with BasicPlayComponents
   with Cassandra {
 

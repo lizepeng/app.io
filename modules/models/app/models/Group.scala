@@ -9,7 +9,7 @@ import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
-import models.sys.{SysConfig, SysConfigRepo}
+import models.sys.{SysConfig, SysConfigs}
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee._
@@ -31,13 +31,13 @@ case class Group(
   updated_at: DateTime
 ) extends HasUUID {
 
-  def createIfNotExist(implicit Group: GroupRepo) = Group.createIfNotExist(this)
+  def createIfNotExist(implicit Group: Groups) = Group.createIfNotExist(this)
 
-  def save(implicit Group: GroupRepo) = Group.save(this)
+  def save(implicit Group: Groups) = Group.save(this)
 }
 
-sealed class Groups
-  extends CassandraTable[Groups, Group]
+sealed class GroupTable
+  extends CassandraTable[GroupTable, Group]
   with CanonicalNamedModel[Group]
   with Logging {
 
@@ -101,7 +101,7 @@ sealed class Groups
 }
 
 object Group
-  extends Groups
+  extends GroupTable
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
@@ -149,14 +149,14 @@ object Group
 
 }
 
-class GroupRepo(
+class Groups(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val User: UserRepo,
-  val internalGroupsRepo: InternalGroupsRepo
+  val User: Users,
+  val internalGroupsRepo: InternalGroupsMapping
 )
-  extends Groups
-  with ExtCQL[Groups, Group]
+  extends GroupTable
+  with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
   with Cassandra {
 
@@ -322,8 +322,8 @@ object InternalGroups {
 
 }
 
-class InternalGroupsRepo(
-  implicit val sysConfig: SysConfigRepo
+class InternalGroupsMapping(
+  implicit val sysConfig: SysConfigs
 )
   extends CanonicalNamed
   with SysConfig
@@ -340,7 +340,7 @@ class InternalGroupsRepo(
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  def initialize(implicit groupRepo: GroupRepo): Future[Boolean] = Future.sequence(
+  def initialize(implicit groupRepo: Groups): Future[Boolean] = Future.sequence(
     ALL.map { n =>
       val key = s"internal_group_${"%02d".format(n)}"
       System.UUID(key).flatMap { id =>

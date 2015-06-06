@@ -23,9 +23,9 @@ trait PermissionCheck
 
   implicit def messagesApi: MessagesApi
 
-  def accessControlRepo: AccessControlRepo
+  def accessControlRepo: AccessControls
 
-  implicit def internalGroupsRepo: InternalGroupsRepo
+  implicit def internalGroupsRepo: InternalGroupsMapping
 
   def check[A](u: User): Future[Option[Boolean]] = {
     for {

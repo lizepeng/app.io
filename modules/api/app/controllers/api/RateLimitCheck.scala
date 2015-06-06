@@ -1,7 +1,7 @@
 package controllers.api
 
 import helpers._
-import models.RateLimitRepo
+import models.RateLimits
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -19,7 +19,7 @@ case class RateLimitCheck(resource: CheckedResource)(
   implicit
   val messagesApi: MessagesApi,
   val configuration: Configuration,
-  val rateLimit: RateLimitRepo
+  val rateLimit: RateLimits
 )
   extends ActionFunction[UserRequest, UserRequest]
   with ExHeaders

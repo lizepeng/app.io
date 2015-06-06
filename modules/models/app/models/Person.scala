@@ -23,8 +23,8 @@ case class Person(
   updated_at: DateTime = DateTime.now
 ) extends HasUUID
 
-sealed class Persons
-  extends CassandraTable[Persons, Person]
+sealed class PersonTable
+  extends CassandraTable[PersonTable, Person]
   with CanonicalNamedModel[Person]
   with CanonicalModel[Person]
   with Logging {
@@ -55,7 +55,7 @@ sealed class Persons
 }
 
 object Person
-  extends Persons
+  extends PersonTable
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
@@ -65,11 +65,11 @@ object Person
   implicit val person_format = Json.format[Person]
 }
 
-class PersonRepo(
+class Persons(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends Persons
-  with ExtCQL[Persons, Person]
+  extends PersonTable
+  with ExtCQL[PersonTable, Person]
   with BasicPlayComponents
   with Cassandra {
 

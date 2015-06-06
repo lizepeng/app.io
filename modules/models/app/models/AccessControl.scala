@@ -29,11 +29,11 @@ case class AccessControl(
 
   override def id = AccessControl.genId(resource, action, principal)
 
-  def save(implicit repo: AccessControlRepo) = repo.save(this)
+  def save(implicit repo: AccessControls) = repo.save(this)
 }
 
-sealed class AccessControls
-  extends CassandraTable[AccessControls, AccessControl]
+sealed class AccessControlTable
+  extends CassandraTable[AccessControlTable, AccessControl]
 
   with CanonicalNamedModel[AccessControl]
   with Logging {
@@ -71,7 +71,7 @@ sealed class AccessControls
 }
 
 object AccessControl
-  extends AccessControls
+  extends AccessControlTable
   with ExceptionDefining {
 
   case class NotFound(id: UUID, res: String, act: String)
@@ -112,11 +112,11 @@ object AccessControl
 
 }
 
-class AccessControlRepo(
+class AccessControls(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends AccessControls
-  with ExtCQL[AccessControls, AccessControl]
+  extends AccessControlTable
+  with ExtCQL[AccessControlTable, AccessControl]
   with BasicPlayComponents
   with Cassandra {
 

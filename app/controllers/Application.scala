@@ -1,7 +1,7 @@
 package controllers
 
 import helpers._
-import models.UserRepo
+import models.Users
 import models.cfs.Path
 import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
@@ -12,7 +12,7 @@ class Application(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
-  val userRepo: UserRepo
+  val userRepo: Users
 )
   extends Controller
   with CanonicalNamed

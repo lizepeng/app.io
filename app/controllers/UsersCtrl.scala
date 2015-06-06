@@ -27,9 +27,9 @@ class UsersCtrl(
   val ES: ElasticSearch
 )(
   implicit
-  val accessControlRepo: AccessControlRepo,
-  val userRepo: UserRepo,
-  internalGroupsRepo: InternalGroupsRepo
+  val accessControlRepo: AccessControls,
+  val userRepo: Users,
+  internalGroupsRepo: InternalGroupsMapping
 )
   extends Secured(UsersCtrl)
   with Controller

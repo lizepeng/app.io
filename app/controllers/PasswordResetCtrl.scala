@@ -4,7 +4,7 @@ import controllers.UsersCtrl.{Password, Rules}
 import controllers.api.Secured
 import helpers._
 import models._
-import models.sys.{SysConfigRepo, SysConfig}
+import models.sys.{SysConfigs, SysConfig}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
@@ -24,11 +24,11 @@ class PasswordResetCtrl(
 )(
   implicit
   val mailService: MailService,
-  val User: UserRepo,
-  val ExpirableLink: ExpirableLinkRepo,
-  val EmailTemplate: EmailTemplateRepo,
-  val sysConfigRepo: SysConfigRepo,
-  internalGroupsRepo: InternalGroupsRepo
+  val User: Users,
+  val ExpirableLink: ExpirableLinks,
+  val EmailTemplate: EmailTemplates,
+  val sysConfigRepo: SysConfigs,
+  internalGroupsRepo: InternalGroupsMapping
 )
   extends Secured(PasswordResetCtrl)
   with Controller

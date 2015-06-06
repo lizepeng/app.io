@@ -14,8 +14,8 @@ import scala.reflect.runtime.universe._
 /**
  * @author zepeng.li@gmail.com
  */
-sealed class SessionData
-  extends CassandraTable[SessionData, UUID]
+sealed class SessionDataTable
+  extends CassandraTable[SessionDataTable, UUID]
   with Logging {
 
   override val tableName = "session_data"
@@ -37,13 +37,13 @@ sealed class SessionData
   override def fromRow(r: Row): UUID = user_id(r)
 }
 
-object SessionData extends SessionData
+object SessionData extends SessionDataTable
 
-class SessionDataDAO(
+class SessionData(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends SessionData
-  with ExtCQL[SessionData, UUID]
+  extends SessionDataTable
+  with ExtCQL[SessionDataTable, UUID]
   with BasicPlayComponents
   with Cassandra {
 

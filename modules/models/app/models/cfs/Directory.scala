@@ -29,7 +29,7 @@ case class Directory(
 ) extends INode {
 
   def save(fileName: String = "")(
-    implicit user: User, Directory: DirectoryRepo, File: FileRepo
+    implicit user: User, Directory: Directories, File: Files
   ): Iteratee[BLK, File] = {
     val f = new File(fileName, path + fileName, user.id, id)
     val ff =
@@ -39,16 +39,16 @@ case class Directory(
   }
 
   def save()
-      (implicit Directory: DirectoryRepo): Future[Directory] = Directory.write(this)
+      (implicit Directory: Directories): Future[Directory] = Directory.write(this)
 
   def list(pager: Pager)
-      (implicit Directory: DirectoryRepo): Future[Page[INode]] = {
+      (implicit Directory: Directories): Future[Page[INode]] = {
     Directory.list(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
   }.map(_.toIterable).map(Page(pager, _))
 
   private def find(path: Seq[String])
-      (implicit Directory: DirectoryRepo): Future[(String, UUID)] = {
+      (implicit Directory: Directories): Future[(String, UUID)] = {
     Enumerator(path: _*) |>>>
       Iteratee.foldM((name, id)) {
         case ((_, parentId), childName) =>
@@ -56,7 +56,7 @@ case class Directory(
       }
   }
 
-  def dir(path: Path)(implicit Directory: DirectoryRepo): Future[Directory] =
+  def dir(path: Path)(implicit Directory: Directories): Future[Directory] =
     if (path.filename.nonEmpty)
       Future.failed(models.cfs.Directory.NotDirectory(path))
     else find(path.parts).flatMap {
@@ -66,7 +66,7 @@ case class Directory(
     }
 
   def file(path: Path)
-      (implicit Directory: DirectoryRepo, File: FileRepo): Future[File] = {
+      (implicit Directory: Directories, File: Files): Future[File] = {
     find(path.parts ++ path.filename).flatMap {
       case (n, i) => File.find(i)(
         _.copy(name = n, path = path)
@@ -75,7 +75,7 @@ case class Directory(
   }
 
   def file(name: String)
-      (implicit Directory: DirectoryRepo, File: FileRepo): Future[File] = {
+      (implicit Directory: Directories, File: Files): Future[File] = {
     Directory.findChild(id, name).flatMap {
       case (n, i) => File.find(i)(
         _.copy(name = n, path = path + name)
@@ -84,26 +84,26 @@ case class Directory(
   }
 
   def mkdir(name: String)
-      (implicit user: User, Directory: DirectoryRepo): Future[Directory] = {
+      (implicit user: User, Directory: Directories): Future[Directory] = {
     new Directory(name, path / name, user.id, id).save()
   }
 
   def mkdir(name: String, uid: UUID)
-      (implicit Directory: DirectoryRepo): Future[Directory] = {
+      (implicit Directory: Directories): Future[Directory] = {
     new Directory(name, path / name, uid, id).save()
   }
 
   def add(inode: INode)
-      (implicit Directory: DirectoryRepo): Future[Directory] = {
+      (implicit Directory: Directories): Future[Directory] = {
     Directory.addChild(this, inode)
   }
 
   def del(inode: INode)
-      (implicit Directory: DirectoryRepo): Future[Directory] = {
+      (implicit Directory: Directories): Future[Directory] = {
     Directory.delChild(this, inode)
   }
 
-  def dir(name: String)(implicit Directory: DirectoryRepo): Future[Directory] =
+  def dir(name: String)(implicit Directory: Directories): Future[Directory] =
     Directory.findChild(id, name).flatMap {
       case (_, i) => Directory.find(i)(
         _.copy(name = name, path = path / name)
@@ -111,7 +111,7 @@ case class Directory(
     }
 
   def dir_!(name: String)
-      (implicit user: User, Directory: DirectoryRepo): Future[Directory] =
+      (implicit user: User, Directory: Directories): Future[Directory] =
     Directory.findChild(id, name).flatMap {
       case (_, i) => Directory.find(i)(
         _.copy(name = name, path = path / name)
@@ -124,11 +124,11 @@ case class Directory(
 /**
  *
  */
-sealed class Directories
-  extends CassandraTable[Directories, Directory]
-  with INodeKey[Directories, Directory]
-  with INodeColumns[Directories, Directory]
-  with DirectoryColumns[Directories, Directory]
+sealed class DirectoryTable
+  extends CassandraTable[DirectoryTable, Directory]
+  with INodeKey[DirectoryTable, Directory]
+  with INodeColumns[DirectoryTable, Directory]
+  with DirectoryColumns[DirectoryTable, Directory]
   with CanonicalNamedModel[Directory]
   with Logging {
 
@@ -147,7 +147,7 @@ sealed class Directories
 }
 
 object Directory
-  extends Directories
+  extends DirectoryTable
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
@@ -164,13 +164,13 @@ object Directory
 
 }
 
-class DirectoryRepo(
+class Directories(
   implicit
-  val INode: INodeRepo,
+  val INode: INodes,
   val basicPlayApi: BasicPlayApi
 )
-  extends Directories
-  with ExtCQL[Directories, Directory]
+  extends DirectoryTable
+  with ExtCQL[DirectoryTable, Directory]
   with BasicPlayComponents
   with Cassandra {
 

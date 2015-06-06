@@ -22,11 +22,11 @@ class AccessControlsCtrl(
   val ES: ElasticSearch
 )(
   implicit
-  val accessControlRepo: AccessControlRepo,
-  val groupRepo: GroupRepo,
-  val User: UserRepo,
-  val rateLimitRepo: RateLimitRepo,
-  internalGroupsRepo: InternalGroupsRepo
+  val accessControlRepo: AccessControls,
+  val groupRepo: Groups,
+  val User: Users,
+  val rateLimitRepo: RateLimits,
+  internalGroupsRepo: InternalGroupsMapping
 )
   extends Secured(AccessControlsCtrl)
   with Controller

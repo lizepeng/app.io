@@ -31,15 +31,15 @@ case class File(
   is_directory: Boolean = false
 ) extends INode {
 
-  def read(offset: Long = 0)(implicit IndirectBlock: IndirectBlockRepo): Enumerator[BLK] =
+  def read(offset: Long = 0)(implicit IndirectBlock: IndirectBlocks): Enumerator[BLK] =
     if (offset == 0) IndirectBlock.read(id)
     else IndirectBlock.read(this, offset)
 
   def save()(
-    implicit File: FileRepo
+    implicit File: Files
   ): Iteratee[BLK, File] = File.streamWriter(this)
 
-  override def purge()(implicit Directory: DirectoryRepo, File: FileRepo) = {
+  override def purge()(implicit Directory: Directories, File: Files) = {
     super.purge().andThen { case _ => File.purge(id) }
   }
 }
@@ -47,11 +47,11 @@ case class File(
 /**
  *
  */
-sealed class Files
-  extends CassandraTable[Files, File]
-  with INodeKey[Files, File]
-  with INodeColumns[Files, File]
-  with FileColumns[Files, File]
+sealed class FileTable
+  extends CassandraTable[FileTable, File]
+  with INodeKey[FileTable, File]
+  with INodeColumns[FileTable, File]
+  with FileColumns[FileTable, File]
   with CanonicalNamedModel[File]
   with Logging {
 
@@ -73,7 +73,7 @@ sealed class Files
 }
 
 object File
-  extends Files
+  extends FileTable
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
@@ -81,14 +81,14 @@ object File
 
 }
 
-class FileRepo(
+class Files(
  implicit
-  val IndirectBlock: IndirectBlockRepo,
-  val Block: BlockRepo,
+  val IndirectBlock: IndirectBlocks,
+  val Block: Blocks,
   val basicPlayApi: BasicPlayApi
 )
-  extends Files
-  with ExtCQL[Files, File]
+  extends FileTable
+  with ExtCQL[FileTable, File]
   with BasicPlayComponents
   with Cassandra {
 

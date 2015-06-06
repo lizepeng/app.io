@@ -22,8 +22,8 @@ case class Block(
   data: ByteBuffer
 )
 
-sealed class Blocks
-  extends CassandraTable[Blocks, Block] {
+sealed class BlockTable
+  extends CassandraTable[BlockTable, Block] {
 
   override val tableName = "blocks"
 
@@ -43,13 +43,13 @@ sealed class Blocks
   }
 }
 
-object Block extends Blocks {
+object Block extends BlockTable {
 
   type BLK = Array[Byte]
 }
 
-class BlockRepo
-  extends Blocks
+class Blocks
+  extends BlockTable
   with Cassandra {
 
   import Block._

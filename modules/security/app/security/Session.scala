@@ -18,7 +18,7 @@ import scala.util._
  */
 trait Session {
 
-  def userRepo: UserRepo
+  def userRepo: Users
 
   private val user_id_key   = "usr_id"
   private val user_salt_key = "usr_salt"

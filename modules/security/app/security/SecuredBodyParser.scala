@@ -19,9 +19,9 @@ case class SecuredBodyParser[A](
   val resource: CheckedResource,
   val langs: Langs,
   val messagesApi: MessagesApi,
-  val accessControlRepo: AccessControlRepo,
-  val userRepo: UserRepo,
-  val internalGroupsRepo: InternalGroupsRepo
+  val accessControlRepo: AccessControls,
+  val userRepo: Users,
+  val internalGroupsRepo: InternalGroupsMapping
 ) extends PermissionCheckedBodyParser[A] {
 
   override def parser(req: RequestHeader)(

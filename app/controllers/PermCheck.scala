@@ -17,9 +17,9 @@ object PermCheck {
     implicit
     langs: Langs,
     messagesApi: MessagesApi,
-    accessControlRepo: AccessControlRepo,
-    userRepo: UserRepo,
-    internalGroupsRepo: InternalGroupsRepo
+    accessControlRepo: AccessControls,
+    userRepo: Users,
+    internalGroupsRepo: InternalGroupsMapping
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
     apply(_.Anything, onDenied)(
       CheckedResource(resource),
@@ -40,9 +40,9 @@ object PermCheck {
     resource: CheckedResource,
     langs: Langs,
     messagesApi: MessagesApi,
-    accessControlRepo: AccessControlRepo,
-    userRepo: UserRepo,
-    internalGroupsRepo: InternalGroupsRepo
+    accessControlRepo: AccessControls,
+    userRepo: Users,
+    internalGroupsRepo: InternalGroupsMapping
   ): ActionBuilder[UserRequest] =
     MaybeUserAction() andThen
       AuthCheck andThen

@@ -19,7 +19,7 @@ case class JsUser(
   ext_groups: Set[UUID]
 ) {
 
-  def toUser(implicit internalGroupsRepo: InternalGroupsRepo): User = User(
+  def toUser(implicit internalGroupsRepo: InternalGroupsMapping): User = User(
     id = id,
     name = name,
     email = email,

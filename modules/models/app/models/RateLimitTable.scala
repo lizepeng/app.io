@@ -14,8 +14,8 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-sealed class RateLimits
-  extends CassandraTable[RateLimits, UUID]
+sealed class RateLimitTable
+  extends CassandraTable[RateLimitTable, UUID]
   with Logging {
 
   override val tableName = "rate_limits"
@@ -38,13 +38,13 @@ sealed class RateLimits
   override def fromRow(r: Row): UUID = user_id(r)
 }
 
-object RateLimitRepo extends RateLimits
+object RateLimits extends RateLimitTable
 
-class RateLimitRepo(
+class RateLimits(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends RateLimits
-  with ExtCQL[RateLimits, UUID]
+  extends RateLimitTable
+  with ExtCQL[RateLimitTable, UUID]
   with BasicPlayComponents
   with Cassandra {
 

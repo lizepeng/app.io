@@ -18,10 +18,10 @@ class SearchCtrl(
   val ES: ElasticSearch
 )(
   implicit
-  val accessControlRepo: AccessControlRepo,
-  val User: UserRepo,
-  val rateLimitRepo: RateLimitRepo,
-  internalGroupsRepo: InternalGroupsRepo
+  val accessControlRepo: AccessControls,
+  val User: Users,
+  val rateLimitRepo: RateLimits,
+  internalGroupsRepo: InternalGroupsMapping
 )
   extends Secured(SearchCtrl)
   with Controller

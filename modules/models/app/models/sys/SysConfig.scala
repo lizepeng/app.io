@@ -23,7 +23,7 @@ trait SysConfig {
 
     def config[T](key: String, default: T)(
       implicit serializer: Serializer[T],
-      sysConfig: SysConfigRepo
+      sysConfig: SysConfigs
     ) = {
       sysConfig.getOrElseUpdate(
         canonicalName, key, default
@@ -31,7 +31,7 @@ trait SysConfig {
     }
 
     def UUID(key: String)(
-      implicit sysConfig: SysConfigRepo
+      implicit sysConfig: SysConfigs
     ) = {
       sysConfig.getOrElseUpdate(
         canonicalName, key, UUIDs.timeBased()
@@ -47,8 +47,8 @@ case class SysConfigEntry(
   value: String
 )
 
-sealed class SysConfigs
-  extends CassandraTable[SysConfigs, SysConfigEntry]
+sealed class SysConfigTable
+  extends CassandraTable[SysConfigTable, SysConfigEntry]
   with Logging {
 
   override val tableName = "system_config"
@@ -68,7 +68,7 @@ sealed class SysConfigs
   }
 }
 
-object SysConfig extends SysConfigs {
+object SysConfig extends SysConfigTable {
 
   trait Serializer[T] {
 
@@ -90,11 +90,11 @@ object SysConfig extends SysConfigs {
   }
 }
 
-class SysConfigRepo(
+class SysConfigs(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends SysConfigs
-  with ExtCQL[SysConfigs, SysConfigEntry]
+  extends SysConfigTable
+  with ExtCQL[SysConfigTable, SysConfigEntry]
   with BasicPlayComponents
   with Cassandra {
 

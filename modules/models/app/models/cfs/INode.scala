@@ -33,7 +33,7 @@ trait INode extends HasUUID {
   lazy val updated_at: DateTime = created_at
 
   def rename(newName: String, force: Boolean = false)(
-    implicit Directory: DirectoryRepo
+    implicit Directory: Directories
   )
   : Future[INode] = {
     Directory.find(parent).flatMap {
@@ -42,7 +42,7 @@ trait INode extends HasUUID {
   }
 
   def purge()(
-    implicit Directory: DirectoryRepo, File: FileRepo
+    implicit Directory: Directories, File: Files
   ): Future[Directory] = {
     Directory.find(parent).flatMap {
       parent => parent.del(this)
@@ -122,12 +122,12 @@ trait DirectoryColumns[T <: CassandraTable[T, R], R] {
 /**
  *
  */
-sealed class INodes
-  extends CassandraTable[INodes, INode]
-  with INodeKey[INodes, INode]
-  with INodeColumns[INodes, INode]
-  with FileColumns[INodes, INode]
-  with DirectoryColumns[INodes, INode]
+sealed class INodeTable
+  extends CassandraTable[INodeTable, INode]
+  with INodeKey[INodeTable, INode]
+  with INodeColumns[INodeTable, INode]
+  with FileColumns[INodeTable, INode]
+  with DirectoryColumns[INodeTable, INode]
   with Logging {
 
   override def fromRow(r: Row): INode = {
@@ -136,13 +136,13 @@ sealed class INodes
   }
 }
 
-object INode extends INodes
+object INode extends INodeTable
 
-class INodeRepo(
+class INodes(
   implicit val basicPlayApi: BasicPlayApi
 )
-  extends INodes
-  with ExtCQL[INodes, INode]
+  extends INodeTable
+  with ExtCQL[INodeTable, INode]
   with BasicPlayComponents
   with Cassandra {
 

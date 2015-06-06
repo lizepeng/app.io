@@ -29,15 +29,15 @@ class CFSCtrl(
   val bandwidthService: BandwidthService
 )(
   implicit val
-  accessControlRepo: AccessControlRepo,
-  userRepo: UserRepo,
-  rateLimitRepo: RateLimitRepo,
+  accessControlRepo: AccessControls,
+  userRepo: Users,
+  rateLimitRepo: RateLimits,
   CFS: CFS,
   Home: Home,
-  internalGroupsRepo: InternalGroupsRepo,
-  directoryRepo: DirectoryRepo,
-  fileRepo: FileRepo,
-  IndirectBlock: IndirectBlockRepo
+  internalGroupsRepo: InternalGroupsMapping,
+  directoryRepo: Directories,
+  fileRepo: Files,
+  IndirectBlock: IndirectBlocks
 )
   extends Secured(CFSCtrl)
   with Controller

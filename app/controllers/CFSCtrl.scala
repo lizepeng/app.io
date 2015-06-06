@@ -18,12 +18,12 @@ class CFSCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
-  val accessControlRepo: AccessControlRepo,
-  val userRepo: UserRepo,
-  internalGroupsRepo: InternalGroupsRepo,
+  val accessControlRepo: AccessControls,
+  val userRepo: Users,
+  internalGroupsRepo: InternalGroupsMapping,
   Home: Home,
-  Directory: DirectoryRepo,
-  File: FileRepo
+  Directory: Directories,
+  File: Files
 )
   extends Secured(CFSCtrl)
   with Controller

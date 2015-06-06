@@ -2,7 +2,7 @@ package models.cfs
 
 import com.websudos.phantom.dsl._
 import helpers._
-import models.sys.{SysConfig, SysConfigRepo}
+import models.sys.{SysConfig, SysConfigs}
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -19,8 +19,8 @@ object CFS
 
 class CFS(
   implicit
-  val sysConfig: SysConfigRepo,
-  val iNodeRepo: INodeRepo,
+  val sysConfig: SysConfigs,
+  val iNodeRepo: INodes,
   val basicPlayApi: BasicPlayApi
 )
   extends CanonicalNamed
@@ -28,7 +28,7 @@ class CFS(
 
   override val basicName = "files"
 
-  val Directory: DirectoryRepo = new DirectoryRepo
+  val Directory: Directories = new Directories
 
   //TODO
   lazy val root: Future[Directory] =
