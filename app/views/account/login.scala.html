@@ -13,7 +13,7 @@
     }
   }
 
-  @form(action = routes.Sessions.create(), 'class -> "signin-form") {
+  @form(action = routes.SessionsCtrl.create(), 'class -> "signin-form") {
 
     <h3 class="signin-form-heading">@MSG("sign.in.head")</h3>
 
@@ -42,7 +42,7 @@
       @MSG("sign.in")
     </button>
 
-    <a href="@routes.PasswordReset.nnew()" title="">
+    <a href="@routes.PasswordResetCtrl.nnew()" title="">
       <span class="help-inline">@MSG("user.pwd.forgot")</span>
     </a>
   }

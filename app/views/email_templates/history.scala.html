@@ -9,9 +9,9 @@ implicit req: UserRequest[_], messages: Messages)
     <!-- Nav tabs -->
     <ul class="nav nav-tabs">
       <li role="presentation">
-        <a href="@routes.EmailTemplates.edit(tmpl.id, tmpl.lang)" aria-controls="edit">
+        <a href="@routes.EmailTemplatesCtrl.edit(tmpl.id, tmpl.lang)" aria-controls="edit">
           <i class="fa fa-edit fa-lg"></i>
-          @EmailTemplates.vmsg("head")
+          @EmailTemplatesCtrl.vmsg("head")
         </a>
       </li>
       <li role="presentation" class="active">
@@ -58,7 +58,7 @@ implicit req: UserRequest[_], messages: Messages)
                 @usrs.get(h.updated_by).map(_.email).getOrElse("")
               </td>
               <td>
-                <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang, Some(h.updated_at))">
+                <a href="@routes.EmailTemplatesCtrl.show(tmpl.id, tmpl.lang, Some(h.updated_at))">
                   <i class="fa fa-arrow-circle-right fa-lg"></i>
                 </a>
               </td>
@@ -66,7 +66,7 @@ implicit req: UserRequest[_], messages: Messages)
           }
         </tbody>
       </table>
-      @{_pager(page, p => routes.EmailTemplates.history(tmpl.id, tmpl.lang, p))}
+      @{_pager(page, p => routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang, p))}
     </div>
 
   </div>

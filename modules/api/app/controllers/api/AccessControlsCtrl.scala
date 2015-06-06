@@ -17,7 +17,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class AccessControls(
+class AccessControlsCtrl(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
@@ -28,7 +28,7 @@ class AccessControls(
   val rateLimitRepo: RateLimitRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(AccessControls)
+  extends Secured(AccessControlsCtrl)
   with Controller
   with BasicPlayComponents
   with I18nSupport
@@ -39,7 +39,7 @@ class AccessControls(
     PermCheck(_.Index).async { implicit req =>
       (ES.Search(q, p) in AccessControl future()).map { page =>
         Ok(page).withHeaders(
-          linkHeader(page, routes.Groups.index(Nil, q, _))
+          linkHeader(page, routes.AccessControlsCtrl.index(q, _))
         )
       }
     }
@@ -70,13 +70,13 @@ class AccessControls(
 
             Created(_resp._1)
               .withHeaders(
-                LOCATION -> routes.AccessControls.show(
+                LOCATION -> routes.AccessControlsCtrl.show(
                   saved.principal, saved.resource, saved.action
                 ).url
               )
           }.recover {
-            case e: models.User.NotFound  => BadRequest(JsonMessage(e))
-            case e: Group.NotFound => BadRequest(JsonMessage(e))
+            case e: models.User.NotFound => BadRequest(JsonMessage(e))
+            case e: Group.NotFound       => BadRequest(JsonMessage(e))
           }
         }
       }
@@ -123,4 +123,4 @@ class AccessControls(
   } yield result
 }
 
-object AccessControls extends Secured(AccessControl)
+object AccessControlsCtrl extends Secured(AccessControl)

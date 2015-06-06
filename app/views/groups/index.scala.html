@@ -4,14 +4,14 @@ implicit req: UserRequest[_], messages: Messages)
 @import common._
 @import helper._
 
-@layouts.base(Groups.vmsg("title")) {
+@layouts.base(GroupsCtrl.vmsg("title")) {
 
   @ng._alert()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-group fa-lg fa-fw"></i>
-      @Groups.vmsg("head")
+      @GroupsCtrl.vmsg("head")
     </h2>
   </div>
 
@@ -41,13 +41,13 @@ implicit req: UserRequest[_], messages: Messages)
           <tbody>
             <tr class="ng-cloak" ng-repeat="grp in GroupList.groups">
               <td class="hidden-xs">
-                <a ng-href="{{jsRoutes.controllers.Groups.show(grp.id).url}}">
+                <a ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}">
                   <code>{{ grp.id }}</code>
                 </a>
               </td>
 
               <td>
-                <a ng-href="{{jsRoutes.controllers.Groups.show(grp.id).url}}" class="hidden-sm hidden-md hidden-lg">
+                <a ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}" class="hidden-sm hidden-md hidden-lg">
                   <i class="fa fa-info-circle fa-lg text-info"></i>
                 </a>
 
@@ -83,20 +83,20 @@ implicit req: UserRequest[_], messages: Messages)
             'maxLength    -> 64,
             'minLength    -> 2,
             'tabindex     -> 1,
-            'placeholder  -> Groups.vmsg("name.placeholder"),
+            'placeholder  -> GroupsCtrl.vmsg("name.placeholder"),
             'autocomplete -> "off",
             Symbol("ng-model") -> "group.name"
           )
 
           @ng._form_control("description",
             'tabindex    -> 2,
-            'placeholder -> Groups.vmsg("description.placeholder"),
+            'placeholder -> GroupsCtrl.vmsg("description.placeholder"),
             Symbol("ng-model") -> "group.description"
           )
 
           <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid || !group.name || group.name === ''">
             <i class="fa fa-plus"></i>
-            @Groups.vmsg("new.group")
+            @GroupsCtrl.vmsg("new.group")
           </button>
         </form>
       </div>
@@ -120,8 +120,8 @@ implicit req: UserRequest[_], messages: Messages)
 
 @jsRoutes = {
   @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Groups.show,
-    routes.javascript.Groups.checkName
+    routes.javascript.GroupsCtrl.show,
+    routes.javascript.GroupsCtrl.checkName
   )
 }
 
@@ -131,8 +131,8 @@ implicit req: UserRequest[_], messages: Messages)
       GroupList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.Groups.index(pager.next).toString)',
-        prevPage : '@Html(routes.Groups.index(pager.prev).toString)'
+        nextPage : '@Html(routes.GroupsCtrl.index(pager.next).toString)',
+        prevPage : '@Html(routes.GroupsCtrl.index(pager.prev).toString)'
       });
     }]);
   </script>

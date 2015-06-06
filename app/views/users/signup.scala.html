@@ -24,16 +24,16 @@
         }
       }
 
-      @form(action = routes.Users.create(), 'class -> "form-signup") {
+      @form(action = routes.UsersCtrl.create(), 'class -> "form-signup") {
 
         @{_input_email(fm("email"),
-          Symbol("data-autocheck-url") -> routes.Users.checkEmail,
+          Symbol("data-autocheck-url") -> routes.UsersCtrl.checkEmail,
           'tabindex    -> 1
           )(_fc_form_group)
         }
 
         @{_input_password(fm("password.original"),
-          Symbol("data-autocheck-url") -> routes.Users.checkPassword,
+          Symbol("data-autocheck-url") -> routes.UsersCtrl.checkPassword,
           'tabindex    -> 2
           )(_fc_form_group)
         }

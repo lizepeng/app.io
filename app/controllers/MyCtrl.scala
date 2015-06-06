@@ -1,6 +1,6 @@
 package controllers
 
-import controllers.Users.{Password, Rules}
+import controllers.UsersCtrl.{Password, Rules}
 import controllers.api.Secured
 import elasticsearch.ElasticSearch
 import helpers._
@@ -18,7 +18,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class My(
+class MyCtrl(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
@@ -88,7 +88,7 @@ class My(
             req.user.savePassword(
               success.new_password.original
             ).map { user =>
-              Redirect(routes.My.account()).flashing {
+              Redirect(routes.MyCtrl.account()).flashing {
                 AlertLevel.Info -> msg("password.changed")
               }.createSession(rememberMe = false)(user)
             }

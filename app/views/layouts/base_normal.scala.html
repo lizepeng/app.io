@@ -131,15 +131,15 @@
       </a>
       <ul class="dropdown-menu" role="menu">
         <li>
-          <a href="@routes.Files.index(Path())">
+          <a href="@routes.CFSCtrl.index(Path())">
             <i class="fa fa-fw fa-hdd-o"></i>
-            @MSG("controllers.files.name")
+            @MSG(CFSCtrl.vmsg("name"))
           </a>
         </li>
         <li>
-          <a href="@routes.EmailTemplates.index()">
+          <a href="@routes.EmailTemplatesCtrl.index()">
             <i class="fa fa-fw fa-envelope-square"></i>
-            @MSG("controllers.email_templates.name")
+            @MSG(EmailTemplatesCtrl.vmsg("name"))
           </a>
         </li>
       </ul>
@@ -154,13 +154,13 @@
   @req.maybeUser match {
     case None => {
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="@routes.Sessions.nnew">@MSG("sign.in")</a></li>
+        <li><a href="@routes.SessionsCtrl.nnew">@MSG("sign.in")</a></li>
       </ul>
     }
     case Some(u) => {
       <ul class="nav navbar-nav user-nav navbar-right">
         <li>
-          <a href="@routes.My.dashboard" title="">
+          <a href="@routes.MyCtrl.dashboard" title="">
             <span class="hidden-xs">
               @u.email
             </span>
@@ -176,7 +176,7 @@
         <li class="hidden-xs"><a href="#" >
           <i class="fa fa-inbox fa-lg"></i>
         </a></li>
-        <li><a href="@routes.My.profile">
+        <li><a href="@routes.MyCtrl.profile">
           <i class="fa fa-cog fa-lg"></i>
           <span class="hidden-sm hidden-md hidden-lg">
             Settings
@@ -184,7 +184,7 @@
         </a></li>
         <li class="divider"></li>
         <li>
-          @form(routes.Sessions.destroy, 'class -> "navbar-form") {
+          @form(routes.SessionsCtrl.destroy, 'class -> "navbar-form") {
             <button type="submit" class="btn form-inline-btn">
               <i class="fa fa-sign-out fa-lg"></i>
               <span class="hidden-sm hidden-md hidden-lg">

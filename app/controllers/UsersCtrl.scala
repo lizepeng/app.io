@@ -2,7 +2,7 @@ package controllers
 
 import java.util.UUID
 
-import controllers.Users.{Password, Rules}
+import controllers.UsersCtrl.{Password, Rules}
 import controllers.api.Secured
 import elasticsearch.ElasticSearch
 import helpers._
@@ -22,7 +22,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class Users(
+class UsersCtrl(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
@@ -31,7 +31,7 @@ class Users(
   val userRepo: UserRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(Users)
+  extends Secured(UsersCtrl)
   with Controller
   with security.Session
   with BasicPlayComponents
@@ -68,7 +68,7 @@ class Users(
   def nnew = MaybeUserAction().apply { implicit req =>
     req.maybeUser match {
       case None    => Ok(views.html.users.signup(signUpFM))
-      case Some(u) => Redirect(routes.My.dashboard())
+      case Some(u) => Redirect(routes.MyCtrl.dashboard())
     }
   }
 
@@ -92,7 +92,7 @@ class Users(
         _____ <- ES.Index(saved) into User
       } yield saved).map { case saved =>
         Redirect {
-          routes.My.dashboard()
+          routes.MyCtrl.dashboard()
         }.createSession(rememberMe = false)(saved)
       }.recover {
         case e: User.EmailTaken =>
@@ -131,7 +131,7 @@ class Users(
 
 }
 
-object Users
+object UsersCtrl
   extends Secured(User)
   with ViewMessages {
 

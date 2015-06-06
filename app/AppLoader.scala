@@ -1,4 +1,4 @@
-import controllers.{AccessControls, Application, EmailTemplates, Files, Groups, Users, _}
+import controllers.{AccessControlsCtrl, Application, EmailTemplatesCtrl, CFSCtrl, GroupsCtrl, UsersCtrl, _}
 import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
@@ -66,15 +66,15 @@ class Components(context: Context)
     Seq(
       Schemas.create,
       //TODO
-      new api.Users(basicPlayApi, elasticSearch).dropIndexIfEmpty,
-      new api.Groups(basicPlayApi, elasticSearch).dropIndexIfEmpty,
-      new api.AccessControls(basicPlayApi, elasticSearch).dropIndexIfEmpty,
+      new api.UsersCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
+      new api.GroupsCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
+      new api.AccessControlsCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
       internalGroupsRepo.initialize.flatMap { done =>
-        if (done) new api.Groups(basicPlayApi, elasticSearch).reindex
+        if (done) new api.GroupsCtrl(basicPlayApi, elasticSearch).reindex
         else Future.successful(false)
       },
-      Groups.initialize,
-      AccessControls.initialize
+      GroupsCtrl.initialize,
+      AccessControlsCtrl.initialize
     )
   ).onSuccess {
     case _ => Logger.info("System has started")
@@ -84,27 +84,27 @@ class Components(context: Context)
     new RegisteredSecured(
       messagesApi,
       Seq(
-        Files,
-        Groups,
-        Users,
-        EmailTemplates,
-        AccessControls,
-        controllers.api.Groups,
-        controllers.api.Users,
-        controllers.api.Search,
-        controllers.api.Files,
-        controllers.api.AccessControls
+        CFSCtrl,
+        GroupsCtrl,
+        UsersCtrl,
+        EmailTemplatesCtrl,
+        AccessControlsCtrl,
+        controllers.api.GroupsCtrl,
+        controllers.api.UsersCtrl,
+        controllers.api.SearchCtrl,
+        controllers.api.CFSCtrl,
+        controllers.api.AccessControlsCtrl
       )
     )
   }
 
   private def buildApiRouter = new _root_.api.Routes(
     httpErrorHandler,
-    new api.Search(basicPlayApi, elasticSearch),
-    new api.Groups(basicPlayApi, elasticSearch),
-    new api.Users(basicPlayApi, elasticSearch),
-    new api.AccessControls(basicPlayApi, elasticSearch),
-    new api.Files(basicPlayApi, bandwidth)
+    new api.SearchCtrl(basicPlayApi, elasticSearch),
+    new api.GroupsCtrl(basicPlayApi, elasticSearch),
+    new api.UsersCtrl(basicPlayApi, elasticSearch),
+    new api.AccessControlsCtrl(basicPlayApi, elasticSearch),
+    new api.CFSCtrl(basicPlayApi, bandwidth)
   )
 
   private def buildSocketsRouter = new _root_.sockets.Routes(
@@ -117,16 +117,16 @@ class Components(context: Context)
     apiRouter,
     socketsRouter,
     new Application(basicPlayApi),
-    new Chat(basicPlayApi),
+    new ChatCtrl(basicPlayApi),
     new Assets(httpErrorHandler),
-    new Files(basicPlayApi),
-    new Sessions(basicPlayApi),
-    new Users(basicPlayApi, elasticSearch),
-    new My(basicPlayApi, elasticSearch),
-    new Groups(basicPlayApi),
-    new PasswordReset(basicPlayApi)(mailService, userRepo, expirableLinkRepo, emailTemplateRepo, sysConfigRepo, internalGroupsRepo),
-    new EmailTemplates(basicPlayApi),
-    new AccessControls(basicPlayApi)
+    new CFSCtrl(basicPlayApi),
+    new SessionsCtrl(basicPlayApi),
+    new UsersCtrl(basicPlayApi, elasticSearch),
+    new MyCtrl(basicPlayApi, elasticSearch),
+    new GroupsCtrl(basicPlayApi),
+    new PasswordResetCtrl(basicPlayApi)(mailService, userRepo, expirableLinkRepo, emailTemplateRepo, sysConfigRepo, internalGroupsRepo),
+    new EmailTemplatesCtrl(basicPlayApi),
+    new AccessControlsCtrl(basicPlayApi)
   )
 
 }

@@ -15,7 +15,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-case class RateLimit(resource: CheckedResource)(
+case class RateLimitCheck(resource: CheckedResource)(
   implicit
   val messagesApi: MessagesApi,
   val configuration: Configuration,

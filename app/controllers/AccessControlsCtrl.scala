@@ -12,7 +12,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class AccessControls(
+class AccessControlsCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
@@ -21,7 +21,7 @@ class AccessControls(
   val userRepo: UserRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(AccessControls)
+  extends Secured(AccessControlsCtrl)
   with Controller
   with BasicPlayComponents
   with I18nSupport {
@@ -33,7 +33,7 @@ class AccessControls(
 
 }
 
-object AccessControls
+object AccessControlsCtrl
   extends Secured(AccessControl)
   with ViewMessages {
 

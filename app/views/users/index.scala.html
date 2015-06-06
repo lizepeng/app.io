@@ -4,14 +4,14 @@ implicit req: UserRequest[_], messages: Messages)
 @import common._
 @import helper._
 
-@layouts.base(Users.vmsg("title")) {
+@layouts.base(UsersCtrl.vmsg("title")) {
 
   @ng._alert()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-user fa-lg fa-fw"></i>
-      @Users.vmsg("head")
+      @UsersCtrl.vmsg("head")
     </h2>
   </div>
 
@@ -21,14 +21,14 @@ implicit req: UserRequest[_], messages: Messages)
       <div class="col-xs-8 col-xs-offset-4 col-sm-6 col-sm-offset-6">
         <div class="form-group">
           <label class="sr-only" for="search-users">
-            @Users.vmsg("search.label")
+            @UsersCtrl.vmsg("search.label")
           </label>
           <div class="input-group">
             <div class="input-group-addon">
               <i class="fa fa-search"></i>
             </div>
             <input type="search" class="form-control" id="search-users"
-              placeholder="@Users.vmsg("search.label")"
+              placeholder="@UsersCtrl.vmsg("search.label")"
               autocomplete="off"
               ng-model="keyword">
           </div>
@@ -58,7 +58,7 @@ implicit req: UserRequest[_], messages: Messages)
           <tbody>
             <tr class="ng-cloak" ng-repeat="usr in UserList.users">
               <td class="hidden-xs">
-                <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
+                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(usr.id).url}}">
                   <code>{{ usr.id }}</code>
                 </a>
               </td>
@@ -66,7 +66,7 @@ implicit req: UserRequest[_], messages: Messages)
                 {{ usr.email }}
               </td>
               <td class="visible-xs">
-                <a ng-href="{{jsRoutes.controllers.Users.show(usr.id).url}}">
+                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(usr.id).url}}">
                   {{ usr.email }}
                 </a>
               </td>
@@ -92,7 +92,7 @@ implicit req: UserRequest[_], messages: Messages)
             '_type        -> "email",
             'email        -> None,
             'tabindex     -> 1,
-            'placeholder  -> Users.vmsg("email.placeholder"),
+            'placeholder  -> UsersCtrl.vmsg("email.placeholder"),
             'autocomplete -> "off",
             Symbol("ng-model") -> "user.email"
           )
@@ -101,14 +101,14 @@ implicit req: UserRequest[_], messages: Messages)
             'maxLength    -> 64,
             'minLength    -> 2,
             'tabindex    -> 2,
-            'placeholder -> Users.vmsg("name.placeholder"),
+            'placeholder -> UsersCtrl.vmsg("name.placeholder"),
             Symbol("ng-model") -> "user.name"
           )
 
           <button type="submit" class="btn btn-success" ng-click="UserList.create(user)"
             ng-disabled="form.$invalid || !user.email || user.email === '' || !user.name || user.name === ''">
             <i class="fa fa-user-plus"></i>
-            @Users.vmsg("new.user")
+            @UsersCtrl.vmsg("new.user")
           </button>
         </form>
       </div>
@@ -129,7 +129,7 @@ implicit req: UserRequest[_], messages: Messages)
 
 @jsRoutes = {
   @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Users.show
+    routes.javascript.UsersCtrl.show
   )
 }
 
@@ -139,8 +139,8 @@ implicit req: UserRequest[_], messages: Messages)
       UserList.options = {
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.Users.index(pager.next).toString)',
-        prevPage : '@Html(routes.Users.index(pager.prev).toString)'
+        nextPage : '@Html(routes.UsersCtrl.index(pager.next).toString)',
+        prevPage : '@Html(routes.UsersCtrl.index(pager.prev).toString)'
       };
     }]);
   </script>

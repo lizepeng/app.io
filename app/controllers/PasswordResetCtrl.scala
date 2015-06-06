@@ -1,6 +1,6 @@
 package controllers
 
-import controllers.Users.{Password, Rules}
+import controllers.UsersCtrl.{Password, Rules}
 import controllers.api.Secured
 import helpers._
 import models._
@@ -19,7 +19,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class PasswordReset(
+class PasswordResetCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
@@ -30,7 +30,7 @@ class PasswordReset(
   val sysConfigRepo: SysConfigRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(PasswordReset)
+  extends Secured(PasswordResetCtrl)
   with Controller
   with CanonicalNameBasedMessages
   with SysConfig
@@ -123,7 +123,7 @@ class PasswordReset(
         tmpl <- getEmailTemplate(s"$basicName.email2")
       } yield (user, tmpl)).map { case (user, tmpl) =>
         mailService.schedule("support", tmpl, user)
-        Redirect(routes.Sessions.nnew()).flashing(
+        Redirect(routes.SessionsCtrl.nnew()).flashing(
           AlertLevel.Info -> msg("password.changed")
         )
       }.recover {
@@ -177,7 +177,7 @@ class PasswordReset(
   }
 }
 
-object PasswordReset extends CanonicalNamed with ViewMessages {
+object PasswordResetCtrl extends CanonicalNamed with ViewMessages {
 
   override val basicName = "password_reset"
 }

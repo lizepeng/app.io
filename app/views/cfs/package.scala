@@ -7,7 +7,7 @@ import play.api.libs.MimeTypes
 /**
  * @author zepeng.li@gmail.com
  */
-package object files {
+package object cfs {
 
   implicit class RichFile(val f: models.cfs.File) extends AnyVal {
 

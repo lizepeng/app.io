@@ -13,7 +13,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class Search(
+class SearchCtrl(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
@@ -23,7 +23,7 @@ class Search(
   val rateLimitRepo: RateLimitRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(Search)
+  extends Secured(SearchCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
@@ -47,10 +47,10 @@ class Search(
         ES.Multi(defs: _*).future()
           .map(PageMSResp(p, _)).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.Search.index(types, q, _))
+            linkHeader(page, routes.SearchCtrl.index(types, q, _))
           )
         }
     }
 }
 
-object Search extends Secured("search")
+object SearchCtrl extends Secured("search")

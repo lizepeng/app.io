@@ -21,7 +21,7 @@ import scala.util.Success
 /**
  * @author zepeng.li@gmail.com
  */
-class Groups(
+class GroupsCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
@@ -30,7 +30,7 @@ class Groups(
   val userRepo: UserRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(Groups)
+  extends Secured(GroupsCtrl)
   with Controller
   with BasicPlayComponents
   with I18nSupport {
@@ -63,7 +63,7 @@ class Groups(
 
 }
 
-object Groups
+object GroupsCtrl
   extends Secured(Group)
   with ViewMessages
   with SysConfig

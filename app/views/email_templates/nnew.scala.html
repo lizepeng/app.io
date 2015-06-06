@@ -4,7 +4,7 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
 @import common._
 @import helper._
 
-@layouts.base(EmailTemplates.vmsg("title")){
+@layouts.base(EmailTemplatesCtrl.vmsg("title")){
 
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
@@ -16,17 +16,17 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">
-          @EmailTemplates.vmsg("head")
+          @EmailTemplatesCtrl.vmsg("head")
         </h3>
       </div>
       <div class="panel-body">
-        @form(action = routes.EmailTemplates.create()) {
+        @form(action = routes.EmailTemplatesCtrl.create()) {
 
           <div class="row">
             <div class="col-xs-12 col-sm-9">
               @{_input_text(fm("name"),
                 '_label      -> MSG("name"),
-                'placeholder -> EmailTemplates.vmsg("name.place_holder"),
+                'placeholder -> EmailTemplatesCtrl.vmsg("name.place_holder"),
                 'tabindex    -> 1
                 )(_fc_form_group)
               }
@@ -45,7 +45,7 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
             <div class="col-xs-12">
               @{_input_text(fm("subject"),
                 '_label      -> MSG("subject"),
-                'placeholder -> EmailTemplates.vmsg("subject.place_holder"),
+                'placeholder -> EmailTemplatesCtrl.vmsg("subject.place_holder"),
                 'tabindex    -> 3
                 )(_fc_form_group)
               }
@@ -56,7 +56,7 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
             <div class="col-xs-12">
               @{_textarea(fm("text"),
                 '_label      -> MSG("text"),
-                'placeholder -> EmailTemplates.vmsg("text.sample"),
+                'placeholder -> EmailTemplatesCtrl.vmsg("text.sample"),
                 'rows        -> 24,
                 'tabindex    -> 4
                 )(_fc_form_group)

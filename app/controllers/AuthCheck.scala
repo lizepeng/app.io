@@ -9,5 +9,5 @@ import security._
 object AuthCheck extends AuthorizationCheck {
 
   override def onUnauthorized(req: RequestHeader) =
-    Results.Redirect(routes.Sessions.nnew())
+    Results.Redirect(routes.SessionsCtrl.nnew())
 }

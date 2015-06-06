@@ -4,7 +4,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 @import common._
 @import helper._
 
-@layouts.base(AccessControls.vmsg("title")) {
+@layouts.base(AccessControlsCtrl.vmsg("title")) {
 
   @ng._alert()
 
@@ -13,7 +13,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-shield fa-lg fa-fw text-success"></i>
-      @AccessControls.vmsg("head")
+      @AccessControlsCtrl.vmsg("head")
     </h2>
   </div>
 
@@ -23,7 +23,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
         @ng._form_control("principal",
           '_inline      -> false,
           'tabindex     -> 1,
-          'placeholder  -> AccessControls.vmsg("principal.placeholder"),
+          'placeholder  -> AccessControlsCtrl.vmsg("principal.placeholder"),
           'typeahead    -> "item as item.label for item in getItems($viewValue)",
           'autocomplete -> "off",
           Symbol("ng-model") -> "ac.principal"
@@ -101,13 +101,13 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
           <tbody>
             <tr class="ng-cloak" ng-repeat="ac in ACList.acs" ng-class="ac.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
               <td ng-if="ac.is_group">
-                <a ng-href="{{jsRoutes.controllers.Groups.show(ac.principal).url}}">
+                <a ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ac.principal).url}}">
                   <i class="fa fa-group fa-lg fa-fw text-info"></i>
                   {{ ACList.groups[ac.principal].name }}
                 </a>
               </td>
               <td ng-if="!ac.is_group">
-                <a ng-href="{{jsRoutes.controllers.Users.show(ac.principal).url}}">
+                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ac.principal).url}}">
                   <i class="fa fa-user fa-lg fa-fw text-info"></i>
                   {{ ACList.users[ac.principal].email }}
                 </a>
@@ -151,8 +151,8 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
 @jsRoutes = {
   @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Groups.show,
-    routes.javascript.Users.show
+    routes.javascript.GroupsCtrl.show,
+    routes.javascript.UsersCtrl.show
   )
 }
 
@@ -164,8 +164,8 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
       ACList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.AccessControls.index(pager.next).toString)',
-        prevPage : '@Html(routes.AccessControls.index(pager.prev).toString)'
+        nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next).toString)',
+        prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev).toString)'
       });
     }]);
   </script>

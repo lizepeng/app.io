@@ -16,7 +16,7 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  *
  **/
-class Sessions(
+class SessionsCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
@@ -57,7 +57,7 @@ class Sessions(
         case e: models.User.NotFound      => Logger.warn(e.reason); throw models.User.AuthFailed()
         case e: models.User.WrongPassword => Logger.warn(e.reason); throw models.User.AuthFailed()
       }.map { implicit user =>
-        Redirect(routes.My.dashboard()).createSession(success.remember_me)
+        Redirect(routes.MyCtrl.dashboard()).createSession(success.remember_me)
       }.recover { case e: BaseException =>
         BadRequest(html.account.login(form.withGlobalError(e.message)))
       }

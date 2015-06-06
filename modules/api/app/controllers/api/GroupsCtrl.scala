@@ -23,7 +23,7 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-class Groups(
+class GroupsCtrl(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
@@ -34,7 +34,7 @@ class Groups(
   rateLimitRepo: RateLimitRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(Groups)
+  extends Secured(GroupsCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
@@ -50,7 +50,7 @@ class Groups(
       else
         (ES.Search(q, p) in Group future()).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.Groups.index(Nil, q, _))
+            linkHeader(page, routes.GroupsCtrl.index(Nil, q, _))
           )
         }
     }
@@ -80,7 +80,7 @@ class Groups(
         } yield
           Created(_resp._1)
             .withHeaders(
-              LOCATION -> routes.Groups.show(saved.id).url
+              LOCATION -> routes.GroupsCtrl.show(saved.id).url
             )
       }
     }
@@ -125,7 +125,7 @@ class Groups(
         usrs <- User.find(page)
       } yield (page, usrs)).map { case (page, usrs) =>
         Ok(JsArray(usrs.map(_.toJson)))
-          .withHeaders(linkHeader(page, routes.Groups.users(id, _)))
+          .withHeaders(linkHeader(page, routes.GroupsCtrl.users(id, _)))
       }.recover {
         case e: BaseException => NotFound
       }
@@ -183,4 +183,4 @@ class Groups(
   }
 }
 
-object Groups extends Secured(Group)
+object GroupsCtrl extends Secured(Group)

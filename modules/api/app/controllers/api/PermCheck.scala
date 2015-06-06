@@ -53,6 +53,6 @@ object PermCheck {
   ): ActionBuilder[UserRequest] =
     MaybeUserAction() andThen
       AuthCheck andThen
-      RateLimit(resource) andThen
+      RateLimitCheck(resource) andThen
       PermissionChecker(action, onDenied, resource)
 }

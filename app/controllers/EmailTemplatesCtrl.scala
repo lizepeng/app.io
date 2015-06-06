@@ -19,7 +19,7 @@ import views._
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-class EmailTemplates(
+class EmailTemplatesCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
@@ -30,7 +30,7 @@ class EmailTemplates(
   val EmailTemplateHistory: EmailTemplateHistoryRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(EmailTemplates)
+  extends Secured(EmailTemplatesCtrl)
   with Controller
   with CanonicalNameBasedMessages
   with BasicPlayComponents
@@ -103,7 +103,7 @@ class EmailTemplates(
             updated_by = req.user.id
           ).save.map { saved =>
             Redirect {
-              routes.EmailTemplates.index()
+              routes.EmailTemplatesCtrl.index()
             }.flashing {
               AlertLevel.Success -> msg("created", saved.name)
             }
@@ -127,7 +127,7 @@ class EmailTemplates(
         }
       result.recover {
         case e: models.EmailTemplate.NotFound => Redirect {
-          routes.EmailTemplates.nnew()
+          routes.EmailTemplatesCtrl.nnew()
         }
       }
     }
@@ -159,12 +159,12 @@ class EmailTemplates(
                 usr2 <- User.find(done.created_by)
                 ____ <- sessionDataDAO.remove(key_editing(id))
               } yield Redirect {
-                routes.EmailTemplates.edit(id, lang)
+                routes.EmailTemplatesCtrl.edit(id, lang)
               }
             case None    => Future.successful(BadRequest)
           }.recover {
             case e: models.EmailTemplate.UpdatedByOther => Redirect {
-              routes.EmailTemplates.edit(id, lang)
+              routes.EmailTemplatesCtrl.edit(id, lang)
             }
           }
         }
@@ -191,7 +191,7 @@ class EmailTemplates(
         tmpl <- EmailTemplate.find(id, lang)
         ___ <- EmailTemplate.destroy(id, lang)
       } yield RedirectToPreviousURI.getOrElse {
-        Redirect(routes.EmailTemplates.index())
+        Redirect(routes.EmailTemplatesCtrl.index())
       }.flashing {
         AlertLevel.Success -> msg("deleted", tmpl.name)
       }
@@ -204,4 +204,4 @@ class EmailTemplates(
   private def key_editing(id: UUID) = s"$canonicalName - $id - version"
 }
 
-object EmailTemplates extends Secured(EmailTemplate) with ViewMessages
+object EmailTemplatesCtrl extends Secured(EmailTemplate) with ViewMessages

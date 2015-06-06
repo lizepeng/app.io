@@ -4,15 +4,15 @@ implicit req: UserRequest[_], messages: Messages)
 @import common._
 @import helper._
 
-@layouts.base(EmailTemplates.vmsg("title")) {
+@layouts.base(EmailTemplatesCtrl.vmsg("title")) {
 
   @common._flashing()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-envelope-o fa-lg fa-fw"></i>
-      @EmailTemplates.vmsg("head")
-      <a href="@routes.EmailTemplates.nnew()" class="btn btn-success pull-right">
+      @EmailTemplatesCtrl.vmsg("head")
+      <a href="@routes.EmailTemplatesCtrl.nnew()" class="btn btn-success pull-right">
         <i class="fa fa-plus"></i>
         @MSG("new")
       </a>
@@ -42,7 +42,7 @@ implicit req: UserRequest[_], messages: Messages)
           @page.map { tmpl =>
             <tr>
               <td>
-                <a href="@routes.EmailTemplates.show(tmpl.id, tmpl.lang)">
+                <a href="@routes.EmailTemplatesCtrl.show(tmpl.id, tmpl.lang)">
                   @tmpl.name
                 </a>
               </td>
@@ -55,17 +55,17 @@ implicit req: UserRequest[_], messages: Messages)
               <td>
                 <div class="btn-toolbar pull-right">
                   <div class="btn-group">
-                    <a href="@routes.EmailTemplates.edit(tmpl.id, tmpl.lang)">
+                    <a href="@routes.EmailTemplatesCtrl.edit(tmpl.id, tmpl.lang)">
                       <i class="fa fa-edit fa-lg text-warning"></i>
                     </a>
                   </div>
                   <div class="btn-group">
-                    <a href="@routes.EmailTemplates.history(tmpl.id, tmpl.lang)">
+                    <a href="@routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang)">
                       <i class="fa fa-history fa-lg text-info"></i>
                     </a>
                   </div>
                   <div class="btn-group">
-                    @form(routes.EmailTemplates.destroy(tmpl.id, tmpl.lang), 'class -> "form-inline") {
+                    @form(routes.EmailTemplatesCtrl.destroy(tmpl.id, tmpl.lang), 'class -> "form-inline") {
                       @common._previous_uri()
                       <button type="submit" class="btn form-inline-btn">
                         <i class="fa fa-trash-o fa-lg text-danger"></i>
@@ -79,7 +79,7 @@ implicit req: UserRequest[_], messages: Messages)
         </tbody>
       </table>
 
-      @{_pager(page, p => routes.EmailTemplates.index(p))}
+      @{_pager(page, p => routes.EmailTemplatesCtrl.index(p))}
     </div>
   </div>
 }()()

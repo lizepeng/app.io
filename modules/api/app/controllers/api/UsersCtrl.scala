@@ -17,7 +17,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-class Users(
+class UsersCtrl(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
@@ -28,7 +28,7 @@ class Users(
   val rateLimitRepo: RateLimitRepo,
   internalGroupsRepo: InternalGroupsRepo
 )
-  extends Secured(Users)
+  extends Secured(UsersCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
@@ -62,7 +62,7 @@ class Users(
       else
         (ES.Search(q, p) in User future()).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.Users.index(Nil, q, _))
+            linkHeader(page, routes.UsersCtrl.index(Nil, q, _))
           )
         }
     }
@@ -76,7 +76,7 @@ class Users(
         } yield (saved, _resp)).map { case (saved, _resp) =>
           Created(_resp._1)
             .withHeaders(
-              LOCATION -> routes.Groups.show(saved.id).url
+              LOCATION -> routes.GroupsCtrl.show(saved.id).url
             )
         }.recover {
           case e: models.User.EmailTaken => MethodNotAllowed(JsonMessage(e))
@@ -97,4 +97,4 @@ class Users(
 
 }
 
-object Users extends Secured(User)
+object UsersCtrl extends Secured(User)

@@ -24,7 +24,7 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-class Files(
+class CFSCtrl(
   val basicPlayApi: BasicPlayApi,
   val bandwidthService: BandwidthService
 )(
@@ -39,7 +39,7 @@ class Files(
   fileRepo: FileRepo,
   IndirectBlock: IndirectBlockRepo
 )
-  extends Secured(Files)
+  extends Secured(CFSCtrl)
   with Controller
   with LinkHeader
   with AppConfig
@@ -110,7 +110,7 @@ class Files(
             }.toSeq
           )
         ).withHeaders(
-            linkHeader(page, routes.Files.index(path, _))
+            linkHeader(page, routes.CFSCtrl.index(path, _))
           )
       }.andThen {
         case Failure(e: FilePerm.Denied) => Logger.trace(e.reason)
@@ -348,4 +348,4 @@ class Files(
 
 }
 
-object Files extends Secured(CFS)
+object CFSCtrl extends Secured(CFS)

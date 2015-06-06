@@ -10,7 +10,7 @@ import views.html
 /**
  * @author zepeng.li@gmail.com
  */
-class Chat(
+class ChatCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
