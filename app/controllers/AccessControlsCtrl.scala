@@ -14,10 +14,9 @@ import scala.concurrent.Future
  */
 class AccessControlsCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
-  val secured: RegisteredSecured,
-  val _groups: Groups
+  val _secured: RegisteredSecured
 )
   extends Secured(AccessControlsCtrl)
   with Controller

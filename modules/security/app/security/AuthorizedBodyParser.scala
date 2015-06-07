@@ -24,7 +24,7 @@ trait AuthorizedBodyParser[A]
 
   def onBaseException: RequestHeader => Result
 
-  def basicPlayApi: BasicPlayApi
+  def _basicPlayApi: BasicPlayApi
 
   override def apply(req: RequestHeader): Iteratee[Array[Byte], Either[Result, A]] = {
     Iteratee.flatten {

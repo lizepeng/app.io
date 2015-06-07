@@ -15,10 +15,10 @@ import scala.concurrent.Future
  */
 class SearchCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
   val _groups: Groups,
-  val ES: ElasticSearch
+  val _es: ElasticSearch
 )
   extends Secured(SearchCtrl)
   with Controller
@@ -42,7 +42,7 @@ class SearchCtrl(
       if (defs.isEmpty)
         Future.successful(Ok(Json.arr()))
       else
-        ES.Multi(defs: _*).future()
+        _es.Multi(defs: _*).future()
           .map(PageMSResp(p, _)).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.SearchCtrl.index(types, q, _))

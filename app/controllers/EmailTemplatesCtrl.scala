@@ -21,12 +21,11 @@ import scala.language.implicitConversions
 
 class EmailTemplatesCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
-  val sessionDataDAO: SessionData,
-  val EmailTemplate: EmailTemplates,
-  val EmailTemplateHistory: EmailTemplateHistories,
-  val _groups: Groups
+  val _sessionData: SessionData,
+  val _emailTemplates: EmailTemplates,
+  val _emailTemplateHistories: EmailTemplateHistories
 )
   extends Secured(EmailTemplatesCtrl)
   with Controller
@@ -57,7 +56,7 @@ class EmailTemplatesCtrl(
 
   def index(pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      EmailTemplate.list(pager).map { list =>
+      _emailTemplates.list(pager).map { list =>
         Ok(html.email_templates.index(Page(pager, list)))
       }.recover {
         case e: BaseException => NotFound
@@ -67,7 +66,7 @@ class EmailTemplatesCtrl(
   def show(id: UUID, lang: Lang, updated_at: Option[DateTime] = None) =
     PermCheck(_.Show).async { implicit req =>
       for {
-        tmpl <- EmailTemplate.find(id, lang, updated_at)
+        tmpl <- _emailTemplates.find(id, lang, updated_at)
         usr1 <- _users.find(tmpl.updated_by)
         usr2 <- _users.find(tmpl.created_by)
       } yield Ok {
@@ -92,7 +91,7 @@ class EmailTemplatesCtrl(
           }
         },
         success => {
-          EmailTemplate(
+          _emailTemplates.build(
             id = UUIDs.timeBased(),
             lang = Lang(success.lang),
             name = success.name,
@@ -115,10 +114,10 @@ class EmailTemplatesCtrl(
     PermCheck(_.Edit).async { implicit req =>
       val result =
         for {
-          tmpl <- EmailTemplate.find(id, lang)
+          tmpl <- _emailTemplates.find(id, lang)
           usr1 <- _users.find(tmpl.updated_by)
           usr2 <- _users.find(tmpl.created_by)
-          ____ <- sessionDataDAO.set[DateTime](key_editing(id), tmpl.updated_at)
+          ____ <- _sessionData.set[DateTime](key_editing(id), tmpl.updated_at)
         } yield Ok {
           html.email_templates.edit(
             TemplateFM.fill(tmpl), tmpl, usr1, usr2
@@ -137,17 +136,17 @@ class EmailTemplatesCtrl(
       bound.fold(
         failure =>
           for {
-            tmpl <- EmailTemplate.find(id, lang)
+            tmpl <- _emailTemplates.find(id, lang)
             usr1 <- _users.find(tmpl.updated_by)
             usr2 <- _users.find(tmpl.created_by)
           } yield BadRequest {
             html.email_templates.edit(bound, tmpl, usr1, usr2)
           },
         success => {
-          sessionDataDAO.get[DateTime](key_editing(id)).flatMap {
+          _sessionData.get[DateTime](key_editing(id)).flatMap {
             case Some(d) =>
               for {
-                tmpl <- EmailTemplate.find(id, lang, Some(d))
+                tmpl <- _emailTemplates.find(id, lang, Some(d))
                 done <- tmpl.copy(
                   name = success.name,
                   subject = success.subject,
@@ -156,7 +155,7 @@ class EmailTemplatesCtrl(
                 ).save
                 usr1 <- _users.find(done.updated_by)
                 usr2 <- _users.find(done.created_by)
-                ____ <- sessionDataDAO.remove(key_editing(id))
+                ____ <- _sessionData.remove(key_editing(id))
               } yield Redirect {
                 routes.EmailTemplatesCtrl.edit(id, lang)
               }
@@ -173,8 +172,8 @@ class EmailTemplatesCtrl(
   def history(id: UUID, lang: Lang, pager: Pager) =
     PermCheck(_.HistoryIndex).async { implicit req =>
       for {
-        tmpl <- EmailTemplate.find(id, lang)
-        list <- EmailTemplateHistory.list(id, lang, pager)
+        tmpl <- _emailTemplates.find(id, lang)
+        list <- _emailTemplateHistories.list(id, lang, pager)
         usrs <- _users.find(list.map(_.updated_by))
           .map(_.map(u => (u.id, u)).toMap)
       } yield Ok {
@@ -187,8 +186,8 @@ class EmailTemplatesCtrl(
   def destroy(id: UUID, lang: Lang) =
     PermCheck(_.Destroy).async { implicit req => {
       for {
-        tmpl <- EmailTemplate.find(id, lang)
-        ___ <- EmailTemplate.destroy(id, lang)
+        tmpl <- _emailTemplates.find(id, lang)
+        ___ <- _emailTemplates.destroy(id, lang)
       } yield RedirectToPreviousURI.getOrElse {
         Redirect(routes.EmailTemplatesCtrl.index())
       }.flashing {

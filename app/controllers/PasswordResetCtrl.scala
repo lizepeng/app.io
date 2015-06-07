@@ -21,12 +21,12 @@ import scala.concurrent.Future
  */
 class PasswordResetCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
-  val mailService: MailService,
+  val _basicPlayApi: BasicPlayApi,
   val _users: Users,
-  val ExpirableLink: ExpirableLinks,
-  val EmailTemplate: EmailTemplates,
-  val sysConfigRepo: SysConfigs
+  val _mailService: MailService,
+  val _expirableLinks: ExpirableLinks,
+  val _emailTemplates: EmailTemplates,
+  val _sysConfig: SysConfigs
 )
   extends Secured(PasswordResetCtrl)
   with Controller
@@ -68,10 +68,10 @@ class PasswordResetCtrl(
       },
       success => (for {
         user <- _users.find(success)
-        link <- ExpirableLink.nnew(canonicalName)(user)
+        link <- _expirableLinks.nnew(canonicalName)(user)
         tmpl <- getEmailTemplate(s"$basicName.email1")
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
-        mailService.schedule("noreply", tmpl, u, "link" -> id)
+        _mailService.schedule("noreply", tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
       }.recover {
         case e: models.User.NotFound          =>
@@ -93,7 +93,7 @@ class PasswordResetCtrl(
    */
   def show(id: String) =
     MaybeUserAction().async { implicit req =>
-    ExpirableLink.find(id).map { ln =>
+    _expirableLinks.find(id).map { ln =>
       if (ln.module != canonicalName)
         onError(emailFM, "invalid.reset.link")
       else
@@ -117,11 +117,11 @@ class PasswordResetCtrl(
         }
       },
       success => (for {
-        link <- ExpirableLink.find(id).andThen { case _ => ExpirableLink.remove(id) }
+        link <- _expirableLinks.find(id).andThen { case _ => _expirableLinks.remove(id) }
         user <- _users.find(link.user_id).flatMap(_.savePassword(success.original))
         tmpl <- getEmailTemplate(s"$basicName.email2")
       } yield (user, tmpl)).map { case (user, tmpl) =>
-        mailService.schedule("support", tmpl, user)
+        _mailService.schedule("support", tmpl, user)
         Redirect(routes.SessionsCtrl.nnew()).flashing(
           AlertLevel.Info -> msg("password.changed")
         )
@@ -151,11 +151,11 @@ class PasswordResetCtrl(
     for {
       uuid <- System.UUID(key)
       user <- mailer
-      tmpl <- EmailTemplate.find(uuid, lang)
+      tmpl <- _emailTemplates.find(uuid, lang)
         .recoverWith {
         case e: models.EmailTemplate.NotFound =>
-        EmailTemplate.save(
-          EmailTemplate(
+        _emailTemplates.save(
+          _emailTemplates.build(
             uuid, Lang.defaultLang,
             key,
             subject = "",

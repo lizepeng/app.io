@@ -91,7 +91,7 @@ object SysConfig extends SysConfigTable {
 }
 
 class SysConfigs(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends SysConfigTable
   with ExtCQL[SysConfigTable, SysConfigEntry]

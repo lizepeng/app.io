@@ -17,9 +17,9 @@ import scala.util.Try
 /**
  * @author zepeng.li@gmail.com
  */
-case class BandwidthService(
-  basicPlayApi: BasicPlayApi,
-  actorSystem: ActorSystem
+class BandwidthService(
+  val _basicPlayApi: BasicPlayApi,
+  val actorSystem: ActorSystem
 ) extends BasicPlayComponents {
 
   implicit private val executor = actorSystem.dispatchers.lookup("traffic-shaper-context")

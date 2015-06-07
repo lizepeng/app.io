@@ -19,19 +19,18 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class MyCtrl(
-  val ES: ElasticSearch
-)(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _users: Users,
-  val _persons: Persons
+  val _persons: Persons,
+  val _es: ElasticSearch
 )
   extends Secured(User)
   with Controller
   with BasicPlayComponents
   with I18nSupport
   with Session
-  with CanonicalNameBasedMessages{
+  with CanonicalNameBasedMessages {
 
   val ChangePasswordFM = Form[ChangePasswordFD](
     mapping(
@@ -119,7 +118,7 @@ class MyCtrl(
           for {
             p <- Future.successful(Person(req.user.id, first, last))
             _ <- _persons.save(p)
-            _ <- ES.Index(p) into Person
+            _ <- _es.Index(p) into Person
           } yield {
             Ok(html.my.profile(filledWith(p)))
           }

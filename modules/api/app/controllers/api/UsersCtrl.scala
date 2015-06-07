@@ -19,10 +19,10 @@ import scala.concurrent.Future
  */
 class UsersCtrl(
   implicit
-  val _groups: Groups,
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
-  val ES: ElasticSearch
+  val _groups: Groups,
+  val _es: ElasticSearch
 )
   extends Secured(UsersCtrl)
   with Controller
@@ -58,7 +58,7 @@ class UsersCtrl(
           Ok(JsArray(usrs.map(_.toJson)))
         }
       else
-        (ES.Search(q, p) in _users future()).map { page =>
+        (_es.Search(q, p) in _users future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.UsersCtrl.index(Nil, q, _))
           )
@@ -70,7 +70,7 @@ class UsersCtrl(
       BindJson().as[JsUser] {
         success => (for {
           saved <- success.toUser.save
-          _resp <- ES.Index(saved) into _users
+          _resp <- _es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>
           Created(_resp._1)
             .withHeaders(
@@ -87,7 +87,7 @@ class UsersCtrl(
     result <-
     if (_empty) {
       Logger.info(s"Clean elasticsearch index $basicName")
-      (ES.Delete from _users).map(_ => true)
+      (_es.Delete from _users).map(_ => true)
     }
     else
       Future.successful(false)

@@ -15,14 +15,14 @@ object PermCheck {
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
   )(
     implicit
-    basicPlayApi: BasicPlayApi,
+    _basicPlayApi: BasicPlayApi,
     _users: Users,
     _accessControls: AccessControls,
     _rateLimits: RateLimits
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
     apply(_.Anything, onDenied)(
       CheckedResource(resource),
-      basicPlayApi,
+      _basicPlayApi,
       _users,
       _accessControls,
       _rateLimits
@@ -36,7 +36,7 @@ object PermCheck {
   )(
     implicit
     resource: CheckedResource,
-    basicPlayApi: BasicPlayApi,
+    _basicPlayApi: BasicPlayApi,
     _users: Users,
     _accessControls: AccessControls,
     _rateLimits: RateLimits

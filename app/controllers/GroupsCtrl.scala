@@ -23,7 +23,7 @@ import scala.util.Success
  */
 class GroupsCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
   val _groups: Groups
 )
@@ -75,13 +75,12 @@ object GroupsCtrl
   @volatile private var _gid2layouts: Map[UUID, String] = Map()
 
   def initialize(
-    implicit groupRepo: Groups,
-    sysConfigRepo: SysConfigs
+    implicit groups: Groups, sysConfig: SysConfigs
   ): Future[Map[UUID, String]] = {
-    groupRepo.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
+    groups.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
       for (
         conf <-
-        if (grp.id == groupRepo._internalGroups.AnyoneId)
+        if (grp.id == groups._internalGroups.AnyoneId)
           System.config(grp.id.toString, layout_admin).map(grp.id -> _)
         else
           System.config(grp.id.toString, layout_normal).map(grp.id -> _)

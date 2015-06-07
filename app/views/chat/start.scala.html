@@ -37,7 +37,7 @@
 @controller = {
   <script>
 
-    var exampleSocket = new WebSocket("@sockets.routes.Chat.connect.webSocketURL()");
+    var exampleSocket = new WebSocket("@sockets.routes.ChatCtrl.connect.webSocketURL()");
     angular.module('chat', [])
     .controller('ChatCtrl', ['$scope', function($scope) {
       $scope.history = [];

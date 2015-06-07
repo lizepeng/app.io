@@ -41,12 +41,12 @@ case class Directory(
   def save()(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs.directories.write(this)
+    cfs._directories.write(this)
 
   def list(pager: Pager)(
     implicit cfs: CassandraFileSystem
   ): Future[Page[INode]] = {
-    cfs.directories.list(this) |>>>
+    cfs._directories.list(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
   }.map(_.toIterable).map(Page(pager, _))
 
@@ -56,7 +56,7 @@ case class Directory(
     Enumerator(path: _*) |>>>
       Iteratee.foldM((name, id)) {
         case ((_, parentId), childName) =>
-          cfs.directories.findChild(parentId, childName)
+          cfs._directories.findChild(parentId, childName)
       }
   }
 
@@ -66,7 +66,7 @@ case class Directory(
     if (path.filename.nonEmpty)
       Future.failed(models.cfs.Directory.NotDirectory(path))
     else find(path.parts).flatMap {
-      case (n, i) => cfs.directories.find(i)(
+      case (n, i) => cfs._directories.find(i)(
         _.copy(name = n, path = path)
       )
     }
@@ -75,7 +75,7 @@ case class Directory(
     implicit cfs: CassandraFileSystem
   ): Future[File] =
     find(path.parts ++ path.filename).flatMap {
-      case (n, i) => cfs.files.find(i)(
+      case (n, i) => cfs._files.find(i)(
         _.copy(name = n, path = path)
       )
     }
@@ -83,8 +83,8 @@ case class Directory(
   def file(name: String)(
     implicit cfs: CassandraFileSystem
   ): Future[File] =
-    cfs.directories.findChild(id, name).flatMap {
-      case (n, i) => cfs.files.find(i)(
+    cfs._directories.findChild(id, name).flatMap {
+      case (n, i) => cfs._files.find(i)(
         _.copy(name = n, path = path + name)
       )
     }
@@ -103,18 +103,18 @@ case class Directory(
   def add(inode: INode)(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs.directories.addChild(this, inode)
+    cfs._directories.addChild(this, inode)
 
   def del(inode: INode)(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs.directories.delChild(this, inode)
+    cfs._directories.delChild(this, inode)
 
   def dir(name: String)(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs.directories.findChild(id, name).flatMap {
-      case (_, i) => cfs.directories.find(i)(
+    cfs._directories.findChild(id, name).flatMap {
+      case (_, i) => cfs._directories.find(i)(
         _.copy(name = name, path = path / name)
       )
     }
@@ -122,8 +122,8 @@ case class Directory(
   def dir_!(name: String)(
     implicit user: User, cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs.directories.findChild(id, name).flatMap {
-      case (_, i) => cfs.directories.find(i)(
+    cfs._directories.findChild(id, name).flatMap {
+      case (_, i) => cfs._directories.find(i)(
         _.copy(name = name, path = path / name)
       )
     }.recoverWith {
@@ -175,8 +175,8 @@ object Directory
 }
 
 class Directories(
-  val basicPlayApi: BasicPlayApi,
-  val INode: INodes
+  val _basicPlayApi: BasicPlayApi,
+  val _inodes: INodes
 )
   extends DirectoryTable
   with ExtCQL[DirectoryTable, Directory]
@@ -302,7 +302,7 @@ class Directories(
       .where(_.inode_id eqs dir.id)
   }.fetchEnumerator() &>
     Enumeratee.mapM {
-      case (name, id) => INode.find(id).map[Option[INode]] {
+      case (name, id) => _inodes.find(id).map[Option[INode]] {
         case Some(nd: File)      =>
           Some(nd.copy(name = name, path = dir.path + name))
         case Some(nd: Directory) =>

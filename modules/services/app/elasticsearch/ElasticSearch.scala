@@ -19,8 +19,8 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-case class ElasticSearch(
-  basicPlayApi: BasicPlayApi
+class ElasticSearch(
+  val _basicPlayApi: BasicPlayApi
 )
   extends AppConfig
   with BasicPlayComponents

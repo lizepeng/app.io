@@ -19,10 +19,10 @@ import scala.concurrent.Future
  */
 class AccessControlsCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
   val _groups: Groups,
-  val ES: ElasticSearch
+  val _es: ElasticSearch
 )
   extends Secured(AccessControlsCtrl)
   with Controller
@@ -34,7 +34,7 @@ class AccessControlsCtrl(
 
   def index(q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      (ES.Search(q, p) in AccessControl future()).map { page =>
+      (_es.Search(q, p) in AccessControl future()).map { page =>
         Ok(page).withHeaders(
           linkHeader(page, routes.AccessControlsCtrl.index(q, _))
         )
@@ -62,7 +62,7 @@ class AccessControlsCtrl(
             else _groups.exists(success.principal)
 
             saved <- success.save
-            _resp <- ES.Index(saved) into AccessControl
+            _resp <- _es.Index(saved) into AccessControl
           } yield (saved, _resp)).map { case (saved, _resp) =>
 
             Created(_resp._1)
@@ -82,7 +82,7 @@ class AccessControlsCtrl(
   def destroy(id: UUID, res: String, act: String) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
-        __ <- ES.Delete(AccessControl.genId(res, act, id)) from AccessControl
+        __ <- _es.Delete(AccessControl.genId(res, act, id)) from AccessControl
         ac <- _accessControls.find(id, res, act)
         __ <- _accessControls.remove(id, res, act)
       } yield res).map { _ =>
@@ -98,7 +98,7 @@ class AccessControlsCtrl(
         (for {
           _____ <- _accessControls.find(id, res, act)
           saved <- ac.save
-          _resp <- ES.Update(saved) in AccessControl
+          _resp <- _es.Update(saved) in AccessControl
         } yield _resp._1).map {
           Ok(_)
         }.recover {
@@ -113,7 +113,7 @@ class AccessControlsCtrl(
     result <-
     if (_empty) {
       Logger.info(s"Clean elasticsearch index $basicName")
-      (ES.Delete from AccessControl).map(_ => true)
+      (_es.Delete from AccessControl).map(_ => true)
     }
     else
       Future.successful(false)

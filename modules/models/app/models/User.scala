@@ -34,10 +34,10 @@ case class User(
   password: String = "",
   remember_me: Boolean = false,
   updated_at: DateTime = DateTime.now
-)(implicit val _internalGroups: InternalGroups) extends HasUUID {
+)(implicit val internalGroups: InternalGroups) extends HasUUID {
 
   lazy val internal_groups: Set[UUID] =
-    _internalGroups.map(internal_groups_code)
+    internalGroups.map(internal_groups_code)
 
   def groups: Set[UUID] = external_groups union internal_groups
 
@@ -196,15 +196,15 @@ object User
 
 class Users(
   implicit
-  val basicPlayApi: BasicPlayApi,
-  val sysConfig: SysConfigs,
+  val _basicPlayApi: BasicPlayApi,
+  val _sysConfig: SysConfigs,
   val _internalGroups: InternalGroups
 )
   extends UserTable
   with ExtCQL[UserTable, User]
   with BasicPlayComponents
-  with Cassandra
-  with SysConfig {
+  with SysConfig
+  with Cassandra {
 
   override def fromRow(r: Row): User = {
     User(
@@ -380,7 +380,7 @@ sealed class UserByEmailIndex
 object UserByEmailIndex extends UserByEmailIndex
 
 class UserByEmail(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends UserByEmailIndex
   with ExtCQL[UserByEmailIndex, (String, UUID)]

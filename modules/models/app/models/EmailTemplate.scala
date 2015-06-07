@@ -122,7 +122,7 @@ with ExceptionDefining {
 }
 
 class EmailTemplates(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends EmailTemplateTable
   with ExtCQL[EmailTemplateTable, ET]
@@ -131,7 +131,7 @@ class EmailTemplates(
 
   import EmailTemplate._
 
-  def apply(
+  def build(
     id: UUID,
     lang: Lang,
     name: String,
@@ -246,7 +246,7 @@ object EmailTemplateHistory
   extends EmailTemplateHistoryTable
 
 class EmailTemplateHistories(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends EmailTemplateHistoryTable
   with ExtCQL[EmailTemplateHistoryTable, ETH]

@@ -35,15 +35,15 @@ trait INode extends HasUUID {
   def rename(newName: String, force: Boolean = false)(
     implicit cfs: CassandraFileSystem
   ): Future[INode] = {
-    cfs.directories.find(parent).flatMap {
-      dir => cfs.directories.renameChild(dir, this, newName, force)
+    cfs._directories.find(parent).flatMap {
+      dir => cfs._directories.renameChild(dir, this, newName, force)
     }
   }
 
   def purge()(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs.directories.find(parent).flatMap {
+    cfs._directories.find(parent).flatMap {
       parent => parent.del(this)
     }
 
@@ -138,7 +138,7 @@ sealed class INodeTable
 object INode extends INodeTable
 
 class INodes(
-  val basicPlayApi: BasicPlayApi
+  val _basicPlayApi: BasicPlayApi
 )
   extends INodeTable
   with ExtCQL[INodeTable, INode]

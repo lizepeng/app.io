@@ -31,9 +31,9 @@ case class Group(
   updated_at: DateTime
 ) extends HasUUID {
 
-  def createIfNotExist(implicit Group: Groups) = Group.createIfNotExist(this)
+  def createIfNotExist(implicit groups: Groups) = groups.createIfNotExist(this)
 
-  def save(implicit Group: Groups) = Group.save(this)
+  def save(implicit groups: Groups) = groups.save(this)
 }
 
 sealed class GroupTable
@@ -151,16 +151,16 @@ object Group
 
 class Groups(
   implicit
-  val basicPlayApi: BasicPlayApi,
-  val sysConfig: SysConfigs,
-  val _users: Users
+  val _basicPlayApi: BasicPlayApi,
+  val _users: Users,
+  val _sysConfig: SysConfigs
 )
   extends GroupTable
   with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
   with InternalGroupsComponents
-  with Cassandra
-  with SysConfig {
+  with SysConfig
+  with Cassandra {
 
   def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
@@ -322,7 +322,7 @@ object InternalGroupsCode {
 }
 
 class InternalGroups(
-  implicit val sysConfig: SysConfigs
+  implicit val _sysConfig: SysConfigs
 )
   extends CanonicalNamed
   with SysConfig
@@ -335,7 +335,7 @@ class InternalGroups(
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  def initialize(implicit _groups: Groups): Future[Boolean] = Future.sequence(
+  def loadOrInit(implicit groups: Groups): Future[Boolean] = Future.sequence(
     InternalGroupsCode.ALL.map { n =>
       val key = s"internal_group_${"%02d".format(n)}"
       System.UUID(key).flatMap { id =>
@@ -352,8 +352,14 @@ class InternalGroups(
     _num2Id = seq.map(_._1)
     _anyoneId = _num2Id(InternalGroupsCode.Anyone)
     _id2num = _num2Id.zipWithIndex.toMap
-    Logger.info("Internal Group Ids has been initialized.")
-    (true /: seq)(_ && _._2)
+    val initialized = (true /: seq)(_ && _._2)
+    Logger.info(
+      if (initialized)
+        "Internal Group Ids has been initialized."
+      else
+        "Internal Group Ids has been loaded."
+    )
+    initialized
   }
 
   def AnyoneId = _anyoneId

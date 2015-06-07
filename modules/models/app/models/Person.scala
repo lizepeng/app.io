@@ -6,7 +6,6 @@ import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
-import models.sys.SysConfig
 import org.joda.time.DateTime
 import play.api.libs.json._
 
@@ -66,7 +65,7 @@ object Person
 }
 
 class Persons(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends PersonTable
   with ExtCQL[PersonTable, Person]

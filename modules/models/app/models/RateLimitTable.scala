@@ -41,7 +41,7 @@ sealed class RateLimitTable
 object RateLimits extends RateLimitTable
 
 class RateLimits(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends RateLimitTable
   with ExtCQL[RateLimitTable, UUID]

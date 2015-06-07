@@ -40,7 +40,7 @@ sealed class SessionDataTable
 object SessionData extends SessionDataTable
 
 class SessionData(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends SessionDataTable
   with ExtCQL[SessionDataTable, UUID]

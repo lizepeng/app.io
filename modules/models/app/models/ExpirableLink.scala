@@ -50,7 +50,7 @@ object ExpirableLink
 }
 
 class ExpirableLinks(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends ExpirableLinkTable
   with ExtCQL[ExpirableLinkTable, ExpirableLink]

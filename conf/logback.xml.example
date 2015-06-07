@@ -11,7 +11,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%coloredLevel %logger - %message%n%xException{5}</pattern>
+      <pattern>%coloredLevel %logger{15} - %message%n%xException{5}</pattern>
     </encoder>
   </appender>
 
@@ -23,19 +23,21 @@
     <appender-ref ref="STDOUT" />
   </appender>
 
-  <logger name="root" level="ERROR" />
-  <logger name="play" level="ERROR" />
-  <logger name="application" level="ERROR" />
+  <logger name="root" level="INFO" />
+  <logger name="play" level="INFO" />
+  <logger name="application" level="INFO" />
   <logger name="org.elasticsearch" level="ERROR" />
   <logger name="com.datastax.driver" level="ERROR" />
   <logger name="com.websudos.phantom" level="ERROR" />
-  <logger name="com.gargoylesoftware.htmlunit.javascript" level="ERROR" />
+  <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
+  <logger name="javax.management" level="OFF" />
+  <logger name="sun.rmi" level="OFF" />
 
   <logger name="controllers" level="TRACE" />
   <logger name="controllers.api" level="TRACE" />
   <logger name="models" level="TRACE" />
   <logger name="helpers" level="TRACE" />
-  <logger name="security" level="TRACE" />
+  <logger name="security" level="ERROR" />
   <logger name="batches" level="TRACE" />
   <logger name="elasticsearch" level="TRACE" />
 

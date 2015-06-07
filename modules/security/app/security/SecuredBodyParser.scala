@@ -17,7 +17,7 @@ case class SecuredBodyParser[A](
 )(bodyParser: RequestHeader => User => Future[BodyParser[A]])(
   implicit
   val resource: CheckedResource,
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _users: Users,
   val _accessControls: AccessControls
 ) extends PermissionCheckedBodyParser[A] {

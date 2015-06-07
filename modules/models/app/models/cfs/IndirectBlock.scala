@@ -52,8 +52,8 @@ sealed class IndirectBlockTable
 object IndirectBlock extends IndirectBlockTable
 
 class IndirectBlocks(
-  val basicPlayApi: BasicPlayApi,
-  val Block: Blocks
+  val _basicPlayApi: BasicPlayApi,
+  val _blocks: Blocks
 )
   extends IndirectBlockTable
   with ExtCQL[IndirectBlockTable, IndirectBlock]
@@ -64,7 +64,7 @@ class IndirectBlocks(
     select(_.indirect_block_id)
       .where(_.inode_id eqs id)
       .fetchEnumerator() &>
-      Enumeratee.mapFlatten[UUID](Block.read)
+      Enumeratee.mapFlatten[UUID](_blocks.read)
   }
 
   def read(file: File, offset: Long): Enumerator[BLK] = Enumerator.flatten {
@@ -74,7 +74,7 @@ class IndirectBlocks(
       .one().map {
       case None     => Enumerator.empty[BLK]
       case Some(id) => {
-        Block.read(id, offset % file.indirect_block_size, file.block_size)
+        _blocks.read(id, offset % file.indirect_block_size, file.block_size)
       }
     }.map {
       _ >>> (
@@ -82,7 +82,7 @@ class IndirectBlocks(
           .where(_.inode_id eqs file.id)
           .and(_.offset gt offset - offset % file.indirect_block_size)
           .fetchEnumerator() &>
-          Enumeratee.mapFlatten[UUID](Block.read))
+          Enumeratee.mapFlatten[UUID](_blocks.read))
     }
   }
 
@@ -101,6 +101,6 @@ class IndirectBlocks(
       .fetchEnumerator() &>
       Enumeratee.onIterateeDone { () =>
         CQL {delete.where(_.inode_id eqs id)}.future()
-      } |>>> Iteratee.foreach[UUID](Block.purge(_))
+      } |>>> Iteratee.foreach[UUID](_blocks.purge(_))
   }
 }

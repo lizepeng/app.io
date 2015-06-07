@@ -26,10 +26,10 @@ import scala.util.Failure
  */
 class FileSystemCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
-  val cfs: CassandraFileSystem,
-  val bandwidthService: BandwidthService
+  val _cfs: CassandraFileSystem,
+  val _bandwidth: BandwidthService
 )
   extends Secured(FileSystemCtrl)
   with Controller
@@ -91,7 +91,7 @@ class FileSystemCtrl(
   def index(path: Path, pager: Pager) =
     PermCheck(_.Index).async { implicit req =>
       (for {
-        root <- cfs.root
+        root <- _cfs.root
         curr <- root.dir(path) if FilePerm(curr).rx.?
         page <- curr.list(pager)
       } yield page).map { page =>
@@ -117,7 +117,7 @@ class FileSystemCtrl(
     PermCheck(_.Show).async { implicit req =>
       val flow = new Flow(req.queryString)
       (for {
-        temp <- cfs.temp
+        temp <- _cfs.temp
         file <- temp.file(flow.tempFileName())
       } yield file).map { file =>
         if (flow.currentChunkSize == file.size) Ok
@@ -131,7 +131,7 @@ class FileSystemCtrl(
   def destroy(path: Path) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
-        root <- cfs.root
+        root <- _cfs.root
         file <- root.file(path)
       } yield file).flatMap { f => f.purge()
       }.map { _ => NoContent
@@ -157,13 +157,13 @@ class FileSystemCtrl(
         case Some(file) =>
           (for {
             ____ <- file.ref.rename(flow.tempFileName(), force = true)
-            temp <- cfs.temp
+            temp <- _cfs.temp
             stat <- tempFiles(temp) |>>> summarizer
           } yield stat).flatMap { case (cnt, size) =>
             if (flow.isLastChunk(cnt, size)) {
               (for {
-                curr <- cfs.home(req.user).flatMap(_.dir(path))
-                file <- cfs.temp.flatMap { t =>
+                curr <- _cfs.home(req.user).flatMap(_.dir(path))
+                file <- _cfs.temp.flatMap { t =>
                   tempFiles(t) &>
                     Enumeratee.mapFlatten[File] { f =>
                       f.read() &> Enumeratee.onIterateeDone(() => f.purge())
@@ -183,7 +183,7 @@ class FileSystemCtrl(
 
   def mkdir(path: Path)(implicit user: User): Future[Directory] =
     Enumerator(path.parts: _*) |>>>
-      Iteratee.fold1(cfs.root) { case (p, cn) =>
+      Iteratee.fold1(_cfs.root) { case (p, cn) =>
         (for (c <- p.dir(cn) if FilePerm(p).rx ?) yield c)
           .recoverWith {
           case e: Directory.ChildNotFound =>
@@ -222,7 +222,7 @@ class FileSystemCtrl(
       ),
       file.read(first) &>
         Enumeratee.take((end - first + 1).toInt) &>
-        bandwidthService.LimitTo(bandwidth_stream)
+        _bandwidth.LimitTo(bandwidth_stream)
 
     )
   }
@@ -235,14 +235,14 @@ class FileSystemCtrl(
         CONTENT_LENGTH -> s"${file.size}"
       )
     ),
-    file.read() &> bandwidthService.LimitTo(bandwidth_download)
+    file.read() &> _bandwidth.LimitTo(bandwidth_download)
   )
 
   private def under(path: Path)(block: File => Result)(
     implicit req: UserRequest[_], messages: Messages
   ): Future[Result] = {
     (for {
-      root <- cfs.root
+      root <- _cfs.root
       file <- root.file(path)
     } yield file).map {
       NotModifiedOrElse(block)(req, messages)
@@ -267,7 +267,7 @@ class FileSystemCtrl(
     def saveTo(dir: Directory)(implicit user: User) = {
       handleFilePart {
         case FileInfo(partName, fileName, contentType) =>
-          bandwidthService.LimitTo(bandwidth_upload) &>> dir.save()
+          _bandwidth.LimitTo(bandwidth_upload) &>> dir.save()
       }
     }
 
@@ -279,8 +279,8 @@ class FileSystemCtrl(
     ) {
       req => implicit user =>
         (for {
-          home <- cfs.home(user)
-          temp <- cfs.temp(user)
+          home <- _cfs.home(user)
+          temp <- _cfs.temp(user)
           dest <- home.dir(path) if FilePerm(dest).w ?
         } yield temp).map { case temp =>
           multipartFormData(saveTo(temp)(user))

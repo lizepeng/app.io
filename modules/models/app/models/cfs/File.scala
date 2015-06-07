@@ -34,18 +34,18 @@ case class File(
   def read(offset: Long = 0)(
     implicit cfs: CassandraFileSystem
   ): Enumerator[BLK] =
-    if (offset == 0) cfs.indirectBlocks.read(id)
-    else cfs.indirectBlocks.read(this, offset)
+    if (offset == 0) cfs._indirectBlocks.read(id)
+    else cfs._indirectBlocks.read(this, offset)
 
   def save()(
     implicit cfs: CassandraFileSystem
   ): Iteratee[BLK, File] =
-    cfs.files.streamWriter(this)
+    cfs._files.streamWriter(this)
 
   override def purge()(
     implicit cfs: CassandraFileSystem
   ) = {
-    super.purge().andThen { case _ => cfs.files.purge(id) }
+    super.purge().andThen { case _ => cfs._files.purge(id) }
   }
 }
 
@@ -87,9 +87,9 @@ object File
 }
 
 class Files(
-  val basicPlayApi: BasicPlayApi,
-  val Block: Blocks,
-  val IndirectBlock: IndirectBlocks
+  val _basicPlayApi: BasicPlayApi,
+  val _blocks: Blocks,
+  val _indirectBlocks: IndirectBlocks
 )
   extends FileTable
   with ExtCQL[FileTable, File]
@@ -115,22 +115,22 @@ class Files(
     } &>>
       Iteratee.foldM[BLK, IndirectBlock](new IndirectBlock(inode.id)) {
         (curr, blk) =>
-          Block.write(curr.id, curr.length, blk)
+          _blocks.write(curr.id, curr.length, blk)
           val next = curr + blk.size
 
           next.length < inode.indirect_block_size match {
             case true  => Future.successful(next)
-            case false => IndirectBlock.write(next).map(_.next)
+            case false => _indirectBlocks.write(next).map(_.next)
           }
       }.mapM { last =>
-        IndirectBlock.write(last) iff (last.length != 0)
+        _indirectBlocks.write(last) iff (last.length != 0)
         this.write(inode.copy(size = last.offset + last.length))
       }
 
   }
 
   def purge(id: UUID): Future[ResultSet] = for {
-    _ <- IndirectBlock.purge(id)
+    _ <- _indirectBlocks.purge(id)
     u <- CQL {delete.where(_.inode_id eqs id)}.future()
   } yield u
 

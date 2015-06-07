@@ -13,21 +13,21 @@ import scala.language.postfixOps
  */
 class CassandraFileSystem(
   implicit
-  val basicPlayApi: BasicPlayApi,
-  val sysConfig: SysConfigs,
-  val users: Users
+  val _basicPlayApi: BasicPlayApi,
+  val _users: Users,
+  val _sysConfig: SysConfigs
 )
   extends CassandraFileSystemCanonicalNamed
   with SysConfig {
 
-  val blocks         = new Blocks
-  val indirectBlocks = new IndirectBlocks(basicPlayApi, blocks)
-  val files          = new Files(basicPlayApi, blocks, indirectBlocks)
-  val inodes         = new INodes(basicPlayApi)
-  val directories    = new Directories(basicPlayApi, inodes)
+  val _blocks         = new Blocks
+  val _indirectBlocks = new IndirectBlocks(_basicPlayApi, _blocks)
+  val _files          = new Files(_basicPlayApi, _blocks, _indirectBlocks)
+  val _inodes         = new INodes(_basicPlayApi)
+  val _directories    = new Directories(_basicPlayApi, _inodes)
 
   def home(implicit user: User): Future[Directory] = {
-    directories.find(user.id).recoverWith {
+    _directories.find(user.id).recoverWith {
       case Directory.NotFound(id) =>
         root.flatMap { root =>
           Directory(
@@ -48,10 +48,10 @@ class CassandraFileSystem(
   //TODO
   lazy val root: Future[Directory] =
     System.UUID("root").flatMap { id =>
-      directories.find(id)
+      _directories.find(id)
         .recoverWith {
         case ex: Directory.NotFound => for {
-          ur <- users.root
+          ur <- _users.root
           fr <- Directory("/", Path.root, ur.id, id, id).save()(this)
           __ <- fr.mkdir("tmp", ur.id)(this)
         } yield fr

@@ -113,7 +113,7 @@ object AccessControl
 }
 
 class AccessControls(
-  implicit val basicPlayApi: BasicPlayApi
+  implicit val _basicPlayApi: BasicPlayApi
 )
   extends AccessControlTable
   with ExtCQL[AccessControlTable, AccessControl]

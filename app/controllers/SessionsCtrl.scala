@@ -18,7 +18,7 @@ import scala.concurrent.Future
  **/
 class SessionsCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi,
+  val _basicPlayApi: BasicPlayApi,
   val _users: Users
 )
   extends Controller
