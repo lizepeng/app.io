@@ -94,16 +94,16 @@ class Components(context: Context)
   implicit val _secured = new controllers.RegisteredSecured(
     messagesApi,
     Seq(
-      controllers.FileSystemCtrl,
-      controllers.GroupsCtrl,
-      controllers.UsersCtrl,
-      controllers.EmailTemplatesCtrl,
       controllers.AccessControlsCtrl,
-      controllers.api.GroupsCtrl,
+      controllers.api.AccessControlsCtrl,
+      controllers.UsersCtrl,
       controllers.api.UsersCtrl,
-      controllers.api.SearchCtrl,
+      controllers.GroupsCtrl,
+      controllers.api.GroupsCtrl,
+      controllers.FileSystemCtrl,
       controllers.api.FileSystemCtrl,
-      controllers.api.AccessControlsCtrl
+      controllers.EmailTemplatesCtrl,
+      controllers.api.SearchCtrl
     )
   )
 

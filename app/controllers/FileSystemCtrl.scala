@@ -43,4 +43,7 @@ class FileSystemCtrl(
     }
 }
 
-object FileSystemCtrl extends Secured(CassandraFileSystem) with ViewMessages
+object FileSystemCtrl
+  extends Secured(CassandraFileSystem)
+  with CanonicalNameBasedMessages
+  with ViewMessages

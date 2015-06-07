@@ -35,13 +35,13 @@ package object security {
 
     val ALL = Seq(
       Anything,
+      Index,
+      Show,
       NNew,
       Create,
       Edit,
       Save,
       Destroy,
-      Index,
-      Show,
       HistoryIndex
     )
   }

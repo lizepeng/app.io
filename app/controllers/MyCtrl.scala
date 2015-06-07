@@ -79,7 +79,7 @@ class MyCtrl(
             Future.successful {
               BadRequest(
                 html.my.account(
-                  bound.withGlobalError(msg("old.password.invalid"))
+                  bound.withGlobalError(message("old.password.invalid"))
                 )
               )
             }
@@ -88,7 +88,7 @@ class MyCtrl(
               success.new_password.original
             ).map { user =>
               Redirect(routes.MyCtrl.account()).flashing {
-                AlertLevel.Info -> msg("password.changed")
+                AlertLevel.Info -> message("password.changed")
               }.createSession(rememberMe = false)(user)
             }
         }

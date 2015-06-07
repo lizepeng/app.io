@@ -103,7 +103,7 @@ class EmailTemplatesCtrl(
             Redirect {
               routes.EmailTemplatesCtrl.index()
             }.flashing {
-              AlertLevel.Success -> msg("created", saved.name)
+              AlertLevel.Success -> message("created", saved.name)
             }
           }
         }
@@ -191,10 +191,10 @@ class EmailTemplatesCtrl(
       } yield RedirectToPreviousURI.getOrElse {
         Redirect(routes.EmailTemplatesCtrl.index())
       }.flashing {
-        AlertLevel.Success -> msg("deleted", tmpl.name)
+        AlertLevel.Success -> message("deleted", tmpl.name)
       }
     }.recover {
-      case e: NotFound => NotFound(msg("not.found", id))
+      case e: NotFound => NotFound(message("not.found", id))
     }
 
     }
@@ -202,4 +202,7 @@ class EmailTemplatesCtrl(
   private def key_editing(id: UUID) = s"$canonicalName - $id - version"
 }
 
-object EmailTemplatesCtrl extends Secured(EmailTemplate) with ViewMessages
+object EmailTemplatesCtrl
+  extends Secured(EmailTemplate)
+  with CanonicalNameBasedMessages
+  with ViewMessages

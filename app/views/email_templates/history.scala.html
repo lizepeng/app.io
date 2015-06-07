@@ -11,7 +11,7 @@ implicit req: UserRequest[_], messages: Messages)
       <li role="presentation">
         <a href="@routes.EmailTemplatesCtrl.edit(tmpl.id, tmpl.lang)" aria-controls="edit">
           <i class="fa fa-edit fa-lg"></i>
-          @EmailTemplatesCtrl.vmsg("head")
+          @EmailTemplatesCtrl.msg("head")
         </a>
       </li>
       <li role="presentation" class="active">

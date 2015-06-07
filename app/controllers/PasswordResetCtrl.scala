@@ -123,7 +123,7 @@ class PasswordResetCtrl(
         } yield (user, tmpl)).map { case (user, tmpl) =>
           _mailService.schedule("support", tmpl, user)
           Redirect(routes.SessionsCtrl.nnew()).flashing(
-            AlertLevel.Info -> msg("password.changed")
+            AlertLevel.Info -> message("password.changed")
           )
         }.recover {
           case e: models.ExpirableLink.NotFound =>

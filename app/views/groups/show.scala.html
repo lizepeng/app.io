@@ -4,7 +4,7 @@ implicit req: UserRequest[_], messages: Messages)
 @import common._
 @import helper._
 
-@layouts.base(GroupsCtrl.vmsg("title")) {
+@layouts.base(GroupsCtrl.msg("title")) {
 
   @ng._alert()
 
@@ -28,7 +28,7 @@ implicit req: UserRequest[_], messages: Messages)
           '_type        -> "email",
           'maxLength    -> 64,
           'email        -> None,
-          'placeholder  -> GroupsCtrl.vmsg("user.email.placeholder"),
+          'placeholder  -> GroupsCtrl.msg("user.email.placeholder"),
           'typeahead    -> "email for email in getUserEmails($viewValue)",
           'autocomplete -> "off",
           Symbol("ng-model") -> "user.email"

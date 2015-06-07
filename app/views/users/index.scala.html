@@ -4,14 +4,14 @@ implicit req: UserRequest[_], messages: Messages)
 @import common._
 @import helper._
 
-@layouts.base(UsersCtrl.vmsg("title")) {
+@layouts.base(UsersCtrl.msg("title")) {
 
   @ng._alert()
 
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-user fa-lg fa-fw"></i>
-      @UsersCtrl.vmsg("head")
+      @UsersCtrl.msg("head")
     </h2>
   </div>
 
@@ -21,14 +21,14 @@ implicit req: UserRequest[_], messages: Messages)
       <div class="col-xs-8 col-xs-offset-4 col-sm-6 col-sm-offset-6">
         <div class="form-group">
           <label class="sr-only" for="search-users">
-            @UsersCtrl.vmsg("search.label")
+            @UsersCtrl.msg("search.label")
           </label>
           <div class="input-group">
             <div class="input-group-addon">
               <i class="fa fa-search"></i>
             </div>
             <input type="search" class="form-control" id="search-users"
-              placeholder="@UsersCtrl.vmsg("search.label")"
+              placeholder="@UsersCtrl.msg("search.label")"
               autocomplete="off"
               ng-model="keyword">
           </div>
@@ -92,7 +92,7 @@ implicit req: UserRequest[_], messages: Messages)
             '_type        -> "email",
             'email        -> None,
             'tabindex     -> 1,
-            'placeholder  -> UsersCtrl.vmsg("email.placeholder"),
+            'placeholder  -> UsersCtrl.msg("email.placeholder"),
             'autocomplete -> "off",
             Symbol("ng-model") -> "user.email"
           )
@@ -101,14 +101,14 @@ implicit req: UserRequest[_], messages: Messages)
             'maxLength    -> 64,
             'minLength    -> 2,
             'tabindex    -> 2,
-            'placeholder -> UsersCtrl.vmsg("name.placeholder"),
+            'placeholder -> UsersCtrl.msg("name.placeholder"),
             Symbol("ng-model") -> "user.name"
           )
 
           <button type="submit" class="btn btn-success" ng-click="UserList.create(user)"
             ng-disabled="form.$invalid || !user.email || user.email === '' || !user.name || user.name === ''">
             <i class="fa fa-user-plus"></i>
-            @UsersCtrl.vmsg("new.user")
+            @UsersCtrl.msg("new.user")
           </button>
         </form>
       </div>

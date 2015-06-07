@@ -58,4 +58,7 @@ class GroupsCtrl(
 
 }
 
-object GroupsCtrl extends Secured(Group) with ViewMessages
+object GroupsCtrl
+  extends Secured(Group)
+  with CanonicalNameBasedMessages
+  with ViewMessages

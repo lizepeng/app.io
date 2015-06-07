@@ -132,6 +132,7 @@ class UsersCtrl(
 
 object UsersCtrl
   extends Secured(User)
+  with CanonicalNameBasedMessages
   with ViewMessages {
 
   case class Password(

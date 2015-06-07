@@ -3,7 +3,7 @@
 @import common._
 @import helper._
 
-@layouts.base(PasswordResetCtrl.vmsg("title") + " - " + MSG("app.name")){
+@layouts.base(PasswordResetCtrl.msg("title") + " - " + MSG("app.name")){
 
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
@@ -14,14 +14,14 @@
   <div class="panel panel-primary auth-form">
     <div class="panel-heading">
       <h3 class="panel-title">
-        @PasswordResetCtrl.vmsg("title")
+        @PasswordResetCtrl.msg("title")
       </h3>
     </div>
     <div class="panel-body">
       @form(action = routes.PasswordResetCtrl.create()) {
 
         @{_input_email(fm("email"),
-          'placeholder -> PasswordResetCtrl.vmsg("email.enter"),
+          'placeholder -> PasswordResetCtrl.msg("email.enter"),
           'tabindex    -> 1
           )(_fc_form_group)
         }

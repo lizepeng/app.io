@@ -4,7 +4,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 @import common._
 @import helper._
 
-@layouts.base(AccessControlsCtrl.vmsg("title")) {
+@layouts.base(AccessControlsCtrl.msg("title")) {
 
   @ng._alert()
 
@@ -13,7 +13,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
   <div class="row" style="margin-top:10px">
     <h2 style="margin-left: 20px">
       <i class="fa fa-shield fa-lg fa-fw text-success"></i>
-      @AccessControlsCtrl.vmsg("head")
+      @AccessControlsCtrl.msg("head")
     </h2>
   </div>
 
@@ -23,7 +23,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
         @ng._form_control("principal",
           '_inline      -> false,
           'tabindex     -> 1,
-          'placeholder  -> AccessControlsCtrl.vmsg("principal.placeholder"),
+          'placeholder  -> AccessControlsCtrl.msg("principal.placeholder"),
           'typeahead    -> "item as item.label for item in getItems($viewValue)",
           'autocomplete -> "off",
           Symbol("ng-model") -> "ac.principal"

@@ -8,7 +8,7 @@ import play.api.i18n.Messages
 trait CanonicalNameBasedMessages {
   self: CanonicalNamed =>
 
-  def msg(key: String, args: Any*)(implicit messages: Messages) = {
+  def message(key: String, args: Any*)(implicit messages: Messages) = {
     messages(msg_key(key), args: _*)
   }
 

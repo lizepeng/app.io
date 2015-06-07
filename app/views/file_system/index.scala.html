@@ -6,7 +6,7 @@ implicit req: UserRequest[_], messages: Messages)
 
 @home = @{req.user.id.toString}
 
-@layouts.base(FileSystemCtrl.vmsg("title")) {
+@layouts.base(FileSystemCtrl.msg("title")) {
 
   @ng._alert()
 

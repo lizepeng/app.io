@@ -9,7 +9,7 @@ import play.api.i18n._
 trait ViewMessages {
   self: CanonicalNamed =>
 
-  def vmsg(key: String, args: Any*)(implicit messages: Messages) = {
+  def msg(key: String, args: Any*)(implicit messages: Messages) = {
     messages(s"views.$basicName.$key", args: _*)
   }
 }

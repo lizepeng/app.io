@@ -36,6 +36,7 @@ class AccessControlsCtrl(
 
 object AccessControlsCtrl
   extends Secured(AccessControl)
+  with CanonicalNameBasedMessages
   with ViewMessages
   with Logging {
 

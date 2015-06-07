@@ -1,22 +1,22 @@
 @()(implicit req: MaybeUserRequest[_], messages: Messages)
 
-@layouts.base(PasswordResetCtrl.vmsg("title") + " - " + MSG("app.name")){
+@layouts.base(PasswordResetCtrl.msg("title") + " - " + MSG("app.name")){
 
   <div class="panel panel-primary auth-form">
     <div class="panel-heading">
       <h3 class="panel-title">
-        @PasswordResetCtrl.vmsg("title")
+        @PasswordResetCtrl.msg("title")
       </h3>
     </div>
     <div class="panel-body">
       <p>
-        @PasswordResetCtrl.vmsg("sent.msg1")
+        @PasswordResetCtrl.msg("sent.msg1")
       </p>
       <p>
-        @PasswordResetCtrl.vmsg("sent.msg2")
+        @PasswordResetCtrl.msg("sent.msg2")
       </p>
       <a href="@routes.SessionsCtrl.nnew" class="btn btn-default" tabindex="2">
-        @PasswordResetCtrl.vmsg("return.to.sign.in")
+        @PasswordResetCtrl.msg("return.to.sign.in")
         <i class="fa fa-arrow-right"></i>
       </a>
     </div>
