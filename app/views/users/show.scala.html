@@ -4,7 +4,7 @@ implicit req: UserRequest[_], messages: Messages)
 @import common._
 @import helper._
 
-@layouts.base(Users.vmsg("title")) {
+@layouts.base(UsersCtrl.vmsg("title")) {
 
   @common._flashing()
 

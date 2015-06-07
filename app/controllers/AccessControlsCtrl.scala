@@ -19,7 +19,7 @@ class AccessControlsCtrl(
   val secured: RegisteredSecured,
   val accessControlRepo: AccessControls,
   val userRepo: Users,
-  internalGroupsRepo: InternalGroupsMapping
+  val groups: Groups
 )
   extends Secured(AccessControlsCtrl)
   with Controller

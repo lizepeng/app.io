@@ -152,15 +152,15 @@ object Group
 class Groups(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val User: Users,
-  val internalGroupsRepo: InternalGroupsMapping
+  val sysConfig: SysConfigs,
+  val _users: Users
 )
   extends GroupTable
   with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
-  with Cassandra {
-
-  import Group._
+  with InternalGroupsComponents
+  with Cassandra
+  with SysConfig {
 
   def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
@@ -175,7 +175,7 @@ class Groups(
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
   }.one.map {
-    case None => throw NotFound(id)
+    case None => throw Group.NotFound(id)
     case _    => true
   }
 
@@ -183,7 +183,7 @@ class Groups(
     select.where(_.id eqs id)
   }.one().map {
     case Some(g) => g
-    case None    => throw NotFound(id)
+    case None    => throw Group.NotFound(id)
   }
 
   def find(ids: TraversableOnce[UUID]): Future[Seq[Group]] = {
@@ -208,8 +208,8 @@ class Groups(
   }.future().map(_ => group)
 
   def remove(id: UUID): Future[ResultSet] =
-    if (internalGroupsRepo.Id2Num.contains(id))
-      Future.failed(NotWritable(id))
+    if (_internalGroups.Id2Num.contains(id))
+      Future.failed(Group.NotWritable(id))
     else
       CQL {
         select(_.child_id)
@@ -218,7 +218,7 @@ class Groups(
         case e: Exception => None
       }.flatMap {
         case None => CQL {delete.where(_.id eqs id)}.future()
-        case _    => throw NotEmpty(id)
+        case _    => throw Group.NotEmpty(id)
       }
 
   def all: Enumerator[Group] = CQL {
@@ -243,17 +243,17 @@ class Groups(
   def addChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     Batch.logged
       .add(this.cql_updated_at(id))
-      .add(User.cql_updated_at(child_id))
+      .add(_users.cql_updated_at(child_id))
       .add(this.cql_add_child(id, child_id))
-      .add(User.cql_add_group(child_id, id))
+      .add(_users.cql_add_group(child_id, id))
   }.future()
 
   def delChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     Batch.logged
       .add(this.cql_updated_at(id))
-      .add(User.cql_updated_at(child_id))
+      .add(_users.cql_updated_at(child_id))
       .add(this.cql_del_child(id, child_id))
-      .add(User.cql_del_group(child_id, id))
+      .add(_users.cql_del_group(child_id, id))
   }.future()
 
   def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
@@ -278,17 +278,17 @@ class Groups(
 
 }
 
-case class InternalGroups(code: Int) {
+case class InternalGroupsCode(code: Int) {
 
   def contains(gid: Int) = gid >= 0 && gid <= 18 && exists(gid)
 
-  def numbers = for (gid <- InternalGroups.ALL if exists(gid)) yield gid
+  def numbers = for (gid <- InternalGroupsCode.ALL if exists(gid)) yield gid
 
   private def exists(gid: Int) = (code & 1 << (19 - 1 - gid)) > 0
 
   def pprintLine1 = {
     import scala.Predef._
-    (for (i <- InternalGroups.ALL) yield {
+    (for (i <- InternalGroupsCode.ALL) yield {
       "%3s".format("G" + i)
     }).mkString("|   |", "|", "|   |")
   }
@@ -309,7 +309,7 @@ case class InternalGroups(code: Int) {
      """
 }
 
-object InternalGroups {
+object InternalGroupsCode {
 
   val ALL        = for (gid <- 0 to 18) yield gid
   val Half1st    = for (gid <- 0 to 9) yield gid
@@ -319,34 +319,29 @@ object InternalGroups {
   val Div3       = for (gid <- 13 to 18) yield gid
   val AnyoneMask = 1 << 18
   val Anyone     = 0
-
 }
 
-class InternalGroupsMapping(
+class InternalGroups(
   implicit val sysConfig: SysConfigs
 )
   extends CanonicalNamed
   with SysConfig
   with Logging {
 
-  import InternalGroups._
-
   //TODO just a workaround
   override val basicName: String = "groups"
-
-  import scala.language.implicitConversions
 
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  def initialize(implicit groupRepo: Groups): Future[Boolean] = Future.sequence(
-    ALL.map { n =>
+  def initialize(implicit _groups: Groups): Future[Boolean] = Future.sequence(
+    InternalGroupsCode.ALL.map { n =>
       val key = s"internal_group_${"%02d".format(n)}"
       System.UUID(key).flatMap { id =>
         Group(
           id,
-          if (n == Anyone) "Anyone" else key,
+          if (n == InternalGroupsCode.Anyone) "Anyone" else key,
           Some(key),
           is_internal = true,
           DateTime.now
@@ -355,7 +350,7 @@ class InternalGroupsMapping(
     }
   ).map { seq =>
     _num2Id = seq.map(_._1)
-    _anyoneId = _num2Id(Anyone)
+    _anyoneId = _num2Id(InternalGroupsCode.Anyone)
     _id2num = _num2Id.zipWithIndex.toMap
     Logger.info("Internal Group Ids has been initialized.")
     (true /: seq)(_ && _._2)
@@ -365,7 +360,14 @@ class InternalGroupsMapping(
 
   def Id2Num = _id2num
 
-  implicit def toGroupIdSet(igs: InternalGroups): Set[UUID] = {
+  def map(igs: InternalGroupsCode): Set[UUID] = {
     igs.numbers.map(_num2Id).toSet
   }
+}
+
+trait InternalGroupsComponents {
+
+  def _users: Users
+
+  implicit def _internalGroups: InternalGroups = _users._internalGroups
 }

@@ -27,8 +27,7 @@ class GroupsCtrl(
   implicit
   val accessControlRepo: AccessControls,
   val groupRepo: Groups,
-  val userRepo: Users,
-  internalGroupsRepo: InternalGroupsMapping
+  val userRepo: Users
 )
   extends Secured(GroupsCtrl)
   with Controller
@@ -78,12 +77,11 @@ object GroupsCtrl
 
   def initialize(
     implicit groupRepo: Groups,
-  internalGroupsRepo: InternalGroupsMapping,
   sysConfigRepo: SysConfigs): Future[Map[UUID, String]] = {
     groupRepo.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
       for (
         conf <-
-        if (grp.id == internalGroupsRepo.AnyoneId)
+        if (grp.id == groupRepo._internalGroups.AnyoneId)
           System.config(grp.id.toString, layout_admin).map(grp.id -> _)
         else
           System.config(grp.id.toString, layout_normal).map(grp.id -> _)
@@ -95,6 +93,7 @@ object GroupsCtrl
       Logger.info("Map(Group -> Layout) has been initialized.")
   }
 
+  //TODO rename or extract to class
   def layouts(ids: Traversable[UUID]): Set[String] = {
     ids.flatMap(_gid2layouts.get).toSet
   }

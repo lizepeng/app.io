@@ -23,31 +23,31 @@ class UsersCtrl(
 )(
   implicit
   val accessControlRepo: AccessControls,
-  val groupRepo: Groups,
-  val User: Users,
+  val _users: Users,
   val rateLimitRepo: RateLimits,
-  internalGroupsRepo: InternalGroupsMapping
+  val _groups: Groups
 )
   extends Secured(UsersCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
+  with InternalGroupsComponents
   with I18nSupport
   with Logging {
 
   def groups(id: UUID, options: Option[String]) =
     PermCheck(_.Show).async { implicit req =>
       (for {
-        user <- User.find(id)
-        grps <- groupRepo.find(
+        user <- _users.find(id)
+        grps <- _groups.find(
           options match {
-            case Some("internal") => internalGroupsRepo.toGroupIdSet(user.int_groups)
-            case Some("external") => user.ext_groups
+            case Some("internal") => user.internal_groups
+            case Some("external") => user.external_groups
             case _                => user.groups
           }
         )
       } yield grps).map { grps =>
-        Ok(Json.toJson(grps.filter(_.id != internalGroupsRepo.AnyoneId)))
+        Ok(Json.toJson(grps.filter(_.id != _internalGroups.AnyoneId)))
       }.recover {
         case e: BaseException => NotFound
       }
@@ -56,11 +56,11 @@ class UsersCtrl(
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
       if (ids.nonEmpty)
-        User.find(ids).map { usrs =>
+        _users.find(ids).map { usrs =>
           Ok(JsArray(usrs.map(_.toJson)))
         }
       else
-        (ES.Search(q, p) in User future()).map { page =>
+        (ES.Search(q, p) in _users future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.UsersCtrl.index(Nil, q, _))
           )
@@ -72,7 +72,7 @@ class UsersCtrl(
       BindJson().as[JsUser] {
         success => (for {
           saved <- success.toUser.save
-          _resp <- ES.Index(saved) into User
+          _resp <- ES.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>
           Created(_resp._1)
             .withHeaders(
@@ -85,11 +85,11 @@ class UsersCtrl(
     }
 
   def dropIndexIfEmpty: Future[Boolean] = for {
-    _empty <- User.isEmpty
+    _empty <- _users.isEmpty
     result <-
     if (_empty) {
       Logger.info(s"Clean elasticsearch index $basicName")
-      (ES.Delete from User).map(_ => true)
+      (ES.Delete from _users).map(_ => true)
     }
     else
       Future.successful(false)

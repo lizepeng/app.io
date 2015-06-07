@@ -1,6 +1,6 @@
 package security
 
-import models.{InternalGroupsMapping, AccessControls}
+import models._
 import play.api.i18n.{Langs, MessagesApi}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
@@ -19,7 +19,7 @@ case class PermissionChecker(
   val langs: Langs,
   val messagesApi: MessagesApi,
   val accessControlRepo: AccessControls,
-  val internalGroupsRepo: InternalGroupsMapping
+  val groups: Groups
 ) //TODO replace with BasicPlayApi
   extends ActionFilter[UserRequest] with PermissionCheck {
 

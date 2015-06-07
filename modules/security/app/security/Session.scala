@@ -18,7 +18,7 @@ import scala.util._
  */
 trait Session {
 
-  def userRepo: Users
+  def _users: Users
 
   private val user_id_key   = "usr_id"
   private val user_salt_key = "usr_salt"
@@ -59,7 +59,7 @@ trait Session {
      */
     def user: Future[User] = retrieve(req) match {
       case None       => Future.failed(User.NoCredentials())
-      case Some(cred) => userRepo.auth(cred)
+      case Some(cred) => _users.auth(cred)
     }
 
   }

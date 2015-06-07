@@ -20,7 +20,7 @@ class CFSCtrl(
   implicit
   val accessControlRepo: AccessControls,
   val userRepo: Users,
-  val internalGroupsRepo: InternalGroupsMapping,
+  val groups: Groups,
   val cfs: CFS
 )
   extends Secured(CFSCtrl)

@@ -9,7 +9,7 @@ import scala.language.higherKinds
  * @author zepeng.li@gmail.com
  */
 case class MaybeUserAction(
-  implicit val userRepo: Users
+  implicit val _users: Users
 )
   extends ActionBuilder[MaybeUserRequest]
   with ActionTransformer[Request, MaybeUserRequest]

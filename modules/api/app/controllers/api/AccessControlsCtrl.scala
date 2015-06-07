@@ -23,10 +23,9 @@ class AccessControlsCtrl(
 )(
   implicit
   val accessControlRepo: AccessControls,
-  val groupRepo: Groups,
   val User: Users,
   val rateLimitRepo: RateLimits,
-  internalGroupsRepo: InternalGroupsMapping
+  val groups: Groups
 )
   extends Secured(AccessControlsCtrl)
   with Controller
@@ -62,7 +61,7 @@ class AccessControlsCtrl(
           (for {
             exists <-
             if (!success.is_group) User.exists(success.principal)
-            else groupRepo.exists(success.principal)
+            else groups.exists(success.principal)
 
             saved <- success.save
             _resp <- ES.Index(saved) into AccessControl

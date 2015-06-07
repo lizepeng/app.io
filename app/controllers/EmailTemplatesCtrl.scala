@@ -28,7 +28,7 @@ class EmailTemplatesCtrl(
   val sessionDataDAO: SessionData,
   val EmailTemplate: EmailTemplates,
   val EmailTemplateHistory: EmailTemplateHistories,
-  internalGroupsRepo: InternalGroupsMapping
+  val groups: Groups
 )
   extends Secured(EmailTemplatesCtrl)
   with Controller

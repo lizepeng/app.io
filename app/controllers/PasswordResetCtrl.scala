@@ -24,11 +24,10 @@ class PasswordResetCtrl(
 )(
   implicit
   val mailService: MailService,
-  val User: Users,
+  val _users: Users,
   val ExpirableLink: ExpirableLinks,
   val EmailTemplate: EmailTemplates,
-  val sysConfigRepo: SysConfigs,
-  internalGroupsRepo: InternalGroupsMapping
+  val sysConfigRepo: SysConfigs
 )
   extends Secured(PasswordResetCtrl)
   with Controller
@@ -36,6 +35,7 @@ class PasswordResetCtrl(
   with SysConfig
   with AppConfig
   with BasicPlayComponents
+  with InternalGroupsComponents
   with I18nSupport
   with Logging {
 
@@ -68,7 +68,7 @@ class PasswordResetCtrl(
         onError(emailFM, "email.not.found")
       },
       success => (for {
-        user <- User.find(success)
+        user <- _users.find(success)
         link <- ExpirableLink.nnew(canonicalName)(user)
         tmpl <- getEmailTemplate(s"$basicName.email1")
       } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
@@ -119,7 +119,7 @@ class PasswordResetCtrl(
       },
       success => (for {
         link <- ExpirableLink.find(id).andThen { case _ => ExpirableLink.remove(id) }
-        user <- User.find(link.user_id).flatMap(_.savePassword(success.original))
+        user <- _users.find(link.user_id).flatMap(_.savePassword(success.original))
         tmpl <- getEmailTemplate(s"$basicName.email2")
       } yield (user, tmpl)).map { case (user, tmpl) =>
         mailService.schedule("support", tmpl, user)
@@ -135,8 +135,8 @@ class PasswordResetCtrl(
 
   private lazy val mailer = for {
     uid <- System.UUID("user.id")
-    usr <- User.find(uid).recoverWith {
-      case e: models.User.NotFound => User.save(
+    usr <- _users.find(uid).recoverWith {
+      case e: models.User.NotFound => _users.save(
         models.User(
           id = uid,
           name = basicName,

@@ -19,13 +19,13 @@ case class JsUser(
   ext_groups: Set[UUID]
 ) {
 
-  def toUser(implicit internalGroupsRepo: InternalGroupsMapping): User = User(
+  def toUser(implicit _internalGroups: InternalGroups): User = User(
     id = id,
     name = name,
     email = email,
-    int_groups = InternalGroups(int_groups),
-    ext_groups = ext_groups
-  )(internalGroupsRepo)
+    internal_groups_code = InternalGroupsCode(int_groups),
+    external_groups = ext_groups
+  )(_internalGroups)
 
 }
 
@@ -44,7 +44,7 @@ object JsUser {
     user.id,
     user.name,
     user.email,
-    user.int_groups.code,
-    user.ext_groups
+    user.internal_groups_code.code,
+    user.external_groups
   )
 }

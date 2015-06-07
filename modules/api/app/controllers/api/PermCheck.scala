@@ -22,7 +22,7 @@ object PermCheck {
     accessControlRepo: AccessControls,
     userRepo: Users,
     rateLimit: RateLimits,
-    internalGroupsRepo: InternalGroupsMapping
+    groups: Groups
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
     apply(_.Anything, onDenied)(
       CheckedResource(resource),
@@ -32,7 +32,7 @@ object PermCheck {
       accessControlRepo,
       userRepo,
       rateLimit,
-      internalGroupsRepo
+      groups
     )
   }
 
@@ -49,7 +49,7 @@ object PermCheck {
     accessControlRepo: AccessControls,
     userRepo: Users,
     rateLimit: RateLimits,
-    internalGroupsRepo: InternalGroupsMapping
+    groups: Groups
   ): ActionBuilder[UserRequest] =
     MaybeUserAction() andThen
       AuthCheck andThen

@@ -28,13 +28,14 @@ class UsersCtrl(
 )(
   implicit
   val accessControlRepo: AccessControls,
-  val userRepo: Users,
-  internalGroupsRepo: InternalGroupsMapping
+  val _users: Users,
+  val groups: Groups
 )
   extends Secured(UsersCtrl)
   with Controller
   with security.Session
   with BasicPlayComponents
+  with InternalGroupsComponents
   with I18nSupport {
 
   val signUpFM = Form[SignUpFD](
@@ -55,7 +56,7 @@ class UsersCtrl(
 
   def show(id: UUID) =
     PermCheck(_.Show).async { implicit req =>
-      userRepo.find(id).map { user =>
+      _users.find(id).map { user =>
         Ok(html.users.show(user))
       }
     }
@@ -84,12 +85,12 @@ class UsersCtrl(
         }
       },
       success => (for {
-        exist <- userRepo.checkEmail(success.email)
+        exist <- _users.checkEmail(success.email)
         saved <- User(
           email = success.email,
           password = success.password.original
         ).save
-        _____ <- ES.Index(saved) into User
+        _____ <- ES.Index(saved) into _users
       } yield saved).map { case saved =>
         Redirect {
           routes.MyCtrl.dashboard()
@@ -111,7 +112,7 @@ class UsersCtrl(
 
     form.bindFromRequest().fold(
       failure => Future.successful(Forbidden(failure.errorsAsJson)),
-      success => userRepo.checkEmail(success).map { _ =>
+      success => _users.checkEmail(success).map { _ =>
         Ok("")
       }.recover {
         case e: User.EmailTaken =>

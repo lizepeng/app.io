@@ -24,12 +24,12 @@ case class FilePermission(
       if (check(resource.permission, mask)) return true
     }
     //check external group permission
-    for (gid <- principal.ext_groups) {
+    for (gid <- principal.external_groups) {
       val perm = resource.ext_permission.getOrElse(gid, 0)
       if (check(perm, action)) return true
     }
     //check internal group permission
-    for (gid <- principal.int_groups.numbers) {
+    for (gid <- principal.internal_groups_code.numbers) {
       val mask = action.toLong << (19 - gid) * 3
       if (check(resource.permission, mask)) return true
     }
@@ -69,8 +69,8 @@ case class FilePermission(
       ${pprintLine(20)}
       ${pprintIndices(20)}
       ${pprintPerms(resource.permission)}
-      ${principal.int_groups.pprintLine1}
-      ${principal.int_groups.pprintLine2}
+      ${principal.internal_groups_code.pprintLine1}
+      ${principal.internal_groups_code.pprintLine2}
       ${pprintLine(20)}
      """
 

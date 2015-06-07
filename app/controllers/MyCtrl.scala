@@ -23,7 +23,7 @@ class MyCtrl(
   val ES: ElasticSearch
 )(
   implicit
-  val userRepo: Users,
+  val _users: Users,
   val personRepo: Persons
 )
   extends Secured(User)

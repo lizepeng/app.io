@@ -21,7 +21,7 @@ class SearchCtrl(
   val accessControlRepo: AccessControls,
   val User: Users,
   val rateLimitRepo: RateLimits,
-  internalGroupsRepo: InternalGroupsMapping
+  val groups: Groups
 )
   extends Secured(SearchCtrl)
   with Controller

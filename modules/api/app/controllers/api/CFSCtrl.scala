@@ -32,7 +32,7 @@ class CFSCtrl(
   accessControlRepo: AccessControls,
   userRepo: Users,
   rateLimitRepo: RateLimits,
-  internalGroupsRepo: InternalGroupsMapping,
+  groups: Groups,
   cfs: CFS
 )
   extends Secured(CFSCtrl)

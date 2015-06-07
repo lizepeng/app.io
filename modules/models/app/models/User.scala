@@ -29,15 +29,17 @@ case class User(
   salt: String = "",
   encrypted_password: String = "",
   email: String = "",
-  int_groups: InternalGroups = InternalGroups(0),
-  ext_groups: Set[UUID] = Set(),
+  internal_groups_code: InternalGroupsCode = InternalGroupsCode(0),
+  external_groups: Set[UUID] = Set(),
   password: String = "",
   remember_me: Boolean = false,
   updated_at: DateTime = DateTime.now
-)(implicit val internalGroupsRepo: InternalGroupsMapping) extends HasUUID {
+)(implicit val _internalGroups: InternalGroups) extends HasUUID {
 
-  def groups: Set[UUID] =
-    ext_groups union internalGroupsRepo.toGroupIdSet(int_groups)
+  lazy val internal_groups: Set[UUID] =
+    _internalGroups.map(internal_groups_code)
+
+  def groups: Set[UUID] = external_groups union internal_groups
 
   def hasPassword(submittedPasswd: String) = {
     if (encrypted_password == "") false
@@ -116,14 +118,14 @@ sealed class UserTable
     extends IntColumn(this)
     with JsonReadable[Int] {
 
-    def reads = (__ \ "int_groups").read[Int]
+    def reads = (__ \ "internal_groups").read[Int]
   }
 
   object external_groups
     extends SetColumn[UserTable, User, UUID](this)
     with JsonReadable[Set[UUID]] {
 
-    def reads = (__ \ "ext_groups").read[Set[UUID]]
+    def reads = (__ \ "external_groups").read[Set[UUID]]
   }
 
   object updated_at
@@ -194,9 +196,9 @@ object User
 
 class Users(
   implicit
+  val basicPlayApi: BasicPlayApi,
   val sysConfig: SysConfigs,
-  val internalGroupsRepo: InternalGroupsMapping,
-  val basicPlayApi: BasicPlayApi
+  val _internalGroups: InternalGroups
 )
   extends UserTable
   with ExtCQL[UserTable, User]
@@ -211,15 +213,13 @@ class Users(
       salt(r),
       encrypted_password(r),
       email(r),
-      InternalGroups(internal_groups(r)),
+      InternalGroupsCode(internal_groups(r)),
       external_groups(r),
       "",
       remember_me = false,
       updated_at(r)
     )
   }
-
-  import User._
 
   val UserByEmail = new UserByEmail
 
@@ -230,14 +230,14 @@ class Users(
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
   }.one.map {
-    case None => throw NotFound(id.toString)
+    case None => throw User.NotFound(id.toString)
     case _    => true
   }
 
   def find(id: UUID): Future[User] = CQL {
     select.where(_.id eqs id)
   }.one().map {
-    case None    => throw NotFound(id.toString)
+    case None    => throw User.NotFound(id.toString)
     case Some(u) => u
   }
 
@@ -253,7 +253,7 @@ class Users(
   def checkEmail(email: String): Future[Boolean] = {
     UserByEmail.cql_check(email).one().map {
       case None => true
-      case _    => throw EmailTaken(email)
+      case _    => throw User.EmailTaken(email)
     }
   }
 
@@ -273,11 +273,11 @@ class Users(
           .value(_.salt, u.salt)
           .value(_.encrypted_password, u.encrypted_password)
           .value(_.email, u.email)
-          .value(_.internal_groups, u.int_groups.code | InternalGroups.AnyoneMask)
+          .value(_.internal_groups, u.internal_groups_code.code | InternalGroupsCode.AnyoneMask)
           .value(_.external_groups, Set[UUID]())
           .value(_.updated_at, u.updated_at)
       }.future().map(_ => u)
-      else throw EmailTaken(u.email)
+      else throw User.EmailTaken(u.email)
     } yield user
   }
 
@@ -345,17 +345,17 @@ class Users(
    * @param cred credentials
    * @return
    */
-  def auth(cred: Credentials): Future[User] = {
+  def auth(cred: User.Credentials): Future[User] = {
     find(cred.id).map { u =>
       if (u.salt == cred.salt) u
-      else throw SaltNotMatch(cred.id)
+      else throw User.SaltNotMatch(cred.id)
     }
   }
 
   def auth(email: String, passwd: String): Future[User] = {
     find(email).map { user =>
       if (user.hasPassword(passwd)) user
-      else throw WrongPassword(email)
+      else throw User.WrongPassword(email)
     }
   }
 }

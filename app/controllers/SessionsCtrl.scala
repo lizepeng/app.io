@@ -20,7 +20,7 @@ class SessionsCtrl(
   val basicPlayApi: BasicPlayApi
 )(
   implicit
-  val userRepo: Users
+  val _users: Users
 )
   extends Controller
   with security.Session
@@ -53,7 +53,7 @@ class SessionsCtrl(
     val form = loginFM.bindFromRequest
     form.fold(
       failure => Future.successful(BadRequest(html.account.login(failure))),
-      success => userRepo.auth(success.email, success.password).recover {
+      success => _users.auth(success.email, success.password).recover {
         case e: models.User.NotFound      => Logger.warn(e.reason); throw models.User.AuthFailed()
         case e: models.User.WrongPassword => Logger.warn(e.reason); throw models.User.AuthFailed()
       }.map { implicit user =>

@@ -25,7 +25,7 @@ trait PermissionCheck
 
   def accessControlRepo: AccessControls
 
-  implicit def internalGroupsRepo: InternalGroupsMapping
+  implicit def groups: Groups
 
   def check[A](u: User): Future[Option[Boolean]] = {
     for {

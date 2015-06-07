@@ -1,4 +1,4 @@
-import controllers.{AccessControlsCtrl, Application, EmailTemplatesCtrl, CFSCtrl, GroupsCtrl, UsersCtrl, _}
+import controllers.{AccessControlsCtrl, Application, CFSCtrl, EmailTemplatesCtrl, GroupsCtrl, UsersCtrl, _}
 import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
@@ -28,18 +28,18 @@ class Components(context: Context)
 
   Logger.configure(context.environment)
 
-  implicit val basicPlayApi = BasicPlayApi(langs, messagesApi, configuration)
+  implicit val basicPlayApi   = BasicPlayApi(langs, messagesApi, configuration)
+  implicit val sysConfigRepo  = new SysConfigs
+  implicit val internalGroups = new InternalGroups
 
-  implicit val sysConfigRepo            = new SysConfigs
-  implicit val internalGroupsRepo       = new InternalGroupsMapping()
   implicit val emailTemplateRepo        = new EmailTemplates
   implicit val emailTemplateHistoryRepo = new EmailTemplateHistories
   implicit val personRepo               = new Persons
+  implicit val userRepo                 = new Users()
+  implicit val groupRepo                = new Groups
   implicit val sessionDataDAO           = new SessionData
   implicit val rateLimitRepo            = new RateLimits
   implicit val expirableLinkRepo        = new ExpirableLinks
-  implicit val userRepo                 = new Users()
-  implicit val groupRepo                = new Groups
   implicit val accessControlRepo        = new AccessControls
   implicit val CFS                      = new CFS()
 
@@ -63,7 +63,7 @@ class Components(context: Context)
       new api.UsersCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
       new api.GroupsCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
       new api.AccessControlsCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
-      internalGroupsRepo.initialize.flatMap { done =>
+      groupRepo._internalGroups.initialize.flatMap { done =>
         if (done) new api.GroupsCtrl(basicPlayApi, elasticSearch).reindex
         else Future.successful(false)
       },
@@ -118,7 +118,7 @@ class Components(context: Context)
     new UsersCtrl(basicPlayApi, elasticSearch),
     new MyCtrl(basicPlayApi, elasticSearch),
     new GroupsCtrl(basicPlayApi),
-    new PasswordResetCtrl(basicPlayApi)(mailService, userRepo, expirableLinkRepo, emailTemplateRepo, sysConfigRepo, internalGroupsRepo),
+    new PasswordResetCtrl(basicPlayApi)(mailService, userRepo, expirableLinkRepo, emailTemplateRepo, sysConfigRepo),
     new EmailTemplatesCtrl(basicPlayApi),
     new AccessControlsCtrl(basicPlayApi)
   )
