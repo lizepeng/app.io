@@ -7,7 +7,6 @@ import helpers._
 import models.AccessControl.NotFound
 import models._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
@@ -27,6 +26,7 @@ class AccessControlsCtrl(
   with LinkHeader
   with BasicPlayComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with Logging {
 

@@ -5,6 +5,8 @@ import play.api.Configuration
 import play.api.i18n.{Langs, MessagesApi}
 import play.api.inject.ApplicationLifecycle
 
+import scala.concurrent.ExecutionContext
+
 /**
  * @author zepeng.li@gmail.com
  */
@@ -12,7 +14,7 @@ case class BasicPlayApi(
   langs: Langs,
   messagesApi: MessagesApi,
   configuration: Configuration,
-  lifecycle: ApplicationLifecycle,
+  applicationLifecycle: ApplicationLifecycle,
   actorSystem: ActorSystem
 )
 
@@ -26,7 +28,13 @@ trait BasicPlayComponents {
 
   implicit def configuration: Configuration = _basicPlayApi.configuration
 
-  def lifecycle: ApplicationLifecycle = _basicPlayApi.lifecycle
+  def applicationLifecycle: ApplicationLifecycle = _basicPlayApi.applicationLifecycle
 
   def actorSystem: ActorSystem = _basicPlayApi.actorSystem
+}
+
+trait DefaultPlayExecutor {
+  self: BasicPlayComponents =>
+
+  implicit def defaultContext: ExecutionContext = actorSystem.dispatcher
 }

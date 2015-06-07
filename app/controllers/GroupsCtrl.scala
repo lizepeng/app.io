@@ -7,7 +7,6 @@ import helpers._
 import models._
 import play.api.data.Forms._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
 import views._
@@ -28,6 +27,7 @@ class GroupsCtrl(
   with Controller
   with BasicPlayComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with I18nSupport {
 
   val mapping_name = "name" -> nonEmptyText(2, 255)

@@ -7,7 +7,6 @@ import models.json._
 import play.api.http.ContentTypes
 import play.api.i18n._
 import play.api.libs.MimeTypes
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
 import play.api.libs.json.JsArray
 import play.api.mvc.BodyParsers.parse._
@@ -36,6 +35,7 @@ class FileSystemCtrl(
   with LinkHeader
   with BasicPlayComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with ExceptionDefining
   with I18nSupport
   with AppConfig
@@ -333,7 +333,6 @@ class FileSystemCtrl(
 
   object Flow {
 
-    //TODO how extends ExceptionDefining here
     case class MissingFlowArgument(key: String)
       extends BaseException(error_code("missing.flow.argument"))
 

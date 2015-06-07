@@ -2,10 +2,9 @@ package batches
 
 import helpers.Logging
 import org.joda.time.Interval
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * @author zepeng.li@gmail.com
@@ -14,7 +13,11 @@ class ReIndex[T](
   source: Enumerator[T],
   forEachChunk: List[T] => Future[_],
   onDone: => Unit = () => Unit
-)(chunkSize: Int, val total: Option[Int] = None)
+)(
+  chunkSize: Int, val total: Option[Int] = None
+)(
+  implicit ec: ExecutionContext
+)
   extends Batch[Int]
   with Logging {
 

@@ -4,7 +4,6 @@ import elasticsearch._
 import helpers._
 import models._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.api.mvc.Controller
 
@@ -25,6 +24,7 @@ class SearchCtrl(
   with LinkHeader
   with BasicPlayComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with I18nSupport {
 
   def index(types: Seq[String], q: Option[String], p: Pager) =

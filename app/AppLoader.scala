@@ -34,7 +34,9 @@ class Components(context: Context)
   play.api.Logger.configure(context.environment)
 
   // Basic Play Api
-  implicit val _basicPlayApi = BasicPlayApi(langs, messagesApi, configuration, applicationLifecycle, actorSystem)
+  implicit val _basicPlayApi = BasicPlayApi(
+    langs, messagesApi, configuration, applicationLifecycle, actorSystem
+  )
 
   // Services
   implicit val _bandwidth   = new BandwidthService(_basicPlayApi)

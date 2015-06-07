@@ -75,7 +75,7 @@ case class User(
 /**
  *
  */
-sealed class UserTable
+sealed abstract class UserTable
   extends CassandraTable[UserTable, User]
   with CanonicalNamedModel[User]
   with Logging {
@@ -133,8 +133,6 @@ sealed class UserTable
     def reads = always(DateTime.now)
   }
 
-  //TODO
-  override def fromRow(r: Row): User = ???
 }
 
 object User
@@ -190,6 +188,8 @@ object User
 
   case class Credentials(id: UUID, salt: String)
 
+  override def fromRow(r: Row): User =
+    throw new RuntimeException("Use instance instead of this object.")
 }
 
 class Users(
@@ -209,7 +209,7 @@ class Users(
 
   create.ifNotExists.future()
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   override def fromRow(r: Row): User = {
     User(
@@ -225,8 +225,6 @@ class Users(
       updated_at(r)
     )
   }
-
-
 
   lazy val root: Future[User] = System.UUID("root_id").map { uid =>
     User(id = uid, name = "root")
@@ -365,7 +363,6 @@ class Users(
   }
 }
 
-//TODO rename to *Table
 sealed class UserByEmailIndex
   extends CassandraTable[UserByEmailIndex, (String, UUID)]
 
@@ -394,7 +391,7 @@ class UserByEmail(
 
   create.ifNotExists.future()
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def save(email: String, id: UUID): Future[Boolean] = CQL {
     insert

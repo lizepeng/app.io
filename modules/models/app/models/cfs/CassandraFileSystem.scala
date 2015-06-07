@@ -27,7 +27,7 @@ class CassandraFileSystem(
   val _inodes         = new INodes(_basicPlayApi)
   val _directories    = new Directories(_basicPlayApi, _inodes)
 
-  lifecycle.addStopHook { () =>
+  applicationLifecycle.addStopHook { () =>
     Future.sequence(
       Seq(
         Future.successful(_blocks.shutdown()),
@@ -58,7 +58,6 @@ class CassandraFileSystem(
     home(user).flatMap(_.dir_!("temp")(user, this))
   }
 
-  //TODO
   lazy val root: Future[Directory] =
     System.UUID("root").flatMap { id =>
       _directories.find(id)

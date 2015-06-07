@@ -18,7 +18,8 @@ import scala.util.Try
  */
 class BandwidthService(
   val _basicPlayApi: BasicPlayApi
-) extends BasicPlayComponents {
+)
+  extends BasicPlayComponents {
 
   val executor: ExecutionContext =
     actorSystem.dispatchers.lookup("contexts.traffic-shaper")

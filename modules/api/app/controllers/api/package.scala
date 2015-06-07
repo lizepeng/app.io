@@ -3,7 +3,6 @@ package controllers
 import models.TimeBased
 import play.api.http._
 import play.api.i18n.Messages
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc._
 import protocols.JsonProtocol._
@@ -16,6 +15,8 @@ import scala.language.implicitConversions
  * @author zepeng.li@gmail.com
  */
 package object api {
+
+  import play.api.libs.iteratee.Execution.Implicits.trampoline
 
   /**
    * `Writable` also Pretty Print for `JsValue` values - Json

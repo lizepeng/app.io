@@ -2,8 +2,6 @@ package security
 
 import helpers._
 import models._
-import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -13,7 +11,8 @@ import scala.util.{Failure, Success}
  */
 trait PermissionCheck
   extends BasicPlayComponents
-  with Logging{
+  with DefaultPlayExecutor
+  with Logging {
 
   def action: CheckedActions => CheckedAction
 

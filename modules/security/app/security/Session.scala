@@ -6,7 +6,6 @@ import helpers._
 import helpers.syntax._
 import models.User._
 import models._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 
 import scala.concurrent.Future
@@ -17,6 +16,9 @@ import scala.util._
  * @author zepeng.li@gmail.com
  */
 trait Session {
+  self: DefaultPlayExecutor =>
+
+  def _basicPlayApi: BasicPlayApi
 
   def _users: Users
 

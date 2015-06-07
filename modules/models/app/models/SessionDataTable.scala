@@ -49,7 +49,7 @@ class SessionData(
 
   create.ifNotExists.future()
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def get[T: TypeTag](
     key: String

@@ -7,7 +7,6 @@ import helpers._
 import models._
 import models.json._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
@@ -28,6 +27,7 @@ class UsersCtrl(
   with BasicPlayComponents
   with InternalGroupsComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with Logging {
 

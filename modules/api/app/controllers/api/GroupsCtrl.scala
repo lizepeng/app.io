@@ -9,7 +9,6 @@ import helpers._
 import models._
 import models.json._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -35,6 +34,7 @@ class GroupsCtrl(
   with LinkHeader
   with BasicPlayComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with Logging {
 

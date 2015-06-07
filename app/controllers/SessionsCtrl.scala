@@ -5,7 +5,6 @@ import models._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import security._
 import views._
@@ -24,6 +23,7 @@ class SessionsCtrl(
   extends Controller
   with security.Session
   with BasicPlayComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with Logging {
 

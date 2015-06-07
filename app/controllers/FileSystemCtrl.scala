@@ -4,7 +4,6 @@ import controllers.api.Secured
 import helpers._
 import models.cfs._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Controller
 import views._
 
@@ -23,6 +22,7 @@ class FileSystemCtrl(
   with Controller
   with BasicPlayComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =

@@ -100,7 +100,7 @@ class SysConfigs(
 
   create.ifNotExists.future()
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   import SysConfig._
 

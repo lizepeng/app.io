@@ -74,7 +74,7 @@ class Persons(
 
   create.ifNotExists.future()
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)

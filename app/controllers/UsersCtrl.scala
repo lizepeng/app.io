@@ -11,7 +11,6 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
 import security._
@@ -33,6 +32,7 @@ class UsersCtrl(
   with BasicPlayComponents
   with InternalGroupsComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with security.Session {
 

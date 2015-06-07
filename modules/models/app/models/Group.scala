@@ -163,7 +163,7 @@ class Groups(
 
   create.ifNotExists.future()
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -325,7 +325,7 @@ class InternalGroups(
   with SysConfig
   with Cassandra {
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()

@@ -2,8 +2,6 @@ package security
 
 import helpers._
 import models.User
-import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Iteratee
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
@@ -17,6 +15,7 @@ import scala.util.Failure
 trait AuthorizedBodyParser[A]
   extends BodyParser[A]
   with BasicPlayComponents
+  with DefaultPlayExecutor
   with Session
   with Logging {
 

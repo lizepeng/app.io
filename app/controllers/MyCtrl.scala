@@ -8,7 +8,6 @@ import models._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Controller
 import security._
 import views._
@@ -28,6 +27,7 @@ class MyCtrl(
   extends Secured(User)
   with Controller
   with BasicPlayComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with Session
   with CanonicalNameBasedMessages {

@@ -131,7 +131,7 @@ class EmailTemplates(
   with BasicPlayComponents
   with Cassandra {
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def build(
     id: UUID,
@@ -255,7 +255,7 @@ class EmailTemplateHistories(
   with BasicPlayComponents
   with Cassandra {
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {
     CQL {

@@ -57,7 +57,7 @@ class ExpirableLinks(
   with BasicPlayComponents
   with Cassandra {
 
-  lifecycle.addStopHook(() => Future.successful(shutdown()))
+  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def find(id: String): Future[ExpirableLink] =
     CQL {

@@ -1,7 +1,6 @@
 package security
 
 import models.User
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
 

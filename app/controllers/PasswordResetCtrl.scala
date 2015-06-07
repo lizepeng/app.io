@@ -8,7 +8,6 @@ import models.sys.{SysConfig, SysConfigs}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import security._
 import services._
@@ -32,6 +31,7 @@ class PasswordResetCtrl(
   with Controller
   with BasicPlayComponents
   with InternalGroupsComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with CanonicalNameBasedMessages
   with SysConfig

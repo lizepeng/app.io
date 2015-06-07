@@ -4,7 +4,6 @@ import helpers._
 import models.RateLimits
 import org.joda.time.DateTime
 import play.api.i18n.I18nSupport
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import protocols.JsonProtocol._
 import security._
@@ -24,6 +23,7 @@ case class RateLimitCheck(
   with ExHeaders
   with CanonicalNamed
   with BasicPlayComponents
+  with DefaultPlayExecutor
   with I18nSupport
   with AppConfig {
 

@@ -4,7 +4,6 @@ import helpers.{PageLike, Pager}
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.xcontent._
 import play.api.http._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Codec
 
 import scala.language.implicitConversions
@@ -18,6 +17,8 @@ case class PageSResp(pager: Pager, resp: SearchResponse) extends PageLike {
 }
 
 object PageSResp {
+
+  import play.api.libs.iteratee.Execution.Implicits.trampoline
 
   /**
    * `Writable` for `PageSResp` values - Json

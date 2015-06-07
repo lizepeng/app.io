@@ -4,7 +4,6 @@ import helpers.{PageLike, Pager}
 import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.common.xcontent._
 import play.api.http._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Codec
 
 import scala.language.implicitConversions
@@ -21,6 +20,8 @@ case class PageMSResp(
 }
 
 object PageMSResp {
+
+  import play.api.libs.iteratee.Execution.Implicits.trampoline
 
   /**
    * `Writable` for `PageMSResp` values - Json

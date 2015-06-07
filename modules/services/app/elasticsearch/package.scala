@@ -10,7 +10,6 @@ import org.elasticsearch.common.compress.CompressorFactory
 import org.elasticsearch.common.io.Streams
 import org.elasticsearch.common.xcontent._
 import play.api.http._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc.Codec
 
@@ -38,6 +37,8 @@ package object elasticsearch {
 
   implicit def PersonToJsonDocSource(p: Person): JsonDocSource =
     JsonDocSource(Json.toJson(p))
+
+  import play.api.libs.iteratee.Execution.Implicits.trampoline
 
   /**
    * `Writable` for `SearchResponse` values - Json

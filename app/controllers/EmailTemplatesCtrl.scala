@@ -11,7 +11,6 @@ import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Controller
 import security._
 import views._
@@ -31,6 +30,7 @@ class EmailTemplatesCtrl(
   with Controller
   with BasicPlayComponents
   with PermCheckComponents
+  with DefaultPlayExecutor
   with CanonicalNameBasedMessages
   with I18nSupport {
 
