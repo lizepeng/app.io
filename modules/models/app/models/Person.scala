@@ -25,9 +25,8 @@ case class Person(
 
 sealed class Persons
   extends CassandraTable[Persons, Person]
-  with ExtCQL[Persons, Person]
   with CanonicalNamedModel[Person]
-  with ExceptionDefining
+  with CanonicalModel[Person]
   with Logging {
 
   override val tableName = "persons"
@@ -55,13 +54,26 @@ sealed class Persons
   }
 }
 
-object Person extends Persons with Cassandra with SysConfig {
+object Person
+  extends Persons
+  with ExceptionDefining {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
 
   // Json Reads and Writes
   implicit val person_format = Json.format[Person]
+}
+
+class PersonRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends Persons
+  with ExtCQL[Persons, Person]
+  with BasicPlayComponents
+  with Cassandra {
+
+  import Person._
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)

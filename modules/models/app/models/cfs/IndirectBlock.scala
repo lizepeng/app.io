@@ -5,7 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
-import helpers.Logging
+import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block._
 import play.api.libs.iteratee._
@@ -30,7 +30,6 @@ case class IndirectBlock(
 sealed class IndirectBlocks
   extends CassandraTable[IndirectBlocks, IndirectBlock]
   with INodeKey[IndirectBlocks, IndirectBlock]
-  with ExtCQL[IndirectBlocks, IndirectBlock]
   with Logging {
 
   override val tableName = "indirect_blocks"
@@ -50,7 +49,17 @@ sealed class IndirectBlocks
   }
 }
 
-object IndirectBlock extends IndirectBlocks with Cassandra {
+object IndirectBlock extends IndirectBlocks
+
+class IndirectBlockRepo(
+  implicit
+  val Block: BlockRepo,
+  val basicPlayApi: BasicPlayApi
+)
+  extends IndirectBlocks
+  with ExtCQL[IndirectBlocks, IndirectBlock]
+  with BasicPlayComponents
+  with Cassandra {
 
   def read(id: UUID): Enumerator[BLK] = {
     select(_.indirect_block_id)

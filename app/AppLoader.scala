@@ -1,7 +1,9 @@
-import controllers.{Application, _}
+import controllers.{AccessControls, Application, EmailTemplates, Files, Groups, Users, _}
 import helpers.BasicPlayApi
 import messages.ChatActor
-import models.{InternalGroups, Schemas}
+import models._
+import models.cfs._
+import models.sys.SysConfigRepo
 import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.i18n._
@@ -24,11 +26,33 @@ class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
   with I18nComponents {
 
-  val basicPlayApi  = BasicPlayApi(langs, messagesApi, configuration)
+  Logger.configure(context.environment)
+
+  implicit val basicPlayApi = BasicPlayApi(langs, messagesApi, configuration)
+
+  implicit val inodeRepo                = new INodeRepo
+  implicit val blockRepo                = new BlockRepo
+  implicit val indirectBlockRepo        = new IndirectBlockRepo
+  implicit val fileRepo                 = new FileRepo
+  implicit val directoryRepo            = new DirectoryRepo
+  implicit val sysConfigRepo            = new SysConfigRepo
+  implicit val CFS                      = new CFS()
+  implicit val Home                     = new Home(CFS)
+  implicit val internalGroupsRepo       = new InternalGroupsRepo()
+  implicit val emailTemplateRepo        = new EmailTemplateRepo
+  implicit val emailTemplateHistoryRepo = new EmailTemplateHistoryRepo
+  implicit val personRepo               = new PersonRepo
+  implicit val sessionDataDAO           = new SessionDataDAO
+  implicit val rateLimitRepo            = new RateLimitRepo
+  implicit val expirableLinkRepo        = new ExpirableLinkRepo
+  implicit val userRepo                 = new UserRepo()
+  implicit val groupRepo                = new GroupRepo
+  implicit val accessControlRepo        = new AccessControlRepo
+
+  implicit val secured = buildSecured
   val bandwidth     = BandwidthService(basicPlayApi, actorSystem)
   val mailService   = MailService(basicPlayApi, actorSystem)
   val elasticSearch = elasticsearch.ElasticSearch(basicPlayApi)
-  val secured       = buildSecured
   val apiRouter     = buildApiRouter
   val socketsRouter = buildSocketsRouter
 
@@ -45,7 +69,7 @@ class Components(context: Context)
       new api.Users(basicPlayApi, elasticSearch).dropIndexIfEmpty,
       new api.Groups(basicPlayApi, elasticSearch).dropIndexIfEmpty,
       new api.AccessControls(basicPlayApi, elasticSearch).dropIndexIfEmpty,
-      InternalGroups.initialize.flatMap { done =>
+      internalGroupsRepo.initialize.flatMap { done =>
         if (done) new api.Groups(basicPlayApi, elasticSearch).reindex
         else Future.successful(false)
       },
@@ -100,9 +124,9 @@ class Components(context: Context)
     new Users(basicPlayApi, elasticSearch),
     new My(basicPlayApi, elasticSearch),
     new Groups(basicPlayApi),
-    new PasswordReset(basicPlayApi)(mailService),
+    new PasswordReset(basicPlayApi)(mailService, userRepo, expirableLinkRepo, emailTemplateRepo, sysConfigRepo, internalGroupsRepo),
     new EmailTemplates(basicPlayApi),
-    new AccessControls(basicPlayApi)(secured)
+    new AccessControls(basicPlayApi)
   )
 
 }

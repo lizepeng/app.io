@@ -29,17 +29,16 @@ case class AccessControl(
 
   override def id = AccessControl.genId(resource, action, principal)
 
-  def save = AccessControl.save(this)
+  def save(implicit repo: AccessControlRepo) = repo.save(this)
 }
 
 sealed class AccessControls
   extends CassandraTable[AccessControls, AccessControl]
-  with ExtCQL[AccessControls, AccessControl]
+
   with CanonicalNamedModel[AccessControl]
-  with ExceptionDefining
   with Logging {
 
-  override val tableName = "access_controls"
+  override lazy val tableName = "access_controls"
 
   object principal_id
     extends UUIDColumn(this)
@@ -71,7 +70,9 @@ sealed class AccessControls
   }
 }
 
-object AccessControl extends AccessControls with Cassandra {
+object AccessControl
+  extends AccessControls
+  with ExceptionDefining {
 
   case class NotFound(id: UUID, res: String, act: String)
     extends BaseException(error_code("not.found"))
@@ -81,7 +82,7 @@ object AccessControl extends AccessControls with Cassandra {
     resource: String,
     sub_key: String
   ) extends Permission.Undefined[P, String, String](
-    s"$canonicalName.$sub_key"
+    error_code(sub_key)
   )
 
   abstract class Denied[P](
@@ -89,7 +90,7 @@ object AccessControl extends AccessControls with Cassandra {
     resource: String,
     sub_key: String
   ) extends Permission.Denied[P, String, String](
-    s"$canonicalName.$sub_key"
+    error_code(sub_key)
   )
 
   abstract class Granted[P](
@@ -97,7 +98,7 @@ object AccessControl extends AccessControls with Cassandra {
     resource: String,
     sub_key: String
   ) extends Permission.Granted[P, String, String](
-    s"$canonicalName.$sub_key"
+    error_code(sub_key)
   )
 
   // Json Reads and Writes
@@ -108,6 +109,18 @@ object AccessControl extends AccessControls with Cassandra {
     action: String,
     principal: UUID
   ) = s"${principal.toString}/$resource/$action"
+
+}
+
+class AccessControlRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends AccessControls
+  with ExtCQL[AccessControls, AccessControl]
+  with BasicPlayComponents
+  with Cassandra {
+
+  import AccessControl._
 
   def find(ac: AccessControl): Future[AccessControl] =
     find(ac.principal, ac.resource, ac.action)

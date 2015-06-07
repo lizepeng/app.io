@@ -1,5 +1,6 @@
 package security
 
+import models.{InternalGroupsRepo, AccessControlRepo}
 import play.api.i18n.{Langs, MessagesApi}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
@@ -16,8 +17,10 @@ case class PermissionChecker(
 )(
   implicit
   val langs: Langs,
-  val messagesApi: MessagesApi
-)
+  val messagesApi: MessagesApi,
+  val accessControlRepo: AccessControlRepo,
+  val internalGroupsRepo: InternalGroupsRepo
+) //TODO replace with BasicPlayApi
   extends ActionFilter[UserRequest] with PermissionCheck {
 
   override protected def filter[A](

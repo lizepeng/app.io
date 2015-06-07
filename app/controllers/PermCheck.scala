@@ -1,5 +1,6 @@
 package controllers
 
+import models._
 import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
 import security._
@@ -15,10 +16,18 @@ object PermCheck {
   )(
     implicit
     langs: Langs,
-    messagesApi: MessagesApi
+    messagesApi: MessagesApi,
+    accessControlRepo: AccessControlRepo,
+    userRepo: UserRepo,
+    internalGroupsRepo: InternalGroupsRepo
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
     apply(_.Anything, onDenied)(
-      CheckedResource(resource), langs, messagesApi
+      CheckedResource(resource),
+      langs,
+      messagesApi,
+      accessControlRepo,
+      userRepo,
+      internalGroupsRepo
     )
   }
 
@@ -30,9 +39,12 @@ object PermCheck {
     implicit
     resource: CheckedResource,
     langs: Langs,
-    messagesApi: MessagesApi
+    messagesApi: MessagesApi,
+    accessControlRepo: AccessControlRepo,
+    userRepo: UserRepo,
+    internalGroupsRepo: InternalGroupsRepo
   ): ActionBuilder[UserRequest] =
-    MaybeUserAction andThen
+    MaybeUserAction() andThen
       AuthCheck andThen
       PermissionChecker(action, onDenied, resource)
 }

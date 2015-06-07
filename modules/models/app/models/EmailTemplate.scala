@@ -26,7 +26,7 @@ case class EmailTemplate(
   created_by: UUID
 ) extends HasUUID {
 
-  def save = EmailTemplate.save(this)
+  def save(implicit emailTemplateRepo: EmailTemplateRepo) = emailTemplateRepo.save(this)
 }
 
 case class EmailTemplateHistory(
@@ -95,7 +95,6 @@ sealed class EmailTemplates
   with EmailTemplateKey[EmailTemplates, ET]
   with EmailTemplateColumns[EmailTemplates, ET]
   with EmailTemplateHistoryColumns[EmailTemplates, ET]
-  with ExtCQL[EmailTemplates, ET]
   with CanonicalNamedModel[ET]
   with ExceptionDefining
   with Logging {
@@ -114,13 +113,23 @@ sealed class EmailTemplates
 
 object EmailTemplate
   extends EmailTemplates
-  with Cassandra {
-
+with ExceptionDefining {
   case class NotFound(id: UUID, lang: String)
     extends BaseException(error_code("not.found"))
 
   case class UpdatedByOther()
     extends BaseException(error_code("updated.by.others"))
+}
+
+class EmailTemplateRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends EmailTemplates
+  with ExtCQL[EmailTemplates, ET]
+  with BasicPlayComponents
+  with Cassandra {
+
+  import EmailTemplate._
 
   def apply(
     id: UUID,
@@ -171,7 +180,7 @@ object EmailTemplate
       case Some(tmpl) => tmpl
     }.recoverWith {
       case e: NotFound if lang != Lang.defaultLang.code =>
-        EmailTemplate.find(id, Lang.defaultLang, updated_at)
+        this.find(id, Lang.defaultLang, updated_at)
     }
 
   def save(tmpl: ET): Future[ET] = for {
@@ -219,7 +228,6 @@ sealed class EmailTemplateHistories
   extends CassandraTable[EmailTemplateHistories, ETH]
   with EmailTemplateKey[EmailTemplateHistories, ETH]
   with EmailTemplateHistoryColumns[EmailTemplateHistories, ETH]
-  with ExtCQL[EmailTemplateHistories, ETH]
   with CanonicalNamedModel[ETH]
   with Logging {
 
@@ -236,6 +244,13 @@ sealed class EmailTemplateHistories
 
 object EmailTemplateHistory
   extends EmailTemplateHistories
+
+class EmailTemplateHistoryRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends EmailTemplateHistories
+  with ExtCQL[EmailTemplateHistories, ETH]
+  with BasicPlayComponents
   with Cassandra {
 
   def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {

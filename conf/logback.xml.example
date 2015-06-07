@@ -1,0 +1,48 @@
+<configuration>
+
+  <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
+
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+     <file>${application.home}/logs/application.log</file>
+     <encoder>
+       <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
+     </encoder>
+   </appender>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%coloredLevel %logger - %message%n%xException{5}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="FILE" />
+  </appender>
+
+  <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="STDOUT" />
+  </appender>
+
+  <logger name="root" level="ERROR" />
+  <logger name="play" level="ERROR" />
+  <logger name="application" level="ERROR" />
+  <logger name="org.elasticsearch" level="ERROR" />
+  <logger name="com.datastax.driver" level="ERROR" />
+  <logger name="com.websudos.phantom" level="ERROR" />
+  <logger name="com.gargoylesoftware.htmlunit.javascript" level="ERROR" />
+
+  <logger name="controllers" level="TRACE" />
+  <logger name="controllers.api" level="TRACE" />
+  <logger name="models" level="TRACE" />
+  <logger name="helpers" level="TRACE" />
+  <logger name="security" level="TRACE" />
+  <logger name="batches" level="TRACE" />
+  <logger name="elasticsearch" level="TRACE" />
+
+
+  <root level="TRACE">
+    <appender-ref ref="ASYNCFILE" />
+    <appender-ref ref="ASYNCSTDOUT" />
+  </root>
+
+</configuration>

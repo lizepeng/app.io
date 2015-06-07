@@ -1,6 +1,7 @@
 package controllers
 
 import helpers.{BasicPlayApi, BasicPlayComponents}
+import models.UserRepo
 import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
 import security.MaybeUserAction
@@ -11,12 +12,15 @@ import views.html
  */
 class Chat(
   val basicPlayApi: BasicPlayApi
+)(
+  implicit
+  val userRepo: UserRepo
 )
   extends Controller
   with BasicPlayComponents
   with I18nSupport {
 
-  def chat = MaybeUserAction { implicit req =>
+  def chat = MaybeUserAction().apply { implicit req =>
     Ok(html.chat.start())
   }
 }

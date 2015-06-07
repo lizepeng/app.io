@@ -12,3 +12,12 @@ trait CanonicalNamedModel[R] extends CanonicalNamed {
 
   override lazy val basicName = tableName
 }
+
+trait CanonicalModel[R] extends CanonicalNamed
+
+
+trait CassandraTableName[R] {
+  self: CanonicalNamed with CassandraTable[_, R] =>
+
+  override lazy val tableName = basicName
+}

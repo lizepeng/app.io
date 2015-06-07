@@ -4,7 +4,7 @@ import controllers.Users.{Password, Rules}
 import controllers.api.Secured
 import helpers._
 import models._
-import models.sys.SysConfig
+import models.sys.{SysConfigRepo, SysConfig}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
@@ -22,7 +22,13 @@ import scala.concurrent.Future
 class PasswordReset(
   val basicPlayApi: BasicPlayApi
 )(
-  implicit val mailService: MailService
+  implicit
+  val mailService: MailService,
+  val User: UserRepo,
+  val ExpirableLink: ExpirableLinkRepo,
+  val EmailTemplate: EmailTemplateRepo,
+  val sysConfigRepo: SysConfigRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(PasswordReset)
   with Controller
@@ -45,7 +51,8 @@ class PasswordReset(
       .verifying("password.not.confirmed", _.isConfirmed)
   )
 
-  def nnew(email: String) = MaybeUserAction { implicit req =>
+  def nnew(email: String) =
+    MaybeUserAction().apply { implicit req =>
     Ok(html.password_reset.nnew(emailFM.fill(email)))
   }
 
@@ -54,7 +61,8 @@ class PasswordReset(
    *
    * @return
    */
-  def create = MaybeUserAction.async { implicit req =>
+  def create =
+    MaybeUserAction().async { implicit req =>
     emailFM.bindFromRequest().fold(
       failure => Future.successful {
         onError(emailFM, "email.not.found")
@@ -67,9 +75,9 @@ class PasswordReset(
         mailService.schedule("noreply", tmpl, u, "link" -> id)
         Ok(html.password_reset.sent())
       }.recover {
-        case e: User.NotFound          =>
+        case e: models.User.NotFound          =>
           onError(emailFM, "email.not.found")
-        case e: EmailTemplate.NotFound =>
+        case e: models.EmailTemplate.NotFound =>
           Logger.warn(e.reason)
           onError(emailFM, "email.not.found")
       }
@@ -84,19 +92,21 @@ class PasswordReset(
    * @param id
    * @return
    */
-  def show(id: String) = MaybeUserAction.async { implicit req =>
+  def show(id: String) =
+    MaybeUserAction().async { implicit req =>
     ExpirableLink.find(id).map { ln =>
       if (ln.module != canonicalName)
         onError(emailFM, "invalid.reset.link")
       else
         Ok(html.password_reset.show(id)(resetFM))
     }.recover {
-      case e: ExpirableLink.NotFound =>
+      case e: models.ExpirableLink.NotFound =>
         onError(emailFM, "invalid.reset.link")
     }
   }
 
-  def save(id: String) = MaybeUserAction.async { implicit req =>
+  def save(id: String) =
+    MaybeUserAction().async { implicit req =>
     val bound = resetFM.bindFromRequest()
     bound.fold(
       failure => Future.successful {
@@ -117,7 +127,7 @@ class PasswordReset(
           AlertLevel.Info -> msg("password.changed")
         )
       }.recover {
-        case e: ExpirableLink.NotFound =>
+        case e: models.ExpirableLink.NotFound =>
           onError(emailFM, "invalid.reset.link")
       }
     )
@@ -126,8 +136,8 @@ class PasswordReset(
   private lazy val mailer = for {
     uid <- System.UUID("user.id")
     usr <- User.find(uid).recoverWith {
-      case e: User.NotFound => User.save(
-        User(
+      case e: models.User.NotFound => User.save(
+        models.User(
           id = uid,
           name = basicName,
           email = s"$basicName@$domain"
@@ -143,7 +153,8 @@ class PasswordReset(
       uuid <- System.UUID(key)
       user <- mailer
       tmpl <- EmailTemplate.find(uuid, lang)
-        .recoverWith { case e: EmailTemplate.NotFound =>
+        .recoverWith {
+        case e: models.EmailTemplate.NotFound =>
         EmailTemplate.save(
           EmailTemplate(
             uuid, Lang.defaultLang,

@@ -8,12 +8,16 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-object Home {
+class Home(
+  val cfs : CFS
+) {
+
+  implicit val directory = cfs.Directory
 
   def apply(implicit user: User): Future[Directory] = {
-    Directory.find(user.id).recoverWith {
+    cfs.Directory.find(user.id).recoverWith {
       case Directory.NotFound(id) =>
-        CFS.root.flatMap { root =>
+        cfs.root.flatMap { root =>
           Directory(
             id.toString,
             Path.root / id.toString,
@@ -26,6 +30,6 @@ object Home {
   }
 
   def temp(implicit user: User): Future[Directory] = {
-    Home(user).flatMap(_.dir_!("temp"))
+    apply(user).flatMap(_.dir_!("temp"))
   }
 }

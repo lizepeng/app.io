@@ -4,7 +4,7 @@ import controllers.Users.{Password, Rules}
 import controllers.api.Secured
 import elasticsearch.ElasticSearch
 import helpers._
-import models.{Person, User}
+import models._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
@@ -21,6 +21,10 @@ import scala.concurrent.Future
 class My(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
+)(
+  implicit
+  val userRepo: UserRepo,
+  val personRepo: PersonRepo
 )
   extends Secured(User)
   with Controller
@@ -53,17 +57,17 @@ class My(
   )
 
   def dashboard =
-    (MaybeUserAction >> AuthCheck) { implicit req =>
+    (MaybeUserAction() >> AuthCheck) { implicit req =>
       Ok(html.my.dashboard())
     }
 
   def account =
-    (MaybeUserAction >> AuthCheck) { implicit req =>
+    (MaybeUserAction() >> AuthCheck) { implicit req =>
       Ok(html.my.account(ChangePasswordFM))
     }
 
   def changePassword =
-    (MaybeUserAction >> AuthCheck).async { implicit req =>
+    (MaybeUserAction() >> AuthCheck).async { implicit req =>
 
       val bound = ChangePasswordFM.bindFromRequest()
       bound.fold(
@@ -93,8 +97,8 @@ class My(
     }
 
   def profile =
-    (MaybeUserAction >> AuthCheck).async { implicit req =>
-      Person.find(req.user.id).map { p =>
+    (MaybeUserAction() >> AuthCheck).async { implicit req =>
+      personRepo.find(req.user.id).map { p =>
         Ok(html.my.profile(filledWith(p)))
       }.recover {
         case e: Person.NotFound =>
@@ -103,7 +107,7 @@ class My(
     }
 
   def changeProfile =
-    (MaybeUserAction >> AuthCheck).async { implicit req =>
+    (MaybeUserAction() >> AuthCheck).async { implicit req =>
       val bound = ProfileFM.bindFromRequest()
 
       bound.fold(
@@ -114,7 +118,7 @@ class My(
         _ match { case (first, last) =>
           for {
             p <- Future.successful(Person(req.user.id, first, last))
-            _ <- Person.save(p)
+            _ <- personRepo.save(p)
             _ <- ES.Index(p) into Person
           } yield {
             Ok(html.my.profile(filledWith(p)))

@@ -4,8 +4,8 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
-import helpers.syntax._
 import helpers._
+import helpers.syntax._
 import models.CanonicalNamedModel
 import models.cassandra.{Cassandra, ExtCQL}
 import models.cfs.Block.BLK
@@ -31,13 +31,15 @@ case class File(
   is_directory: Boolean = false
 ) extends INode {
 
-  def read(offset: Long = 0): Enumerator[BLK] =
+  def read(offset: Long = 0)(implicit IndirectBlock: IndirectBlockRepo): Enumerator[BLK] =
     if (offset == 0) IndirectBlock.read(id)
     else IndirectBlock.read(this, offset)
 
-  def save(): Iteratee[BLK, File] = File.streamWriter(this)
+  def save()(
+    implicit File: FileRepo
+  ): Iteratee[BLK, File] = File.streamWriter(this)
 
-  override def purge() = {
+  override def purge()(implicit Directory: DirectoryRepo, File: FileRepo) = {
     super.purge().andThen { case _ => File.purge(id) }
   }
 }
@@ -51,8 +53,6 @@ sealed class Files
   with INodeColumns[Files, File]
   with FileColumns[Files, File]
   with CanonicalNamedModel[File]
-  with ExtCQL[Files, File]
-  with ExceptionDefining
   with Logging {
 
   override def fromRow(r: Row): File = {
@@ -72,10 +72,27 @@ sealed class Files
   }
 }
 
-object File extends Files with Cassandra {
+object File
+  extends Files
+  with ExceptionDefining {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("file.not.found"))
+
+}
+
+class FileRepo(
+ implicit
+  val IndirectBlock: IndirectBlockRepo,
+  val Block: BlockRepo,
+  val basicPlayApi: BasicPlayApi
+)
+  extends Files
+  with ExtCQL[Files, File]
+  with BasicPlayComponents
+  with Cassandra {
+
+  import File._
 
   def find(id: UUID)(
     implicit onFound: File => File
@@ -92,7 +109,7 @@ object File extends Files with Cassandra {
       Traversable.take[BLK](inode.block_size) &>>
         Iteratee.consume[BLK]()
     } &>>
-      Iteratee.foldM[BLK, IndirectBlock](IndirectBlock(inode.id)) {
+      Iteratee.foldM[BLK, IndirectBlock](new IndirectBlock(inode.id)) {
         (curr, blk) =>
           Block.write(curr.id, curr.length, blk)
           val next = curr + blk.size
@@ -103,7 +120,7 @@ object File extends Files with Cassandra {
           }
       }.mapM { last =>
         IndirectBlock.write(last) iff (last.length != 0)
-        File.write(inode.copy(size = last.offset + last.length))
+        this.write(inode.copy(size = last.offset + last.length))
       }
 
   }

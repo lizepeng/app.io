@@ -15,12 +15,13 @@ import scala.language.postfixOps
 object Schemas extends Cassandra {
 
   def create: Future[Seq[ResultSet]] = Future.sequence(
+    //TODO
     Seq(
       //System
       SysConfig.create.ifNotExists.future(),
       AccessControl.create.ifNotExists.future(),
       SessionData.create.ifNotExists.future(),
-      RateLimit.create.ifNotExists.future(),
+      RateLimitRepo.create.ifNotExists.future(),
 
       //User
       User.create.ifNotExists.future(),

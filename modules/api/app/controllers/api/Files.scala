@@ -27,6 +27,17 @@ import scala.util.Failure
 class Files(
   val basicPlayApi: BasicPlayApi,
   val bandwidthService: BandwidthService
+)(
+  implicit val
+  accessControlRepo: AccessControlRepo,
+  userRepo: UserRepo,
+  rateLimitRepo: RateLimitRepo,
+  CFS: CFS,
+  Home: Home,
+  internalGroupsRepo: InternalGroupsRepo,
+  directoryRepo: DirectoryRepo,
+  fileRepo: FileRepo,
+  IndirectBlock: IndirectBlockRepo
 )
   extends Secured(Files)
   with Controller
@@ -137,7 +148,7 @@ class Files(
     }
 
   def create(path: Path) =
-    (MaybeUserAction >> AuthCheck).async(CFSBodyParser(path)) { implicit req =>
+    (MaybeUserAction() >> AuthCheck).async(CFSBodyParser(path)) { implicit req =>
       val flow = new Flow(req.body.asFormUrlEncoded)
 
       def tempFiles(temp: Directory) =
@@ -267,7 +278,12 @@ class Files(
       }
     }
 
-    SecuredBodyParser(_.Create, onUnauthorized, onPermDenied, onBaseException) {
+    SecuredBodyParser(
+      _.Create,
+      onUnauthorized,
+      onPermDenied,
+      onBaseException
+    ) {
       req => implicit user =>
         (for {
           home <- Home(user)

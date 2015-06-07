@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
-import helpers.Logging
+import helpers._
 import models.cassandra._
 import org.joda.time.DateTime
 
@@ -16,7 +16,6 @@ import scala.reflect.runtime.universe._
  */
 sealed class SessionData
   extends CassandraTable[SessionData, UUID]
-  with ExtCQL[SessionData, UUID]
   with Logging {
 
   override val tableName = "session_data"
@@ -38,7 +37,15 @@ sealed class SessionData
   override def fromRow(r: Row): UUID = user_id(r)
 }
 
-object SessionData extends SessionData with Cassandra {
+object SessionData extends SessionData
+
+class SessionDataDAO(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends SessionData
+  with ExtCQL[SessionData, UUID]
+  with BasicPlayComponents
+  with Cassandra {
 
   def get[T: TypeTag](
     key: String

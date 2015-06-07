@@ -25,6 +25,11 @@ import scala.concurrent.Future
 class Users(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
+)(
+  implicit
+  val accessControlRepo: AccessControlRepo,
+  val userRepo: UserRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(Users)
   with Controller
@@ -50,7 +55,7 @@ class Users(
 
   def show(id: UUID) =
     PermCheck(_.Show).async { implicit req =>
-      User.find(id).map { user =>
+      userRepo.find(id).map { user =>
         Ok(html.users.show(user))
       }
     }
@@ -60,14 +65,14 @@ class Users(
       Ok(html.users.index(pager))
     }
 
-  def nnew = MaybeUserAction { implicit req =>
+  def nnew = MaybeUserAction().apply { implicit req =>
     req.maybeUser match {
       case None    => Ok(views.html.users.signup(signUpFM))
       case Some(u) => Redirect(routes.My.dashboard())
     }
   }
 
-  def create = MaybeUserAction.async { implicit req =>
+  def create = MaybeUserAction().async { implicit req =>
     val bound = signUpFM.bindFromRequest
     bound.fold(
       failure => Future.successful {
@@ -79,7 +84,7 @@ class Users(
         }
       },
       success => (for {
-        exist <- User.checkEmail(success.email)
+        exist <- userRepo.checkEmail(success.email)
         saved <- User(
           email = success.email,
           password = success.password.original
@@ -106,7 +111,7 @@ class Users(
 
     form.bindFromRequest().fold(
       failure => Future.successful(Forbidden(failure.errorsAsJson)),
-      success => User.checkEmail(success).map { _ =>
+      success => userRepo.checkEmail(success).map { _ =>
         Ok("")
       }.recover {
         case e: User.EmailTaken =>

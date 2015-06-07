@@ -1,6 +1,7 @@
 package controllers
 
 import helpers._
+import models.UserRepo
 import models.cfs.Path
 import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
@@ -9,6 +10,9 @@ import views._
 
 class Application(
   val basicPlayApi: BasicPlayApi
+)(
+  implicit
+  val userRepo: UserRepo
 )
   extends Controller
   with CanonicalNamed
@@ -19,15 +23,15 @@ class Application(
 
   override val basicName = "app"
 
-  def index = MaybeUserAction { implicit req =>
+  def index = MaybeUserAction().apply { implicit req =>
     Ok(html.welcome.index())
   }
 
-  def about = MaybeUserAction { implicit req =>
+  def about = MaybeUserAction().apply { implicit req =>
     Ok(html.static_pages.about())
   }
 
-  def wiki = MaybeUserAction { implicit req =>
+  def wiki = MaybeUserAction().apply { implicit req =>
     val videoPath = config.getString("wiki.video").map(fn => Path(filename = Some(fn)))
     Ok(html.static_pages.wiki(videoPath))
   }

@@ -1,6 +1,7 @@
 package controllers.api
 
 import helpers._
+import models.RateLimitRepo
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -17,7 +18,8 @@ import scala.concurrent.Future
 case class RateLimit(resource: CheckedResource)(
   implicit
   val messagesApi: MessagesApi,
-  val configuration: Configuration
+  val configuration: Configuration,
+  val rateLimit: RateLimitRepo
 )
   extends ActionFunction[UserRequest, UserRequest]
   with ExHeaders
@@ -44,7 +46,7 @@ case class RateLimit(resource: CheckedResource)(
     val period_start = now.hourOfDay.roundFloorCopy
       .plusMinutes((minutes / span) * span)
 
-    models.RateLimit.get(res, period_start)(user)
+    rateLimit.get(res, period_start)(user)
       .flatMap { counter =>
       if (counter >= limit) Future.successful {
         Results.TooManyRequest {
@@ -57,7 +59,7 @@ case class RateLimit(resource: CheckedResource)(
       }
       else
         for {
-          ___ <- models.RateLimit.inc(res, period_start)(user)
+          ___ <- rateLimit.inc(res, period_start)(user)
           ret <- block(req)
         } yield {
           ret.withHeaders(

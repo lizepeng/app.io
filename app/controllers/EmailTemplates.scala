@@ -21,6 +21,14 @@ import scala.language.implicitConversions
 
 class EmailTemplates(
   val basicPlayApi: BasicPlayApi
+)(
+  implicit
+  val accessControlRepo: AccessControlRepo,
+  val User: UserRepo,
+  val sessionDataDAO: SessionDataDAO,
+  val EmailTemplate: EmailTemplateRepo,
+  val EmailTemplateHistory: EmailTemplateHistoryRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(EmailTemplates)
   with Controller
@@ -111,14 +119,14 @@ class EmailTemplates(
           tmpl <- EmailTemplate.find(id, lang)
           usr1 <- User.find(tmpl.updated_by)
           usr2 <- User.find(tmpl.created_by)
-          ____ <- SessionData.set[DateTime](key_editing(id), tmpl.updated_at)
+          ____ <- sessionDataDAO.set[DateTime](key_editing(id), tmpl.updated_at)
         } yield Ok {
           html.email_templates.edit(
             TemplateFM.fill(tmpl), tmpl, usr1, usr2
           )
         }
       result.recover {
-        case e: EmailTemplate.NotFound => Redirect {
+        case e: models.EmailTemplate.NotFound => Redirect {
           routes.EmailTemplates.nnew()
         }
       }
@@ -137,7 +145,7 @@ class EmailTemplates(
             html.email_templates.edit(bound, tmpl, usr1, usr2)
           },
         success => {
-          SessionData.get[DateTime](key_editing(id)).flatMap {
+          sessionDataDAO.get[DateTime](key_editing(id)).flatMap {
             case Some(d) =>
               for {
                 tmpl <- EmailTemplate.find(id, lang, Some(d))
@@ -149,13 +157,13 @@ class EmailTemplates(
                 ).save
                 usr1 <- User.find(done.updated_by)
                 usr2 <- User.find(done.created_by)
-                ____ <- SessionData.remove(key_editing(id))
+                ____ <- sessionDataDAO.remove(key_editing(id))
               } yield Redirect {
                 routes.EmailTemplates.edit(id, lang)
               }
             case None    => Future.successful(BadRequest)
           }.recover {
-            case e: EmailTemplate.UpdatedByOther => Redirect {
+            case e: models.EmailTemplate.UpdatedByOther => Redirect {
               routes.EmailTemplates.edit(id, lang)
             }
           }

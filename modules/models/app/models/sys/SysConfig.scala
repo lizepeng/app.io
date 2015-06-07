@@ -8,7 +8,6 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
-import models.sys.SysConfig.Serializer
 
 import scala.concurrent.Future
 
@@ -18,20 +17,25 @@ import scala.concurrent.Future
 trait SysConfig {
   self: CanonicalNamed =>
 
+  import SysConfig._
+
   object System {
 
     def config[T](key: String, default: T)(
-      implicit serializer: Serializer[T]
+      implicit serializer: Serializer[T],
+      sysConfig: SysConfigRepo
     ) = {
-      SysConfig.getOrElseUpdate(
+      sysConfig.getOrElseUpdate(
         canonicalName, key, default
       )(serializer)
     }
 
-    def UUID(key: String) = {
-      SysConfig.getOrElseUpdate(
+    def UUID(key: String)(
+      implicit sysConfig: SysConfigRepo
+    ) = {
+      sysConfig.getOrElseUpdate(
         canonicalName, key, UUIDs.timeBased()
-      )(SysConfig.uuidSerializer)
+      )(uuidSerializer)
     }
   }
 
@@ -45,7 +49,6 @@ case class SysConfigEntry(
 
 sealed class SysConfigs
   extends CassandraTable[SysConfigs, SysConfigEntry]
-  with ExtCQL[SysConfigs, SysConfigEntry]
   with Logging {
 
   override val tableName = "system_config"
@@ -65,7 +68,37 @@ sealed class SysConfigs
   }
 }
 
-object SysConfig extends SysConfigs with Cassandra {
+object SysConfig extends SysConfigs {
+
+  trait Serializer[T] {
+
+    def << : String => T
+
+    def >>: : T => String
+  }
+
+  implicit val uuidSerializer = new Serializer[UUID] {
+    def << = UUID.fromString
+
+    def >>: = _.toString
+  }
+
+  implicit val stringSerializer = new Serializer[String] {
+    def << = s => s
+
+    def >>: = s => s
+  }
+}
+
+class SysConfigRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends SysConfigs
+  with ExtCQL[SysConfigs, SysConfigEntry]
+  with BasicPlayComponents
+  with Cassandra {
+
+  import SysConfig._
 
   def getOrElseUpdate[T](
     module: String,
@@ -88,25 +121,6 @@ object SysConfig extends SysConfigs with Cassandra {
       case Some(value) =>
         Future.successful(serializer << value)
     }
-  }
-
-  trait Serializer[T] {
-
-    def << : String => T
-
-    def >>: : T => String
-  }
-
-  implicit val uuidSerializer = new Serializer[UUID] {
-    def << = UUID.fromString
-
-    def >>: = _.toString
-  }
-
-  implicit val stringSerializer = new Serializer[String] {
-    def << = s => s
-
-    def >>: = s => s
   }
 
 }

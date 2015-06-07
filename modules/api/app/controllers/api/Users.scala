@@ -20,6 +20,13 @@ import scala.concurrent.Future
 class Users(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
+)(
+  implicit
+  val accessControlRepo: AccessControlRepo,
+  val groupRepo: GroupRepo,
+  val User: UserRepo,
+  val rateLimitRepo: RateLimitRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(Users)
   with Controller
@@ -32,15 +39,15 @@ class Users(
     PermCheck(_.Show).async { implicit req =>
       (for {
         user <- User.find(id)
-        grps <- Group.find(
+        grps <- groupRepo.find(
           options match {
-            case Some("internal") => Set.empty union user.int_groups
+            case Some("internal") => internalGroupsRepo.toGroupIdSet(user.int_groups)
             case Some("external") => user.ext_groups
             case _                => user.groups
           }
         )
       } yield grps).map { grps =>
-        Ok(Json.toJson(grps.filter(_.id != InternalGroups.AnyoneId)))
+        Ok(Json.toJson(grps.filter(_.id != internalGroupsRepo.AnyoneId)))
       }.recover {
         case e: BaseException => NotFound
       }
@@ -72,7 +79,7 @@ class Users(
               LOCATION -> routes.Groups.show(saved.id).url
             )
         }.recover {
-          case e: User.EmailTaken => MethodNotAllowed(JsonMessage(e))
+          case e: models.User.EmailTaken => MethodNotAllowed(JsonMessage(e))
         }
       }
     }

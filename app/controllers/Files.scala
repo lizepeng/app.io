@@ -2,6 +2,7 @@ package controllers
 
 import controllers.api.Secured
 import helpers._
+import models._
 import models.cfs._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -15,6 +16,14 @@ import scala.language.postfixOps
  */
 class Files(
   val basicPlayApi: BasicPlayApi
+)(
+  implicit
+  val accessControlRepo: AccessControlRepo,
+  val userRepo: UserRepo,
+  internalGroupsRepo: InternalGroupsRepo,
+  Home: Home,
+  Directory: DirectoryRepo,
+  File: FileRepo
 )
   extends Secured(Files)
   with Controller

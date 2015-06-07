@@ -18,6 +18,9 @@ import scala.concurrent.Future
  **/
 class Sessions(
   val basicPlayApi: BasicPlayApi
+)(
+  implicit
+  val userRepo: UserRepo
 )
   extends Controller
   with security.Session
@@ -39,20 +42,20 @@ class Sessions(
     remember_me: Boolean
   )
 
-  def nnew = MaybeUserAction { implicit req =>
+  def nnew = MaybeUserAction().apply { implicit req =>
     req.maybeUser match {
       case Some(u) => Redirect(routes.Application.index())
       case None    => Ok(html.account.login(loginFM))
     }
   }
 
-  def create = MaybeUserAction.async { implicit req =>
+  def create = MaybeUserAction().async { implicit req =>
     val form = loginFM.bindFromRequest
     form.fold(
       failure => Future.successful(BadRequest(html.account.login(failure))),
-      success => User.auth(success.email, success.password).recover {
-        case e: User.NotFound      => Logger.warn(e.reason); throw User.AuthFailed()
-        case e: User.WrongPassword => Logger.warn(e.reason); throw User.AuthFailed()
+      success => userRepo.auth(success.email, success.password).recover {
+        case e: models.User.NotFound      => Logger.warn(e.reason); throw models.User.AuthFailed()
+        case e: models.User.WrongPassword => Logger.warn(e.reason); throw models.User.AuthFailed()
       }.map { implicit user =>
         Redirect(routes.My.dashboard()).createSession(success.remember_me)
       }.recover { case e: BaseException =>

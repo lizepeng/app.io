@@ -16,6 +16,12 @@ import scala.concurrent.Future
 class Search(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
+)(
+  implicit
+  val accessControlRepo: AccessControlRepo,
+  val User: UserRepo,
+  val rateLimitRepo: RateLimitRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(Search)
   with Controller

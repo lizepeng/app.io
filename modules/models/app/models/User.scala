@@ -8,7 +8,7 @@ import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
-import models.sys.SysConfig
+import models.sys.{SysConfig, SysConfigRepo}
 import org.joda.time.DateTime
 import play.api.libs.Crypto
 import play.api.libs.functional.syntax._
@@ -34,9 +34,10 @@ case class User(
   password: String = "",
   remember_me: Boolean = false,
   updated_at: DateTime = DateTime.now
-) extends HasUUID {
+)(implicit val internalGroupsRepo: InternalGroupsRepo) extends HasUUID {
 
-  lazy val groups: Set[UUID] = ext_groups union int_groups
+  def groups: Set[UUID] =
+    ext_groups union internalGroupsRepo.toGroupIdSet(int_groups)
 
   def hasPassword(submittedPasswd: String) = {
     if (encrypted_password == "") false
@@ -54,11 +55,13 @@ case class User(
     )
   }
 
-  def savePassword(newPassword: String): Future[User] = {
+  def savePassword(newPassword: String)(
+    implicit User: UserRepo
+  ): Future[User] = {
     User.savePassword(this, newPassword)
   }
 
-  def save = User.save(this)
+  def save(implicit User: UserRepo) = User.save(this)
 
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")
@@ -72,9 +75,9 @@ case class User(
  */
 sealed class Users
   extends CassandraTable[Users, User]
-  with ExtCQL[Users, User]
+
   with CanonicalNamedModel[User]
-  with ExceptionDefining
+  with CanonicalModel[User]
   with Logging {
 
   override val tableName = "users"
@@ -130,23 +133,13 @@ sealed class Users
     def reads = always(DateTime.now)
   }
 
-  override def fromRow(r: Row): User = {
-    User(
-      id(r),
-      name(r),
-      salt(r),
-      encrypted_password(r),
-      email(r),
-      InternalGroups(internal_groups(r)),
-      external_groups(r),
-      "",
-      remember_me = false,
-      updated_at(r)
-    )
-  }
+  //TODO
+  override def fromRow(r: Row): User = ???
 }
 
-object User extends Users with Cassandra with SysConfig {
+object User
+  extends Users
+  with ExceptionDefining {
 
   /**
    * Thrown when user is not found
@@ -194,6 +187,41 @@ object User extends Users with Cassandra with SysConfig {
     ) extends AC.Granted[UUID](action, resource, basicName)
 
   }
+
+  case class Credentials(id: UUID, salt: String)
+
+}
+
+class UserRepo(
+  implicit
+  val sysConfig: SysConfigRepo,
+  val internalGroupsRepo: InternalGroupsRepo,
+  val basicPlayApi: BasicPlayApi
+)
+  extends Users
+  with ExtCQL[Users, User]
+  with BasicPlayComponents
+  with Cassandra
+  with SysConfig {
+
+  override def fromRow(r: Row): User = {
+    User(
+      id(r),
+      name(r),
+      salt(r),
+      encrypted_password(r),
+      email(r),
+      InternalGroups(internal_groups(r)),
+      external_groups(r),
+      "",
+      remember_me = false,
+      updated_at(r)
+    )
+  }
+
+  import User._
+
+  val UserByEmail = new UserByEmailRepo
 
   lazy val root: Future[User] = System.UUID("root_id").map { uid =>
     User(id = uid, name = "root")
@@ -312,8 +340,6 @@ object User extends Users with Cassandra with SysConfig {
 
   ////////////////////////////////////////////////////////////////
 
-  case class Credentials(id: UUID, salt: String)
-
   /**
    *
    * @param cred credentials
@@ -334,9 +360,10 @@ object User extends Users with Cassandra with SysConfig {
   }
 }
 
+//TODO rename to *Table
 sealed class UserByEmail
   extends CassandraTable[UserByEmail, (String, UUID)]
-  with ExtCQL[UserByEmail, (String, UUID)]
+
   with Logging {
 
   override val tableName = "users_email_index"
@@ -350,7 +377,15 @@ sealed class UserByEmail
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
 }
 
-object UserByEmail extends UserByEmail with Cassandra {
+object UserByEmail extends UserByEmail
+
+class UserByEmailRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends UserByEmail
+  with ExtCQL[UserByEmail, (String, UUID)]
+  with BasicPlayComponents
+  with Cassandra {
 
   def save(email: String, id: UUID): Future[Boolean] = CQL {
     insert

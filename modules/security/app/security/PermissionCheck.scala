@@ -1,7 +1,7 @@
 package security
 
 import helpers.Logging
-import models.{AccessControl, User}
+import models._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
 
@@ -23,17 +23,21 @@ trait PermissionCheck
 
   implicit def messagesApi: MessagesApi
 
+  def accessControlRepo: AccessControlRepo
+
+  implicit def internalGroupsRepo: InternalGroupsRepo
+
   def check[A](u: User): Future[Option[Boolean]] = {
     for {
       b1 <- thenCheck(
         previous = None, action(CheckedActions),
-        ac => AccessControl.check(
+        ac => accessControlRepo.check(
           resource.name, ac.name, u.groups
         )
       )
       b2 <- thenCheck(
         previous = b1, action(CheckedActions),
-        ac => AccessControl.check(
+        ac => accessControlRepo.check(
           resource.name, ac.name, u.id
         )
       )

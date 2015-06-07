@@ -9,7 +9,7 @@ import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra.{Cassandra, ExtCQL}
-import models.sys.SysConfig
+import models.sys.{SysConfig, SysConfigRepo}
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee._
@@ -31,19 +31,17 @@ case class Group(
   updated_at: DateTime
 ) extends HasUUID {
 
-  def createIfNotExist = Group.createIfNotExist(this)
+  def createIfNotExist(implicit Group: GroupRepo) = Group.createIfNotExist(this)
 
-  def save = Group.save(this)
+  def save(implicit Group: GroupRepo) = Group.save(this)
 }
 
 sealed class Groups
   extends CassandraTable[Groups, Group]
-  with ExtCQL[Groups, Group]
   with CanonicalNamedModel[Group]
-  with ExceptionDefining
   with Logging {
 
-  override val tableName = "groups"
+  override lazy val tableName = "groups"
 
   object id
     extends UUIDColumn(this)
@@ -102,7 +100,9 @@ sealed class Groups
   }
 }
 
-object Group extends Groups with Cassandra {
+object Group
+  extends Groups
+  with ExceptionDefining {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
@@ -146,6 +146,21 @@ object Group extends Groups with Cassandra {
       and is_internal.reads
       and updated_at.reads
     )(Group.apply _)
+
+}
+
+class GroupRepo(
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val User: UserRepo,
+  val internalGroupsRepo: InternalGroupsRepo
+)
+  extends Groups
+  with ExtCQL[Groups, Group]
+  with BasicPlayComponents
+  with Cassandra {
+
+  import Group._
 
   def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
@@ -193,7 +208,7 @@ object Group extends Groups with Cassandra {
   }.future().map(_ => group)
 
   def remove(id: UUID): Future[ResultSet] =
-    if (InternalGroups.Id2Num.contains(id))
+    if (internalGroupsRepo.Id2Num.contains(id))
       Future.failed(NotWritable(id))
     else
       CQL {
@@ -227,17 +242,17 @@ object Group extends Groups with Cassandra {
 
   def addChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     Batch.logged
-      .add(Group.cql_updated_at(id))
+      .add(this.cql_updated_at(id))
       .add(User.cql_updated_at(child_id))
-      .add(Group.cql_add_child(id, child_id))
+      .add(this.cql_add_child(id, child_id))
       .add(User.cql_add_group(child_id, id))
   }.future()
 
   def delChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     Batch.logged
-      .add(Group.cql_updated_at(id))
+      .add(this.cql_updated_at(id))
       .add(User.cql_updated_at(child_id))
-      .add(Group.cql_del_child(id, child_id))
+      .add(this.cql_del_child(id, child_id))
       .add(User.cql_del_group(child_id, id))
   }.future()
 
@@ -294,15 +309,7 @@ case class InternalGroups(code: Int) {
      """
 }
 
-object InternalGroups
-  extends CanonicalNamed
-  with SysConfig
-  with Logging {
-
-  override lazy val basicName = Group.basicName
-
-  import scala.Predef._
-  import scala.language.implicitConversions
+object InternalGroups {
 
   val ALL        = for (gid <- 0 to 18) yield gid
   val Half1st    = for (gid <- 0 to 9) yield gid
@@ -313,11 +320,27 @@ object InternalGroups
   val AnyoneMask = 1 << 18
   val Anyone     = 0
 
+}
+
+class InternalGroupsRepo(
+  implicit val sysConfig: SysConfigRepo
+)
+  extends CanonicalNamed
+  with SysConfig
+  with Logging {
+
+  import InternalGroups._
+
+  //TODO just a workaround
+  override val basicName: String = "groups"
+
+  import scala.language.implicitConversions
+
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  def initialize: Future[Boolean] = Future.sequence(
+  def initialize(implicit groupRepo: GroupRepo): Future[Boolean] = Future.sequence(
     ALL.map { n =>
       val key = s"internal_group_${"%02d".format(n)}"
       System.UUID(key).flatMap { id =>

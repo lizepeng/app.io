@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
-import helpers.Logging
+import helpers._
 import models.HasUUID
 import models.cassandra.{Cassandra, ExtCQL}
 import org.joda.time.DateTime
@@ -32,13 +32,18 @@ trait INode extends HasUUID {
 
   lazy val updated_at: DateTime = created_at
 
-  def rename(newName: String, force: Boolean = false): Future[INode] = {
+  def rename(newName: String, force: Boolean = false)(
+    implicit Directory: DirectoryRepo
+  )
+  : Future[INode] = {
     Directory.find(parent).flatMap {
       dir => Directory.renameChild(dir, this, newName, force)
     }
   }
 
-  def purge(): Future[Directory] = {
+  def purge()(
+    implicit Directory: DirectoryRepo, File: FileRepo
+  ): Future[Directory] = {
     Directory.find(parent).flatMap {
       parent => parent.del(this)
     }
@@ -123,7 +128,6 @@ sealed class INodes
   with INodeColumns[INodes, INode]
   with FileColumns[INodes, INode]
   with DirectoryColumns[INodes, INode]
-  with ExtCQL[INodes, INode]
   with Logging {
 
   override def fromRow(r: Row): INode = {
@@ -132,7 +136,15 @@ sealed class INodes
   }
 }
 
-object INode extends INodes with Cassandra {
+object INode extends INodes
+
+class INodeRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends INodes
+  with ExtCQL[INodes, INode]
+  with BasicPlayComponents
+  with Cassandra {
 
   def find(id: UUID): Future[Option[INode]] = {
     CQL {select.where(_.inode_id eqs id)}.one()

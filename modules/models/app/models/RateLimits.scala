@@ -5,7 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
-import helpers.Logging
+import helpers._
 import models.cassandra._
 import org.joda.time.DateTime
 
@@ -16,7 +16,6 @@ import scala.concurrent.Future
  */
 sealed class RateLimits
   extends CassandraTable[RateLimits, UUID]
-  with ExtCQL[RateLimits, UUID]
   with Logging {
 
   override val tableName = "rate_limits"
@@ -39,7 +38,15 @@ sealed class RateLimits
   override def fromRow(r: Row): UUID = user_id(r)
 }
 
-object RateLimit extends RateLimits with Cassandra {
+object RateLimitRepo extends RateLimits
+
+class RateLimitRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends RateLimits
+  with ExtCQL[RateLimits, UUID]
+  with BasicPlayComponents
+  with Cassandra {
 
   def get(
     resource: String,

@@ -20,7 +20,6 @@ case class ExpirableLink(
 
 sealed class ExpirableLinks
   extends CassandraTable[ExpirableLinks, ExpirableLink]
-  with ExtCQL[ExpirableLinks, ExpirableLink]
   with CanonicalNamedModel[ExpirableLink]
   with ExceptionDefining
   with Logging {
@@ -41,10 +40,24 @@ sealed class ExpirableLinks
     ExpirableLink(id(r), user_id(r), module(r))
 }
 
-object ExpirableLink extends ExpirableLinks with Cassandra {
+object ExpirableLink
+  extends ExpirableLinks
+  with ExceptionDefining {
 
   case class NotFound(id: String)
     extends BaseException(error_code("not.found"))
+
+}
+
+class ExpirableLinkRepo(
+  implicit val basicPlayApi: BasicPlayApi
+)
+  extends ExpirableLinks
+  with ExtCQL[ExpirableLinks, ExpirableLink]
+  with BasicPlayComponents
+  with Cassandra {
+
+  import ExpirableLink._
 
   def find(id: String): Future[ExpirableLink] =
     CQL {

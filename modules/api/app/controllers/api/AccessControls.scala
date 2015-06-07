@@ -20,6 +20,13 @@ import scala.concurrent.Future
 class AccessControls(
   val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
+)(
+  implicit
+  val accessControlRepo: AccessControlRepo,
+  val groupRepo: GroupRepo,
+  val User: UserRepo,
+  val rateLimitRepo: RateLimitRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(AccessControls)
   with Controller
@@ -39,7 +46,7 @@ class AccessControls(
 
   def show(id: UUID, res: String, act: String) =
     PermCheck(_.Show).async { implicit req =>
-      AccessControl.find(id, res, act).map { ac =>
+      accessControlRepo.find(id, res, act).map { ac =>
         Ok(Json.toJson(ac))
       }.recover {
         case e: BaseException => NotFound
@@ -49,13 +56,13 @@ class AccessControls(
   def create =
     PermCheck(_.Create).async { implicit req =>
       BindJson().as[AccessControl] { success =>
-        AccessControl.find(success).map { found =>
+        accessControlRepo.find(success).map { found =>
           Ok(Json.toJson(found))
         }.recoverWith { case e: NotFound =>
           (for {
             exists <-
             if (!success.is_group) User.exists(success.principal)
-            else Group.exists(success.principal)
+            else groupRepo.exists(success.principal)
 
             saved <- success.save
             _resp <- ES.Index(saved) into AccessControl
@@ -68,7 +75,7 @@ class AccessControls(
                 ).url
               )
           }.recover {
-            case e: User.NotFound  => BadRequest(JsonMessage(e))
+            case e: models.User.NotFound  => BadRequest(JsonMessage(e))
             case e: Group.NotFound => BadRequest(JsonMessage(e))
           }
         }
@@ -79,8 +86,8 @@ class AccessControls(
     PermCheck(_.Destroy).async { implicit req =>
       (for {
         __ <- ES.Delete(AccessControl.genId(res, act, id)) from AccessControl
-        ac <- AccessControl.find(id, res, act)
-        __ <- AccessControl.remove(id, res, act)
+        ac <- accessControlRepo.find(id, res, act)
+        __ <- accessControlRepo.remove(id, res, act)
       } yield res).map { _ =>
         NoContent
       }.recover {
@@ -92,7 +99,7 @@ class AccessControls(
     PermCheck(_.Save).async { implicit req =>
       BindJson().as[AccessControl] { ac =>
         (for {
-          _____ <- AccessControl.find(id, res, act)
+          _____ <- accessControlRepo.find(id, res, act)
           saved <- ac.save
           _resp <- ES.Update(saved) in AccessControl
         } yield _resp._1).map {
@@ -105,7 +112,7 @@ class AccessControls(
     }
 
   def dropIndexIfEmpty: Future[Boolean] = for {
-    _empty <- AccessControl.isEmpty
+    _empty <- accessControlRepo.isEmpty
     result <-
     if (_empty) {
       Logger.info(s"Clean elasticsearch index $basicName")

@@ -1,5 +1,6 @@
 package security
 
+import models.UserRepo
 import play.api.mvc._
 
 import scala.language.higherKinds
@@ -7,7 +8,9 @@ import scala.language.higherKinds
 /**
  * @author zepeng.li@gmail.com
  */
-object MaybeUserAction
+case class MaybeUserAction(
+  implicit val userRepo: UserRepo
+)
   extends ActionBuilder[MaybeUserRequest]
   with ActionTransformer[Request, MaybeUserRequest]
   with Session {

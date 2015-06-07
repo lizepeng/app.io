@@ -5,7 +5,7 @@ import java.util.UUID
 import controllers.api.Secured
 import helpers._
 import models._
-import models.sys.SysConfig
+import models.sys.{SysConfig, SysConfigRepo}
 import play.api.data.Forms._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -23,6 +23,12 @@ import scala.util.Success
  */
 class Groups(
   val basicPlayApi: BasicPlayApi
+)(
+  implicit
+  val accessControlRepo: AccessControlRepo,
+  val groupRepo: GroupRepo,
+  val userRepo: UserRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(Groups)
   with Controller
@@ -38,7 +44,7 @@ class Groups(
 
   def show(id: UUID) =
     PermCheck(_.Show).async { implicit req =>
-      Group.find(id).map { grp =>
+      groupRepo.find(id).map { grp =>
         Ok(html.groups.show(grp))
       }.recover {
         case e: BaseException => NotFound
@@ -70,11 +76,14 @@ object Groups
 
   @volatile private var _gid2layouts: Map[UUID, String] = Map()
 
-  def initialize: Future[Map[UUID, String]] = {
-    Group.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
+  def initialize(
+    implicit groupRepo: GroupRepo,
+  internalGroupsRepo: InternalGroupsRepo,
+  sysConfigRepo: SysConfigRepo): Future[Map[UUID, String]] = {
+    groupRepo.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
       for (
         conf <-
-        if (grp.id == InternalGroups.AnyoneId)
+        if (grp.id == internalGroupsRepo.AnyoneId)
           System.config(grp.id.toString, layout_admin).map(grp.id -> _)
         else
           System.config(grp.id.toString, layout_normal).map(grp.id -> _)

@@ -15,7 +15,11 @@ import scala.concurrent.Future
 class AccessControls(
   val basicPlayApi: BasicPlayApi
 )(
-  implicit val secured: RegisteredSecured
+  implicit
+  val secured: RegisteredSecured,
+  val accessControlRepo: AccessControlRepo,
+  val userRepo: UserRepo,
+  internalGroupsRepo: InternalGroupsRepo
 )
   extends Secured(AccessControls)
   with Controller

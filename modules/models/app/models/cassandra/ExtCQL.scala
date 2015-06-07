@@ -5,6 +5,7 @@ import com.websudos.phantom.batch.BatchQuery
 import com.websudos.phantom.builder._
 import com.websudos.phantom.builder.query._
 import helpers.Logging
+import play.api.Configuration
 
 /**
  * @author zepeng.li@gmail.com
@@ -12,8 +13,9 @@ import helpers.Logging
 trait ExtCQL[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] with Logging =>
 
-  lazy val flags: Int = play.api.Play.current
-    .configuration
+  def configuration: Configuration
+
+  lazy val flags: Int = configuration
     .getStringSeq("cassandra.cql.log")
     .getOrElse(Seq.empty).map {
     case "batch"  => 0x10

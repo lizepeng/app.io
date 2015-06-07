@@ -1,7 +1,5 @@
 import messages.ChatActor
 import models._
-import models.cfs._
-import models.sys.SysConfig
 import play.api.Play.current
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.concurrent.Akka
@@ -32,34 +30,36 @@ object Global
     ChatActor.startRegion(Akka.system)
   }
 
+  //TODO lifecycle
   override def onStop(app: Application) = {
     Logger.info("Shutting down cassandra...")
 
     Schemas.shutdown()
 
     //System
-    SysConfig.shutdown()
-    AccessControl.shutdown()
-    SessionData.shutdown()
-    RateLimit.shutdown()
+    //    SysConfig.shutdown()
+    //TODO lifecycle
+    //    AccessControl.shutdown()
+    //    SessionData.shutdown()
+    //    RateLimit.shutdown()
 
     //User
-    User.shutdown()
-    UserByEmail.shutdown()
-    Group.shutdown()
-    Person.shutdown()
+//    User.shutdown()
+    //    UserByEmail.shutdown()
+    //    Group.shutdown()
+    //    Person.shutdown()
 
     //CFS
-    INode.shutdown()
-    IndirectBlock.shutdown()
-    Block.shutdown()
+    //    INode.shutdown()
+    //    IndirectBlock.shutdown()
+    //    Block.shutdown()
 
-    ExpirableLink.shutdown()
-    EmailTemplate.shutdown()
+    //    ExpirableLink.shutdown()
+    //    EmailTemplate.shutdown()
 
     //CFS View
-    File.shutdown()
-    Directory.shutdown()
+    //    File.shutdown()
+    //    Directory.shutdown()
 
     Logger.info("Shutting down elastic search...")
 

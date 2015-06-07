@@ -22,7 +22,8 @@ case class Block(
   data: ByteBuffer
 )
 
-sealed class Blocks extends CassandraTable[Blocks, Block] {
+sealed class Blocks
+  extends CassandraTable[Blocks, Block] {
 
   override val tableName = "blocks"
 
@@ -42,9 +43,16 @@ sealed class Blocks extends CassandraTable[Blocks, Block] {
   }
 }
 
-object Block extends Blocks with Cassandra {
+object Block extends Blocks {
 
   type BLK = Array[Byte]
+}
+
+class BlockRepo
+  extends Blocks
+  with Cassandra {
+
+  import Block._
 
   def read(ind_blk_id: UUID): Enumerator[BLK] = {
     select(_.data)
