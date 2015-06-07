@@ -24,7 +24,7 @@
   </appender>
 
   <logger name="play" level="INFO" />
-  <logger name="application" level="INFO" />
+  <logger name="application" level="TRACE" />
   <logger name="org.elasticsearch" level="ERROR" />
   <logger name="com.datastax.driver" level="ERROR" />
   <logger name="com.websudos.phantom" level="ERROR" />

@@ -29,16 +29,16 @@ class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
   with I18nComponents {
 
-  implicit val ec = actorSystem.dispatcher
+  implicit val executor = actorSystem.dispatcher
 
   play.api.Logger.configure(context.environment)
 
   // Basic Play Api
-  implicit val _basicPlayApi = BasicPlayApi(langs, messagesApi, configuration, applicationLifecycle)
+  implicit val _basicPlayApi = BasicPlayApi(langs, messagesApi, configuration, applicationLifecycle, actorSystem)
 
   // Services
-  implicit val _bandwidth   = new BandwidthService(_basicPlayApi, actorSystem)
-  implicit val _mailService = new MailService(_basicPlayApi, actorSystem)
+  implicit val _bandwidth   = new BandwidthService(_basicPlayApi)
+  implicit val _mailService = new MailService(_basicPlayApi)
   implicit val _es          = new ElasticSearch(_basicPlayApi)
 
   // Models
@@ -172,11 +172,7 @@ class Components(context: Context)
   //Start System
   Future.sequence(
     Seq(
-      _internalGroups.loadOrInit.flatMap { init =>
-        if (init) apiGroupsCtrl.reindex
-        else Future.successful(false)
-      }(actorSystem.dispatcher),
-      controllers.GroupsCtrl.initLayouts,
+      controllers.Layouts.init,
       controllers.AccessControlsCtrl.initIfEmpty
     )
   ).onSuccess {

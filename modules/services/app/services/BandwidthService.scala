@@ -2,7 +2,6 @@ package services
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorSystem
 import helpers._
 import models.cfs.Block._
 import org.joda.time.DateTime
@@ -18,8 +17,7 @@ import scala.util.Try
  * @author zepeng.li@gmail.com
  */
 class BandwidthService(
-  val _basicPlayApi: BasicPlayApi,
-  val actorSystem: ActorSystem
+  val _basicPlayApi: BasicPlayApi
 ) extends BasicPlayComponents {
 
   val executor: ExecutionContext =

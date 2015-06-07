@@ -31,8 +31,6 @@ case class Group(
   updated_at: DateTime
 ) extends HasUUID {
 
-  def createIfNotExist(implicit groups: Groups) = groups.createIfNotExist(this)
-
   def save(implicit groups: Groups) = groups.save(this)
 }
 
@@ -166,16 +164,6 @@ class Groups(
   create.ifNotExists.future()
 
   lifecycle.addStopHook(() => Future.successful(shutdown()))
-
-  def createIfNotExist(group: Group): Future[Boolean] = CQL {
-    insert
-      .value(_.id, group.id)
-      .value(_.name, group.name)
-      .value(_.description, group.description)
-      .value(_.is_internal, Some(group.is_internal).filter(_ == true))
-      .value(_.updated_at, group.updated_at)
-      .ifNotExists()
-  }.future().map(_.wasApplied())
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -327,30 +315,35 @@ object InternalGroupsCode {
 }
 
 class InternalGroups(
-  implicit val _sysConfig: SysConfigs
+  implicit
+  val _basicPlayApi: BasicPlayApi,
+  val _sysConfig: SysConfigs
 )
-  extends CanonicalNamed
+  extends GroupTable
+  with ExtCQL[GroupTable, Group]
+  with BasicPlayComponents
   with SysConfig
-  with Logging {
+  with Cassandra {
 
-  //TODO just a workaround
-  override val basicName: String = "groups"
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
 
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  def loadOrInit(implicit groups: Groups): Future[Boolean] = Future.sequence(
+  Future.sequence(
     InternalGroupsCode.ALL.map { n =>
       val key = s"internal_group_${"%02d".format(n)}"
       System.UUID(key).flatMap { id =>
-        Group(
-          id,
-          if (n == InternalGroupsCode.Anyone) "Anyone" else key,
-          Some(key),
-          is_internal = true,
-          DateTime.now
-        ).createIfNotExist.map((id, _))
+        createIfNotExist(
+          Group(
+            id,
+            if (n == InternalGroupsCode.Anyone) "Anyone" else key,
+            Some(key),
+            is_internal = true,
+            DateTime.now
+          )
+        ).map((id, _))
       }
     }
   ).map { seq =>
@@ -374,6 +367,17 @@ class InternalGroups(
   def map(igs: InternalGroupsCode): Set[UUID] = {
     igs.numbers.map(_num2Id).toSet
   }
+
+  private def createIfNotExist(group: Group): Future[Boolean] = CQL {
+    insert
+      .value(_.id, group.id)
+      .value(_.name, group.name)
+      .value(_.description, group.description)
+      .value(_.is_internal, Some(group.is_internal).filter(_ == true))
+      .value(_.updated_at, group.updated_at)
+      .ifNotExists()
+  }.future().map(_.wasApplied())
+
 }
 
 trait InternalGroupsComponents {
