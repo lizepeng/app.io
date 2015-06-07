@@ -22,14 +22,14 @@
     <table class="table table-bordered table-condensed">
       <thead>
         <tr class="info">
-          @for(i <- InternalGroups.Div1) {
+          @for(i <- InternalGroupsCode.Div1) {
             <th class="text-center">@("G" + i)</th>
           }
         </tr>
       </thead>
       <tbody>
         <tr>
-          @for(i <- InternalGroups.Div1) {
+          @for(i <- InternalGroupsCode.Div1) {
             @isGroupMember(user, i)
           }
         </tr>
@@ -37,7 +37,7 @@
       <thead>
         <tr class="info">
           <th></th>
-          @for(i <- InternalGroups.Div2) {
+          @for(i <- InternalGroupsCode.Div2) {
             <th class="text-center">@("G" + i)</th>
           }
         </tr>
@@ -45,7 +45,7 @@
       <tbody>
         <tr>
           <td></td>
-          @for(i <- InternalGroups.Div2) {
+          @for(i <- InternalGroupsCode.Div2) {
               @isGroupMember(user, i)
           }
         </tr>
@@ -53,7 +53,7 @@
       <thead>
         <tr class="info">
           <th></th>
-          @for(i <- InternalGroups.Div3) {
+          @for(i <- InternalGroupsCode.Div3) {
             <th class="text-center">@("G" + i)</th>
           }
         </tr>
@@ -61,7 +61,7 @@
       <tbody>
         <tr>
           <td></td>
-          @for(i <- InternalGroups.Div3) {
+          @for(i <- InternalGroupsCode.Div3) {
               @isGroupMember(user, i)
           }
         </tr>
@@ -84,7 +84,7 @@
 
 @isGroupMember(user:User, i:Int) = {
   <td class="text-center">
-    @if(user.int_groups.contains(i)){
+    @if(user.internal_groups_code.contains(i)){
       <i class="fa fa-check-circle fa-lg text-success"></i>
     }else{
       <i class="fa fa-circle-thin fa-lg"></i>

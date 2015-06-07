@@ -23,20 +23,20 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class UsersCtrl(
-  val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
   implicit
-  val accessControlRepo: AccessControls,
-  val _users: Users,
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
   val groups: Groups
 )
   extends Secured(UsersCtrl)
   with Controller
-  with security.Session
   with BasicPlayComponents
   with InternalGroupsComponents
-  with I18nSupport {
+  with PermCheckComponents
+  with I18nSupport
+  with security.Session {
 
   val signUpFM = Form[SignUpFD](
     mapping(

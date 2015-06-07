@@ -24,26 +24,24 @@ import scala.language.postfixOps
  * @author zepeng.li@gmail.com
  */
 class GroupsCtrl(
-  val basicPlayApi: BasicPlayApi,
-  val ES: ElasticSearch
-)(
   implicit
-  val accessControlRepo: AccessControls,
-  val User: Users,
-  rateLimitRepo: RateLimits,
-  groups: Groups
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
+  val _groups: Groups,
+  val ES: ElasticSearch
 )
   extends Secured(GroupsCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
+  with PermCheckComponents
   with I18nSupport
   with Logging {
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
       if (ids.nonEmpty)
-        groups.find(ids).map { grps =>
+        _groups.find(ids).map { grps =>
           Ok(Json.toJson(grps))
         }
       else
@@ -56,7 +54,7 @@ class GroupsCtrl(
 
   def show(id: UUID) =
     PermCheck(_.Show).async { implicit req =>
-      groups.find(id).map {
+      _groups.find(id).map {
         NotModifiedOrElse { grp =>
           Ok(Json.toJson(grp))
         }
@@ -88,8 +86,8 @@ class GroupsCtrl(
     PermCheck(_.Destroy).async { implicit req =>
       (for {
         ___ <- ES.Delete(id) from Group
-        grp <- groups.find(id)
-        ___ <- groups.remove(id)
+        grp <- _groups.find(id)
+        ___ <- _groups.remove(id)
       } yield grp).map { _ =>
         NoContent
       }.recover {
@@ -106,7 +104,7 @@ class GroupsCtrl(
     PermCheck(_.Save).async { implicit req =>
       BindJson().as[Group] { grp =>
         (for {
-          _____ <- groups.find(id)
+          _____ <- _groups.find(id)
           saved <- grp.save
           _resp <- ES.Update(saved) in Group
         } yield _resp._1).map {
@@ -120,8 +118,8 @@ class GroupsCtrl(
   def users(id: UUID, pager: Pager) =
     PermCheck(_.Show).async { implicit req =>
       (for {
-        page <- groups.children(id, pager)
-        usrs <- User.find(page)
+        page <- _groups.children(id, pager)
+        usrs <- _users.find(page)
       } yield (page, usrs)).map { case (page, usrs) =>
         Ok(JsArray(usrs.map(_.toJson)))
           .withHeaders(linkHeader(page, routes.GroupsCtrl.users(id, _)))
@@ -133,15 +131,15 @@ class GroupsCtrl(
   def addUser(id: UUID) =
     PermCheck(_.Save).async { implicit req =>
       BodyIsJsObject { obj =>
-        obj.validate[UUID]((__ \ 'id).read[UUID]).map(User.find)
+        obj.validate[UUID]((__ \ 'id).read[UUID]).map(_users.find)
           .orElse(
-            obj.validate[String]((__ \ 'email).read[String]).map(User.find)
+            obj.validate[String]((__ \ 'email).read[String]).map(_users.find)
           ).map {
           _.flatMap { user =>
             if (user.groups.contains(id)) Future.successful {
               Ok(user.toJson)
             }
-            else groups.addChild(id, user.id).map { _ =>
+            else _groups.addChild(id, user.id).map { _ =>
               Created(user.toJson)
             }
           }
@@ -159,11 +157,11 @@ class GroupsCtrl(
 
   def delUser(id: UUID, uid: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
-      groups.delChild(id, uid).map { _ => NoContent }
+      _groups.delChild(id, uid).map { _ => NoContent }
     }
 
   def dropIndexIfEmpty: Future[Boolean] = for {
-    _empty <- groups.isEmpty
+    _empty <- _groups.isEmpty
     result <-
     if (_empty) {
       Logger.info(s"Clean elasticsearch index $basicName")
@@ -175,7 +173,7 @@ class GroupsCtrl(
 
   def reindex: Future[Boolean] = {
     new ReIndex[Group](
-      groups.all,
+      _groups.all,
       list => (ES.BulkIndex(list) into Group)
         .map { res => Logger.info(res.getTook.toString) }
     )(10).start().map(_ => true)

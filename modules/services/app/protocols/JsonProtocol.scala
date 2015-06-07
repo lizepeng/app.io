@@ -47,12 +47,15 @@ object JsonProtocol {
 
   object JsonMessage {
 
-    def apply(e: BaseException)(implicit messages: Messages): JsObject = {
+    def apply(e: BaseException)(
+      implicit messages: Messages
+    ): JsObject = {
       generate(e.message)
     }
 
-    def apply(key: String, args: Any*)
-        (implicit messages: Messages): JsObject = {
+    def apply(key: String, args: Any*)(
+      implicit messages: Messages
+    ): JsObject = {
       generate(messages(key, args))
     }
 

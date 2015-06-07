@@ -19,19 +19,19 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class MyCtrl(
-  val basicPlayApi: BasicPlayApi,
   val ES: ElasticSearch
 )(
   implicit
+  val basicPlayApi: BasicPlayApi,
   val _users: Users,
-  val personRepo: Persons
+  val _persons: Persons
 )
   extends Secured(User)
   with Controller
-  with Session
   with BasicPlayComponents
-  with CanonicalNameBasedMessages
-  with I18nSupport {
+  with I18nSupport
+  with Session
+  with CanonicalNameBasedMessages{
 
   val ChangePasswordFM = Form[ChangePasswordFD](
     mapping(
@@ -98,7 +98,7 @@ class MyCtrl(
 
   def profile =
     (MaybeUserAction() >> AuthCheck).async { implicit req =>
-      personRepo.find(req.user.id).map { p =>
+      _persons.find(req.user.id).map { p =>
         Ok(html.my.profile(filledWith(p)))
       }.recover {
         case e: Person.NotFound =>
@@ -118,7 +118,7 @@ class MyCtrl(
         _ match { case (first, last) =>
           for {
             p <- Future.successful(Person(req.user.id, first, last))
-            _ <- personRepo.save(p)
+            _ <- _persons.save(p)
             _ <- ES.Index(p) into Person
           } yield {
             Ok(html.my.profile(filledWith(p)))

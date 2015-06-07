@@ -18,20 +18,18 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class UsersCtrl(
-  val basicPlayApi: BasicPlayApi,
-  val ES: ElasticSearch
-)(
   implicit
-  val accessControlRepo: AccessControls,
-  val _users: Users,
-  val rateLimitRepo: RateLimits,
-  val _groups: Groups
+  val _groups: Groups,
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
+  val ES: ElasticSearch
 )
   extends Secured(UsersCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
   with InternalGroupsComponents
+  with PermCheckComponents
   with I18nSupport
   with Logging {
 

@@ -11,10 +11,9 @@ import views.html
  * @author zepeng.li@gmail.com
  */
 class ChatCtrl(
-  val basicPlayApi: BasicPlayApi
-)(
   implicit
-  val userRepo: Users
+  val basicPlayApi: BasicPlayApi,
+  val _users: Users
 )
   extends Controller
   with BasicPlayComponents

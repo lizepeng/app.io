@@ -15,23 +15,22 @@ import protocols.JsonProtocol._
 import views._
 
 import scala.concurrent.Future
-import scala.language.postfixOps
+import scala.language.postfixOps //TODO remove ?
 import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
  */
 class GroupsCtrl(
-  val basicPlayApi: BasicPlayApi
-)(
   implicit
-  val accessControlRepo: AccessControls,
-  val groupRepo: Groups,
-  val userRepo: Users
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
+  val _groups: Groups
 )
   extends Secured(GroupsCtrl)
   with Controller
   with BasicPlayComponents
+  with PermCheckComponents
   with I18nSupport {
 
   val mapping_name = "name" -> nonEmptyText(2, 255)
@@ -43,7 +42,7 @@ class GroupsCtrl(
 
   def show(id: UUID) =
     PermCheck(_.Show).async { implicit req =>
-      groupRepo.find(id).map { grp =>
+      _groups.find(id).map { grp =>
         Ok(html.groups.show(grp))
       }.recover {
         case e: BaseException => NotFound
@@ -77,7 +76,8 @@ object GroupsCtrl
 
   def initialize(
     implicit groupRepo: Groups,
-  sysConfigRepo: SysConfigs): Future[Map[UUID, String]] = {
+    sysConfigRepo: SysConfigs
+  ): Future[Map[UUID, String]] = {
     groupRepo.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
       for (
         conf <-

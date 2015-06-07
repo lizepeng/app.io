@@ -15,17 +15,16 @@ import scala.language.postfixOps
  * @author zepeng.li@gmail.com
  */
 class CFSCtrl(
-  val basicPlayApi: BasicPlayApi
-)(
   implicit
-  val accessControlRepo: AccessControls,
-  val userRepo: Users,
-  val groups: Groups,
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
+  val _groups: Groups,
   val cfs: CFS
 )
   extends Secured(CFSCtrl)
   with Controller
   with BasicPlayComponents
+  with PermCheckComponents
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =

@@ -20,9 +20,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class PasswordResetCtrl(
-  val basicPlayApi: BasicPlayApi
-)(
   implicit
+  val basicPlayApi: BasicPlayApi,
   val mailService: MailService,
   val _users: Users,
   val ExpirableLink: ExpirableLinks,
@@ -31,12 +30,12 @@ class PasswordResetCtrl(
 )
   extends Secured(PasswordResetCtrl)
   with Controller
-  with CanonicalNameBasedMessages
-  with SysConfig
-  with AppConfig
   with BasicPlayComponents
   with InternalGroupsComponents
   with I18nSupport
+  with CanonicalNameBasedMessages
+  with SysConfig
+  with AppConfig
   with Logging {
 
   val emailFM = Form(

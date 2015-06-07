@@ -25,23 +25,20 @@ import scala.util.Failure
  * @author zepeng.li@gmail.com
  */
 class CFSCtrl(
+  implicit
   val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
+  val cfs: CFS,
   val bandwidthService: BandwidthService
-)(
-  implicit val
-  accessControlRepo: AccessControls,
-  userRepo: Users,
-  rateLimitRepo: RateLimits,
-  groups: Groups,
-  cfs: CFS
 )
   extends Secured(CFSCtrl)
   with Controller
   with LinkHeader
-  with AppConfig
   with BasicPlayComponents
+  with PermCheckComponents
   with ExceptionDefining
   with I18nSupport
+  with AppConfig
   with Logging {
 
   lazy val bandwidth_upload  : Int =

@@ -1,8 +1,7 @@
 package controllers.api
 
+import helpers.BasicPlayApi
 import models._
-import play.api.Configuration
-import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
 import security._
 
@@ -16,23 +15,17 @@ object PermCheck {
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
   )(
     implicit
-    langs: Langs,
-    messagesApi: MessagesApi,
-    configuration: Configuration,
-    accessControlRepo: AccessControls,
-    userRepo: Users,
-    rateLimit: RateLimits,
-    groups: Groups
+    basicPlayApi: BasicPlayApi,
+    _users: Users,
+    _accessControls: AccessControls,
+    _rateLimits: RateLimits
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
     apply(_.Anything, onDenied)(
       CheckedResource(resource),
-      langs,
-      messagesApi,
-      configuration,
-      accessControlRepo,
-      userRepo,
-      rateLimit,
-      groups
+      basicPlayApi,
+      _users,
+      _accessControls,
+      _rateLimits
     )
   }
 
@@ -43,16 +36,33 @@ object PermCheck {
   )(
     implicit
     resource: CheckedResource,
-    langs: Langs,
-    messagesApi: MessagesApi,
-    configuration: Configuration,
-    accessControlRepo: AccessControls,
-    userRepo: Users,
-    rateLimit: RateLimits,
-    groups: Groups
+    basicPlayApi: BasicPlayApi,
+    _users: Users,
+    _accessControls: AccessControls,
+    _rateLimits: RateLimits
   ): ActionBuilder[UserRequest] =
     MaybeUserAction() andThen
       AuthCheck andThen
-      RateLimitCheck(resource) andThen
+      RateLimitCheck() andThen
       PermissionChecker(action, onDenied, resource)
+}
+
+case class PermCheckRequired(
+  _users: Users,
+  _accessControls: AccessControls,
+  _rateLimits: RateLimits
+)
+
+trait PermCheckComponents {
+
+  def _permCheckRequired: PermCheckRequired
+
+  implicit def _users: Users =
+    _permCheckRequired._users
+
+  implicit def _accessControls: AccessControls =
+    _permCheckRequired._accessControls
+
+  implicit def _rateLimits: RateLimits =
+    _permCheckRequired._rateLimits
 }

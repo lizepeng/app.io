@@ -1,7 +1,7 @@
 package controllers
 
+import helpers.BasicPlayApi
 import models._
-import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
 import security._
 
@@ -15,19 +15,15 @@ object PermCheck {
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
   )(
     implicit
-    langs: Langs,
-    messagesApi: MessagesApi,
-    accessControlRepo: AccessControls,
-    userRepo: Users,
-    groups: Groups
+    basicPlayApi: BasicPlayApi,
+    _users: Users,
+    _accessControls: AccessControls
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
     apply(_.Anything, onDenied)(
       CheckedResource(resource),
-      langs,
-      messagesApi,
-      accessControlRepo,
-      userRepo,
-      groups
+      basicPlayApi,
+      _users,
+      _accessControls
     )
   }
 
@@ -38,13 +34,27 @@ object PermCheck {
   )(
     implicit
     resource: CheckedResource,
-    langs: Langs,
-    messagesApi: MessagesApi,
-    accessControlRepo: AccessControls,
-    userRepo: Users,
-    groups: Groups
+    basicPlayApi: BasicPlayApi,
+    _users: Users,
+    _accessControls: AccessControls
   ): ActionBuilder[UserRequest] =
     MaybeUserAction() andThen
       AuthCheck andThen
       PermissionChecker(action, onDenied, resource)
+}
+
+case class PermCheckRequired(
+  _users: Users,
+  _accessControls: AccessControls
+)
+
+trait PermCheckComponents {
+
+  def _permCheckRequired: PermCheckRequired
+
+  implicit def _users: Users =
+    _permCheckRequired._users
+
+  implicit def _accessControls: AccessControls =
+    _permCheckRequired._accessControls
 }

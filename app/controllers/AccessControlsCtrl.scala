@@ -13,17 +13,16 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class AccessControlsCtrl(
-  val basicPlayApi: BasicPlayApi
-)(
   implicit
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
   val secured: RegisteredSecured,
-  val accessControlRepo: AccessControls,
-  val userRepo: Users,
-  val groups: Groups
+  val _groups: Groups
 )
   extends Secured(AccessControlsCtrl)
   with Controller
   with BasicPlayComponents
+  with PermCheckComponents
   with I18nSupport {
 
   def index(pager: Pager) =

@@ -14,19 +14,17 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class SearchCtrl(
-  val basicPlayApi: BasicPlayApi,
-  val ES: ElasticSearch
-)(
   implicit
-  val accessControlRepo: AccessControls,
-  val User: Users,
-  val rateLimitRepo: RateLimits,
-  val groups: Groups
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
+  val _groups: Groups,
+  val ES: ElasticSearch
 )
   extends Secured(SearchCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
+  with PermCheckComponents
   with I18nSupport {
 
   def index(types: Seq[String], q: Option[String], p: Pager) =
@@ -34,11 +32,11 @@ class SearchCtrl(
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
-        case (User.`basicName`, _p)  =>
-          Some((es: ElasticSearch) => es.Search(q, _p) in User)
-        case (Group.`basicName`, _p) =>
+        case (name, _p) if name == _users.basicName  =>
+          Some((es: ElasticSearch) => es.Search(q, _p) in _users)
+        case (name, _p) if name == _groups.basicName =>
           Some((es: ElasticSearch) => es.Search(q, _p) in Group)
-        case _                       => None
+        case _                                       => None
       }
 
       if (defs.isEmpty)

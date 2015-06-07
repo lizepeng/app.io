@@ -8,6 +8,7 @@ import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.i18n._
 import router.Routes
+
 import services.{BandwidthService, MailService}
 
 import scala.concurrent.Future
@@ -42,11 +43,13 @@ class Components(context: Context)
   implicit val expirableLinkRepo        = new ExpirableLinks
   implicit val accessControlRepo        = new AccessControls
   implicit val CFS                      = new CFS()
+  implicit val permCheck                = PermCheckRequired(userRepo, accessControlRepo)
+  implicit val apiPermCheck             = api.PermCheckRequired(userRepo, accessControlRepo, rateLimitRepo)
+  implicit val secured                  = buildSecured
+  implicit val bandwidth                = BandwidthService(basicPlayApi, actorSystem)
+  implicit val elasticSearch            = elasticsearch.ElasticSearch(basicPlayApi)
 
-  implicit val secured = buildSecured
-  val bandwidth     = BandwidthService(basicPlayApi, actorSystem)
   val mailService   = MailService(basicPlayApi, actorSystem)
-  val elasticSearch = elasticsearch.ElasticSearch(basicPlayApi)
   val apiRouter     = buildApiRouter
   val socketsRouter = buildSocketsRouter
 
@@ -60,11 +63,11 @@ class Components(context: Context)
     Seq(
       Schemas.create,
       //TODO
-      new api.UsersCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
-      new api.GroupsCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
-      new api.AccessControlsCtrl(basicPlayApi, elasticSearch).dropIndexIfEmpty,
+      new api.UsersCtrl().dropIndexIfEmpty,
+      new api.GroupsCtrl().dropIndexIfEmpty,
+      new api.AccessControlsCtrl().dropIndexIfEmpty,
       groupRepo._internalGroups.initialize.flatMap { done =>
-        if (done) new api.GroupsCtrl(basicPlayApi, elasticSearch).reindex
+        if (done) new api.GroupsCtrl().reindex
         else Future.successful(false)
       },
       GroupsCtrl.initialize,
@@ -94,11 +97,11 @@ class Components(context: Context)
 
   private def buildApiRouter = new _root_.api.Routes(
     httpErrorHandler,
-    new api.SearchCtrl(basicPlayApi, elasticSearch),
-    new api.GroupsCtrl(basicPlayApi, elasticSearch),
-    new api.UsersCtrl(basicPlayApi, elasticSearch),
-    new api.AccessControlsCtrl(basicPlayApi, elasticSearch),
-    new api.CFSCtrl(basicPlayApi, bandwidth)
+    new api.SearchCtrl(),
+    new api.GroupsCtrl(),
+    new api.UsersCtrl(),
+    new api.AccessControlsCtrl(),
+    new api.CFSCtrl()
   )
 
   private def buildSocketsRouter = new _root_.sockets.Routes(
@@ -110,17 +113,17 @@ class Components(context: Context)
     httpErrorHandler,
     apiRouter,
     socketsRouter,
-    new Application(basicPlayApi),
-    new ChatCtrl(basicPlayApi),
+    new Application(),
+    new ChatCtrl(),
     new Assets(httpErrorHandler),
-    new CFSCtrl(basicPlayApi),
-    new SessionsCtrl(basicPlayApi),
-    new UsersCtrl(basicPlayApi, elasticSearch),
-    new MyCtrl(basicPlayApi, elasticSearch),
-    new GroupsCtrl(basicPlayApi),
-    new PasswordResetCtrl(basicPlayApi)(mailService, userRepo, expirableLinkRepo, emailTemplateRepo, sysConfigRepo),
-    new EmailTemplatesCtrl(basicPlayApi),
-    new AccessControlsCtrl(basicPlayApi)
+    new CFSCtrl(),
+    new SessionsCtrl(),
+    new UsersCtrl(elasticSearch),
+    new MyCtrl(elasticSearch),
+    new GroupsCtrl(),
+    new PasswordResetCtrl()(basicPlayApi, mailService, userRepo, expirableLinkRepo, emailTemplateRepo, sysConfigRepo),
+    new EmailTemplatesCtrl(),
+    new AccessControlsCtrl()
   )
 
 }

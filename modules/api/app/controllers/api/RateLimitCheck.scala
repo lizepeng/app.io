@@ -3,8 +3,7 @@ package controllers.api
 import helpers._
 import models.RateLimits
 import org.joda.time.DateTime
-import play.api.Configuration
-import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.i18n.I18nSupport
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import protocols.JsonProtocol._
@@ -15,17 +14,18 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-case class RateLimitCheck(resource: CheckedResource)(
+case class RateLimitCheck(
   implicit
-  val messagesApi: MessagesApi,
-  val configuration: Configuration,
-  val rateLimit: RateLimits
+  val resource: CheckedResource,
+  val basicPlayApi: BasicPlayApi,
+  val _rateLimits: RateLimits
 )
   extends ActionFunction[UserRequest, UserRequest]
   with ExHeaders
   with CanonicalNamed
-  with AppConfig
-  with I18nSupport {
+  with BasicPlayComponents
+  with I18nSupport
+  with AppConfig {
 
   override val basicName = "rate_limit"
 
@@ -46,11 +46,11 @@ case class RateLimitCheck(resource: CheckedResource)(
     val period_start = now.hourOfDay.roundFloorCopy
       .plusMinutes((minutes / span) * span)
 
-    rateLimit.get(res, period_start)(user)
+    _rateLimits.get(res, period_start)(user)
       .flatMap { counter =>
       if (counter >= limit) Future.successful {
         Results.TooManyRequest {
-          JsonMessage(s"api.$basicName.exceeded")
+          JsonMessage(s"api.$basicName.exceeded")(request2Messages(req))
         }.withHeaders(
             X_RATE_LIMIT_LIMIT -> limit.toString,
             X_RATE_LIMIT_REMAINING -> "0",
@@ -59,7 +59,7 @@ case class RateLimitCheck(resource: CheckedResource)(
       }
       else
         for {
-          ___ <- rateLimit.inc(res, period_start)(user)
+          ___ <- _rateLimits.inc(res, period_start)(user)
           ret <- block(req)
         } yield {
           ret.withHeaders(

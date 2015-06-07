@@ -16,15 +16,15 @@ import scala.util.Failure
  */
 trait AuthorizedBodyParser[A]
   extends BodyParser[A]
-  with security.Session with Logging {
+  with BasicPlayComponents
+  with Session
+  with Logging {
 
   def onUnauthorized: RequestHeader => Result
 
   def onBaseException: RequestHeader => Result
 
-  implicit def langs: Langs
-
-  implicit def messagesApi: MessagesApi
+  def basicPlayApi: BasicPlayApi
 
   override def apply(req: RequestHeader): Iteratee[Array[Byte], Either[Result, A]] = {
     Iteratee.flatten {

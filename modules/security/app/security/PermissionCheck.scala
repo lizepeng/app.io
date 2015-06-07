@@ -1,6 +1,6 @@
 package security
 
-import helpers.Logging
+import helpers._
 import models._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -12,32 +12,28 @@ import scala.util.{Failure, Success}
  * @author zepeng.li@gmail.com
  */
 trait PermissionCheck
-  extends Logging
-  with I18nSupport {
+  extends BasicPlayComponents
+  with Logging{
 
   def action: CheckedActions => CheckedAction
 
   def resource: CheckedResource
 
-  implicit def langs: Langs
+  def basicPlayApi: BasicPlayApi
 
-  implicit def messagesApi: MessagesApi
-
-  def accessControlRepo: AccessControls
-
-  implicit def groups: Groups
+  def _accessControls: AccessControls
 
   def check[A](u: User): Future[Option[Boolean]] = {
     for {
       b1 <- thenCheck(
         previous = None, action(CheckedActions),
-        ac => accessControlRepo.check(
+        ac => _accessControls.check(
           resource.name, ac.name, u.groups
         )
       )
       b2 <- thenCheck(
         previous = b1, action(CheckedActions),
-        ac => accessControlRepo.check(
+        ac => _accessControls.check(
           resource.name, ac.name, u.id
         )
       )

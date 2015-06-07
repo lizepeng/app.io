@@ -9,17 +9,16 @@ import security._
 import views._
 
 class Application(
-  val basicPlayApi: BasicPlayApi
-)(
   implicit
-  val userRepo: Users
+  val basicPlayApi: BasicPlayApi,
+  val _users: Users
 )
   extends Controller
+  with BasicPlayComponents
+  with I18nSupport
   with CanonicalNamed
   with ViewMessages
-  with AppConfig
-  with BasicPlayComponents
-  with I18nSupport {
+  with AppConfig {
 
   override val basicName = "app"
 

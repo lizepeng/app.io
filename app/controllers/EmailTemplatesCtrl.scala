@@ -20,20 +20,19 @@ import scala.concurrent.Future
 import scala.language.implicitConversions
 
 class EmailTemplatesCtrl(
-  val basicPlayApi: BasicPlayApi
-)(
   implicit
-  val accessControlRepo: AccessControls,
-  val User: Users,
+  val basicPlayApi: BasicPlayApi,
+  val _permCheckRequired: PermCheckRequired,
   val sessionDataDAO: SessionData,
   val EmailTemplate: EmailTemplates,
   val EmailTemplateHistory: EmailTemplateHistories,
-  val groups: Groups
+  val _groups: Groups
 )
   extends Secured(EmailTemplatesCtrl)
   with Controller
-  with CanonicalNameBasedMessages
   with BasicPlayComponents
+  with PermCheckComponents
+  with CanonicalNameBasedMessages
   with I18nSupport {
 
   val TemplateFM = Form[TemplateFD](
@@ -69,8 +68,8 @@ class EmailTemplatesCtrl(
     PermCheck(_.Show).async { implicit req =>
       for {
         tmpl <- EmailTemplate.find(id, lang, updated_at)
-        usr1 <- User.find(tmpl.updated_by)
-        usr2 <- User.find(tmpl.created_by)
+        usr1 <- _users.find(tmpl.updated_by)
+        usr2 <- _users.find(tmpl.created_by)
       } yield Ok {
         html.email_templates.show(tmpl, usr1, usr2)
       }
@@ -117,8 +116,8 @@ class EmailTemplatesCtrl(
       val result =
         for {
           tmpl <- EmailTemplate.find(id, lang)
-          usr1 <- User.find(tmpl.updated_by)
-          usr2 <- User.find(tmpl.created_by)
+          usr1 <- _users.find(tmpl.updated_by)
+          usr2 <- _users.find(tmpl.created_by)
           ____ <- sessionDataDAO.set[DateTime](key_editing(id), tmpl.updated_at)
         } yield Ok {
           html.email_templates.edit(
@@ -139,8 +138,8 @@ class EmailTemplatesCtrl(
         failure =>
           for {
             tmpl <- EmailTemplate.find(id, lang)
-            usr1 <- User.find(tmpl.updated_by)
-            usr2 <- User.find(tmpl.created_by)
+            usr1 <- _users.find(tmpl.updated_by)
+            usr2 <- _users.find(tmpl.created_by)
           } yield BadRequest {
             html.email_templates.edit(bound, tmpl, usr1, usr2)
           },
@@ -155,8 +154,8 @@ class EmailTemplatesCtrl(
                   text = success.text,
                   updated_by = req.user.id
                 ).save
-                usr1 <- User.find(done.updated_by)
-                usr2 <- User.find(done.created_by)
+                usr1 <- _users.find(done.updated_by)
+                usr2 <- _users.find(done.created_by)
                 ____ <- sessionDataDAO.remove(key_editing(id))
               } yield Redirect {
                 routes.EmailTemplatesCtrl.edit(id, lang)
@@ -176,7 +175,7 @@ class EmailTemplatesCtrl(
       for {
         tmpl <- EmailTemplate.find(id, lang)
         list <- EmailTemplateHistory.list(id, lang, pager)
-        usrs <- User.find(list.map(_.updated_by))
+        usrs <- _users.find(list.map(_.updated_by))
           .map(_.map(u => (u.id, u)).toMap)
       } yield Ok {
         html.email_templates.history(
