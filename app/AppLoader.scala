@@ -5,7 +5,11 @@ import models._
 import models.cfs._
 import models.sys.SysConfigs
 import play.api.ApplicationLoader.Context
+import play.api.Logger
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.i18n._
+import play.api.mvc._
+import play.filters.gzip.GzipFilter
 import router.Routes
 import services.{BandwidthService, MailService}
 
@@ -25,10 +29,11 @@ class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
   with I18nComponents {
 
+  implicit val ec = actorSystem.dispatcher
+
   play.api.Logger.configure(context.environment)
 
-  val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
-
+  // Basic Play Api
   implicit val _basicPlayApi = BasicPlayApi(langs, messagesApi, configuration, applicationLifecycle)
 
   // Services
@@ -49,6 +54,9 @@ class Components(context: Context)
   implicit val _persons                = new Persons
   implicit val _emailTemplates         = new EmailTemplates
   implicit val _emailTemplateHistories = new EmailTemplateHistories
+
+  // Error Handler
+  val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
 
   // Api Permission Checking
   implicit val _apiPermCheckRequired =
@@ -131,7 +139,33 @@ class Components(context: Context)
     accessControlsCtrl
   )
 
-  implicit val ec = actorSystem.dispatcher
+  // Http Filters
+  override lazy val httpFilters: Seq[EssentialFilter] = Seq(
+    new GzipFilter(
+      shouldGzip = (request, response) =>
+        response.headers.get(HeaderNames.CONTENT_TYPE).exists {
+          case s if s.startsWith(MimeTypes.JSON) => true
+          case s if s.startsWith(MimeTypes.HTML) => true
+          case _                                 => false
+        }
+    ),
+    new Filter {
+      def apply(nextFilter: RequestHeader => Future[Result])
+          (requestHeader: RequestHeader): Future[Result] = {
+        val startTime = System.currentTimeMillis
+        nextFilter(requestHeader).map { result =>
+          val endTime = System.currentTimeMillis
+          val requestTime = endTime - startTime
+          if (!requestHeader.uri.contains("assets")) {
+            Logger.trace(
+              f"${result.header.status}, took $requestTime%4d ms, ${requestHeader.method} ${requestHeader.uri}"
+            )
+          }
+          result.withHeaders("Request-Time" -> requestTime.toString)
+        }(actorSystem.dispatcher)
+      }
+    }
+  )
 
   ChatActor.startRegion(actorSystem)
 
@@ -141,7 +175,7 @@ class Components(context: Context)
       _internalGroups.loadOrInit.flatMap { init =>
         if (init) apiGroupsCtrl.reindex
         else Future.successful(false)
-      },
+      }(actorSystem.dispatcher),
       controllers.GroupsCtrl.initLayouts,
       controllers.AccessControlsCtrl.initIfEmpty
     )
