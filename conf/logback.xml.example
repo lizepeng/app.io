@@ -23,15 +23,11 @@
     <appender-ref ref="STDOUT" />
   </appender>
 
-  <logger name="root" level="INFO" />
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
   <logger name="org.elasticsearch" level="ERROR" />
   <logger name="com.datastax.driver" level="ERROR" />
   <logger name="com.websudos.phantom" level="ERROR" />
-  <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
-  <logger name="javax.management" level="OFF" />
-  <logger name="sun.rmi" level="OFF" />
 
   <logger name="controllers" level="TRACE" />
   <logger name="controllers.api" level="TRACE" />
@@ -42,7 +38,7 @@
   <logger name="elasticsearch" level="TRACE" />
 
 
-  <root level="TRACE">
+  <root level="INFO">
     <appender-ref ref="ASYNCFILE" />
     <appender-ref ref="ASYNCSTDOUT" />
   </root>

@@ -22,7 +22,8 @@ class BandwidthService(
   val actorSystem: ActorSystem
 ) extends BasicPlayComponents {
 
-  implicit private val executor = actorSystem.dispatchers.lookup("traffic-shaper-context")
+  val executor: ExecutionContext =
+    actorSystem.dispatchers.lookup("contexts.traffic-shaper")
 
   import BandwidthService._
 
@@ -36,13 +37,11 @@ class BandwidthService(
 
   object LimitTo {
 
-    import Config._
-
     def apply(rate: Int = 1 MBps): Enumeratee[BLK, BLK] = limitTo(
-      if (rate < min) min
-      else if (rate > max) max
+      if (rate < Config.min) Config.min
+      else if (rate > Config.max) Config.max
       else rate
-    )
+    )(executor)
 
   }
 
@@ -52,7 +51,7 @@ class BandwidthService(
   }
 
   private def limitTo(rate: Int)(
-    implicit ec: ExecutionContext
+    implicit executor: ExecutionContext
   ): Enumeratee[BLK, BLK] = new CheckDone[BLK, BLK] {
 
     def step[B](remaining: Int, start: Long)(
@@ -66,7 +65,7 @@ class BandwidthService(
             val cont = Cont(step(rate / 4, now)(k))
             Iteratee.flatten {
               if (spent > 500) Future.successful(cont)
-              else timeout(cont, 500 - spent, MILLISECONDS)(ec)
+              else timeout(cont, 500 - spent, MILLISECONDS)
             }
           }
         } &> k(in)
@@ -99,10 +98,10 @@ class BandwidthService(
     duration: Long,
     unit: TimeUnit = TimeUnit.MILLISECONDS
   )(
-    implicit ec: ExecutionContext
+    implicit executor: ExecutionContext
   ): Future[A] = {
     val p = Promise[A]()
-    actorSystem.scheduler.scheduleOnce(FiniteDuration(duration, unit)){
+    actorSystem.scheduler.scheduleOnce(FiniteDuration(duration, unit)) {
       p.complete(Try(message))
     }
     p.future

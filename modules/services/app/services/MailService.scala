@@ -84,18 +84,19 @@ class MailService(
 class MAMailerPlugin(
   configuration: Configuration,
   actorSystem: ActorSystem
-) {
+) extends Logging {
 
-  val mailerExecutor: ExecutionContext =
-    actorSystem.dispatchers.lookup("actor.mailer-dispatcher")
+  val executor: ExecutionContext =
+    actorSystem.dispatchers.lookup("contexts.mailer")
 
   private lazy val mailerConf = getSubConfig(configuration, "mailer")
   private lazy val instances  = mailerConf.subKeys.map { key =>
     val conf = getSubConfig(mailerConf, key)
+    Logger.info(s"Created mailer: $key.")
     (key, MAMailer(
       mailerInstance(conf),
       conf.getString("smtp.user").getOrElse("")
-    )(actorSystem, mailerExecutor))
+    )(actorSystem, executor))
   }.toMap
 
   def instance(key: String): MAMailer = instances(key)
@@ -129,8 +130,7 @@ class MAMailerPlugin(
 }
 
 case class MAMailer(api: MailerClient, smtp_user: String)(
-  implicit actorSystem: ActorSystem,
-  executor: ExecutionContext
+  implicit actorSystem: ActorSystem, executor: ExecutionContext
 ) {
 
   def schedule(email: Email)(

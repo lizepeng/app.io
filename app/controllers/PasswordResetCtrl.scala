@@ -4,12 +4,12 @@ import controllers.UsersCtrl.{Password, Rules}
 import controllers.api.Secured
 import helpers._
 import models._
-import models.sys.{SysConfigs, SysConfig}
+import models.sys.{SysConfig, SysConfigs}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.mvc.{Controller, Result}
+import play.api.mvc._
 import security._
 import services._
 import views._
@@ -52,8 +52,8 @@ class PasswordResetCtrl(
 
   def nnew(email: String) =
     MaybeUserAction().apply { implicit req =>
-    Ok(html.password_reset.nnew(emailFM.fill(email)))
-  }
+      Ok(html.password_reset.nnew(emailFM.fill(email)))
+    }
 
   /**
    * TODO count access, if someone try to enumerate our users, then ban
@@ -62,27 +62,27 @@ class PasswordResetCtrl(
    */
   def create =
     MaybeUserAction().async { implicit req =>
-    emailFM.bindFromRequest().fold(
-      failure => Future.successful {
-        onError(emailFM, "email.not.found")
-      },
-      success => (for {
-        user <- _users.find(success)
-        link <- _expirableLinks.nnew(canonicalName)(user)
-        tmpl <- getEmailTemplate(s"$basicName.email1")
-      } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
-        _mailService.schedule("noreply", tmpl, u, "link" -> id)
-        Ok(html.password_reset.sent())
-      }.recover {
-        case e: models.User.NotFound          =>
+      emailFM.bindFromRequest().fold(
+        failure => Future.successful {
           onError(emailFM, "email.not.found")
-        case e: models.EmailTemplate.NotFound =>
-          Logger.warn(e.reason)
-          onError(emailFM, "email.not.found")
-      }
+        },
+        success => (for {
+          user <- _users.find(success)
+          link <- _expirableLinks.nnew(canonicalName)(user)
+          tmpl <- getEmailTemplate(s"$basicName.email1")
+        } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
+          _mailService.schedule("noreply", tmpl, u, "link" -> id)
+          Ok(html.password_reset.sent())
+        }.recover {
+          case e: models.User.NotFound          =>
+            onError(emailFM, "email.not.found")
+          case e: models.EmailTemplate.NotFound =>
+            Logger.warn(e.reason)
+            onError(emailFM, "email.not.found")
+        }
 
-    )
-  }
+      )
+    }
 
   /**
    * Show a form that user can enter new password, only if
@@ -93,44 +93,44 @@ class PasswordResetCtrl(
    */
   def show(id: String) =
     MaybeUserAction().async { implicit req =>
-    _expirableLinks.find(id).map { ln =>
-      if (ln.module != canonicalName)
-        onError(emailFM, "invalid.reset.link")
-      else
-        Ok(html.password_reset.show(id)(resetFM))
-    }.recover {
-      case e: models.ExpirableLink.NotFound =>
-        onError(emailFM, "invalid.reset.link")
-    }
-  }
-
-  def save(id: String) =
-    MaybeUserAction().async { implicit req =>
-    val bound = resetFM.bindFromRequest()
-    bound.fold(
-      failure => Future.successful {
-        BadRequest {
-          html.password_reset.show(id) {
-            if (bound.hasGlobalErrors) bound
-            else bound.withGlobalError(msg_key("failed"))
-          }
-        }
-      },
-      success => (for {
-        link <- _expirableLinks.find(id).andThen { case _ => _expirableLinks.remove(id) }
-        user <- _users.find(link.user_id).flatMap(_.savePassword(success.original))
-        tmpl <- getEmailTemplate(s"$basicName.email2")
-      } yield (user, tmpl)).map { case (user, tmpl) =>
-        _mailService.schedule("support", tmpl, user)
-        Redirect(routes.SessionsCtrl.nnew()).flashing(
-          AlertLevel.Info -> msg("password.changed")
-        )
+      _expirableLinks.find(id).map { ln =>
+        if (ln.module != canonicalName)
+          onError(emailFM, "invalid.reset.link")
+        else
+          Ok(html.password_reset.show(id)(resetFM))
       }.recover {
         case e: models.ExpirableLink.NotFound =>
           onError(emailFM, "invalid.reset.link")
       }
-    )
-  }
+    }
+
+  def save(id: String) =
+    MaybeUserAction().async { implicit req =>
+      val bound = resetFM.bindFromRequest()
+      bound.fold(
+        failure => Future.successful {
+          BadRequest {
+            html.password_reset.show(id) {
+              if (bound.hasGlobalErrors) bound
+              else bound.withGlobalError(msg_key("failed"))
+            }
+          }
+        },
+        success => (for {
+          link <- _expirableLinks.find(id).andThen { case _ => _expirableLinks.remove(id) }
+          user <- _users.find(link.user_id).flatMap(_.savePassword(success.original))
+          tmpl <- getEmailTemplate(s"$basicName.email2")
+        } yield (user, tmpl)).map { case (user, tmpl) =>
+          _mailService.schedule("support", tmpl, user)
+          Redirect(routes.SessionsCtrl.nnew()).flashing(
+            AlertLevel.Info -> msg("password.changed")
+          )
+        }.recover {
+          case e: models.ExpirableLink.NotFound =>
+            onError(emailFM, "invalid.reset.link")
+        }
+      )
+    }
 
   private lazy val mailer = for {
     uid <- System.UUID("user.id")
@@ -146,24 +146,24 @@ class PasswordResetCtrl(
   } yield usr
 
   private def getEmailTemplate(key: String)(
-    implicit lang: Lang
+    implicit messages: Messages
   ): Future[EmailTemplate] =
     for {
       uuid <- System.UUID(key)
       user <- mailer
-      tmpl <- _emailTemplates.find(uuid, lang)
+      tmpl <- _emailTemplates.find(uuid, messages.lang)
         .recoverWith {
         case e: models.EmailTemplate.NotFound =>
-        _emailTemplates.save(
-          _emailTemplates.build(
-            uuid, Lang.defaultLang,
-            key,
-            subject = "",
-            text = "",
-            user.id,
-            user.id
+          _emailTemplates.save(
+            _emailTemplates.build(
+              uuid, Lang.defaultLang,
+              key,
+              subject = "",
+              text = "",
+              user.id,
+              user.id
+            )
           )
-        )
       }
     } yield tmpl
 

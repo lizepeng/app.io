@@ -8,11 +8,11 @@
 # This must be changed for production, but we recommend not changing it in this file.
 #
 # See http://www.playframework.com/documentation/latest/ApplicationSecret for more details.
-application.secret="XH33fTcx3S/lE`xweDgA5[BZTMR=JmesvVQVw=UH`@yCHyyW14:NED`^r7K>HwRA"
+play.crypto.secret="XH33fTcx3S/lE`xweDgA5[BZTMR=JmesvVQVw=UH`@yCHyyW14:NED`^r7K>HwRA"
 
 # The application languages
 # ~~~~~
-application.langs="en-US,zh,ja"
+play.i18n.langs=[ "en-US", "zh", "ja" ]
 
 # Global object class
 # ~~~~~
@@ -58,14 +58,19 @@ application.langs="en-US,zh,ja"
 app.domain=app.io
 app.hostname="http://127.0.0.1:9000"
 
-play.akka.actor.default-dispatcher.fork-join-executor.parallelism-max=8
-play.akka.actor.default-dispatcher.fork-join-executor.parallelism-min=8
-actor.mailer-dispatcher.fork-join-executor.parallelism-max=4
-traffic-shaper-context.fork-join-executor.parallelism-max=4
+play.application.loader=AppLoader
+
+contexts {
+  mailer {
+    fork-join-executor.parallelism-max=4
+  }
+  traffic-shaper {
+    fork-join-executor.parallelism-max=4
+  }
+}
 
 # cassandra.cql.log=[batch,select,insert,update,delete]
 cassandra.cql.log=[]
-cassandra.fetch-size=0
 
 elasticsearch.client.uri="elasticsearch://127.0.0.1:9300"
 elasticsearch.cluster.name=elasticsearch_name
@@ -73,17 +78,14 @@ elasticsearch.cluster.name=elasticsearch_name
 controllers.api.rate_limit.limit=5000
 controllers.api.rate_limit.span=15
 
-controllers.api.bandwidth.max=5M
-controllers.api.bandwidth.min=200K
+services.bandwidth.max=5M
+services.bandwidth.min=200K
 
-controllers.files.bandwidth.upload=1.5M
-controllers.files.bandwidth.download=1M
-controllers.files.bandwidth.stream=1M
+controllers.api.files.bandwidth.upload=1.5M
+controllers.api.files.bandwidth.download=1M
+controllers.api.files.bandwidth.stream=1M
 
 services.mailer.admin.email-addresses=["admin@app.io"]
-
-models.cfs.files.stream-fetch-size=5000
-models.cfs.files.list-fetch-size=0
 
 akka {
   actor.provider = "akka.cluster.ClusterActorRefProvider"
@@ -105,7 +107,7 @@ akka {
   }
 
   log-config-on-start = "off"
-  loglevel=INFO
+  loglevel=ERROR
 
   extensions = ["akka.contrib.pattern.DistributedPubSubExtension"]
 

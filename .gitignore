@@ -18,4 +18,5 @@ dist
 projectFilesBackup*
 /conf/application*.conf
 /conf/logger.xml
+/conf/logback.xml
 /data

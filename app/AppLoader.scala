@@ -31,8 +31,8 @@ class Components(context: Context)
 
   // Services
   implicit val _bandwidth   = new BandwidthService(_basicPlayApi, actorSystem)
-  implicit val _es          = new ElasticSearch(_basicPlayApi)
   implicit val _mailService = new MailService(_basicPlayApi, actorSystem)
+  implicit val _es          = new ElasticSearch(_basicPlayApi)
 
   // Models
   implicit val _sysConfig              = new SysConfigs
