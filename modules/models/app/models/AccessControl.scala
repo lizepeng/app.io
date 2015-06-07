@@ -120,6 +120,10 @@ class AccessControls(
   with BasicPlayComponents
   with Cassandra {
 
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
+
   def find(ac: AccessControl): Future[AccessControl] =
     find(ac.principal, ac.resource, ac.action)
 

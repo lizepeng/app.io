@@ -48,6 +48,10 @@ class RateLimits(
   with BasicPlayComponents
   with Cassandra {
 
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
+
   def get(
     resource: String,
     datetime: DateTime

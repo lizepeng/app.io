@@ -2,6 +2,7 @@ package helpers
 
 import play.api.Configuration
 import play.api.i18n.{Langs, MessagesApi}
+import play.api.inject.ApplicationLifecycle
 
 /**
  * @author zepeng.li@gmail.com
@@ -9,7 +10,8 @@ import play.api.i18n.{Langs, MessagesApi}
 case class BasicPlayApi(
   langs: Langs,
   messagesApi: MessagesApi,
-  configuration: Configuration
+  configuration: Configuration,
+  lifecycle: ApplicationLifecycle
 )
 
 trait BasicPlayComponents {
@@ -21,4 +23,6 @@ trait BasicPlayComponents {
   implicit def langs: Langs = _basicPlayApi.langs
 
   implicit def configuration: Configuration = _basicPlayApi.configuration
+
+  def lifecycle: ApplicationLifecycle = _basicPlayApi.lifecycle
 }

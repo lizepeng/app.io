@@ -145,6 +145,8 @@ class INodes(
   with BasicPlayComponents
   with Cassandra {
 
+  create.ifNotExists.future()
+
   def find(id: UUID): Future[Option[INode]] = {
     CQL {select.where(_.inode_id eqs id)}.one()
   }

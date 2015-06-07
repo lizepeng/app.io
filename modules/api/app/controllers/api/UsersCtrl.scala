@@ -2,7 +2,7 @@ package controllers.api
 
 import java.util.UUID
 
-import elasticsearch.ElasticSearch
+import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import helpers._
 import models._
 import models.json._
@@ -30,6 +30,8 @@ class UsersCtrl(
   with PermCheckComponents
   with I18nSupport
   with Logging {
+
+  ESIndexCleaner(_users).dropIndexIfEmpty
 
   def groups(id: UUID, options: Option[String]) =
     PermCheck(_.Show).async { implicit req =>

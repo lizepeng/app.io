@@ -72,6 +72,10 @@ class Persons(
   with BasicPlayComponents
   with Cassandra {
 
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
+
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
   }.one.map {

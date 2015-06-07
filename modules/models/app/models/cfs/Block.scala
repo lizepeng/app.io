@@ -52,6 +52,8 @@ class Blocks
   extends BlockTable
   with Cassandra {
 
+  create.ifNotExists.future()
+
   import Block._
 
   def read(ind_blk_id: UUID): Enumerator[BLK] = {

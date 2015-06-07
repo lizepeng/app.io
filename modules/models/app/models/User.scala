@@ -205,6 +205,12 @@ class Users(
   with SysConfig
   with Cassandra {
 
+  val UserByEmail = new UserByEmail
+
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
+
   override def fromRow(r: Row): User = {
     User(
       id(r),
@@ -220,7 +226,7 @@ class Users(
     )
   }
 
-  val UserByEmail = new UserByEmail
+
 
   lazy val root: Future[User] = System.UUID("root_id").map { uid =>
     User(id = uid, name = "root")
@@ -385,6 +391,10 @@ class UserByEmail(
   with ExtCQL[UserByEmailIndex, (String, UUID)]
   with BasicPlayComponents
   with Cassandra {
+
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def save(email: String, id: UUID): Future[Boolean] = CQL {
     insert

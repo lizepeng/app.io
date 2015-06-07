@@ -60,6 +60,8 @@ class IndirectBlocks(
   with BasicPlayComponents
   with Cassandra {
 
+  create.ifNotExists.future()
+
   def read(id: UUID): Enumerator[BLK] = {
     select(_.indirect_block_id)
       .where(_.inode_id eqs id)

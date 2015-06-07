@@ -1,4 +1,4 @@
-import elasticsearch.{ESIndexCleaner, ElasticSearch}
+import elasticsearch.ElasticSearch
 import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
@@ -27,7 +27,9 @@ class Components(context: Context)
 
   play.api.Logger.configure(context.environment)
 
-  implicit val _basicPlayApi = BasicPlayApi(langs, messagesApi, configuration)
+  val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
+
+  implicit val _basicPlayApi = BasicPlayApi(langs, messagesApi, configuration, applicationLifecycle)
 
   // Services
   implicit val _bandwidth   = new BandwidthService(_basicPlayApi, actorSystem)
@@ -61,7 +63,7 @@ class Components(context: Context)
 
   // Api Router
   val apiRouter = new api.Routes(
-    httpErrorHandler,
+    errorHandler,
     apiSearchCtrl,
     apiGroupsCtrl,
     apiUsersCtrl,
@@ -74,7 +76,7 @@ class Components(context: Context)
 
   // Sockets Router
   val socketsRouter = new sockets.Routes(
-    httpErrorHandler,
+    errorHandler,
     socketsChatCtrl
   )
 
@@ -112,13 +114,13 @@ class Components(context: Context)
   val accessControlsCtrl = new controllers.AccessControlsCtrl()
 
   // Root Router
-  lazy val router = new Routes(
-    httpErrorHandler,
+  lazy val router: Routes = new Routes(
+    errorHandler,
     apiRouter,
     socketsRouter,
     applicationCtrl,
     chatCtrl,
-    new controllers.Assets(httpErrorHandler),
+    new controllers.Assets(errorHandler),
     fileSystemCtrl,
     sessionsCtrl,
     usersCtrl,
@@ -136,8 +138,6 @@ class Components(context: Context)
   //Start System
   Future.sequence(
     Seq(
-      Schemas.create,
-      ESIndexCleaner(_users, _groups, _accessControls).dropIndexIfEmpty,
       _internalGroups.loadOrInit.flatMap { init =>
         if (init) apiGroupsCtrl.reindex
         else Future.successful(false)

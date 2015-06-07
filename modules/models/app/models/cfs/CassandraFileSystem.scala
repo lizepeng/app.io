@@ -18,6 +18,7 @@ class CassandraFileSystem(
   val _sysConfig: SysConfigs
 )
   extends CassandraFileSystemCanonicalNamed
+  with BasicPlayComponents
   with SysConfig {
 
   val _blocks         = new Blocks
@@ -25,6 +26,18 @@ class CassandraFileSystem(
   val _files          = new Files(_basicPlayApi, _blocks, _indirectBlocks)
   val _inodes         = new INodes(_basicPlayApi)
   val _directories    = new Directories(_basicPlayApi, _inodes)
+
+  lifecycle.addStopHook { () =>
+    Future.sequence(
+      Seq(
+        Future.successful(_blocks.shutdown()),
+        Future.successful(_indirectBlocks.shutdown()),
+        Future.successful(_files.shutdown()),
+        Future.successful(_inodes.shutdown()),
+        Future.successful(_directories.shutdown())
+      )
+    ).map(_ => Unit)
+  }
 
   def home(implicit user: User): Future[Directory] = {
     _directories.find(user.id).recoverWith {

@@ -27,6 +27,8 @@ class ElasticSearch(
   with BasicPlayComponents
   with Logging {
 
+  lifecycle.addStopHook(() => Future.successful(Client.close()))
+
   import ESyntax._
 
   implicit lazy val Client = (

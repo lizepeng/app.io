@@ -163,6 +163,10 @@ class Groups(
   with SysConfig
   with Cassandra {
 
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
+
   def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
       .value(_.id, group.id)

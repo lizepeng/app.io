@@ -1,8 +1,4 @@
-import messages.ChatActor
-import models._
-import play.api.Play.current
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import play.api.{Application, _}
@@ -27,46 +23,14 @@ object Global
   with GlobalSettings {
 
   override def onStart(app: Application) = {
-    ChatActor.startRegion(Akka.system)
+    //    ChatActor.startRegion(Akka.system)
   }
 
   //TODO lifecycle
   override def onStop(app: Application) = {
-    Logger.info("Shutting down cassandra...")
-
-    Schemas.shutdown()
-
-    //System
-    //    SysConfig.shutdown()
-    //TODO lifecycle
-    //    AccessControl.shutdown()
-    //    SessionData.shutdown()
-    //    RateLimit.shutdown()
-
-    //User
-//    User.shutdown()
-    //    UserByEmail.shutdown()
-    //    Group.shutdown()
-    //    Person.shutdown()
-
-    //CFS
-    //    INode.shutdown()
-    //    IndirectBlock.shutdown()
-    //    Block.shutdown()
-
-    //    ExpirableLink.shutdown()
-    //    EmailTemplate.shutdown()
-
-    //CFS View
-    //    File.shutdown()
-    //    Directory.shutdown()
-
-    Logger.info("Shutting down elastic search...")
-
-    //TODO lifecycle
-    //    ES.Client.close()
-
-    Logger.info("System shutdown...")
+    //    Logger.info("Shutting down cassandra...")
+    //    Logger.info("Shutting down elastic search...")
+    //    Logger.info("System shutdown...")
   }
 
   override def onBadRequest(

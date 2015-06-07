@@ -98,6 +98,10 @@ class SysConfigs(
   with BasicPlayComponents
   with Cassandra {
 
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
+
   import SysConfig._
 
   def getOrElseUpdate[T](

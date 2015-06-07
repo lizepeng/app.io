@@ -30,6 +30,8 @@ class AccessControlsCtrl(
   with I18nSupport
   with Logging {
 
+  ESIndexCleaner(_accessControls).dropIndexIfEmpty
+
   def index(q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
       (_es.Search(q, p) in _accessControls future()).map { page =>

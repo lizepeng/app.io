@@ -47,6 +47,10 @@ class SessionData(
   with BasicPlayComponents
   with Cassandra {
 
+  create.ifNotExists.future()
+
+  lifecycle.addStopHook(() => Future.successful(shutdown()))
+
   def get[T: TypeTag](
     key: String
   )(
