@@ -12,8 +12,6 @@ import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
 
-import scala.concurrent.Future
-
 /**
  * @author zepeng.li@gmail.com
  */
@@ -81,17 +79,6 @@ class UsersCtrl(
         }
       }
     }
-
-  def dropIndexIfEmpty: Future[Boolean] = for {
-    _empty <- _users.isEmpty
-    result <-
-    if (_empty) {
-      Logger.info(s"Clean elasticsearch index $basicName")
-      (_es.Delete from _users).map(_ => true)
-    }
-    else
-      Future.successful(false)
-  } yield result
 
 }
 

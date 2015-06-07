@@ -4,6 +4,7 @@ import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s._
 import helpers._
 import models._
+import models.cassandra.EntityTable
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingResponse
 import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.delete.DeleteResponse
@@ -83,7 +84,7 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def in(t: CanonicalNamedModel[_]): ReadySearchDefinition = {
+    def in(t: EntityTable[_]): ReadySearchDefinition = {
       new ReadySearchDefinition(client, p)(
         Def(search in indexName / t.basicName)
           .?(cond = true)(_ start p.start limit p.limit)
@@ -106,7 +107,7 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: CanonicalNamedModel[T])(
+    def into(t: EntityTable[T])(
       implicit converter: T => JsonDocSource
     ): Future[(JsValue, Future[IndexResponse])] = {
       val src = converter(r)
@@ -122,7 +123,7 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def from[T <: HasID[ID]](t: CanonicalNamedModel[T]): Future[DeleteResponse] =
+    def from[T <: HasID[ID]](t: EntityTable[T]): Future[DeleteResponse] =
       client.execute {
         delete id id from s"$indexName/${t.basicName}"
       }
@@ -132,7 +133,7 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def from[T <: HasID[_]](t: CanonicalNamedModel[T]): Future[DeleteMappingResponse] =
+    def from[T](t: EntityTable[T]): Future[DeleteMappingResponse] =
       client.execute {
         delete mapping indexName / t.basicName
       }
@@ -142,7 +143,7 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def in(t: CanonicalNamedModel[T])(
+    def in(t: EntityTable[T])(
       implicit converter: T => JsonDocSource
     ): Future[(JsValue, Future[UpdateResponse])] = {
       val src = converter(r)
@@ -158,7 +159,7 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: CanonicalNamedModel[T])(
+    def into(t: EntityTable[T])(
       implicit converter: T => JsonDocSource
     ): Future[BulkResponse] = client.execute {
       bulk(

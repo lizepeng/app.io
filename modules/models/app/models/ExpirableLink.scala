@@ -57,13 +57,11 @@ class ExpirableLinks(
   with BasicPlayComponents
   with Cassandra {
 
-  import ExpirableLink._
-
   def find(id: String): Future[ExpirableLink] =
     CQL {
       select.where(_.id eqs id)
     }.one().map {
-      case None       => throw NotFound(id)
+      case None       => throw ExpirableLink.NotFound(id)
       case Some(link) => link
     }
 

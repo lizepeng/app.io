@@ -113,12 +113,14 @@ sealed class EmailTemplateTable
 
 object EmailTemplate
   extends EmailTemplateTable
-with ExceptionDefining {
+  with ExceptionDefining {
+
   case class NotFound(id: UUID, lang: String)
     extends BaseException(error_code("not.found"))
 
   case class UpdatedByOther()
     extends BaseException(error_code("updated.by.others"))
+
 }
 
 class EmailTemplates(
@@ -128,8 +130,6 @@ class EmailTemplates(
   with ExtCQL[EmailTemplateTable, ET]
   with BasicPlayComponents
   with Cassandra {
-
-  import EmailTemplate._
 
   def build(
     id: UUID,
@@ -176,10 +176,10 @@ class EmailTemplates(
             .and(_.lang eqs lang)
         )
     }.one().map {
-      case None       => throw NotFound(id, lang)
+      case None       => throw EmailTemplate.NotFound(id, lang)
       case Some(tmpl) => tmpl
     }.recoverWith {
-      case e: NotFound if lang != Lang.defaultLang.code =>
+      case e: EmailTemplate.NotFound if lang != Lang.defaultLang.code =>
         this.find(id, Lang.defaultLang, updated_at)
     }
 
@@ -207,7 +207,7 @@ class EmailTemplates(
           .onlyIf(_.last_updated_at is tmpl.updated_at)
       }.future().map { r =>
         if (r.wasApplied()) tmpl.copy(updated_at = curr)
-        else throw UpdatedByOther()
+        else throw EmailTemplate.UpdatedByOther()
       }
     }
   } yield tmpl

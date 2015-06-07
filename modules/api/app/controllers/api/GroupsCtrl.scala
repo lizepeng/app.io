@@ -45,7 +45,7 @@ class GroupsCtrl(
           Ok(Json.toJson(grps))
         }
       else
-        (_es.Search(q, p) in Group future()).map { page =>
+        (_es.Search(q, p) in _groups future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.GroupsCtrl.index(Nil, q, _))
           )
@@ -73,7 +73,7 @@ class GroupsCtrl(
       ).as[Group] {
         success => for {
           saved <- success.save
-          _resp <- _es.Index(saved) into Group
+          _resp <- _es.Index(saved) into _groups
         } yield
           Created(_resp._1)
             .withHeaders(
@@ -85,7 +85,7 @@ class GroupsCtrl(
   def destroy(id: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
-        ___ <- _es.Delete(id) from Group
+        ___ <- _es.Delete(id) from _groups
         grp <- _groups.find(id)
         ___ <- _groups.remove(id)
       } yield grp).map { _ =>
@@ -106,7 +106,7 @@ class GroupsCtrl(
         (for {
           _____ <- _groups.find(id)
           saved <- grp.save
-          _resp <- _es.Update(saved) in Group
+          _resp <- _es.Update(saved) in _groups
         } yield _resp._1).map {
           Ok(_)
         }.recover {
@@ -160,21 +160,10 @@ class GroupsCtrl(
       _groups.delChild(id, uid).map { _ => NoContent }
     }
 
-  def dropIndexIfEmpty: Future[Boolean] = for {
-    _empty <- _groups.isEmpty
-    result <-
-    if (_empty) {
-      Logger.info(s"Clean elasticsearch index $basicName")
-      (_es.Delete from Group).map(_ => true)
-    }
-    else
-      Future.successful(false)
-  } yield result
-
   def reindex: Future[Boolean] = {
     new ReIndex[Group](
       _groups.all,
-      list => (_es.BulkIndex(list) into Group)
+      list => (_es.BulkIndex(list) into _groups)
         .map { res => Logger.info(res.getTook.toString) }
     )(10).start().map(_ => true)
   }

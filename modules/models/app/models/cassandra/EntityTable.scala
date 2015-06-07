@@ -1,14 +1,15 @@
-package models
+package models.cassandra
 
 import com.websudos.phantom.CassandraTable
 import helpers.CanonicalNamed
 
+import scala.concurrent.Future
+
 /**
  * @author zepeng.li@gmail.com
  */
-
-trait CanonicalNamedModel[R] extends CanonicalNamed {
+trait EntityTable[R] extends CanonicalNamed {
   self: CassandraTable[_, R] =>
 
-  override lazy val basicName = tableName
+  def isEmpty: Future[Boolean]
 }

@@ -77,9 +77,7 @@ case class User(
  */
 sealed class UserTable
   extends CassandraTable[UserTable, User]
-
   with CanonicalNamedModel[User]
-  with CanonicalModel[User]
   with Logging {
 
   override val tableName = "users"
@@ -201,6 +199,7 @@ class Users(
   val _internalGroups: InternalGroups
 )
   extends UserTable
+  with EntityTable[User]
   with ExtCQL[UserTable, User]
   with BasicPlayComponents
   with SysConfig

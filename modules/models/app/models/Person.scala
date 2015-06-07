@@ -25,7 +25,6 @@ case class Person(
 sealed class PersonTable
   extends CassandraTable[PersonTable, Person]
   with CanonicalNamedModel[Person]
-  with CanonicalModel[Person]
   with Logging {
 
   override val tableName = "persons"
@@ -68,23 +67,22 @@ class Persons(
   implicit val _basicPlayApi: BasicPlayApi
 )
   extends PersonTable
+  with EntityTable[Person]
   with ExtCQL[PersonTable, Person]
   with BasicPlayComponents
   with Cassandra {
 
-  import Person._
-
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
   }.one.map {
-    case None => throw NotFound(id)
+    case None => throw Person.NotFound(id)
     case _    => true
   }
 
   def find(id: UUID): Future[Person] = CQL {
     select.where(_.id eqs id)
   }.one().map {
-    case None    => throw NotFound(id)
+    case None    => throw Person.NotFound(id)
     case Some(u) => u
   }
 
@@ -95,4 +93,6 @@ class Persons(
       .and(_.last_name setTo p.last_name)
       .and(_.updated_at setTo DateTime.now)
   }.future()
+
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
 }

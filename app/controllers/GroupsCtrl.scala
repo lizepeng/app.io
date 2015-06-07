@@ -15,7 +15,7 @@ import protocols.JsonProtocol._
 import views._
 
 import scala.concurrent.Future
-import scala.language.postfixOps //TODO remove ?
+import scala.language.postfixOps
 import scala.util.Success
 
 /**
@@ -74,7 +74,7 @@ object GroupsCtrl
 
   @volatile private var _gid2layouts: Map[UUID, String] = Map()
 
-  def initialize(
+  def initLayouts(
     implicit groups: Groups, sysConfig: SysConfigs
   ): Future[Map[UUID, String]] = {
     groups.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
@@ -92,7 +92,6 @@ object GroupsCtrl
       Logger.info("Map(Group -> Layout) has been initialized.")
   }
 
-  //TODO rename or extract to class
   def layouts(ids: Traversable[UUID]): Set[String] = {
     ids.flatMap(_gid2layouts.get).toSet
   }

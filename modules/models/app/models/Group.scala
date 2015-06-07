@@ -8,7 +8,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
@@ -156,6 +156,7 @@ class Groups(
   val _sysConfig: SysConfigs
 )
   extends GroupTable
+  with EntityTable[Group]
   with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
   with InternalGroupsComponents

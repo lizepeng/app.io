@@ -12,8 +12,6 @@ import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
 
-import scala.concurrent.Future
-
 /**
  * @author zepeng.li@gmail.com
  */
@@ -34,7 +32,7 @@ class AccessControlsCtrl(
 
   def index(q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
-      (_es.Search(q, p) in AccessControl future()).map { page =>
+      (_es.Search(q, p) in _accessControls future()).map { page =>
         Ok(page).withHeaders(
           linkHeader(page, routes.AccessControlsCtrl.index(q, _))
         )
@@ -62,7 +60,7 @@ class AccessControlsCtrl(
             else _groups.exists(success.principal)
 
             saved <- success.save
-            _resp <- _es.Index(saved) into AccessControl
+            _resp <- _es.Index(saved) into _accessControls
           } yield (saved, _resp)).map { case (saved, _resp) =>
 
             Created(_resp._1)
@@ -82,7 +80,7 @@ class AccessControlsCtrl(
   def destroy(id: UUID, res: String, act: String) =
     PermCheck(_.Destroy).async { implicit req =>
       (for {
-        __ <- _es.Delete(AccessControl.genId(res, act, id)) from AccessControl
+        __ <- _es.Delete(AccessControl.genId(res, act, id)) from _accessControls
         ac <- _accessControls.find(id, res, act)
         __ <- _accessControls.remove(id, res, act)
       } yield res).map { _ =>
@@ -98,7 +96,7 @@ class AccessControlsCtrl(
         (for {
           _____ <- _accessControls.find(id, res, act)
           saved <- ac.save
-          _resp <- _es.Update(saved) in AccessControl
+          _resp <- _es.Update(saved) in _accessControls
         } yield _resp._1).map {
           Ok(_)
         }.recover {
@@ -107,17 +105,6 @@ class AccessControlsCtrl(
 
       }
     }
-
-  def dropIndexIfEmpty: Future[Boolean] = for {
-    _empty <- _accessControls.isEmpty
-    result <-
-    if (_empty) {
-      Logger.info(s"Clean elasticsearch index $basicName")
-      (_es.Delete from AccessControl).map(_ => true)
-    }
-    else
-      Future.successful(false)
-  } yield result
 }
 
 object AccessControlsCtrl extends Secured(AccessControl)

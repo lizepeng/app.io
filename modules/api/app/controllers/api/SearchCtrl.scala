@@ -35,7 +35,7 @@ class SearchCtrl(
         case (name, _p) if name == _users.basicName  =>
           Some((es: ElasticSearch) => es.Search(q, _p) in _users)
         case (name, _p) if name == _groups.basicName =>
-          Some((es: ElasticSearch) => es.Search(q, _p) in Group)
+          Some((es: ElasticSearch) => es.Search(q, _p) in _groups)
         case _                                       => None
       }
 

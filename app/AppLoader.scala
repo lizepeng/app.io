@@ -1,4 +1,4 @@
-import elasticsearch.ElasticSearch
+import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
@@ -137,17 +137,13 @@ class Components(context: Context)
   Future.sequence(
     Seq(
       Schemas.create,
-      //TODO
-      apiUsersCtrl.dropIndexIfEmpty,
-      apiGroupsCtrl.dropIndexIfEmpty,
-      apiAccessControlsCtrl.dropIndexIfEmpty,
-      _internalGroups.loadOrInit.flatMap {
-        init =>
-          if (init) apiGroupsCtrl.reindex
-          else Future.successful(false)
+      ESIndexCleaner(_users, _groups, _accessControls).dropIndexIfEmpty,
+      _internalGroups.loadOrInit.flatMap { init =>
+        if (init) apiGroupsCtrl.reindex
+        else Future.successful(false)
       },
-      controllers.GroupsCtrl.initialize,
-      controllers.AccessControlsCtrl.initialize
+      controllers.GroupsCtrl.initLayouts,
+      controllers.AccessControlsCtrl.initIfEmpty
     )
   ).onSuccess {
     case _ => play.api.Logger.info("System has started")

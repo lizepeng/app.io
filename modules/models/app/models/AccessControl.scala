@@ -7,7 +7,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 
@@ -34,7 +34,6 @@ case class AccessControl(
 
 sealed class AccessControlTable
   extends CassandraTable[AccessControlTable, AccessControl]
-
   with CanonicalNamedModel[AccessControl]
   with Logging {
 
@@ -116,11 +115,10 @@ class AccessControls(
   implicit val _basicPlayApi: BasicPlayApi
 )
   extends AccessControlTable
+  with EntityTable[AccessControl]
   with ExtCQL[AccessControlTable, AccessControl]
   with BasicPlayComponents
   with Cassandra {
-
-  import AccessControl._
 
   def find(ac: AccessControl): Future[AccessControl] =
     find(ac.principal, ac.resource, ac.action)
@@ -137,7 +135,7 @@ class AccessControls(
         .and(_.action eqs act)
     }.one().map {
       case Some(ac) => ac
-      case None     => throw NotFound(id, res, act)
+      case None     => throw AccessControl.NotFound(id, res, act)
     }
   }
 
@@ -145,7 +143,7 @@ class AccessControls(
     res: String,
     act: String,
     user_id: UUID
-  ): Future[Granted[UUID]] =
+  ): Future[AccessControl.Granted[UUID]] =
     CQL {
       select(_.granted)
         .where(_.principal_id eqs user_id)
@@ -168,7 +166,7 @@ class AccessControls(
     res: String,
     act: String,
     group_ids: TraversableOnce[UUID]
-  ): Future[Granted[Set[UUID]]] = {
+  ): Future[AccessControl.Granted[Set[UUID]]] = {
     val gids = group_ids.toSet
     CQL {
       select(_.granted)
@@ -214,6 +212,5 @@ class AccessControls(
   def all: Enumerator[AccessControl] =
     CQL(select).fetchEnumerator
 
-  def isEmpty: Future[Boolean] =
-    CQL(select).one.map(_.isEmpty)
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
 }

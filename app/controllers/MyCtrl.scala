@@ -118,7 +118,7 @@ class MyCtrl(
           for {
             p <- Future.successful(Person(req.user.id, first, last))
             _ <- _persons.save(p)
-            _ <- _es.Index(p) into Person
+            _ <- _es.Index(p) into _persons
           } yield {
             Ok(html.my.profile(filledWith(p)))
           }
