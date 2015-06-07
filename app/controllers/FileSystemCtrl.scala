@@ -14,14 +14,14 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-class CFSCtrl(
+class FileSystemCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
   val _groups: Groups,
-  val cfs: CFS
+  val cfs: CassandraFileSystem
 )
-  extends Secured(CFSCtrl)
+  extends Secured(FileSystemCtrl)
   with Controller
   with BasicPlayComponents
   with PermCheckComponents
@@ -29,7 +29,7 @@ class CFSCtrl(
 
   def index(path: Path, pager: Pager) =
     PermCheck(_.Index).apply { implicit req =>
-      Ok(html.cfs.index(path, pager))
+      Ok(html.file_system.index(path, pager))
     }
 
   def show(path: Path) =
@@ -38,11 +38,11 @@ class CFSCtrl(
         home <- cfs.home(req.user)
         file <- home.file(path)
       } yield file).map { file =>
-        Ok(html.cfs.show(path, file))
+        Ok(html.file_system.show(path, file))
       }.recover {
         case e: BaseException => NotFound(e.reason)
       }
     }
 }
 
-object CFSCtrl extends Secured(CFS) with ViewMessages
+object FileSystemCtrl extends Secured(CassandraFileSystem) with ViewMessages

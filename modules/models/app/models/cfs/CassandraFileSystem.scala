@@ -11,13 +11,13 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-class CFS(
+class CassandraFileSystem(
   implicit
   val basicPlayApi: BasicPlayApi,
   val sysConfig: SysConfigs,
   val users: Users
 )
-  extends CFSCanonicalNamed
+  extends CassandraFileSystemCanonicalNamed
   with SysConfig {
 
   val blocks         = new Blocks
@@ -59,9 +59,9 @@ class CFS(
     }
 }
 
-trait CFSCanonicalNamed extends CanonicalNamed {
+trait CassandraFileSystemCanonicalNamed extends CanonicalNamed {
 
   override val basicName = "files"
 }
 
-object CFS extends CFSCanonicalNamed
+object CassandraFileSystem extends CassandraFileSystemCanonicalNamed

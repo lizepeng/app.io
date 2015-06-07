@@ -6,7 +6,7 @@ implicit req: UserRequest[_], messages: Messages)
 
 @home = @{req.user.id.toString}
 
-@layouts.base(CFSCtrl.vmsg("title")) {
+@layouts.base(FileSystemCtrl.vmsg("title")) {
 
   @ng._alert()
 
@@ -35,7 +35,7 @@ implicit req: UserRequest[_], messages: Messages)
               <!-- Directory -->
               <td ng-if="inode.is_directory">
                 <i class="fa fa-2x fa-folder fa-fw text-info"></i>
-                <a ng-href="{{jsRoutes.controllers.CFSCtrl.index(path.append(inode.name)).url}}">
+                <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.index(path.append(inode.name)).url}}">
                   {{ inode.name }}
                 </a>
               </td>
@@ -50,7 +50,7 @@ implicit req: UserRequest[_], messages: Messages)
               <!-- File -->
               <td ng-if="!inode.is_directory">
                 <i class="fa fa-2x fa-file-o fa-fw"></i>
-                <a ng-href="{{jsRoutes.controllers.CFSCtrl.show(path.set(inode.name)).url}}">
+                <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.show(path.set(inode.name)).url}}">
                   {{ inode.name }}
                 </a>
               </td>
@@ -63,7 +63,7 @@ implicit req: UserRequest[_], messages: Messages)
               <td ng-if="!inode.is_directory">
                 <div class="btn-toolbar pull-right">
                   <div class="btn-group">
-                    <a ng-href="{{jsRoutes.controllers.api.CFSCtrl.download(inode.path).url}}">
+                    <a ng-href="{{jsRoutes.controllers.api.FileSystemCtrl.download(inode.path).url}}">
                       <i class="fa fa-download fa-lg"></i>
                     </a>
                   </div>
@@ -84,7 +84,7 @@ implicit req: UserRequest[_], messages: Messages)
   </div>
 
   <div class="row">
-    <div flow-init="{target: '@api.routes.CFSCtrl.create(path)'}"
+    <div flow-init="{target: '@api.routes.FileSystemCtrl.create(path)'}"
          flow-files-submitted="$flow.upload()"
          flow-file-success="$file.msg = $message"
          class="pull-right">
@@ -110,10 +110,10 @@ implicit req: UserRequest[_], messages: Messages)
 
 @jsRoutes = {
   @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.CFSCtrl.index,
-    routes.javascript.CFSCtrl.show,
-    api.routes.javascript.CFSCtrl.download,
-    api.routes.javascript.CFSCtrl.destroy
+    routes.javascript.FileSystemCtrl.index,
+    routes.javascript.FileSystemCtrl.show,
+    api.routes.javascript.FileSystemCtrl.download,
+    api.routes.javascript.FileSystemCtrl.destroy
   )
 }
 
@@ -123,8 +123,8 @@ implicit req: UserRequest[_], messages: Messages)
       INodeList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.CFSCtrl.index(path,pager.next).toString)',
-        prevPage : '@Html(routes.CFSCtrl.index(path,pager.prev).toString)',
+        nextPage : '@Html(routes.FileSystemCtrl.index(path,pager.next).toString)',
+        prevPage : '@Html(routes.FileSystemCtrl.index(path,pager.prev).toString)',
         userId   : '@req.user.id',
         path     : @Html(path.toJson.toString)
       });

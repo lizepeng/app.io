@@ -31,14 +31,20 @@ case class File(
   is_directory: Boolean = false
 ) extends INode {
 
-  def read(offset: Long = 0)(implicit cfs: CFS): Enumerator[BLK] =
+  def read(offset: Long = 0)(
+    implicit cfs: CassandraFileSystem
+  ): Enumerator[BLK] =
     if (offset == 0) cfs.indirectBlocks.read(id)
     else cfs.indirectBlocks.read(this, offset)
 
-  def save()(implicit cfs: CFS): Iteratee[BLK, File] =
+  def save()(
+    implicit cfs: CassandraFileSystem
+  ): Iteratee[BLK, File] =
     cfs.files.streamWriter(this)
 
-  override def purge()(implicit cfs: CFS) = {
+  override def purge()(
+    implicit cfs: CassandraFileSystem
+  ) = {
     super.purge().andThen { case _ => cfs.files.purge(id) }
   }
 }

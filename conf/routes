@@ -16,8 +16,8 @@ GET  /chat                                  controllers.ChatCtrl.chat
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file                          controllers.Assets.at(path="/public", file)
 
-GET  /cfs/show/$path<.*>                    controllers.CFSCtrl.show(path:Path)
-GET  /cfs/$path<.*>                         controllers.CFSCtrl.index(path:Path,p:Pager?=Pager.first)
+GET  /cfs/show/$path<.*>                    controllers.FileSystemCtrl.show(path:Path)
+GET  /cfs/$path<.*>                         controllers.FileSystemCtrl.index(path:Path,p:Pager?=Pager.first)
 
 GET  /login                                 controllers.SessionsCtrl.nnew
 POST /login                                 controllers.SessionsCtrl.create

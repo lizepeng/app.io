@@ -24,14 +24,14 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-class CFSCtrl(
+class FileSystemCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _permCheckRequired: PermCheckRequired,
-  val cfs: CFS,
+  val cfs: CassandraFileSystem,
   val bandwidthService: BandwidthService
 )
-  extends Secured(CFSCtrl)
+  extends Secured(FileSystemCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
@@ -103,7 +103,7 @@ class CFSCtrl(
             }.toSeq
           )
         ).withHeaders(
-            linkHeader(page, routes.CFSCtrl.index(path, _))
+            linkHeader(page, routes.FileSystemCtrl.index(path, _))
           )
       }.andThen {
         case Failure(e: FilePerm.Denied) => Logger.trace(e.reason)
@@ -341,4 +341,4 @@ class CFSCtrl(
 
 }
 
-object CFSCtrl extends Secured(CFS)
+object FileSystemCtrl extends Secured(CassandraFileSystem)

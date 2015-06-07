@@ -1,4 +1,4 @@
-import controllers.{AccessControlsCtrl, Application, CFSCtrl, EmailTemplatesCtrl, GroupsCtrl, UsersCtrl, _}
+import controllers.{AccessControlsCtrl, Application, FileSystemCtrl, EmailTemplatesCtrl, GroupsCtrl, UsersCtrl, _}
 import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
@@ -42,7 +42,7 @@ class Components(context: Context)
   implicit val rateLimitRepo            = new RateLimits
   implicit val expirableLinkRepo        = new ExpirableLinks
   implicit val accessControlRepo        = new AccessControls
-  implicit val CFS                      = new CFS()
+  implicit val CFS                      = new CassandraFileSystem()
   implicit val permCheck                = PermCheckRequired(userRepo, accessControlRepo)
   implicit val apiPermCheck             = api.PermCheckRequired(userRepo, accessControlRepo, rateLimitRepo)
   implicit val secured                  = buildSecured
@@ -81,7 +81,7 @@ class Components(context: Context)
     new RegisteredSecured(
       messagesApi,
       Seq(
-        CFSCtrl,
+        FileSystemCtrl,
         GroupsCtrl,
         UsersCtrl,
         EmailTemplatesCtrl,
@@ -89,7 +89,7 @@ class Components(context: Context)
         controllers.api.GroupsCtrl,
         controllers.api.UsersCtrl,
         controllers.api.SearchCtrl,
-        controllers.api.CFSCtrl,
+        controllers.api.FileSystemCtrl,
         controllers.api.AccessControlsCtrl
       )
     )
@@ -101,7 +101,7 @@ class Components(context: Context)
     new api.GroupsCtrl(),
     new api.UsersCtrl(),
     new api.AccessControlsCtrl(),
-    new api.CFSCtrl()
+    new api.FileSystemCtrl()
   )
 
   private def buildSocketsRouter = new _root_.sockets.Routes(
@@ -116,7 +116,7 @@ class Components(context: Context)
     new Application(),
     new ChatCtrl(),
     new Assets(httpErrorHandler),
-    new CFSCtrl(),
+    new FileSystemCtrl(),
     new SessionsCtrl(),
     new UsersCtrl(elasticSearch),
     new MyCtrl(elasticSearch),

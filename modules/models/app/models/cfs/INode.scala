@@ -33,14 +33,16 @@ trait INode extends HasUUID {
   lazy val updated_at: DateTime = created_at
 
   def rename(newName: String, force: Boolean = false)(
-    implicit cfs: CFS
+    implicit cfs: CassandraFileSystem
   ): Future[INode] = {
     cfs.directories.find(parent).flatMap {
       dir => cfs.directories.renameChild(dir, this, newName, force)
     }
   }
 
-  def purge()(implicit cfs: CFS): Future[Directory] =
+  def purge()(
+    implicit cfs: CassandraFileSystem
+  ): Future[Directory] =
     cfs.directories.find(parent).flatMap {
       parent => parent.del(this)
     }
