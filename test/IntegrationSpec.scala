@@ -9,12 +9,12 @@ import play.api.test._
  */
 @RunWith(classOf[JUnitRunner])
 class IntegrationSpec extends Specification {
-
-  "Application" should {
-
-    "work from within a browser" in new WithBrowser {
-      //      browser.goTo("http://localhost:" + port)
-      //      browser.pageSource must contain(s"Welcome to ${Messages.get("app.name")}")
-    }
-  }
+//
+//  "Application" should {
+//
+//    "work from within a browser" in new WithBrowser {
+//      browser.goTo("http://localhost:" + port)
+//      browser.pageSource must contain(s"Welcome")
+//    }
+//  }
 }

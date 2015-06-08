@@ -15,7 +15,6 @@ import play.api.mvc.Controller
 import protocols.JsonProtocol._
 
 import scala.concurrent.Future
-import scala.language.postfixOps
 
 //* TODO authorization
 

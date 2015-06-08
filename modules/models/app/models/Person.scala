@@ -10,7 +10,6 @@ import org.joda.time.DateTime
 import play.api.libs.json._
 
 import scala.concurrent.Future
-import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com

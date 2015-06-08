@@ -4,15 +4,14 @@ import org.joda.time.DateTime
 import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
-import org.specs2.time.NoTimeConversions
 
 @RunWith(classOf[JUnitRunner])
-class JodaSpec extends Specification with NoTimeConversions {
+class JodaSpec extends Specification {
 
   "DateTime" should {
 
     "print itself this way" in {
-      println(DateTime.now())
+      ConsoleLogger.debug(DateTime.now().toString)
       true mustEqual true
     }
   }

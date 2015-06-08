@@ -7,8 +7,6 @@ import play.api.i18n._
 import play.api.mvc.Controller
 import views._
 
-import scala.language.postfixOps
-
 /**
  * @author zepeng.li@gmail.com
  */

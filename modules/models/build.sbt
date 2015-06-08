@@ -19,3 +19,7 @@ resolvers ++= Seq(
   "Java.net Maven2 Repository"    at "http://download.java.net/maven/2/",
   "Twitter Repository"            at "http://maven.twttr.com"
 )
+
+libraryDependencies += specs2 % Test
+
+resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"

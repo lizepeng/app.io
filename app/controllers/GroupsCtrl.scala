@@ -12,7 +12,6 @@ import protocols.JsonProtocol._
 import views._
 
 import scala.concurrent.Future
-import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com

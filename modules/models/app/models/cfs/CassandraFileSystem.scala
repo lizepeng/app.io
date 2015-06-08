@@ -6,7 +6,6 @@ import models.sys.{SysConfig, SysConfigs}
 import models.{User, Users}
 
 import scala.concurrent.Future
-import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com

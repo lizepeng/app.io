@@ -46,6 +46,10 @@ libraryDependencies ++= Seq(
   "org.webjars"       % "ng-flow"            % "2.6.1"
 )
 
+libraryDependencies += specs2 % Test
+
+resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
+
 TwirlKeys.templateImports ++= Seq(
   "helpers._",
   "java.util.UUID",

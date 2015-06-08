@@ -18,7 +18,6 @@ import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
-import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
