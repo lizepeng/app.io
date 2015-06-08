@@ -1,7 +1,3 @@
-/**
- * @author zepeng.li@gmail.com
- */
-
 import play.api._
 import play.api.http.DefaultHttpErrorHandler
 import play.api.mvc.Results._
@@ -11,6 +7,9 @@ import play.core.SourceMapper
 
 import scala.concurrent._
 
+/**
+ * @author zepeng.li@gmail.com
+ */
 class ErrorHandler(
   env: Environment,
   config: Configuration,
