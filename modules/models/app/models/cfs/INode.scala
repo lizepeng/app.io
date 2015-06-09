@@ -5,7 +5,7 @@ import java.util.UUID
 import com.websudos.phantom.dsl._
 import helpers._
 import models.HasUUID
-import models.cassandra.{CassandraComponents, ExtCQL}
+import models.cassandra._
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
@@ -79,11 +79,11 @@ trait INodeColumns[T <: CassandraTable[T, R], R] {
     with StaticColumn[Long]
 
   object ext_permission
-    extends MapColumn[T, R, UUID, Int](self)
+    extends StaticMapColumn[T, R, UUID, Int](self)
     with StaticColumn[Map[UUID, Int]]
 
   object attributes
-    extends MapColumn[T, R, String, String](self)
+    extends StaticMapColumn[T, R, String, String](self)
     with StaticColumn[Map[String, String]]
 
 }
