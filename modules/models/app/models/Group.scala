@@ -33,10 +33,8 @@ case class Group(
   def save(implicit groups: Groups) = groups.save(this)
 }
 
-sealed class GroupTable
-  extends CassandraTable[GroupTable, Group]
-  with CanonicalNamedModel[Group]
-  with Logging {
+trait GroupColumns[T <: CassandraTable[T, R], R] {
+  self: CassandraTable[T, R] =>
 
   override lazy val tableName = "groups"
 
@@ -97,8 +95,38 @@ sealed class GroupTable
   }
 }
 
+sealed trait GroupTable
+  extends CassandraTable[GroupTable, Group]
+  with GroupColumns[GroupTable, Group]
+  with EntityTable[Group]
+  with ExtCQL[GroupTable, Group]
+  with CanonicalNamedModel[Group]
+  with CassandraComponents
+  with Logging {
+
+  def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
+    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
+      .distinct
+      .where(_.id in ids.toList.distinct)
+  }.fetchEnumerator() &>
+    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
+    Enumeratee.map(t => Group.apply _ tupled t)
+
+  def all: Enumerator[Group] = CQL {
+    select(_.id).distinct
+  }.fetchEnumerator &>
+    Enumeratee.grouped {
+      Enumeratee.take(1000) &>>
+        Iteratee.getChunks
+    } &> Enumeratee.mapFlatten(stream)
+
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
+}
+
 object Group
-  extends GroupTable
+  extends CassandraTable[GroupTable, Group]
+  with GroupColumns[GroupTable, Group]
+  with CanonicalNamedModel[Group]
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
@@ -154,12 +182,9 @@ class Groups(
   val _sysConfig: SysConfigs
 )
   extends GroupTable
-  with EntityTable[Group]
-  with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
   with InternalGroupsComponents
-  with SysConfig
-  with CassandraComponents {
+  with SysConfig {
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -178,14 +203,6 @@ class Groups(
   def find(ids: TraversableOnce[UUID]): Future[Seq[Group]] = {
     stream(ids) |>>> Iteratee.getChunks[Group]
   }
-
-  def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
-    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
-      .distinct
-      .where(_.id in ids.toList.distinct)
-  }.fetchEnumerator() &>
-    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
-    Enumeratee.map(t => Group.apply _ tupled t)
 
   def save(group: Group): Future[Group] = CQL {
     update
@@ -209,14 +226,6 @@ class Groups(
         case None => CQL {delete.where(_.id eqs id)}.future()
         case _    => throw Group.NotEmpty(id)
       }
-
-  def all: Enumerator[Group] = CQL {
-    select(_.id).distinct
-  }.fetchEnumerator &>
-    Enumeratee.grouped {
-      Enumeratee.take(1000) &>>
-        Iteratee.getChunks
-    } &> Enumeratee.mapFlatten(stream)
 
   def children(id: UUID, pager: Pager): Future[Page[UUID]] = {
     CQL {
@@ -244,8 +253,6 @@ class Groups(
       .add(this.cql_del_child(id, child_id))
       .add(_users.cql_del_group(child_id, id))
   }.future()
-
-  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
 
   def cql_add_child(id: UUID, child_id: UUID) = CQL {
     insert
@@ -319,11 +326,8 @@ class InternalGroups(
   val _sysConfig: SysConfigs
 )
   extends GroupTable
-  with EntityTable[Group]
-  with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
-  with SysConfig
-  with CassandraComponents {
+  with SysConfig {
 
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
@@ -369,24 +373,6 @@ class InternalGroups(
   def map(igs: InternalGroupsCode): Set[UUID] = {
     igs.numbers.map(_num2Id).toSet
   }
-
-  def all: Enumerator[Group] = CQL {
-    select(_.id).distinct
-  }.fetchEnumerator &>
-    Enumeratee.grouped {
-      Enumeratee.take(100) &>>
-        Iteratee.getChunks
-    } &> Enumeratee.mapFlatten(stream)
-
-  def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
-    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
-      .distinct
-      .where(_.id in ids.toList.distinct)
-  }.fetchEnumerator() &>
-    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
-    Enumeratee.map(t => Group.apply _ tupled t)
-
-  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
 
   private def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
