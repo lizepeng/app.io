@@ -16,10 +16,10 @@ import protocols.JsonProtocol._
  */
 class UsersCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
-  val _permCheckRequired: PermCheckRequired,
-  val _groups: Groups,
-  val _es: ElasticSearch
+  val basicPlayApi: BasicPlayApi,
+  val permCheckRequired: PermCheckRequired,
+  val es: ElasticSearch,
+  val _groups: Groups
 )
   extends Secured(UsersCtrl)
   with Controller
@@ -58,7 +58,7 @@ class UsersCtrl(
           Ok(JsArray(usrs.map(_.toJson)))
         }
       else
-        (_es.Search(q, p) in _users future()).map { page =>
+        (es.Search(q, p) in _users future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.UsersCtrl.index(Nil, q, _))
           )
@@ -70,7 +70,7 @@ class UsersCtrl(
       BindJson().as[JsUser] {
         success => (for {
           saved <- success.toUser.save
-          _resp <- _es.Index(saved) into _users
+          _resp <- es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>
           Created(_resp._1)
             .withHeaders(

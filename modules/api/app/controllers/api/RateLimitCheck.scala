@@ -16,7 +16,7 @@ import scala.concurrent.Future
 case class RateLimitCheck(
   implicit
   val resource: CheckedResource,
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
   val _rateLimits: RateLimits
 )
   extends ActionFunction[UserRequest, UserRequest]

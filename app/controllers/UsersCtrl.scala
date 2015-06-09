@@ -23,9 +23,9 @@ import scala.concurrent.Future
  */
 class UsersCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
-  val _permCheckRequired: PermCheckRequired,
-  val _es: ElasticSearch
+  val basicPlayApi: BasicPlayApi,
+  val permCheckRequired: PermCheckRequired,
+  val es: ElasticSearch
 )
   extends Secured(UsersCtrl)
   with Controller
@@ -88,7 +88,7 @@ class UsersCtrl(
           email = success.email,
           password = success.password.original
         ).save
-        _____ <- _es.Index(saved) into _users
+        _____ <- es.Index(saved) into _users
       } yield saved).map { case saved =>
         Redirect {
           routes.MyCtrl.dashboard()

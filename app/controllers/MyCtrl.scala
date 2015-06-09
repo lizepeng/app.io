@@ -19,10 +19,10 @@ import scala.concurrent.Future
  */
 class MyCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
   val _users: Users,
   val _persons: Persons,
-  val _es: ElasticSearch
+  val es: ElasticSearch
 )
   extends Secured(User)
   with Controller
@@ -118,7 +118,7 @@ class MyCtrl(
           for {
             p <- Future.successful(Person(req.user.id, first, last))
             _ <- _persons.save(p)
-            _ <- _es.Index(p) into _persons
+            _ <- es.Index(p) into _persons
           } yield {
             Ok(html.my.profile(filledWith(p)))
           }

@@ -7,7 +7,7 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import helpers._
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra.{CassandraComponents, ExtCQL}
 
 import scala.concurrent.Future
 
@@ -68,7 +68,7 @@ sealed class SysConfigTable
   }
 }
 
-object SysConfig extends SysConfigTable {
+object SysConfig {
 
   trait Serializer[T] {
 
@@ -91,16 +91,16 @@ object SysConfig extends SysConfigTable {
 }
 
 class SysConfigs(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends SysConfigTable
   with ExtCQL[SysConfigTable, SysConfigEntry]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   import SysConfig._
 

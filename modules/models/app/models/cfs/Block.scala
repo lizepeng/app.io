@@ -5,10 +5,8 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.Bytes
 import com.datastax.driver.core.{ResultSet, Row}
-import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.column.TimeUUIDColumn
 import com.websudos.phantom.dsl._
-import models.cassandra.Cassandra
+import models.cassandra.CassandraComponents
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -48,9 +46,12 @@ object Block extends BlockTable {
   type BLK = Array[Byte]
 }
 
-class Blocks
+class Blocks(
+  implicit
+  val cassandraManager: CassandraManager
+)
   extends BlockTable
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
 

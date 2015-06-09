@@ -14,7 +14,7 @@ import scala.util.Try
 
 class ChatCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi
 )
   extends Controller
   with BasicPlayComponents

@@ -25,10 +25,10 @@ import scala.util.Failure
  */
 class FileSystemCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
-  val _permCheckRequired: PermCheckRequired,
-  val _cfs: CassandraFileSystem,
-  val _bandwidth: BandwidthService
+  val basicPlayApi: BasicPlayApi,
+  val permCheckRequired: PermCheckRequired,
+  val bandwidth: BandwidthService,
+  val _cfs: CassandraFileSystem
 )
   extends Secured(FileSystemCtrl)
   with Controller
@@ -222,7 +222,7 @@ class FileSystemCtrl(
       ),
       file.read(first) &>
         Enumeratee.take((end - first + 1).toInt) &>
-        _bandwidth.LimitTo(bandwidth_stream)
+        bandwidth.LimitTo(bandwidth_stream)
 
     )
   }
@@ -235,7 +235,7 @@ class FileSystemCtrl(
         CONTENT_LENGTH -> s"${file.size}"
       )
     ),
-    file.read() &> _bandwidth.LimitTo(bandwidth_download)
+    file.read() &> bandwidth.LimitTo(bandwidth_download)
   )
 
   private def under(path: Path)(block: File => Result)(
@@ -267,7 +267,7 @@ class FileSystemCtrl(
     def saveTo(dir: Directory)(implicit user: User) = {
       handleFilePart {
         case FileInfo(partName, fileName, contentType) =>
-          _bandwidth.LimitTo(bandwidth_upload) &>> dir.save()
+          bandwidth.LimitTo(bandwidth_upload) &>> dir.save()
       }
     }
 

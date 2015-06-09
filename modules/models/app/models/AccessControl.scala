@@ -3,7 +3,6 @@ package models
 import java.util.UUID
 
 import com.datastax.driver.core.Row
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
@@ -112,17 +111,17 @@ object AccessControl
 }
 
 class AccessControls(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends AccessControlTable
   with EntityTable[AccessControl]
   with ExtCQL[AccessControlTable, AccessControl]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def find(ac: AccessControl): Future[AccessControl] =
     find(ac.principal, ac.resource, ac.action)

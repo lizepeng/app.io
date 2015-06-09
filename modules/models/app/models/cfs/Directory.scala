@@ -6,7 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra.{CassandraComponents, ExtCQL}
 import models.cfs.Block.BLK
 import models.{CanonicalNamedModel, User}
 import play.api.libs.iteratee._
@@ -175,13 +175,15 @@ object Directory
 }
 
 class Directories(
-  val _basicPlayApi: BasicPlayApi,
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager,
   val _inodes: INodes
 )
   extends DirectoryTable
   with ExtCQL[DirectoryTable, Directory]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   import Directory._
 

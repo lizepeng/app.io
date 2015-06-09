@@ -18,8 +18,8 @@ import scala.concurrent.Future
  */
 class GroupsCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
-  val _permCheckRequired: PermCheckRequired,
+  val basicPlayApi: BasicPlayApi,
+  val permCheckRequired: PermCheckRequired,
   val _groups: Groups
 )
   extends Secured(GroupsCtrl)

@@ -15,14 +15,14 @@ object PermCheck {
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
   )(
     implicit
-    _basicPlayApi: BasicPlayApi,
+    basicPlayApi: BasicPlayApi,
     _users: Users,
     _accessControls: AccessControls,
     _rateLimits: RateLimits
   ): ActionFunction[MaybeUserRequest, UserRequest] = {
     apply(_.Anything, onDenied)(
       CheckedResource(resource),
-      _basicPlayApi,
+      basicPlayApi,
       _users,
       _accessControls,
       _rateLimits
@@ -36,7 +36,7 @@ object PermCheck {
   )(
     implicit
     resource: CheckedResource,
-    _basicPlayApi: BasicPlayApi,
+    basicPlayApi: BasicPlayApi,
     _users: Users,
     _accessControls: AccessControls,
     _rateLimits: RateLimits
@@ -55,14 +55,14 @@ case class PermCheckRequired(
 
 trait PermCheckComponents {
 
-  def _permCheckRequired: PermCheckRequired
+  def permCheckRequired: PermCheckRequired
 
   implicit def _users: Users =
-    _permCheckRequired._users
+    permCheckRequired._users
 
   implicit def _accessControls: AccessControls =
-    _permCheckRequired._accessControls
+    permCheckRequired._accessControls
 
   implicit def _rateLimits: RateLimits =
-    _permCheckRequired._rateLimits
+    permCheckRequired._rateLimits
 }

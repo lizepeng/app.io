@@ -40,16 +40,16 @@ sealed class SessionDataTable
 object SessionData extends SessionDataTable
 
 class SessionData(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends SessionDataTable
   with ExtCQL[SessionDataTable, UUID]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def get[T: TypeTag](
     key: String

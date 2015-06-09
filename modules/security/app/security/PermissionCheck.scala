@@ -18,7 +18,7 @@ trait PermissionCheck
 
   def resource: CheckedResource
 
-  def _basicPlayApi: BasicPlayApi
+  def basicPlayApi: BasicPlayApi
 
   def _accessControls: AccessControls
 

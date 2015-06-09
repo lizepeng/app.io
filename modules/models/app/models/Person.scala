@@ -63,17 +63,17 @@ object Person
 }
 
 class Persons(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends PersonTable
   with EntityTable[Person]
   with ExtCQL[PersonTable, Person]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)

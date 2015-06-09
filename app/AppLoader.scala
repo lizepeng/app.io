@@ -2,6 +2,7 @@ import elasticsearch.ElasticSearch
 import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
+import models.cassandra.ClosableCassandraManager
 import models.cfs._
 import models.sys.SysConfigs
 import play.api.ApplicationLoader.Context
@@ -34,14 +35,12 @@ class Components(context: Context)
   play.api.Logger.configure(context.environment)
 
   // Basic Play Api
-  implicit val _basicPlayApi = BasicPlayApi(
+  implicit val basicPlayApi = BasicPlayApi(
     langs, messagesApi, configuration, applicationLifecycle, actorSystem
   )
 
-  // Services
-  implicit val _bandwidth   = new BandwidthService(_basicPlayApi)
-  implicit val _mailService = new MailService(_basicPlayApi)
-  implicit val _es          = new ElasticSearch(_basicPlayApi)
+  // Cassandra Connector
+  implicit val cassandraManager = new ClosableCassandraManager(basicPlayApi)
 
   // Models
   implicit val _sysConfig              = new SysConfigs
@@ -57,11 +56,16 @@ class Components(context: Context)
   implicit val _emailTemplates         = new EmailTemplates
   implicit val _emailTemplateHistories = new EmailTemplateHistories
 
+  // Services
+  implicit val bandwidth   = new BandwidthService(basicPlayApi)
+  implicit val mailService = new MailService(basicPlayApi)
+  implicit val es          = new ElasticSearch(basicPlayApi)
+
   // Error Handler
   val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
 
   // Api Permission Checking
-  implicit val _apiPermCheckRequired =
+  implicit val apiPermCheckRequired =
     controllers.api.PermCheckRequired(_users, _accessControls, _rateLimits)
 
   // Api Controllers
@@ -91,7 +95,7 @@ class Components(context: Context)
   )
 
   // Register permission checkable controllers
-  implicit val _secured = new controllers.RegisteredSecured(
+  implicit val secured = new controllers.RegisteredSecured(
     messagesApi,
     Seq(
       controllers.AccessControlsCtrl,
@@ -108,7 +112,7 @@ class Components(context: Context)
   )
 
   // Permission Checking
-  implicit val _permCheckRequired =
+  implicit val permCheckRequired =
     controllers.PermCheckRequired(_users, _accessControls)
 
   // Root Controllers

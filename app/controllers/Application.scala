@@ -10,7 +10,7 @@ import views._
 
 class Application(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
   val _users: Users
 )
   extends Controller

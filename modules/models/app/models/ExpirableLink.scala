@@ -1,10 +1,9 @@
 package models
 
 import com.datastax.driver.core.Row
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
-import helpers.{Logging, _}
-import models.cassandra.{Cassandra, ExtCQL}
+import helpers._
+import models.cassandra.{CassandraComponents, ExtCQL}
 import play.api.libs.Crypto
 
 import scala.concurrent.Future
@@ -50,14 +49,14 @@ object ExpirableLink
 }
 
 class ExpirableLinks(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends ExpirableLinkTable
   with ExtCQL[ExpirableLinkTable, ExpirableLink]
   with BasicPlayComponents
-  with Cassandra {
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
+  with CassandraComponents {
 
   def find(id: String): Future[ExpirableLink] =
     CQL {

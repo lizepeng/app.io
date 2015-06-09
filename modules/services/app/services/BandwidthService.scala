@@ -17,7 +17,7 @@ import scala.util.Try
  * @author zepeng.li@gmail.com
  */
 class BandwidthService(
-  val _basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi
 )
   extends BasicPlayComponents {
 

@@ -18,7 +18,7 @@ import scala.util._
 trait Session {
   self: DefaultPlayExecutor =>
 
-  def _basicPlayApi: BasicPlayApi
+  def basicPlayApi: BasicPlayApi
 
   def _users: Users
 

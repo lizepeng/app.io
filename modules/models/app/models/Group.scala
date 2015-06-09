@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
@@ -148,7 +147,8 @@ object Group
 
 class Groups(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager,
   val _users: Users,
   val _sysConfig: SysConfigs
 )
@@ -158,11 +158,9 @@ class Groups(
   with BasicPlayComponents
   with InternalGroupsComponents
   with SysConfig
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -315,16 +313,15 @@ object InternalGroupsCode {
 
 class InternalGroups(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager,
   val _sysConfig: SysConfigs
 )
   extends GroupTable
   with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
   with SysConfig
-  with Cassandra {
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
+  with CassandraComponents {
 
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()

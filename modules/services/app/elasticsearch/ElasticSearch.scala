@@ -23,14 +23,17 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author zepeng.li@gmail.com
  */
 class ElasticSearch(
-  val _basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi
 )
   extends AppConfig
   with BasicPlayComponents
   with DefaultPlayExecutor
   with Logging {
 
-  applicationLifecycle.addStopHook(() => Future.successful(Client.close()))
+  applicationLifecycle.addStopHook { () =>
+    Logger.info(s"Shutdown Elastic Search Client")
+    Future.successful(Client.close())
+  }
 
   import ESyntax._
 

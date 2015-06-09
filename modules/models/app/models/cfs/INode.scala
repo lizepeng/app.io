@@ -2,11 +2,10 @@ package models.cfs
 
 import java.util.UUID
 
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import helpers._
 import models.HasUUID
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra.{CassandraComponents, ExtCQL}
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
@@ -138,12 +137,14 @@ sealed class INodeTable
 object INode extends INodeTable
 
 class INodes(
-  val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends INodeTable
   with ExtCQL[INodeTable, INode]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
 

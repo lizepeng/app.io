@@ -7,7 +7,7 @@ import com.websudos.phantom.dsl._
 import helpers._
 import helpers.syntax._
 import models.CanonicalNamedModel
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra.{CassandraComponents, ExtCQL}
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
 
@@ -87,14 +87,16 @@ object File
 }
 
 class Files(
-  val _basicPlayApi: BasicPlayApi,
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager,
   val _blocks: Blocks,
   val _indirectBlocks: IndirectBlocks
 )
   extends FileTable
   with ExtCQL[FileTable, File]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   import File._
 

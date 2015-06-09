@@ -1,10 +1,9 @@
 package models
 
 import com.datastax.driver.core.Row
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
-import helpers.{Logging, _}
+import helpers._
 import models.cassandra._
 import org.joda.time.DateTime
 import play.api.i18n.Lang
@@ -124,14 +123,14 @@ object EmailTemplate
 }
 
 class EmailTemplates(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends EmailTemplateTable
   with ExtCQL[EmailTemplateTable, ET]
   with BasicPlayComponents
-  with Cassandra {
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
+  with CassandraComponents {
 
   def build(
     id: UUID,
@@ -248,14 +247,14 @@ object EmailTemplateHistory
   extends EmailTemplateHistoryTable
 
 class EmailTemplateHistories(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends EmailTemplateHistoryTable
   with ExtCQL[EmailTemplateHistoryTable, ETH]
   with BasicPlayComponents
-  with Cassandra {
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
+  with CassandraComponents {
 
   def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {
     CQL {

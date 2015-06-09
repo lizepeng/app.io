@@ -12,7 +12,8 @@ import scala.concurrent.Future
  */
 class CassandraFileSystem(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager,
   val _users: Users,
   val _sysConfig: SysConfigs
 )
@@ -20,23 +21,11 @@ class CassandraFileSystem(
   with BasicPlayComponents
   with SysConfig {
 
-  val _blocks         = new Blocks
-  val _indirectBlocks = new IndirectBlocks(_basicPlayApi, _blocks)
-  val _files          = new Files(_basicPlayApi, _blocks, _indirectBlocks)
-  val _inodes         = new INodes(_basicPlayApi)
-  val _directories    = new Directories(_basicPlayApi, _inodes)
-
-  applicationLifecycle.addStopHook { () =>
-    Future.sequence(
-      Seq(
-        Future.successful(_blocks.shutdown()),
-        Future.successful(_indirectBlocks.shutdown()),
-        Future.successful(_files.shutdown()),
-        Future.successful(_inodes.shutdown()),
-        Future.successful(_directories.shutdown())
-      )
-    ).map(_ => Unit)
-  }
+  implicit val _blocks         = new Blocks
+  implicit val _indirectBlocks = new IndirectBlocks
+  implicit val _files          = new Files
+  implicit val _inodes         = new INodes
+  implicit val _directories    = new Directories
 
   def home(implicit user: User): Future[Directory] = {
     _directories.find(user.id).recoverWith {

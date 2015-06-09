@@ -6,7 +6,7 @@ import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers._
-import models.cassandra.{Cassandra, ExtCQL}
+import models.cassandra.{CassandraComponents, ExtCQL}
 import models.cfs.Block._
 import play.api.libs.iteratee._
 
@@ -52,13 +52,15 @@ sealed class IndirectBlockTable
 object IndirectBlock extends IndirectBlockTable
 
 class IndirectBlocks(
-  val _basicPlayApi: BasicPlayApi,
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager,
   val _blocks: Blocks
 )
   extends IndirectBlockTable
   with ExtCQL[IndirectBlockTable, IndirectBlock]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
 

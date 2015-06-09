@@ -193,7 +193,8 @@ object User
 
 class Users(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager,
   val _sysConfig: SysConfigs,
   val _internalGroups: InternalGroups
 )
@@ -202,13 +203,11 @@ class Users(
   with ExtCQL[UserTable, User]
   with BasicPlayComponents
   with SysConfig
-  with Cassandra {
+  with CassandraComponents {
 
   val UserByEmail = new UserByEmail
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   override def fromRow(r: Row): User = {
     User(
@@ -381,16 +380,16 @@ sealed class UserByEmailIndex
 object UserByEmailIndex extends UserByEmailIndex
 
 class UserByEmail(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends UserByEmailIndex
   with ExtCQL[UserByEmailIndex, (String, UUID)]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def save(email: String, id: UUID): Future[Boolean] = CQL {
     insert

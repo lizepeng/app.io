@@ -20,8 +20,8 @@ import scala.language.implicitConversions
 
 class EmailTemplatesCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
-  val _permCheckRequired: PermCheckRequired,
+  val basicPlayApi: BasicPlayApi,
+  val permCheckRequired: PermCheckRequired,
   val _sessionData: SessionData,
   val _emailTemplates: EmailTemplates,
   val _emailTemplateHistories: EmailTemplateHistories

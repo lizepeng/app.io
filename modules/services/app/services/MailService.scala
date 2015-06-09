@@ -15,7 +15,7 @@ import scala.concurrent.duration._
  * @author zepeng.li@gmail.com
  */
 class MailService(
-  val _basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi
 )
   extends CanonicalNamed
   with BasicPlayComponents

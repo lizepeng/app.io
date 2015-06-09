@@ -12,8 +12,8 @@ import views._
  */
 class FileSystemCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
-  val _permCheckRequired: PermCheckRequired,
+  val basicPlayApi: BasicPlayApi,
+  val permCheckRequired: PermCheckRequired,
   val _cfs: CassandraFileSystem
 )
   extends Secured(FileSystemCtrl)

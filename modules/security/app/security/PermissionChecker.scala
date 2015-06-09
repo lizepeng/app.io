@@ -15,7 +15,7 @@ case class PermissionChecker(
   resource: CheckedResource
 )(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
   val _accessControls: AccessControls
 )
   extends ActionFilter[UserRequest]

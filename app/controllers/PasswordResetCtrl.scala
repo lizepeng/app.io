@@ -20,9 +20,9 @@ import scala.concurrent.Future
  */
 class PasswordResetCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
   val _users: Users,
-  val _mailService: MailService,
+  val mailService: MailService,
   val _expirableLinks: ExpirableLinks,
   val _emailTemplates: EmailTemplates,
   val _sysConfig: SysConfigs
@@ -71,7 +71,7 @@ class PasswordResetCtrl(
           link <- _expirableLinks.nnew(canonicalName)(user)
           tmpl <- getEmailTemplate(s"$basicName.email1")
         } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
-          _mailService.schedule("noreply", tmpl, u, "link" -> id)
+          mailService.schedule("noreply", tmpl, u, "link" -> id)
           Ok(html.password_reset.sent())
         }.recover {
           case e: models.User.NotFound          =>
@@ -121,7 +121,7 @@ class PasswordResetCtrl(
           user <- _users.find(link.user_id).flatMap(_.savePassword(success.original))
           tmpl <- getEmailTemplate(s"$basicName.email2")
         } yield (user, tmpl)).map { case (user, tmpl) =>
-          _mailService.schedule("support", tmpl, user)
+          mailService.schedule("support", tmpl, user)
           Redirect(routes.SessionsCtrl.nnew()).flashing(
             AlertLevel.Info -> message("password.changed")
           )

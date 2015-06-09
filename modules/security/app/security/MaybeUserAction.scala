@@ -11,7 +11,7 @@ import scala.language.higherKinds
  */
 case class MaybeUserAction(
   implicit
-  val _basicPlayApi: BasicPlayApi,
+  val basicPlayApi: BasicPlayApi,
   val _users: Users
 )
   extends ActionBuilder[MaybeUserRequest]

@@ -3,7 +3,6 @@ package models
 import java.util.UUID
 
 import com.datastax.driver.core.Row
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
@@ -41,16 +40,16 @@ sealed class RateLimitTable
 object RateLimits extends RateLimitTable
 
 class RateLimits(
-  implicit val _basicPlayApi: BasicPlayApi
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val cassandraManager: CassandraManager
 )
   extends RateLimitTable
   with ExtCQL[RateLimitTable, UUID]
   with BasicPlayComponents
-  with Cassandra {
+  with CassandraComponents {
 
   create.ifNotExists.future()
-
-  applicationLifecycle.addStopHook(() => Future.successful(shutdown()))
 
   def get(
     resource: String,

@@ -20,17 +20,17 @@ case class BasicPlayApi(
 
 trait BasicPlayComponents {
 
-  def _basicPlayApi: BasicPlayApi
+  def basicPlayApi: BasicPlayApi
 
-  implicit def messagesApi: MessagesApi = _basicPlayApi.messagesApi
+  implicit def messagesApi: MessagesApi = basicPlayApi.messagesApi
 
-  implicit def langs: Langs = _basicPlayApi.langs
+  implicit def langs: Langs = basicPlayApi.langs
 
-  implicit def configuration: Configuration = _basicPlayApi.configuration
+  implicit def configuration: Configuration = basicPlayApi.configuration
 
-  def applicationLifecycle: ApplicationLifecycle = _basicPlayApi.applicationLifecycle
+  def applicationLifecycle: ApplicationLifecycle = basicPlayApi.applicationLifecycle
 
-  def actorSystem: ActorSystem = _basicPlayApi.actorSystem
+  def actorSystem: ActorSystem = basicPlayApi.actorSystem
 }
 
 trait DefaultPlayExecutor {

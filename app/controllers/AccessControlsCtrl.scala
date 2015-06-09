@@ -17,9 +17,9 @@ import scala.util.Success
  */
 class AccessControlsCtrl(
   implicit
-  val _basicPlayApi: BasicPlayApi,
-  val _permCheckRequired: PermCheckRequired,
-  val _secured: RegisteredSecured
+  val basicPlayApi: BasicPlayApi,
+  val permCheckRequired: PermCheckRequired,
+  val secured: RegisteredSecured
 )
   extends Secured(AccessControlsCtrl)
   with Controller
