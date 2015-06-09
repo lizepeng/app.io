@@ -37,8 +37,6 @@ class GroupsCtrl(
   with I18nSupport
   with Logging {
 
-  ESIndexCleaner(_groups).dropIndexIfEmpty
-
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     PermCheck(_.Index).async { implicit req =>
       if (ids.nonEmpty)

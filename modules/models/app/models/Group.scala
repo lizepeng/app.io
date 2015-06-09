@@ -17,6 +17,7 @@ import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
+import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
@@ -310,12 +311,15 @@ object InternalGroupsCode {
 }
 
 class InternalGroups(
+  onInitialized: InternalGroups => Future[_]
+)(
   implicit
   val basicPlayApi: BasicPlayApi,
   val cassandraManager: CassandraManager,
   val _sysConfig: SysConfigs
 )
   extends GroupTable
+  with EntityTable[Group]
   with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
   with SysConfig
@@ -325,35 +329,37 @@ class InternalGroups(
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  create.ifNotExists.future()
-
-  Future.sequence(
-    InternalGroupsCode.ALL.map { n =>
-      val key = s"internal_group_${"%02d".format(n)}"
-      System.UUID(key).flatMap { id =>
-        createIfNotExist(
-          Group(
-            id,
-            if (n == InternalGroupsCode.Anyone) "Anyone" else key,
-            Some(key),
-            is_internal = true,
-            DateTime.now
-          )
-        ).map((id, _))
+  create.ifNotExists.future().flatMap { _ =>
+    Future.sequence(
+      InternalGroupsCode.ALL.map { n =>
+        val key = s"internal_group_${"%02d".format(n)}"
+        System.UUID(key).flatMap { id =>
+          createIfNotExist(
+            Group(
+              id,
+              if (n == InternalGroupsCode.Anyone) "Anyone" else key,
+              Some(key),
+              is_internal = true,
+              DateTime.now
+            )
+          ).map((id, _))
+        }
       }
+    ).map { seq =>
+      _num2Id = seq.map(_._1)
+      _anyoneId = _num2Id(InternalGroupsCode.Anyone)
+      _id2num = _num2Id.zipWithIndex.toMap
+      val initialized = (true /: seq)(_ && _._2)
+      Logger.info(
+        if (initialized)
+          "Internal Group Ids has been initialized."
+        else
+          "Internal Group Ids has been loaded."
+      )
+      initialized
+    }.andThen {
+      case Success(true) => onInitialized(this)
     }
-  ).map { seq =>
-    _num2Id = seq.map(_._1)
-    _anyoneId = _num2Id(InternalGroupsCode.Anyone)
-    _id2num = _num2Id.zipWithIndex.toMap
-    val initialized = (true /: seq)(_ && _._2)
-    Logger.info(
-      if (initialized)
-        "Internal Group Ids has been initialized."
-      else
-        "Internal Group Ids has been loaded."
-    )
-    initialized
   }
 
   def AnyoneId = _anyoneId
@@ -363,6 +369,24 @@ class InternalGroups(
   def map(igs: InternalGroupsCode): Set[UUID] = {
     igs.numbers.map(_num2Id).toSet
   }
+
+  def all: Enumerator[Group] = CQL {
+    select(_.id).distinct
+  }.fetchEnumerator &>
+    Enumeratee.grouped {
+      Enumeratee.take(100) &>>
+        Iteratee.getChunks
+    } &> Enumeratee.mapFlatten(stream)
+
+  def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
+    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
+      .distinct
+      .where(_.id in ids.toList.distinct)
+  }.fetchEnumerator() &>
+    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
+    Enumeratee.map(t => Group.apply _ tupled t)
+
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
 
   private def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert

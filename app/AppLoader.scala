@@ -1,4 +1,5 @@
-import elasticsearch.ElasticSearch
+import batches.ReIndexInternalGroups
+import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import helpers.BasicPlayApi
 import messages.ChatActor
 import models._
@@ -39,12 +40,17 @@ class Components(context: Context)
     langs, messagesApi, configuration, applicationLifecycle, actorSystem
   )
 
+  // Services
+  implicit val bandwidth   = new BandwidthService(basicPlayApi)
+  implicit val mailService = new MailService(basicPlayApi)
+  implicit val es          = new ElasticSearch(basicPlayApi)
+
   // Cassandra Connector
   implicit val cassandraManager = new ClosableCassandraManager(basicPlayApi)
 
   // Models
   implicit val _sysConfig              = new SysConfigs
-  implicit val _internalGroups         = new InternalGroups
+  implicit val _internalGroups         = new InternalGroups(onInternalGroupInitialized)
   implicit val _users                  = new Users
   implicit val _accessControls         = new AccessControls
   implicit val _sessionData            = new SessionData
@@ -55,11 +61,6 @@ class Components(context: Context)
   implicit val _persons                = new Persons
   implicit val _emailTemplates         = new EmailTemplates
   implicit val _emailTemplateHistories = new EmailTemplateHistories
-
-  // Services
-  implicit val bandwidth   = new BandwidthService(basicPlayApi)
-  implicit val mailService = new MailService(basicPlayApi)
-  implicit val es          = new ElasticSearch(basicPlayApi)
 
   // Error Handler
   val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
@@ -184,4 +185,13 @@ class Components(context: Context)
   ).onSuccess {
     case _ => play.api.Logger.info("System has started")
   }
+
+  private def onInternalGroupInitialized(
+    _internalGroups: InternalGroups
+  ): Future[Seq[AnyVal]] = Future.sequence(
+    Seq(
+      ESIndexCleaner(_internalGroups).dropIndexIfEmpty,
+      new ReIndexInternalGroups(es, _internalGroups).start()
+    )
+  )
 }

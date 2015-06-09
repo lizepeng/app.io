@@ -42,25 +42,25 @@ object AccessControlsCtrl
 
   def initIfEmpty(
     implicit
-    accessControls: AccessControls,
     secured: RegisteredSecured,
-    internalGroups: InternalGroups,
-    elasticSearch: ElasticSearch,
-    executor: ExecutionContext
+    es: ElasticSearch,
+    executor: ExecutionContext,
+    _internalGroups: InternalGroups,
+    _accessControls: AccessControls
   ): Future[Boolean] =
     for {
-      _empty <- accessControls.isEmpty
+      _empty <- _accessControls.isEmpty
       result <-
       if (_empty) Future.sequence(
         secured.Modules.names.map { resource =>
           AccessControl(
             resource,
             CheckedActions.Anything.name,
-            internalGroups.AnyoneId,
+            _internalGroups.AnyoneId,
             is_group = true,
             granted = true
           ).save.flatMap { saved =>
-            elasticSearch.Index(saved) into accessControls
+            es.Index(saved) into _accessControls
           }
         }
       ).andThen {
