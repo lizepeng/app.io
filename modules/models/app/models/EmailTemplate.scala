@@ -132,6 +132,8 @@ class EmailTemplates(
   with BasicPlayComponents
   with CassandraComponents {
 
+  create.ifNotExists.future()
+
   def build(
     id: UUID,
     lang: Lang,

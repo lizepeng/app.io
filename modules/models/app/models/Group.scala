@@ -160,8 +160,6 @@ class Groups(
   with SysConfig
   with CassandraComponents {
 
-  create.ifNotExists.future()
-
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
   }.one.map {
@@ -326,6 +324,8 @@ class InternalGroups(
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
+
+  create.ifNotExists.future()
 
   Future.sequence(
     InternalGroupsCode.ALL.map { n =>
