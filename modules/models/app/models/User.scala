@@ -33,7 +33,7 @@ case class User(
   password: String = "",
   remember_me: Boolean = false,
   updated_at: DateTime = DateTime.now
-)(implicit val internalGroups: InternalGroups) extends HasUUID {
+)(implicit val internalGroups: InternalGroups) extends HasUUID with TimeBased {
 
   lazy val internal_groups: Set[UUID] =
     internalGroups.map(internal_groups_code)

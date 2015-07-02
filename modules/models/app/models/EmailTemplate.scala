@@ -23,7 +23,7 @@ case class EmailTemplate(
   updated_at: DateTime,
   updated_by: UUID,
   created_by: UUID
-) extends HasUUID {
+) extends HasUUID with TimeBased {
 
   def save(implicit emailTemplateRepo: EmailTemplates) = emailTemplateRepo.save(this)
 }

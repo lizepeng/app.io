@@ -28,7 +28,7 @@ case class Group(
   description: Option[String] = None,
   is_internal: Boolean = false,
   updated_at: DateTime
-) extends HasUUID {
+) extends HasUUID with TimeBased {
 
   def save(implicit groups: Groups) = groups.save(this)
 }

@@ -16,12 +16,10 @@ trait HasID[T] {
 
 trait TimeBased {
 
-  def created_at: DateTime
-
   def updated_at: DateTime
 }
 
-trait HasUUID extends HasID[UUID] with TimeBased {
+trait HasUUID extends HasID[UUID] {
 
   def id: UUID
 

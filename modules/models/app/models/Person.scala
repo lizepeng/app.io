@@ -19,7 +19,7 @@ case class Person(
   first_name: String = "",
   last_name: String = "",
   updated_at: DateTime = DateTime.now
-) extends HasUUID
+) extends HasUUID with TimeBased
 
 sealed class PersonTable
   extends CassandraTable[PersonTable, Person]

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.websudos.phantom.dsl._
 import helpers._
-import models.HasUUID
+import models.{TimeBased, HasUUID}
 import models.cassandra._
 import org.joda.time.DateTime
 
@@ -13,7 +13,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-trait INode extends HasUUID {
+trait INode extends HasUUID with TimeBased {
 
   def name: String
 
