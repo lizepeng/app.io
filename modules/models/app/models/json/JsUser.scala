@@ -31,8 +31,8 @@ case class JsUser(
 
 object JsUser {
 
-  implicit val user_writes = Json.writes[JsUser]
-  implicit val user_reads  = (
+  implicit val json_writes = Json.writes[JsUser]
+  implicit val json_reads  = (
     User.id.always(UUIDs.timeBased)
       and User.name.reads
       and User.email.reads

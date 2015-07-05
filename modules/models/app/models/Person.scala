@@ -59,7 +59,7 @@ object Person
     extends BaseException(error_code("not.found"))
 
   // Json Reads and Writes
-  implicit val person_format = Json.format[Person]
+  implicit val json_format = Json.format[Person]
 }
 
 class Persons(

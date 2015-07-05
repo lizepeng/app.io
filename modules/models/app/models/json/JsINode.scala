@@ -39,7 +39,7 @@ case class JsFile(
 
 object JsFile {
 
-  implicit val js_file_writes = Json.writes[JsFile]
+  implicit val json_writes = Json.writes[JsFile]
 
   def from(f: File) =
     JsFile(
@@ -66,7 +66,7 @@ case class JsDirectory(
 
 object JsDirectory {
 
-  implicit val js_directory_writes = Json.writes[JsDirectory]
+  implicit val json_writes = Json.writes[JsDirectory]
 
   def from(d: Directory) =
     JsDirectory(

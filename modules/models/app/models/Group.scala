@@ -163,8 +163,8 @@ object Group
   }
 
   // Json Reads and Writes
-  implicit val group_writes = Json.writes[Group]
-  implicit val group_reads  = (
+  implicit val json_writes = Json.writes[Group]
+  implicit val json_reads  = (
     id.reads
       and name.reads
       and description.reads
