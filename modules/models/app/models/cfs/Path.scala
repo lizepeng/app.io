@@ -27,7 +27,7 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
 
 object Path {
 
-  implicit val json_format = Json.format[Path]
+  implicit val jsonFormat = Json.format[Path]
 
   def root = Path()
 

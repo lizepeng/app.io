@@ -100,7 +100,7 @@ object AccessControl
   )
 
   // Json Reads and Writes
-  implicit val json_format = Json.format[AccessControl]
+  implicit val jsonFormat = Json.format[AccessControl]
 
   def genId(
     resource: String,
