@@ -1,6 +1,7 @@
 package models.cfs
 
-import play.api.libs.json.Json
+import helpers.JsonStringifier
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 import play.utils.UriEncoding
 
@@ -25,10 +26,8 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
   }
 }
 
-object Path {
-
-  implicit val jsonFormat = Json.format[Path]
-
+object Path extends PathJsonStringifier{
+  
   def root = Path()
 
   implicit def bindablePath: PathBindable[Path] = new PathBindable[Path] {
@@ -83,4 +82,11 @@ object Path {
   }
 
   val charset = "utf-8"
+}
+
+trait PathJsonStringifier extends JsonStringifier[Path] {
+
+  implicit val jsonFormat: Format[Path] = Json.format[Path]
+
+  val default: Path = Path()
 }
