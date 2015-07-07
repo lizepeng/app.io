@@ -17,9 +17,9 @@ package object security {
   case class Unauthorized()
     extends BaseException("security.unauthorized")
 
-  case class CheckedAction(name: String)
+  case class CheckedAction(name: String) extends AnyVal
 
-  case class CheckedResource(name: String)
+  case class CheckedResource(name: String) extends AnyVal
 
   trait CheckedActions {
 
