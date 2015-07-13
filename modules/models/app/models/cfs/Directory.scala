@@ -5,11 +5,12 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
+import helpers.ExtEnumeratee._
 import helpers._
 import models.cassandra.{CassandraComponents, ExtCQL}
 import models.cfs.Block.BLK
 import models.{CanonicalNamedModel, User}
-import play.api.libs.iteratee._
+import play.api.libs.iteratee.{Enumeratee => _, _}
 
 import scala.concurrent.Future
 

@@ -1,20 +1,14 @@
+package helpers
+
 import org.joda.time.DateTime
 import play.api.i18n.Lang
-import play.api.libs.Crypto
-import play.api.libs.iteratee.Enumeratee
 import play.api.mvc.QueryStringBindable
 import play.api.mvc.QueryStringBindable.Parsing
-
-import scala.language.implicitConversions
 
 /**
  * @author zepeng.li@gmail.com
  */
-package object helpers {
-
-  implicit def extendEnumeratee(e: Enumeratee.type): ExtEnumeratee.type = ExtEnumeratee
-
-  implicit def extendCrypto(c: Crypto.type): ExtCrypto.type = ExtCrypto
+object ExtBindable {
 
   implicit object bindableQueryLang extends Parsing[Lang](
     Lang(_), _.code, (

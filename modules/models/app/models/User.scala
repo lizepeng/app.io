@@ -6,11 +6,11 @@ import com.datastax.driver.core.utils.UUIDs
 import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
+import helpers.ExtCrypto._
 import helpers._
 import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
 import org.joda.time.DateTime
-import play.api.libs.Crypto
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Reads._

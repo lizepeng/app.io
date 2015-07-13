@@ -1,10 +1,9 @@
 package models
 
-import helpers._
+import helpers.ExtCrypto._
 import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
-import play.api.libs.Crypto
 
 @RunWith(classOf[JUnitRunner])
 class ExpirableLinkSpec extends Specification {

@@ -2,9 +2,9 @@ package models
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
+import helpers.ExtCrypto._
 import helpers._
 import models.cassandra.{CassandraComponents, ExtCQL}
-import play.api.libs.Crypto
 
 import scala.concurrent.Future
 

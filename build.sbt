@@ -61,10 +61,11 @@ TwirlKeys.templateImports ++= Seq(
 )
 
 routesImport ++= Seq(
-  "helpers._",
+  "helpers.ExtBindable._",
+  "helpers.Pager",
   "java.util.UUID",
-  "org.joda.time.DateTime",
   "models.cfs._",
+  "org.joda.time.DateTime",
   "play.api.i18n.Lang",
   "scala.language.reflectiveCalls"
 )

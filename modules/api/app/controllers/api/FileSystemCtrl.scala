@@ -1,5 +1,6 @@
 package controllers.api
 
+import helpers.ExtEnumeratee._
 import helpers._
 import models._
 import models.cfs._
@@ -7,7 +8,7 @@ import models.json._
 import play.api.http.ContentTypes
 import play.api.i18n._
 import play.api.libs.MimeTypes
-import play.api.libs.iteratee._
+import play.api.libs.iteratee.{Enumeratee => _, _}
 import play.api.libs.json.JsArray
 import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
