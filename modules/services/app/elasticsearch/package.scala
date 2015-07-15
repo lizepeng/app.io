@@ -23,7 +23,7 @@ package object elasticsearch {
 
   case class JsonDocSource(jsval: JsValue) extends DocumentSource {
 
-    val json = jsval.toString()
+    val json = Json.stringify(jsval)
   }
 
   implicit def GroupToJsonDocSource(g: Group): JsonDocSource =
@@ -38,7 +38,7 @@ package object elasticsearch {
   implicit def PersonToJsonDocSource(p: Person): JsonDocSource =
     JsonDocSource(Json.toJson(p))
 
-  import play.api.libs.iteratee.Execution.Implicits.trampoline
+  import play.api.libs.iteratee.Execution.Implicits.trampoline //TODO
 
   /**
    * `Writable` for `SearchResponse` values - Json

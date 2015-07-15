@@ -4,7 +4,7 @@ import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
 import helpers.ExtCrypto._
 import helpers._
-import models.cassandra.{CassandraComponents, ExtCQL}
+import models.cassandra._
 
 import scala.concurrent.Future
 
@@ -17,13 +17,14 @@ case class ExpirableLink(
   module: String
 )
 
-sealed class ExpirableLinkTable
-  extends CassandraTable[ExpirableLinkTable, ExpirableLink]
-  with CanonicalNamedModel[ExpirableLink]
-  with ExceptionDefining
-  with Logging {
+trait ExpirableLinkCanonicalNamed extends CanonicalNamed {
 
-  override val tableName = "expirable_links"
+  override val basicName = "expirable_links"
+}
+
+sealed class ExpirableLinkTable
+  extends NamedCassandraTable[ExpirableLinkTable, ExpirableLink]
+  with ExpirableLinkCanonicalNamed {
 
   object id
     extends StringColumn(this)
@@ -40,7 +41,7 @@ sealed class ExpirableLinkTable
 }
 
 object ExpirableLink
-  extends ExpirableLinkTable
+  extends ExpirableLinkCanonicalNamed
   with ExceptionDefining {
 
   case class NotFound(id: String)
@@ -56,7 +57,8 @@ class ExpirableLinks(
   extends ExpirableLinkTable
   with ExtCQL[ExpirableLinkTable, ExpirableLink]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   def find(id: String): Future[ExpirableLink] =
     CQL {

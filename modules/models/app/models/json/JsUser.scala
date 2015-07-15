@@ -32,13 +32,6 @@ case class JsUser(
 object JsUser {
 
   implicit val jsonWrites = Json.writes[JsUser]
-  implicit val jsonReads  = (
-    User.id.always(UUIDs.timeBased)
-      and User.name.reads
-      and User.email.reads
-      and User.internal_groups.always(0)
-      and User.external_groups.always(Set())
-    )(JsUser.apply _)
 
   def from(user: User) = JsUser(
     user.id,

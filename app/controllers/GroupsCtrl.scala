@@ -48,7 +48,7 @@ class GroupsCtrl(
   def checkName =
     PermCheck(_.Show).async(parse.json) { implicit req =>
       Future.successful {
-        req.body.validate(Group.name.reads).fold(
+        req.body.validate(Group.name_reads).fold(
           failure => UnprocessableEntity(JsonClientErrors(failure)),
           success => Ok
         )

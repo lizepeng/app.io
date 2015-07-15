@@ -2,11 +2,13 @@ package controllers.api
 
 import java.util.UUID
 
-import elasticsearch.{ESIndexCleaner, ElasticSearch}
+import elasticsearch._
 import helpers._
 import models._
 import models.json._
 import play.api.i18n._
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
@@ -67,9 +69,9 @@ class UsersCtrl(
 
   def create =
     PermCheck(_.Save).async { implicit req =>
-      BindJson().as[JsUser] {
+      BindJson().as[UserInfo] {
         success => (for {
-          saved <- success.toUser.save
+          saved <- User().copy(name = success.name, email = success.email).save
           _resp <- es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>
           Created(_resp._1)
@@ -81,6 +83,16 @@ class UsersCtrl(
         }
       }
     }
+
+  case class UserInfo(name: String, email: String)
+
+  object UserInfo {
+
+    val name_reads  = (__ \ 'name).read[String](minLength[String](2) <~ maxLength[String](255))
+    val email_reads = (__ \ 'email).read[String](minLength[String](1) <~ maxLength[String](40) <~ email)
+
+    implicit val jsonReads: Reads[UserInfo] = (name_reads ~ email_reads)(UserInfo.apply _)
+  }
 
 }
 

@@ -25,7 +25,7 @@ trait SysConfig {
       implicit serializer: Serializer[T],
       sysConfig: SysConfigs
     ) = {
-      sysConfig.getOrElseUpdate(
+      sysConfig.getOrElseInsert(
         canonicalName, key, default
       )(serializer)
     }
@@ -33,7 +33,7 @@ trait SysConfig {
     def UUID(key: String)(
       implicit sysConfig: SysConfigs
     ) = {
-      sysConfig.getOrElseUpdate(
+      sysConfig.getOrElseInsert(
         canonicalName, key, UUIDs.timeBased()
       )(uuidSerializer)
     }
@@ -48,8 +48,7 @@ case class SysConfigEntry(
 )
 
 sealed class SysConfigTable
-  extends CassandraTable[SysConfigTable, SysConfigEntry]
-  with Logging {
+  extends CassandraTable[SysConfigTable, SysConfigEntry] {
 
   override val tableName = "system_config"
 
@@ -98,33 +97,40 @@ class SysConfigs(
   extends SysConfigTable
   with ExtCQL[SysConfigTable, SysConfigEntry]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 
   import SysConfig._
 
-  def getOrElseUpdate[T](
+  def getOrElseInsert[T](
     module: String,
     key: String,
     op: => T
   )(implicit serializer: Serializer[T]): Future[T] = {
-    CQL {
-      select(_.value)
-        .where(_.module eqs module)
-        .and(_.key eqs key)
-    }.one().flatMap {
-      case None        =>
-        val value: T = op
-        CQL {
-          update
-            .where(_.module eqs module)
-            .and(_.key eqs key)
-            .modify(_.value setTo (value >>: serializer))
-        }.future().map(_ => value)
-      case Some(value) =>
-        Future.successful(serializer << value)
-    }
+    for {
+      maybe <- CQL {
+        select(_.value)
+          .where(_.module eqs module)
+          .and(_.key eqs key)
+      }.one()
+      value <- maybe match {
+        case None    =>
+          val v: T = op
+          CQL {
+            insert
+              .value(_.module, module)
+              .value(_.key, key)
+              .value(_.value, v >>: serializer)
+              .ifNotExists()
+          }.future().flatMap { rs =>
+            if (rs.wasApplied()) Future.successful(v)
+            else getOrElseInsert(module, key, op)
+          }
+        case Some(v) =>
+          Future.successful(serializer << v)
+      }
+    } yield value
   }
-
 }

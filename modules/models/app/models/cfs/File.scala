@@ -6,8 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers._
 import helpers.syntax._
-import models.CanonicalNamedModel
-import models.cassandra.{CassandraComponents, ExtCQL}
+import models.cassandra._
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
 
@@ -53,12 +52,11 @@ case class File(
  *
  */
 sealed class FileTable
-  extends CassandraTable[FileTable, File]
+  extends NamedCassandraTable[FileTable, File]
+  with INodeCanonicalNamed
   with INodeKey[FileTable, File]
   with INodeColumns[FileTable, File]
-  with FileColumns[FileTable, File]
-  with CanonicalNamedModel[File]
-  with Logging {
+  with FileColumns[FileTable, File] {
 
   override def fromRow(r: Row): File = {
     File(
@@ -77,12 +75,12 @@ sealed class FileTable
   }
 }
 
-object File
-  extends FileTable
-  with ExceptionDefining {
+object File extends CanonicalNamed with ExceptionDefining {
+
+  override val basicName: String = "file"
 
   case class NotFound(id: UUID)
-    extends BaseException(error_code("file.not.found"))
+    extends BaseException(error_code("not.found"))
 
 }
 
@@ -96,16 +94,15 @@ class Files(
   extends FileTable
   with ExtCQL[FileTable, File]
   with BasicPlayComponents
-  with CassandraComponents {
-
-  import File._
+  with CassandraComponents
+  with Logging {
 
   def find(id: UUID)(
     implicit onFound: File => File
   ): Future[File] = CQL {
     select.where(_.inode_id eqs id)
   }.one().map {
-    case None    => throw NotFound(id)
+    case None    => throw File.NotFound(id)
     case Some(f) => onFound(f)
   }
 

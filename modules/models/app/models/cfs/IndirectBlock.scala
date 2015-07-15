@@ -6,7 +6,7 @@ import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers._
-import models.cassandra.{CassandraComponents, ExtCQL}
+import models.cassandra._
 import models.cfs.Block._
 import play.api.libs.iteratee._
 
@@ -27,12 +27,15 @@ case class IndirectBlock(
   def +(length: Int) = IndirectBlock(inode_id, offset, this.length + length, id)
 }
 
-sealed class IndirectBlockTable
-  extends CassandraTable[IndirectBlockTable, IndirectBlock]
-  with INodeKey[IndirectBlockTable, IndirectBlock]
-  with Logging {
+trait IndirectBlockCanonicalNamed extends CanonicalNamed {
 
-  override val tableName = "indirect_blocks"
+  override val basicName = "indirect_blocks"
+}
+
+sealed class IndirectBlockTable
+  extends NamedCassandraTable[IndirectBlockTable, IndirectBlock]
+  with IndirectBlockCanonicalNamed
+  with INodeKey[IndirectBlockTable, IndirectBlock] {
 
   object offset
     extends LongColumn(this)
@@ -49,7 +52,7 @@ sealed class IndirectBlockTable
   }
 }
 
-object IndirectBlock extends IndirectBlockTable
+object IndirectBlock extends IndirectBlockCanonicalNamed
 
 class IndirectBlocks(
   implicit
@@ -60,7 +63,8 @@ class IndirectBlocks(
   extends IndirectBlockTable
   with ExtCQL[IndirectBlockTable, IndirectBlock]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 

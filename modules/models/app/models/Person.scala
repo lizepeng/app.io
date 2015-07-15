@@ -21,12 +21,14 @@ case class Person(
   updated_at: DateTime = DateTime.now
 ) extends HasUUID with TimeBased
 
-sealed class PersonTable
-  extends CassandraTable[PersonTable, Person]
-  with CanonicalNamedModel[Person]
-  with Logging {
+trait PersonCanonicalNamed extends CanonicalNamed {
 
-  override val tableName = "persons"
+  override val basicName = "persons"
+}
+
+sealed class PersonTable
+  extends NamedCassandraTable[PersonTable, Person]
+  with PersonCanonicalNamed {
 
   object id
     extends UUIDColumn(this)
@@ -52,13 +54,12 @@ sealed class PersonTable
 }
 
 object Person
-  extends PersonTable
+  extends PersonCanonicalNamed
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
 
-  // Json Reads and Writes
   implicit val jsonFormat = Json.format[Person]
 }
 
@@ -71,7 +72,8 @@ class Persons(
   with EntityTable[Person]
   with ExtCQL[PersonTable, Person]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 

@@ -31,12 +31,14 @@ case class AccessControl(
   def save(implicit repo: AccessControls) = repo.save(this)
 }
 
-sealed class AccessControlTable
-  extends CassandraTable[AccessControlTable, AccessControl]
-  with CanonicalNamedModel[AccessControl]
-  with Logging {
+trait AccessControlCanonicalNamed extends CanonicalNamed {
 
-  override lazy val tableName = "access_controls"
+  override val basicName = "access_controls"
+}
+
+sealed class AccessControlTable
+  extends NamedCassandraTable[AccessControlTable, AccessControl]
+  with AccessControlCanonicalNamed {
 
   object principal_id
     extends UUIDColumn(this)
@@ -69,7 +71,7 @@ sealed class AccessControlTable
 }
 
 object AccessControl
-  extends AccessControlTable
+  extends AccessControlCanonicalNamed
   with ExceptionDefining {
 
   case class NotFound(id: UUID, res: String, act: String)
@@ -99,7 +101,6 @@ object AccessControl
     error_code(sub_key)
   )
 
-  // Json Reads and Writes
   implicit val jsonFormat = Json.format[AccessControl]
 
   def genId(
@@ -119,7 +120,8 @@ class AccessControls(
   with EntityTable[AccessControl]
   with ExtCQL[AccessControlTable, AccessControl]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 

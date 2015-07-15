@@ -14,11 +14,14 @@ import scala.reflect.runtime.universe._
 /**
  * @author zepeng.li@gmail.com
  */
-sealed class SessionDataTable
-  extends CassandraTable[SessionDataTable, UUID]
-  with Logging {
+trait SessionDataCanonicalNamed extends CanonicalNamed {
 
-  override val tableName = "session_data"
+  override val basicName = "session_data"
+}
+
+sealed class SessionDataTable
+  extends NamedCassandraTable[SessionDataTable, UUID]
+  with SessionDataCanonicalNamed {
 
   object user_id
     extends UUIDColumn(this)
@@ -37,7 +40,8 @@ sealed class SessionDataTable
   override def fromRow(r: Row): UUID = user_id(r)
 }
 
-object SessionData extends SessionDataTable
+object SessionData
+  extends SessionDataCanonicalNamed
 
 class SessionData(
   implicit
@@ -47,7 +51,8 @@ class SessionData(
   extends SessionDataTable
   with ExtCQL[SessionDataTable, UUID]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 

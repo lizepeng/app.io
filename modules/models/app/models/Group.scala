@@ -33,56 +33,38 @@ case class Group(
   def save(implicit groups: Groups) = groups.save(this)
 }
 
-trait GroupColumns[T <: CassandraTable[T, R], R] {
-  self: CassandraTable[T, R] =>
+trait GroupCanonicalNamed extends CanonicalNamed {
 
-  override lazy val tableName = "groups"
+  override val basicName = "groups"
+}
+
+sealed trait GroupTable
+  extends NamedCassandraTable[GroupTable, Group]
+  with GroupCanonicalNamed {
 
   object id
     extends UUIDColumn(this)
     with PartitionKey[UUID]
-    with JsonReadable[UUID] {
-
-    def reads = (__ \ "id").read[UUID]
-  }
-
-  object name
-    extends StringColumn(this)
-    with StaticColumn[String]
-    with JsonReadable[String] {
-
-    def reads = (__ \ "name").read[String](
-      minLength[String](2) keepAnd maxLength[String](255)
-    )
-  }
-
-  object description
-    extends OptionalStringColumn(this)
-    with StaticColumn[Option[String]]
-    with JsonReadable[Option[String]] {
-
-    def reads = (__ \ "description").readNullable[String]
-  }
-
-  object is_internal
-    extends OptionalBooleanColumn(this)
-    with StaticColumn[Option[Boolean]]
-    with JsonReadable[Boolean] {
-
-    def reads = (__ \ "is_internal").read[Boolean]
-  }
-
-  object updated_at
-    extends DateTimeColumn(this)
-    with StaticColumn[DateTime]
-    with JsonReadable[DateTime] {
-
-    def reads = always(DateTime.now)
-  }
 
   object child_id
     extends UUIDColumn(this)
     with ClusteringOrder[UUID]
+
+  object name
+    extends StringColumn(this)
+    with StaticColumn[String]
+
+  object description
+    extends OptionalStringColumn(this)
+    with StaticColumn[Option[String]]
+
+  object is_internal
+    extends OptionalBooleanColumn(this)
+    with StaticColumn[Option[Boolean]]
+
+  object updated_at
+    extends DateTimeColumn(this)
+    with StaticColumn[DateTime]
 
   override def fromRow(r: Row): Group = {
     Group(
@@ -95,38 +77,8 @@ trait GroupColumns[T <: CassandraTable[T, R], R] {
   }
 }
 
-sealed trait GroupTable
-  extends CassandraTable[GroupTable, Group]
-  with GroupColumns[GroupTable, Group]
-  with EntityTable[Group]
-  with ExtCQL[GroupTable, Group]
-  with CanonicalNamedModel[Group]
-  with CassandraComponents
-  with Logging {
-
-  def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
-    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
-      .distinct
-      .where(_.id in ids.toList.distinct)
-  }.fetchEnumerator() &>
-    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
-    Enumeratee.map(t => Group.apply _ tupled t)
-
-  def all: Enumerator[Group] = CQL {
-    select(_.id).distinct
-  }.fetchEnumerator &>
-    Enumeratee.grouped {
-      Enumeratee.take(1000) &>>
-        Iteratee.getChunks
-    } &> Enumeratee.mapFlatten(stream)
-
-  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
-}
-
 object Group
-  extends CassandraTable[GroupTable, Group]
-  with GroupColumns[GroupTable, Group]
-  with CanonicalNamedModel[Group]
+  extends GroupCanonicalNamed
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
@@ -162,16 +114,18 @@ object Group
 
   }
 
-  // Json Reads and Writes
-  implicit val jsonWrites = Json.writes[Group]
-  implicit val jsonReads  = (
-    id.reads
-      and name.reads
-      and description.reads
-      and is_internal.reads
-      and updated_at.reads
-    )(Group.apply _)
+  val id_reads          = (__ \ 'id).read[UUID]
+  val name_reads        = (__ \ 'name).read[String](minLength[String](2) <~ maxLength[String](255))
+  val description_reads = (__ \ 'description).readNullable[String]
+  val is_internal_reads = (__ \ 'is_internal).read[Boolean]
 
+  implicit val jsonWrites = Json.writes[Group]
+  implicit val jsonReads  = (id_reads ~
+    name_reads ~
+    description_reads ~
+    is_internal_reads ~
+    ExtReads.always(DateTime.now)
+    )(Group.apply _)
 }
 
 class Groups(
@@ -182,9 +136,12 @@ class Groups(
   val _sysConfig: SysConfigs
 )
   extends GroupTable
+  with EntityTable[Group]
+  with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
   with InternalGroupsComponents
-  with SysConfig {
+  with CassandraComponents
+  with Logging {
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -201,7 +158,7 @@ class Groups(
   }
 
   def find(ids: TraversableOnce[UUID]): Future[Seq[Group]] = {
-    stream(ids) |>>> Iteratee.getChunks[Group]
+    _internalGroups.stream(ids) |>>> Iteratee.getChunks[Group]
   }
 
   def save(group: Group): Future[Group] = CQL {
@@ -272,6 +229,16 @@ class Groups(
       .modify(_.updated_at setTo DateTime.now)
   }
 
+  def all: Enumerator[Group] = CQL {
+    select(_.id).distinct
+  }.fetchEnumerator &>
+    Enumeratee.grouped {
+      Enumeratee.take(1000) &>>
+        Iteratee.getChunks
+    } &> Enumeratee.mapFlatten(_internalGroups.stream)
+
+  def isEmpty: Future[Boolean] = _internalGroups.isEmpty
+
 }
 
 case class InternalGroupsCode(code: Int) {
@@ -318,7 +285,8 @@ object InternalGroupsCode {
 }
 
 class InternalGroups(
-  onInitialized: InternalGroups => Future[_]
+  preLoad: InternalGroups => Future[_],
+  postInit: InternalGroups => Future[_]
 )(
   implicit
   val basicPlayApi: BasicPlayApi,
@@ -326,14 +294,23 @@ class InternalGroups(
   val _sysConfig: SysConfigs
 )
   extends GroupTable
+  with EntityTable[Group]
+  with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
-  with SysConfig {
+  with CassandraComponents
+  with SysConfig
+  with Logging {
 
   @volatile private var _num2Id  : Seq[UUID]      = Seq()
   @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
   @volatile private var _id2num  : Map[UUID, Int] = Map()
 
-  create.ifNotExists.future().flatMap { _ =>
+  create.ifNotExists.future()
+    .andThen { case _ => preLoad(this) }
+    .flatMap { case _ => loadOrInit }
+    .andThen { case Success(true) => postInit(this) }
+
+  private def loadOrInit: Future[Boolean] = {
     Future.sequence(
       InternalGroupsCode.ALL.map { n =>
         val key = s"internal_group_${"%02d".format(n)}"
@@ -361,8 +338,6 @@ class InternalGroups(
           "Internal Group Ids has been loaded."
       )
       initialized
-    }.andThen {
-      case Success(true) => onInitialized(this)
     }
   }
 
@@ -383,6 +358,24 @@ class InternalGroups(
       .value(_.updated_at, group.updated_at)
       .ifNotExists()
   }.future().map(_.wasApplied())
+
+  def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
+    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
+      .distinct
+      .where(_.id in ids.toList.distinct)
+  }.fetchEnumerator() &>
+    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
+    Enumeratee.map(t => Group.apply _ tupled t)
+
+  def all: Enumerator[Group] = CQL {
+    select(_.id).distinct.where(_.id in _num2Id.toList)
+  }.fetchEnumerator &>
+    Enumeratee.grouped {
+      Enumeratee.take(1000) &>>
+        Iteratee.getChunks
+    } &> Enumeratee.mapFlatten(stream)
+
+  def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
 
 }
 

@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext
 /**
  * @author zepeng.li@gmail.com
  */
-class ReIndexInternalGroups(
+case class ReIndexInternalGroups(
   es: ElasticSearch,
   _internalGroups: InternalGroups
 )(

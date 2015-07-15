@@ -49,8 +49,12 @@ class Components(context: Context)
   implicit val cassandraManager = new ClosableCassandraManager(basicPlayApi)
 
   // Models
-  implicit val _sysConfig              = new SysConfigs
-  implicit val _internalGroups         = new InternalGroups(onInternalGroupInitialized)
+  implicit val _sysConfig      = new SysConfigs
+  implicit val _internalGroups = new InternalGroups(
+    ESIndexCleaner(_).dropIndexIfEmpty,
+    ReIndexInternalGroups(es, _).start()
+  )
+
   implicit val _users                  = new Users
   implicit val _accessControls         = new AccessControls
   implicit val _sessionData            = new SessionData
@@ -185,13 +189,4 @@ class Components(context: Context)
   ).onSuccess {
     case _ => play.api.Logger.info("System has started")
   }
-
-  private def onInternalGroupInitialized(
-    _internalGroups: InternalGroups
-  ): Future[Seq[AnyVal]] = Future.sequence(
-    Seq(
-      ESIndexCleaner(_internalGroups).dropIndexIfEmpty,
-      new ReIndexInternalGroups(es, _internalGroups).start()
-    )
-  )
 }

@@ -38,12 +38,15 @@ case class EmailTemplateHistory(
   updated_by: UUID
 ) extends HasUUID
 
+trait EmailTemplateCanonicalNamed extends CanonicalNamed {
+
+  override val basicName = "email_templates"
+}
+
 import models.{EmailTemplate => ET, EmailTemplateHistory => ETH}
 
 trait EmailTemplateKey[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
-
-  override val tableName = "email_templates"
 
   object id
     extends TimeUUIDColumn(this)
@@ -90,13 +93,11 @@ trait EmailTemplateHistoryColumns[T <: CassandraTable[T, R], R] {
 }
 
 sealed class EmailTemplateTable
-  extends CassandraTable[EmailTemplateTable, ET]
+  extends NamedCassandraTable[EmailTemplateTable, ET]
+  with EmailTemplateCanonicalNamed
   with EmailTemplateKey[EmailTemplateTable, ET]
   with EmailTemplateColumns[EmailTemplateTable, ET]
-  with EmailTemplateHistoryColumns[EmailTemplateTable, ET]
-  with CanonicalNamedModel[ET]
-  with ExceptionDefining
-  with Logging {
+  with EmailTemplateHistoryColumns[EmailTemplateTable, ET] {
 
   override def fromRow(r: Row): ET = ET(
     id(r),
@@ -111,7 +112,7 @@ sealed class EmailTemplateTable
 }
 
 object EmailTemplate
-  extends EmailTemplateTable
+  extends EmailTemplateCanonicalNamed
   with ExceptionDefining {
 
   case class NotFound(id: UUID, lang: String)
@@ -130,7 +131,8 @@ class EmailTemplates(
   extends EmailTemplateTable
   with ExtCQL[EmailTemplateTable, ET]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 
@@ -228,11 +230,10 @@ class EmailTemplates(
 }
 
 sealed class EmailTemplateHistoryTable
-  extends CassandraTable[EmailTemplateHistoryTable, ETH]
+  extends NamedCassandraTable[EmailTemplateHistoryTable, ETH]
+  with EmailTemplateCanonicalNamed
   with EmailTemplateKey[EmailTemplateHistoryTable, ETH]
-  with EmailTemplateHistoryColumns[EmailTemplateHistoryTable, ETH]
-  with CanonicalNamedModel[ETH]
-  with Logging {
+  with EmailTemplateHistoryColumns[EmailTemplateHistoryTable, ETH] {
 
   override def fromRow(r: Row): ETH = ETH(
     id(r),
@@ -246,7 +247,7 @@ sealed class EmailTemplateHistoryTable
 }
 
 object EmailTemplateHistory
-  extends EmailTemplateHistoryTable
+  extends EmailTemplateCanonicalNamed
 
 class EmailTemplateHistories(
   implicit
@@ -256,7 +257,8 @@ class EmailTemplateHistories(
   extends EmailTemplateHistoryTable
   with ExtCQL[EmailTemplateHistoryTable, ETH]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {
     CQL {

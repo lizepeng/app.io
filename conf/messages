@@ -174,22 +174,22 @@ log.models.users.wrong.password                  =wrong password of user: [{0}]
 log.models.users.auth.failed                     =TODO
 log.models.users.no.credentials                  =TODO
 
-# files
-controllers.api.files.name                       =API: File System
-controllers.files.name                           =File System
-controllers.files.missing                        =Missing File
-controllers.files.uploaded                       ={0} Uploaded
-controllers.files.deleted                        ={0} Deleted
-controllers.files.not.found                      ={0} Not Found
+# file_system
+controllers.api.file_system.name                 =API: File System
+controllers.file_system.name                     =File System
+controllers.file_system.missing                  =Missing File
+controllers.file_system.uploaded                 ={0} Uploaded
+controllers.file_system.deleted                  ={0} Deleted
+controllers.file_system.not.found                ={0} Not Found
 
-views.files.title                                =File System
-views.files.head                                 =File System
+views.file_system.title                          =File System
+views.file_system.head                           =File System
 
-log.models.cfs.files.dir.child.not.found         =No such child {1} in dir {0}
-log.models.cfs.files.dir.child.exists            =There already exists child {1} in dir {0}
-log.models.cfs.files.dir.not.found               =No such dir   [{0}]
-log.models.cfs.files.file.not.found              =No such file  [{0}]
-log.models.cfs.files.perm.denied                 =Permission Denied [{0}], [{1}], [{2}]
+log.models.cfs.dir.child.not.found               =No such child {1} in dir {0}
+log.models.cfs.dir.child.exists                  =There already exists child {1} in dir {0}
+log.models.cfs.dir.not.found                     =No such dir   [{0}]
+log.models.cfs.file.not.found                    =No such file  [{0}]
+log.models.cfs.file_system.perm.denied           =Permission Denied [{0}], [{1}], [{2}]
 
 # password_reset
 controllers.password_reset.email.not.found       =Can't find that email, sorry.

@@ -4,8 +4,8 @@ import java.util.UUID
 
 import com.websudos.phantom.dsl._
 import helpers._
-import models.{TimeBased, HasUUID}
 import models.cassandra._
+import models.{HasUUID, TimeBased}
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
@@ -48,6 +48,11 @@ trait INode extends HasUUID with TimeBased {
 
 }
 
+trait INodeCanonicalNamed extends CanonicalNamed {
+
+  override val basicName = "inodes"
+}
+
 trait INodeKey[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
@@ -59,8 +64,6 @@ trait INodeKey[T <: CassandraTable[T, R], R] {
 
 trait INodeColumns[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
-
-  override val tableName = "inodes"
 
   object parent
     extends UUIDColumn(self)
@@ -121,20 +124,17 @@ trait DirectoryColumns[T <: CassandraTable[T, R], R] {
  *
  */
 sealed class INodeTable
-  extends CassandraTable[INodeTable, INode]
-  with INodeKey[INodeTable, INode]
-  with INodeColumns[INodeTable, INode]
-  with FileColumns[INodeTable, INode]
-  with DirectoryColumns[INodeTable, INode]
-  with Logging {
+  extends NamedCassandraTable[INodeTable, Row]
+  with INodeCanonicalNamed
+  with INodeKey[INodeTable, Row]
+  with INodeColumns[INodeTable, Row]
+  with FileColumns[INodeTable, Row]
+  with DirectoryColumns[INodeTable, Row] {
 
-  override def fromRow(r: Row): INode = {
-    if (!is_directory(r)) File.fromRow(r)
-    else Directory.fromRow(r)
-  }
+  override def fromRow(r: Row): Row = r
 }
 
-object INode extends INodeTable
+object INode extends INodeCanonicalNamed
 
 class INodes(
   implicit
@@ -142,13 +142,14 @@ class INodes(
   val cassandraManager: CassandraManager
 )
   extends INodeTable
-  with ExtCQL[INodeTable, INode]
+  with ExtCQL[INodeTable, Row]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 
-  def find(id: UUID): Future[Option[INode]] = {
+  def find(id: UUID): Future[Option[Row]] = {
     CQL {select.where(_.inode_id eqs id)}.one()
   }
 }

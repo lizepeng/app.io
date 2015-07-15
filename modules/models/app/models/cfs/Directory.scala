@@ -7,9 +7,9 @@ import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers.ExtEnumeratee._
 import helpers._
-import models.cassandra.{CassandraComponents, ExtCQL}
+import models.User
+import models.cassandra._
 import models.cfs.Block.BLK
-import models.{CanonicalNamedModel, User}
 import play.api.libs.iteratee.{Enumeratee => _, _}
 
 import scala.concurrent.Future
@@ -136,12 +136,11 @@ case class Directory(
  *
  */
 sealed class DirectoryTable
-  extends CassandraTable[DirectoryTable, Directory]
+  extends NamedCassandraTable[DirectoryTable, Directory]
+  with INodeCanonicalNamed
   with INodeKey[DirectoryTable, Directory]
   with INodeColumns[DirectoryTable, Directory]
-  with DirectoryColumns[DirectoryTable, Directory]
-  with CanonicalNamedModel[Directory]
-  with Logging {
+  with DirectoryColumns[DirectoryTable, Directory] {
 
   override def fromRow(r: Row): Directory = {
     Directory(
@@ -157,21 +156,21 @@ sealed class DirectoryTable
   }
 }
 
-object Directory
-  extends DirectoryTable
-  with ExceptionDefining {
+object Directory extends CanonicalNamed with ExceptionDefining {
+
+  override val basicName: String = "dir"
 
   case class NotFound(id: UUID)
-    extends BaseException(error_code("dir.not.found"))
+    extends BaseException(error_code("not.found"))
 
   case class ChildNotFound(parent: Any, name: String)
-    extends BaseException(error_code("dir.child.not.found"))
+    extends BaseException(error_code("child.not.found"))
 
   case class ChildExists(parent: Any, name: String)
-    extends BaseException(error_code("dir.child.exists"))
+    extends BaseException(error_code("child.exists"))
 
   case class NotDirectory(path: Path)
-    extends BaseException(error_code("dir.not.dir"))
+    extends BaseException(error_code("not.dir"))
 
 }
 
@@ -179,14 +178,14 @@ class Directories(
   implicit
   val basicPlayApi: BasicPlayApi,
   val cassandraManager: CassandraManager,
-  val _inodes: INodes
+  val _inodes: INodes,
+  val _files: Files
 )
   extends DirectoryTable
   with ExtCQL[DirectoryTable, Directory]
   with BasicPlayComponents
-  with CassandraComponents {
-
-  import Directory._
+  with CassandraComponents
+  with Logging {
 
   def findChild(
     parent: UUID, name: String
@@ -195,7 +194,7 @@ class Directories(
       .where(_.inode_id eqs parent)
       .and(_.name eqs name)
   }.one().map {
-    case None     => throw ChildNotFound(parent, name)
+    case None     => throw Directory.ChildNotFound(parent, name)
     case Some(id) => (name, id)
   }
 
@@ -205,7 +204,7 @@ class Directories(
     select
       .where(_.inode_id eqs id)
   }.one().map {
-    case None    => throw NotFound(id)
+    case None    => throw Directory.NotFound(id)
     case Some(d) => onFound(d)
   }
 
@@ -219,7 +218,7 @@ class Directories(
       .ifNotExists()
   }.future().map { rs =>
     if (rs.wasApplied()) dir
-    else throw ChildExists(dir.id, inode.name)
+    else throw Directory.ChildExists(dir.id, inode.name)
   }
 
   def delChild(
@@ -306,13 +305,12 @@ class Directories(
   }.fetchEnumerator() &>
     Enumeratee.mapM {
       case (name, id) => _inodes.find(id).map[Option[INode]] {
-        case Some(nd: File)      =>
-          Some(nd.copy(name = name, path = dir.path + name))
-        case Some(nd: Directory) =>
-          Some(nd.copy(name = name, path = dir.path / name))
-        case _                   =>
-          None
+        _.map { r =>
+          if (_inodes.is_directory(r))
+            fromRow(r).copy(name = name, path = dir.path / name)
+          else
+            _files.fromRow(r).copy(name = name, path = dir.path + name)
+        }
       }
     } &> Enumeratee.flattenOption
-
 }

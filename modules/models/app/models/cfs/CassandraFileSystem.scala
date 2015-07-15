@@ -61,7 +61,7 @@ class CassandraFileSystem(
 
 trait CassandraFileSystemCanonicalNamed extends CanonicalNamed {
 
-  override val basicName = "files"
+  override def basicName: String = "file_system"
 }
 
 object CassandraFileSystem extends CassandraFileSystemCanonicalNamed

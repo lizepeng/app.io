@@ -6,7 +6,8 @@ import java.util.UUID
 import com.datastax.driver.core.utils.Bytes
 import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.dsl._
-import models.cassandra.CassandraComponents
+import helpers.CanonicalNamed
+import models.cassandra.{CassandraComponents, NamedCassandraTable}
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -20,10 +21,14 @@ case class Block(
   data: ByteBuffer
 )
 
-sealed class BlockTable
-  extends CassandraTable[BlockTable, Block] {
+trait BlockCanonicalNamed extends CanonicalNamed {
 
-  override val tableName = "blocks"
+  override val basicName = "blocks"
+}
+
+sealed class BlockTable
+  extends NamedCassandraTable[BlockTable, Block]
+  with BlockCanonicalNamed {
 
   object indirect_block_id
     extends TimeUUIDColumn(this)
@@ -41,7 +46,7 @@ sealed class BlockTable
   }
 }
 
-object Block extends BlockTable {
+object Block extends BlockCanonicalNamed {
 
   type BLK = Array[Byte]
 }

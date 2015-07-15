@@ -11,10 +11,7 @@ import helpers._
 import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
 import org.joda.time.DateTime
-import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.Reads._
-import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
@@ -71,32 +68,24 @@ case class User(
     Crypto.sha2(s"${DateTime.now}--$passwd")
 }
 
+trait UserCanonicalNamed extends CanonicalNamed {
+
+  override val basicName = "users"
+}
+
 /**
  *
  */
 sealed abstract class UserTable
-  extends CassandraTable[UserTable, User]
-  with CanonicalNamedModel[User]
-  with Logging {
-
-  override val tableName = "users"
+  extends NamedCassandraTable[UserTable, User]
+  with UserCanonicalNamed {
 
   object id
     extends UUIDColumn(this)
     with PartitionKey[UUID]
-    with JsonReadable[UUID] {
-
-    def reads = (__ \ "id").read[UUID]
-  }
 
   object name
     extends StringColumn(this)
-    with JsonReadable[String] {
-
-    def reads = (__ \ "name").read[String](
-      minLength[String](2) keepAnd maxLength[String](255)
-    )
-  }
 
   object salt
     extends StringColumn(this)
@@ -106,36 +95,20 @@ sealed abstract class UserTable
 
   object email
     extends StringColumn(this)
-    with JsonReadable[String] {
-
-    def reads = (__ \ "email").read[String](Reads.email)
-  }
 
   object internal_groups
     extends IntColumn(this)
-    with JsonReadable[Int] {
-
-    def reads = (__ \ "internal_groups").read[Int]
-  }
 
   object external_groups
     extends SetColumn[UserTable, User, UUID](this)
-    with JsonReadable[Set[UUID]] {
-
-    def reads = (__ \ "external_groups").read[Set[UUID]]
-  }
 
   object updated_at
     extends DateTimeColumn(this)
-    with JsonReadable[DateTime] {
-
-    def reads = always(DateTime.now)
-  }
 
 }
 
 object User
-  extends UserTable
+  extends UserCanonicalNamed
   with ExceptionDefining {
 
   /**
@@ -187,8 +160,6 @@ object User
 
   case class Credentials(id: UUID, salt: String)
 
-  override def fromRow(r: Row): User =
-    throw new RuntimeException("Use instance instead of this object.")
 }
 
 class Users(
@@ -202,8 +173,9 @@ class Users(
   with EntityTable[User]
   with ExtCQL[UserTable, User]
   with BasicPlayComponents
+  with CassandraComponents
   with SysConfig
-  with CassandraComponents {
+  with Logging {
 
   val UserByEmail = new UserByEmail
 
@@ -362,9 +334,7 @@ class Users(
 }
 
 sealed class UserByEmailIndex
-  extends CassandraTable[UserByEmailIndex, (String, UUID)]
-
-  with Logging {
+  extends CassandraTable[UserByEmailIndex, (String, UUID)] {
 
   override val tableName = "users_email_index"
 
@@ -377,8 +347,6 @@ sealed class UserByEmailIndex
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
 }
 
-object UserByEmailIndex extends UserByEmailIndex
-
 class UserByEmail(
   implicit
   val basicPlayApi: BasicPlayApi,
@@ -387,7 +355,8 @@ class UserByEmail(
   extends UserByEmailIndex
   with ExtCQL[UserByEmailIndex, (String, UUID)]
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with Logging {
 
   create.ifNotExists.future()
 
