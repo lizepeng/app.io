@@ -12,6 +12,7 @@ import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
 import org.joda.time.DateTime
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
@@ -160,6 +161,15 @@ object User
 
   case class Credentials(id: UUID, salt: String)
 
+  implicit val jsonWrites = new Writes[User] {
+    override def writes(o: User): JsValue = Json.obj(
+      "id" -> o.id,
+      "name" -> o.name,
+      "email" -> o.email,
+      "int_groups" -> o.internal_groups_code.code,
+      "ext_groups" -> o.external_groups
+    )
+  }
 }
 
 class Users(

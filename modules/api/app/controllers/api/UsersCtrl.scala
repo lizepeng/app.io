@@ -5,7 +5,6 @@ import java.util.UUID
 import elasticsearch._
 import helpers._
 import models._
-import models.json._
 import play.api.i18n._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
@@ -57,7 +56,7 @@ class UsersCtrl(
     PermCheck(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _users.find(ids).map { usrs =>
-          Ok(JsArray(usrs.map(_.toJson)))
+          Ok(Json.toJson(usrs))
         }
       else
         (es.Search(q, p) in _users future()).map { page =>

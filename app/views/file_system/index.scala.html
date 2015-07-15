@@ -126,7 +126,7 @@ implicit req: UserRequest[_], messages: Messages)
         nextPage : '@Html(routes.FileSystemCtrl.index(path,pager.next).toString)',
         prevPage : '@Html(routes.FileSystemCtrl.index(path,pager.prev).toString)',
         userId   : '@req.user.id',
-        path     : @Html(path.toJson.toString)
+        path     : @Html(Path.toJson(path))
       });
     }]);
   </script>

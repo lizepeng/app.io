@@ -27,7 +27,7 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
 }
 
 object Path extends PathJsonStringifier{
-  
+
   def root = Path()
 
   implicit def bindablePath: PathBindable[Path] = new PathBindable[Path] {

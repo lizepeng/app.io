@@ -9,6 +9,7 @@ import helpers.syntax._
 import models.cassandra._
 import models.cfs.Block.BLK
 import play.api.libs.iteratee._
+import play.api.libs.json._
 
 import scala.concurrent.Future
 
@@ -82,6 +83,18 @@ object File extends CanonicalNamed with ExceptionDefining {
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
 
+  implicit val jsonWrites = new Writes[File] {
+    override def writes(o: File): JsValue = Json.obj(
+      "id" -> o.id,
+      "name" -> o.name,
+      "path" -> o.path,
+      "size" -> o.size,
+      "owner_id" -> o.owner_id,
+      "created_at" -> o.created_at,
+      "is_directory" -> o.is_directory,
+      "is_file" -> !o.is_directory
+    )
+  }
 }
 
 class Files(

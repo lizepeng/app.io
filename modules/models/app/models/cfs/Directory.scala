@@ -11,6 +11,7 @@ import models.User
 import models.cassandra._
 import models.cfs.Block.BLK
 import play.api.libs.iteratee.{Enumeratee => _, _}
+import play.api.libs.json._
 
 import scala.concurrent.Future
 
@@ -172,6 +173,17 @@ object Directory extends CanonicalNamed with ExceptionDefining {
   case class NotDirectory(path: Path)
     extends BaseException(error_code("not.dir"))
 
+  implicit val jsonWrites = new Writes[Directory] {
+    override def writes(o: Directory): JsValue = Json.obj(
+      "id" -> o.id,
+      "name" -> o.name,
+      "path" -> o.path,
+      "owner_id" -> o.owner_id,
+      "created_at" -> o.created_at,
+      "is_directory" -> o.is_directory,
+      "is_file" -> !o.is_directory
+    )
+  }
 }
 
 class Directories(

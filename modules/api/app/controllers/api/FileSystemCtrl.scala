@@ -4,12 +4,11 @@ import helpers.ExtEnumeratee._
 import helpers._
 import models._
 import models.cfs._
-import models.json._
 import play.api.http.ContentTypes
 import play.api.i18n._
 import play.api.libs.MimeTypes
 import play.api.libs.iteratee.{Enumeratee => _, _}
-import play.api.libs.json.JsArray
+import play.api.libs.json.Json
 import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
 import play.core.parsers.Multipart._
@@ -96,16 +95,9 @@ class FileSystemCtrl(
         curr <- root.dir(path) if FilePerm(curr).rx.?
         page <- curr.list(pager)
       } yield page).map { page =>
-        Ok(
-          JsArray(
-            page.collect {
-              case d: Directory => d.toJson
-              case f: File      => f.toJson
-            }.toSeq
-          )
-        ).withHeaders(
-            linkHeader(page, routes.FileSystemCtrl.index(path, _))
-          )
+        Ok(Json.toJson(page.elements)).withHeaders(
+          linkHeader(page, routes.FileSystemCtrl.index(path, _))
+        )
       }.andThen {
         case Failure(e: FilePerm.Denied) => Logger.trace(e.reason)
       }.recover {

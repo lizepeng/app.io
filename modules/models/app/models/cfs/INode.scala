@@ -7,6 +7,7 @@ import helpers._
 import models.cassandra._
 import models.{HasUUID, TimeBased}
 import org.joda.time.DateTime
+import play.api.libs.json._
 
 import scala.concurrent.Future
 
@@ -134,7 +135,15 @@ sealed class INodeTable
   override def fromRow(r: Row): Row = r
 }
 
-object INode extends INodeCanonicalNamed
+object INode extends INodeCanonicalNamed {
+
+  implicit val jsonWrites = new Writes[INode] {
+    override def writes(o: INode): JsValue = o match {
+      case d: Directory => Json.toJson(d)
+      case f: File      => Json.toJson(f)
+    }
+  }
+}
 
 class INodes(
   implicit

@@ -6,7 +6,6 @@ import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
 import models._
-import models.json._
 import play.api.i18n._
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -118,7 +117,7 @@ class GroupsCtrl(
         page <- _groups.children(id, pager)
         usrs <- _users.find(page)
       } yield (page, usrs)).map { case (page, usrs) =>
-        Ok(JsArray(usrs.map(_.toJson)))
+        Ok(Json.toJson(usrs))
           .withHeaders(linkHeader(page, routes.GroupsCtrl.users(id, _)))
       }.recover {
         case e: BaseException => NotFound
@@ -134,10 +133,10 @@ class GroupsCtrl(
           ).map {
           _.flatMap { user =>
             if (user.groups.contains(id)) Future.successful {
-              Ok(user.toJson)
+              Ok(Json.toJson(user))
             }
             else _groups.addChild(id, user.id).map { _ =>
-              Created(user.toJson)
+              Created(Json.toJson(user))
             }
           }
         }.fold(
