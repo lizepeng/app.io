@@ -11,7 +11,7 @@ import scala.util.Success
  */
 case class ESIndexCleaner(
   tables: EntityTable[_]*
-)(implicit es: ElasticSearch, executor: ExecutionContext) extends Logging {
+)(implicit es: ElasticSearch, ec: ExecutionContext) extends Logging {
 
   def dropIndexIfEmpty: Future[Boolean] = {
     Future.sequence(

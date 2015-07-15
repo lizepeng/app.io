@@ -16,12 +16,11 @@ case class PageMSResp(
   resp: MultiSearchResponse
 ) extends PageLike {
 
+  //TODO
   def hasNext: Boolean = true //resp.getHits.hits.size > pager.pageSize
 }
 
 object PageMSResp {
-
-  import play.api.libs.iteratee.Execution.Implicits.trampoline
 
   /**
    * `Writable` for `PageMSResp` values - Json
@@ -34,7 +33,7 @@ object PageMSResp {
   implicit def writableOf_PageMultiSearchResponse(
     implicit codec: Codec
   ): Writeable[PageMSResp] = {
-
+    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(
       p => {
         val builder = XContentFactory.jsonBuilder.prettyPrint

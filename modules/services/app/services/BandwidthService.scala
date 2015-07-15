@@ -19,10 +19,10 @@ import scala.util.Try
 class BandwidthService(
   val basicPlayApi: BasicPlayApi
 )
-  extends BasicPlayComponents {
+  extends BasicPlayComponents
+  with ConfiguredExecutor {
 
-  val executor: ExecutionContext =
-    actorSystem.dispatchers.lookup("contexts.traffic-shaper")
+  val executor: ExecutionContext = lookupExecutionContext("contexts.traffic-shaper")
 
   import BandwidthService._
 
@@ -50,7 +50,7 @@ class BandwidthService(
   }
 
   private def limitTo(rate: Int)(
-    implicit executor: ExecutionContext
+    implicit ec: ExecutionContext
   ): Enumeratee[BLK, BLK] = new CheckDone[BLK, BLK] {
 
     def step[B](remaining: Int, start: Long)(
@@ -97,7 +97,7 @@ class BandwidthService(
     duration: Long,
     unit: TimeUnit = TimeUnit.MILLISECONDS
   )(
-    implicit executor: ExecutionContext
+    implicit ec: ExecutionContext
   ): Future[A] = {
     val p = Promise[A]()
     actorSystem.scheduler.scheduleOnce(FiniteDuration(duration, unit)) {

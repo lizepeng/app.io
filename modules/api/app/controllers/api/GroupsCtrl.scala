@@ -2,14 +2,12 @@ package controllers.api
 
 import java.util.UUID
 
-import batches.ReIndex
 import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
 import models._
 import models.json._
 import play.api.i18n._
-import play.api.libs.json.Reads._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
@@ -158,14 +156,6 @@ class GroupsCtrl(
     PermCheck(_.Destroy).async { implicit req =>
       _groups.delChild(id, uid).map { _ => NoContent }
     }
-
-  def reindex: Future[Boolean] = {
-    new ReIndex[Group](
-      _groups.all,
-      list => (es.BulkIndex(list) into _groups)
-        .map { res => Logger.info(res.getTook.toString) }
-    )(10).start().map(_ => true)
-  }
 }
 
 object GroupsCtrl extends Secured(Group)

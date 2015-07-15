@@ -4,7 +4,6 @@ import java.util.UUID
 
 import elasticsearch._
 import helpers._
-import models.AccessControl.NotFound
 import models._
 import play.api.i18n._
 import play.api.libs.json._
@@ -55,26 +54,27 @@ class AccessControlsCtrl(
       BindJson().as[AccessControl] { success =>
         _accessControls.find(success).map { found =>
           Ok(Json.toJson(found))
-        }.recoverWith { case e: NotFound =>
-          (for {
-            exists <-
-            if (!success.is_group) _users.exists(success.principal)
-            else _groups.exists(success.principal)
+        }.recoverWith {
+          case e: AccessControl.NotFound =>
+            (for {
+              exists <-
+              if (!success.is_group) _users.exists(success.principal)
+              else _groups.exists(success.principal)
 
-            saved <- success.save
-            _resp <- es.Index(saved) into _accessControls
-          } yield (saved, _resp)).map { case (saved, _resp) =>
+              saved <- success.save
+              _resp <- es.Index(saved) into _accessControls
+            } yield (saved, _resp)).map { case (saved, _resp) =>
 
-            Created(_resp._1)
-              .withHeaders(
-                LOCATION -> routes.AccessControlsCtrl.show(
-                  saved.principal, saved.resource, saved.action
-                ).url
-              )
-          }.recover {
-            case e: models.User.NotFound => BadRequest(JsonMessage(e))
-            case e: Group.NotFound       => BadRequest(JsonMessage(e))
-          }
+              Created(_resp._1)
+                .withHeaders(
+                  LOCATION -> routes.AccessControlsCtrl.show(
+                    saved.principal, saved.resource, saved.action
+                  ).url
+                )
+            }.recover {
+              case e: User.NotFound  => BadRequest(JsonMessage(e))
+              case e: Group.NotFound => BadRequest(JsonMessage(e))
+            }
         }
       }
     }

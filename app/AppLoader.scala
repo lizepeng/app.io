@@ -1,6 +1,6 @@
 import batches.ReIndexInternalGroups
 import elasticsearch.{ESIndexCleaner, ElasticSearch}
-import helpers.BasicPlayApi
+import helpers._
 import messages.ChatActor
 import models._
 import models.cassandra.ClosableCassandraManager
@@ -29,9 +29,8 @@ class AppLoader extends play.api.ApplicationLoader {
 
 class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
-  with I18nComponents {
-
-  implicit val executor = actorSystem.dispatcher
+  with I18nComponents
+  with DefaultPlayExecutor {
 
   play.api.Logger.configure(context.environment)
 

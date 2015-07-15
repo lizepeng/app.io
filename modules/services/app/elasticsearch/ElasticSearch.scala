@@ -12,9 +12,6 @@ import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.action.update.UpdateResponse
 import org.elasticsearch.common.settings.ImmutableSettings
-
-//import play.api.libs.concurrent.Execution.Implicits._
-
 import play.api.libs.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -106,7 +103,7 @@ object ESyntax {
     val definition: SearchDefinition
   ) {
 
-    def future()(implicit executor: ExecutionContext): Future[PageSResp] = {
+    def future()(implicit ec: ExecutionContext): Future[PageSResp] = {
       client.execute(definition).map(PageSResp(pager, _))
     }
   }

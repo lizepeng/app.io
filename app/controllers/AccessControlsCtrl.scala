@@ -44,7 +44,7 @@ object AccessControlsCtrl
     implicit
     secured: RegisteredSecured,
     es: ElasticSearch,
-    executor: ExecutionContext,
+    ec: ExecutionContext,
     _internalGroups: InternalGroups,
     _accessControls: AccessControls
   ): Future[Boolean] =

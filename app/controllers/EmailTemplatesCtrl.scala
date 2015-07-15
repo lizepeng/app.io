@@ -5,7 +5,6 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import controllers.api.Secured
 import helpers._
-import models.EmailTemplate.NotFound
 import models._
 import org.joda.time.DateTime
 import play.api.data.Form
@@ -194,7 +193,7 @@ class EmailTemplatesCtrl(
         AlertLevel.Success -> message("deleted", tmpl.name)
       }
     }.recover {
-      case e: NotFound => NotFound(message("not.found", id))
+      case e: EmailTemplate.NotFound => NotFound(e.message)
     }
 
     }

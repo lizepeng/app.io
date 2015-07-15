@@ -30,7 +30,7 @@ object Layouts
     implicit
     groups: Groups,
     sysConfig: SysConfigs,
-    executor: ExecutionContext
+    ec: ExecutionContext
   ): Future[Map[UUID, String]] = {
     groups.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
       for (

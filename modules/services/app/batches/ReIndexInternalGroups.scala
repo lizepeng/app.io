@@ -12,7 +12,7 @@ case class ReIndexInternalGroups(
   es: ElasticSearch,
   _internalGroups: InternalGroups
 )(
-  implicit executor: ExecutionContext
+  implicit ec: ExecutionContext
 ) extends ReIndex[Group](
   _internalGroups.all,
   list => es.BulkIndex(list) into _internalGroups

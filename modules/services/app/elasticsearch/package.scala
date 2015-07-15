@@ -38,12 +38,11 @@ package object elasticsearch {
   implicit def PersonToJsonDocSource(p: Person): JsonDocSource =
     JsonDocSource(Json.toJson(p))
 
-  import play.api.libs.iteratee.Execution.Implicits.trampoline //TODO
-
   /**
    * `Writable` for `SearchResponse` values - Json
    */
   implicit def writableOf_SearchResponse(implicit codec: Codec): Writeable[SearchResponse] = {
+    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(response => codec.encode(response.toString))
   }
 

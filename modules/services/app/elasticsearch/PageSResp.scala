@@ -18,8 +18,6 @@ case class PageSResp(pager: Pager, resp: SearchResponse) extends PageLike {
 
 object PageSResp {
 
-  import play.api.libs.iteratee.Execution.Implicits.trampoline
-
   /**
    * `Writable` for `PageSResp` values - Json
    *
@@ -31,7 +29,7 @@ object PageSResp {
   implicit def writableOf_PageSearchResponse(
     implicit codec: Codec
   ): Writeable[PageSResp] = {
-
+    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(
       p => {
         val hits = p.resp.getHits

@@ -1,5 +1,10 @@
 package helpers
 
+import play.api.libs.iteratee.Enumeratee.MapM
+import play.api.libs.iteratee.Execution.{trampoline => dec}
+import play.api.libs.iteratee.{Enumeratee => PlayEnumeratee, _}
+
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 /**
@@ -9,15 +14,11 @@ object ExtEnumeratee {
 
   object Enumeratee {
 
-    import play.api.libs.iteratee.Enumeratee.MapM
-    import play.api.libs.iteratee.Execution.Implicits.{defaultExecutionContext => dec}
-    import play.api.libs.iteratee._
-
-    import scala.concurrent.{ExecutionContext, Future}
-
-    def flattenOption[A]: Enumeratee[Option[A], A] =
-      play.api.libs.iteratee.Enumeratee.filter[Option[A]](_.isDefined) ><>
-        play.api.libs.iteratee.Enumeratee.map(_.get)
+    def flattenOption[A](
+      implicit ec: ExecutionContext
+    ): PlayEnumeratee[Option[A], A] =
+      PlayEnumeratee.filter[Option[A]](_.isDefined) ><>
+        PlayEnumeratee.map(_.get)
 
     /**
      * Like `mapM`, but push EOF into stream when exception occurs.
@@ -25,7 +26,7 @@ object ExtEnumeratee {
     def mapM1[E] = new MapM[E] {
       def apply[NE](f: E => Future[NE])(
         implicit ec: ExecutionContext
-      ): Enumeratee[E, NE] = play.api.libs.iteratee.Enumeratee.mapInputM[E] {
+      ): PlayEnumeratee[E, NE] = PlayEnumeratee.mapInputM[E] {
         case Input.Empty => Future.successful(Input.Empty)
         case Input.EOF   => Future.successful(Input.EOF)
         case Input.El(e) => f(e).map(Input.El(_))(dec).recover { case e: Exception => Input.EOF }(dec)
@@ -33,5 +34,5 @@ object ExtEnumeratee {
     }
   }
 
-  implicit def wrappedEnumeratee(e: Enumeratee.type): play.api.libs.iteratee.Enumeratee.type = play.api.libs.iteratee.Enumeratee
+  implicit def wrappedEnumeratee(e: Enumeratee.type): PlayEnumeratee.type = PlayEnumeratee
 }

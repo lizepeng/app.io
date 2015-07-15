@@ -16,12 +16,11 @@ import scala.language.implicitConversions
  */
 package object api {
 
-  import play.api.libs.iteratee.Execution.Implicits.trampoline
-
   /**
    * `Writable` also Pretty Print for `JsValue` values - Json
    */
   implicit def prettyWritableOf_JsValue(implicit codec: Codec): Writeable[JsValue] = {
+    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(jsval => codec.encode(Json.prettyPrint(jsval)))
   }
 

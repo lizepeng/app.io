@@ -34,7 +34,15 @@ trait BasicPlayComponents {
 }
 
 trait DefaultPlayExecutor {
-  self: BasicPlayComponents =>
+
+  def actorSystem: ActorSystem
 
   implicit def defaultContext: ExecutionContext = actorSystem.dispatcher
+}
+
+trait ConfiguredExecutor {
+
+  def actorSystem: ActorSystem
+
+  def lookupExecutionContext(id: String): ExecutionContext = actorSystem.dispatchers.lookup(id)
 }
