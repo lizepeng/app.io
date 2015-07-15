@@ -241,7 +241,7 @@ class Groups(
 
 }
 
-case class InternalGroupsCode(code: Int) {
+case class InternalGroupsCode(code: Int) extends AnyVal {
 
   def contains(gid: Int) = gid >= 0 && gid <= 18 && exists(gid)
 
