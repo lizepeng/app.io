@@ -161,6 +161,10 @@ object User
 
   case class Credentials(id: UUID, salt: String)
 
+  val idReads    = JsonReads.idReads
+  val nameReads  = JsonReads.nameReads
+  val emailReads = JsonReads.emailReads
+
   implicit val jsonWrites = new Writes[User] {
     override def writes(o: User): JsValue = Json.obj(
       "id" -> o.id,

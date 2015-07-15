@@ -66,7 +66,7 @@ case class Directory(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
     if (path.filename.nonEmpty)
-      Future.failed(models.cfs.Directory.NotDirectory(path))
+      Future.failed(Directory.NotDirectory(path))
     else find(path.parts).flatMap {
       case (n, i) => cfs._directories.find(i)(
         _.copy(name = n, path = path)

@@ -74,9 +74,9 @@ class PasswordResetCtrl(
           mailService.schedule("noreply", tmpl, u, "link" -> id)
           Ok(html.password_reset.sent())
         }.recover {
-          case e: models.User.NotFound          =>
+          case e: User.NotFound          =>
             onError(emailFM, "email.not.found")
-          case e: models.EmailTemplate.NotFound =>
+          case e: EmailTemplate.NotFound =>
             Logger.warn(e.reason)
             onError(emailFM, "email.not.found")
         }
@@ -99,7 +99,7 @@ class PasswordResetCtrl(
         else
           Ok(html.password_reset.show(id)(resetFM))
       }.recover {
-        case e: models.ExpirableLink.NotFound =>
+        case e: ExpirableLink.NotFound =>
           onError(emailFM, "invalid.reset.link")
       }
     }
@@ -126,7 +126,7 @@ class PasswordResetCtrl(
             AlertLevel.Info -> message("password.changed")
           )
         }.recover {
-          case e: models.ExpirableLink.NotFound =>
+          case e: ExpirableLink.NotFound =>
             onError(emailFM, "invalid.reset.link")
         }
       )
@@ -135,8 +135,8 @@ class PasswordResetCtrl(
   private lazy val mailer = for {
     uid <- System.UUID("user.id")
     usr <- _users.find(uid).recoverWith {
-      case e: models.User.NotFound => _users.save(
-        models.User(
+      case e: User.NotFound => _users.save(
+        User(
           id = uid,
           name = basicName,
           email = s"$basicName@$domain"
@@ -153,7 +153,7 @@ class PasswordResetCtrl(
       user <- mailer
       tmpl <- _emailTemplates.find(uuid, messages.lang)
         .recoverWith {
-        case e: models.EmailTemplate.NotFound =>
+        case e: EmailTemplate.NotFound =>
           _emailTemplates.save(
             _emailTemplates.build(
               uuid, Lang.defaultLang,

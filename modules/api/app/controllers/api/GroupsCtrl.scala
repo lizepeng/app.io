@@ -127,9 +127,9 @@ class GroupsCtrl(
   def addUser(id: UUID) =
     PermCheck(_.Save).async { implicit req =>
       BodyIsJsObject { obj =>
-        obj.validate[UUID]((__ \ 'id).read[UUID]).map(_users.find)
+        obj.validate[UUID](User.idReads).map(_users.find)
           .orElse(
-            obj.validate[String]((__ \ 'email).read[String]).map(_users.find)
+            obj.validate[String](User.emailReads).map(_users.find)
           ).map {
           _.flatMap { user =>
             if (user.groups.contains(id)) Future.successful {
@@ -146,7 +146,7 @@ class GroupsCtrl(
             success => success
           )
           .recover {
-          case e: models.User.NotFound => NotFound(JsonMessage(e))
+          case e: User.NotFound => NotFound(JsonMessage(e))
         }
       }
     }

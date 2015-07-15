@@ -53,8 +53,8 @@ class SessionsCtrl(
     form.fold(
       failure => Future.successful(BadRequest(html.account.login(failure))),
       success => _users.auth(success.email, success.password).recover {
-        case e: models.User.NotFound      => Logger.warn(e.reason); throw models.User.AuthFailed()
-        case e: models.User.WrongPassword => Logger.warn(e.reason); throw models.User.AuthFailed()
+        case e: User.NotFound      => Logger.warn(e.reason); throw User.AuthFailed()
+        case e: User.WrongPassword => Logger.warn(e.reason); throw User.AuthFailed()
       }.map { implicit user =>
         Redirect(routes.MyCtrl.dashboard()).createSession(success.remember_me)
       }.recover { case e: BaseException =>

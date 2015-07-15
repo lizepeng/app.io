@@ -78,7 +78,7 @@ class UsersCtrl(
               LOCATION -> routes.GroupsCtrl.show(saved.id).url
             )
         }.recover {
-          case e: models.User.EmailTaken => MethodNotAllowed(JsonMessage(e))
+          case e: User.EmailTaken => MethodNotAllowed(JsonMessage(e))
         }
       }
     }
@@ -87,10 +87,8 @@ class UsersCtrl(
 
   object UserInfo {
 
-    val name_reads  = (__ \ 'name).read[String](minLength[String](2) <~ maxLength[String](255))
-    val email_reads = (__ \ 'email).read[String](minLength[String](1) <~ maxLength[String](40) <~ email)
-
-    implicit val jsonReads: Reads[UserInfo] = (name_reads ~ email_reads)(UserInfo.apply _)
+    implicit val jsonReads: Reads[UserInfo] =
+      (User.nameReads ~ User.emailReads)(UserInfo.apply _)
   }
 
 }

@@ -123,7 +123,7 @@ class EmailTemplatesCtrl(
           )
         }
       result.recover {
-        case e: models.EmailTemplate.NotFound => Redirect {
+        case e: EmailTemplate.NotFound => Redirect {
           routes.EmailTemplatesCtrl.nnew()
         }
       }
@@ -160,7 +160,7 @@ class EmailTemplatesCtrl(
               }
             case None    => Future.successful(BadRequest)
           }.recover {
-            case e: models.EmailTemplate.UpdatedByOther => Redirect {
+            case e: EmailTemplate.UpdatedByOther => Redirect {
               routes.EmailTemplatesCtrl.edit(id, lang)
             }
           }

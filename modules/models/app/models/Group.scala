@@ -114,16 +114,16 @@ object Group
 
   }
 
-  val id_reads          = (__ \ 'id).read[UUID]
-  val name_reads        = (__ \ 'name).read[String](minLength[String](2) <~ maxLength[String](255))
-  val description_reads = (__ \ 'description).readNullable[String]
-  val is_internal_reads = (__ \ 'is_internal).read[Boolean]
+  val idReads          = JsonReads.idReads
+  val nameReads        = JsonReads.nameReads
+  val descriptionReads = (__ \ 'description).readNullable[String]
+  val isInternalReads  = (__ \ 'is_internal).read[Boolean]
 
   implicit val jsonWrites = Json.writes[Group]
-  implicit val jsonReads  = (id_reads ~
-    name_reads ~
-    description_reads ~
-    is_internal_reads ~
+  implicit val jsonReads  = (idReads ~
+    nameReads ~
+    descriptionReads ~
+    isInternalReads ~
     ExtReads.always(DateTime.now)
     )(Group.apply _)
 }
