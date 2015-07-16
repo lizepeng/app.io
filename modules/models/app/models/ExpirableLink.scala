@@ -60,6 +60,8 @@ class ExpirableLinks(
   with CassandraComponents
   with Logging {
 
+  create.ifNotExists.future()
+
   def find(id: String): Future[ExpirableLink] =
     CQL {
       select.where(_.id eqs id)
