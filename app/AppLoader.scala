@@ -10,6 +10,7 @@ import play.api.ApplicationLoader.Context
 import play.api.Logger
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.i18n._
+import play.api.inject.{NewInstanceInjector, SimpleInjector}
 import play.api.mvc._
 import play.filters.gzip.GzipFilter
 import router.Routes
@@ -188,4 +189,12 @@ class Components(context: Context)
   ).onSuccess {
     case _ => play.api.Logger.info("System has started")
   }
+
+  // temporary workaround until issue #4614 in play framework is fixed. See https://github.com/playframework/playframework/issues/4614
+  override lazy val injector =
+    new SimpleInjector(NewInstanceInjector) +
+      router.asInstanceOf[play.api.routing.Router] +
+      crypto +
+      httpConfiguration +
+      actorSystem
 }
