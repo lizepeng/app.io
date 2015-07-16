@@ -3,6 +3,7 @@ import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import helpers._
 import messages.ChatActor
 import models._
+import models.actors.ModelsGuide
 import models.cassandra.ClosableCassandraManager
 import models.cfs._
 import models.sys.SysConfigs
@@ -65,6 +66,7 @@ class Components(context: Context)
   implicit val _persons                = new Persons
   implicit val _emailTemplates         = new EmailTemplates
   implicit val _emailTemplateHistories = new EmailTemplateHistories
+  implicit val _chatHistories          = new ChatHistories
 
   // Error Handler
   val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
@@ -177,6 +179,9 @@ class Components(context: Context)
       }
     }
   )
+
+  //Start Actors
+  actorSystem.actorOf(ModelsGuide.props, ModelsGuide.basicName)
 
   ChatActor.startRegion(actorSystem)
 

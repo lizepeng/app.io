@@ -1,34 +1,31 @@
 package messages
 
-import java.util.UUID
-
 import akka.actor._
 import akka.contrib.pattern.{ClusterSharding, ShardRegion}
 import akka.persistence.PersistentActor
 import akka.routing._
+import models._
+import models.actors.ModelsGuide
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 object ChatActor {
 
-  val shardName: String = "ChatActor"
+  val shardName: String = "chat_actors"
 
   def props: Props = Props(classOf[ChatActor])
 
-  sealed trait Command {def uid: UUID}
+  case class Connect(socket: ActorRef)
 
-  case class Connect(uid: UUID, socket: ActorRef) extends Command
-
-  case class Message(uid: UUID, text: String, from: UUID) extends Command
+  case object Ready
 
   val idExtractor: ShardRegion.IdExtractor = {
-    case cmd: Command =>
-      (cmd.uid.toString, cmd)
+    case env@Envelope(uid, _) => (uid.toString, env)
   }
 
   val shardResolver: ShardRegion.ShardResolver = {
-    case cmd: Command =>
-      (math.abs(cmd.uid.hashCode) % 20000).toString
+    case Envelope(uid, _) => (math.abs(uid.hashCode) % 20000).toString
   }
 
   def startRegion(system: ActorSystem) = {
@@ -45,38 +42,83 @@ object ChatActor {
   }
 }
 
-class ChatActor extends PersistentActor {
+class ChatActor
+  extends PersistentActor
+  with ActorLogging {
 
   import ShardRegion.Passivate
 
   override def persistenceId: String =
-    self.path.parent.name + "-" + self.path.name
+    s"${self.path.parent.name}-${self.path.name}"
 
   var sockets = Router(BroadcastRoutingLogic(), Vector())
 
-  override def receiveCommand: Receive = {
-    case ChatActor.Connect(_, a) =>
-      context watch a
-      sockets = sockets.addRoutee(a)
-      if (sockets.routees.isEmpty)
-        context.setReceiveTimeout(Duration.Undefined)
+  var _chatHistories: Option[ChatHistories] = None
 
-    case msg@ChatActor.Message(_, text, from) =>
-      sockets.route(msg, sender())
+  val receiveTimeout = 2 minute
+
+  val modelsGuide = context.actorSelection(ModelsGuide.actorPath)
+
+  override def preStart() = {
+    modelsGuide ! ChatHistory.basicName
+    super.preStart()
+  }
+
+  def receiveCommand: Receive = {
+
+    case Envelope(_, c: ChatActor.Connect) =>
+      connect(c.socket)
+
+    case ch: ChatHistories =>
+      _chatHistories = Some(ch)
+      context become readyCommand
+      log.info("ready.")
+      sockets.route(ChatActor.Ready, self)
+      trySetReceiveTimeout()
+  }
+
+  def readyCommand: Receive = {
+
+    case Envelope(_, c: ChatActor.Connect) =>
+      connect(c.socket)
+      c.socket ! ChatActor.Ready
+
+    case Envelope(_, msg: ChatMessage) =>
+      _chatHistories.foreach { ch =>
+        ch.save(msg)
+        sockets.route(msg, sender())
+      }
 
     case Terminated(a) =>
       context unwatch a
       sockets = sockets.removeRoutee(a)
-      if (sockets.routees.isEmpty)
-        context.setReceiveTimeout(2.minutes)
+      log.debug(s"${a.path} disconnected.")
+      trySetReceiveTimeout()
   }
 
-  override def receiveRecover: Receive = Actor.emptyBehavior
+  private def connect(socket: ActorRef): Unit = {
+    context watch socket
+    sockets = sockets.addRoutee(socket)
+    context.setReceiveTimeout(Duration.Undefined)
+    log.debug(s"${socket.path} connected.")
+  }
+
+  private def trySetReceiveTimeout(): Unit = {
+    if (sockets.routees.isEmpty) {
+      log.debug(s"no connected sockets, passivate after $receiveTimeout.")
+      context.setReceiveTimeout(receiveTimeout)
+    }
+  }
+
+  def receiveRecover: Receive = Actor.emptyBehavior
 
   override def unhandled(msg: Any): Unit = msg match {
     case ReceiveTimeout =>
-      if (sockets.routees.isEmpty)
+      if (sockets.routees.isEmpty) {
+        _chatHistories = None
         context.parent ! Passivate(stopMessage = PoisonPill)
+        log.debug("passivate")
+      }
     case _              =>
       super.unhandled(msg)
   }

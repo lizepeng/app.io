@@ -3,12 +3,14 @@ package actors
 import java.util.UUID
 
 import akka.actor._
-import messages.ChatActor
+import messages.{ChatActor, Envelope}
+import models.ChatMessage
+import org.joda.time.DateTime
 import play.api.i18n.Messages
 import play.api.libs.json._
 import play.api.mvc.WebSocket.FrameFormatter
 
-import scala.language.implicitConversions
+import scala.language.{implicitConversions, postfixOps}
 import scala.util.{Success, Try}
 
 /**
@@ -36,15 +38,21 @@ class ChatWebSocket(out: ActorRef, uid: UUID) extends Actor {
 
   val chatActor = ChatActor.getRegion(context.system)
 
-  override def preStart() = {
-    chatActor ! ChatActor.Connect(uid, self)
+  chatActor ! Envelope(uid, ChatActor.Connect(self))
+
+  def receive: Receive = {
+
+    case ChatActor.Ready =>
+      context become ready
   }
 
-  def receive = {
-    case Success(ChatWebSocket.Send(to, text)) =>
-      chatActor ! ChatActor.Message(to, text, uid)
+  def ready: Receive = {
 
-    case ChatActor.Message(_, text, from) =>
+    case Success(ChatWebSocket.Send(to, text)) =>
+      if (text.nonEmpty)
+        chatActor ! Envelope(to, ChatMessage(to, uid, text, DateTime.now))
+
+    case ChatMessage(_, from, text, _) =>
       out ! ChatWebSocket.Received(from, text)
   }
 }

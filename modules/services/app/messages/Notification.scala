@@ -4,37 +4,23 @@ import akka.actor._
 import akka.contrib.pattern.DistributedPubSubExtension
 import akka.contrib.pattern.DistributedPubSubMediator._
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 object Notification {
 
-  def props(name: String): Props = Props(classOf[Notification], name)
-
-  case class Publish(msg: String)
-
-  case class Connect(socket: ActorRef)
-
-  case class Message(from: String, text: String)
-
+  def props: Props = Props(classOf[Notification])
 }
 
-class Notification(name: String) extends Actor {
+class Notification extends Actor {
 
   val mediator = DistributedPubSubExtension(context.system).mediator
-  val topic    = "chatroom"
-  mediator ! Subscribe(topic, self)
-  mediator ! Put(self)
 
-  var socket: ActorRef = null
+  val topic = "chatroom"
 
-  def receive = {
-    case Notification.Connect(sc) =>
-      socket = sc
+  context.system.scheduler.schedule(0 second, 10 seconds) {
+    mediator ! Publish(topic, "welcome to the chatroom!")
+  }(context.system.dispatcher)
 
-    case Notification.Publish(msg) =>
-      mediator ! Publish(topic, Notification.Message(name, msg))
-
-    case msg@Notification.Message(from, text) =>
-      val direction = if (sender == self) ">>>>" else s"<< $from:"
-      println(s"$name $direction $text")
-      socket ! msg
-  }
+  def receive = Actor.emptyBehavior
 }
