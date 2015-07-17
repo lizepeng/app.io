@@ -1,7 +1,7 @@
 import batches.ReIndexInternalGroups
 import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import helpers._
-import messages.ChatActor
+import messages.{ChatActor, MailActor}
 import models._
 import models.actors.ModelsGuide
 import models.cassandra.ClosableCassandraManager
@@ -67,6 +67,8 @@ class Components(context: Context)
   implicit val _emailTemplates         = new EmailTemplates
   implicit val _emailTemplateHistories = new EmailTemplateHistories
   implicit val _chatHistories          = new ChatHistories
+  implicit val _mailInbox              = new MailInbox
+  implicit val _mailSent               = new MailSent
 
   // Error Handler
   val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
@@ -183,6 +185,8 @@ class Components(context: Context)
   //Start Actors
   actorSystem.actorOf(ModelsGuide.props, ModelsGuide.basicName)
 
+  //Start Actor ShardRegion
+  MailActor.startRegion(actorSystem)
   ChatActor.startRegion(actorSystem)
 
   //Start System

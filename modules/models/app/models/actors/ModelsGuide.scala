@@ -12,15 +12,17 @@ object ModelsGuide extends CanonicalNamedActor {
 
   def props(
     implicit
-    _chatHistories: ChatHistories
-  ): Props = Props(
-    new ModelsGuide
-  )
+    _chatHistories: ChatHistories,
+    _mailInbox: MailInbox,
+    _mailSent: MailSent
+  ): Props = Props(new ModelsGuide)
 }
 
 class ModelsGuide(
   implicit
-  val _chatHistories: ChatHistories
+  val _chatHistories: ChatHistories,
+  val _mailInbox: MailInbox,
+  val _mailSent: MailSent
 )
   extends Actor
   with ActorLogging {
@@ -31,5 +33,7 @@ class ModelsGuide(
 
   def receive = {
     case ChatHistory.basicName => sender ! _chatHistories
+    case MailInbox.basicName   => sender ! _mailInbox
+    case MailSent.basicName    => sender ! _mailSent
   }
 }

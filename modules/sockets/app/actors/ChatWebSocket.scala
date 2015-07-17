@@ -3,9 +3,8 @@ package actors
 import java.util.UUID
 
 import akka.actor._
-import messages.{ChatActor, Envelope}
-import models.ChatMessage
-import org.joda.time.DateTime
+import messages._
+import models._
 import play.api.i18n.Messages
 import play.api.libs.json._
 import play.api.mvc.WebSocket.FrameFormatter
@@ -38,19 +37,17 @@ class ChatWebSocket(out: ActorRef, uid: UUID) extends Actor {
 
   val chatActor = ChatActor.getRegion(context.system)
 
-  chatActor ! Envelope(uid, ChatActor.Connect(self))
+  chatActor ! Envelope(uid, UserActor.Connect(self))
 
   def receive: Receive = {
-
-    case ChatActor.Ready =>
-      context become ready
+    case UserActor.Ready => context become ready
   }
 
   def ready: Receive = {
 
     case Success(ChatWebSocket.Send(to, text)) =>
       if (text.nonEmpty)
-        chatActor ! Envelope(to, ChatMessage(to, uid, text, DateTime.now))
+        chatActor ! Envelope(to, ChatMessage(to, uid, text))
 
     case ChatMessage(_, from, text, _) =>
       out ! ChatWebSocket.Received(from, text)

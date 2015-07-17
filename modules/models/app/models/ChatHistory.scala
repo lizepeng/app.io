@@ -16,7 +16,7 @@ case class ChatMessage(
   to: UUID,
   from: UUID,
   text: String,
-  sent_at: DateTime
+  sent_at: Option[DateTime] = None
 ) extends MessageLike
 
 trait ChatHistoryCanonicalNamed extends CanonicalNamed {
@@ -50,7 +50,7 @@ sealed class ChatHistoryTable
     val p1 = participant1_id(r)
     val p2 = participant2_id(r)
     val s = sender(r)
-    ChatMessage(s, if (s != p1) p1 else p2, text(r), sent_at(r))
+    ChatMessage(s, if (s != p1) p1 else p2, text(r), Some(sent_at(r)))
   }
 }
 
@@ -78,7 +78,7 @@ class ChatHistories(
         .value(_.participant2_id, p2)
         .value(_.sender, msg.from)
         .value(_.text, msg.text)
-        .value(_.sent_at, msg.sent_at)
+        .value(_.sent_at, DateTime.now)
     }.future()
   }
 
