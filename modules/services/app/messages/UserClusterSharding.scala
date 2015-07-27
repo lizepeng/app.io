@@ -4,7 +4,7 @@ import akka.actor._
 import akka.contrib.pattern.{ClusterSharding, ShardRegion}
 import akka.persistence.PersistentActor
 import akka.routing.{BroadcastRoutingLogic, Router}
-import models.actors.ModelsGuide
+import models.actors.ResourcesMediator
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -59,7 +59,7 @@ abstract class UserActor
 
   protected val receiveTimeout = 2 minute
 
-  protected val modelsGuide = context.actorSelection(ModelsGuide.actorPath)
+  protected val mediator = context.actorSelection(ResourcesMediator.actorPath)
 
   protected var sockets = Router(BroadcastRoutingLogic(), Vector())
 

@@ -17,7 +17,7 @@ class ChatActor extends UserActor {
   var _chatHistories: ChatHistories = _
 
   override def preStart() = {
-    modelsGuide ! ChatHistory.basicName
+    mediator ! ChatHistory.basicName
     super.preStart()
   }
 

@@ -3,7 +3,7 @@ import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import helpers._
 import messages.{ChatActor, MailActor}
 import models._
-import models.actors.ModelsGuide
+import models.actors.ResourcesMediator
 import models.cassandra.ClosableCassandraManager
 import models.cfs._
 import models.sys.SysConfigs
@@ -183,7 +183,7 @@ class Components(context: Context)
   )
 
   //Start Actors
-  actorSystem.actorOf(ModelsGuide.props, ModelsGuide.basicName)
+  actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
 
   //Start Actor ShardRegion
   MailActor.startRegion(actorSystem)

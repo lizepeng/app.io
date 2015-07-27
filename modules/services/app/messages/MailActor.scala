@@ -18,8 +18,8 @@ class MailActor extends UserActor {
   var _mailSent : MailSent  = _
 
   override def preStart() = {
-    modelsGuide ! MailInbox.basicName
-    modelsGuide ! MailSent.basicName
+    mediator ! MailInbox.basicName
+    mediator ! MailSent.basicName
     super.preStart()
   }
 
