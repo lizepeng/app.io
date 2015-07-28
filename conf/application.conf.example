@@ -116,12 +116,24 @@ akka {
     gossip-interval = 1s
   }
 
-  persistence.journal.leveldb.dir = "target/journal"
-  persistence.snapshot-store.local.dir = "target/snapshots"
+  ## Since we're using our own cassandra plugins
+  # persistence.journal.leveldb.dir = "target/journal"
+  # persistence.snapshot-store.local.dir = "target/snapshots"
+
+  persistence.journal.plugin = "cassandra-journal"
+  persistence.snapshot-store.plugin = "cassandra-snapshot-store"
 
   contrib.cluster.sharding {
     handoff-timeout = 60 s
   }
+}
+
+cassandra-journal {
+  class = "plugins.akka.persistence.CassandraJournal"
+}
+
+cassandra-snapshot-store {
+  class = "plugins.akka.persistence.CassandraSnapshotStore"
 }
 
 mimetype {
