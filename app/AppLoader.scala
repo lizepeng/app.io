@@ -36,6 +36,9 @@ class Components(context: Context)
 
   play.api.Logger.configure(context.environment)
 
+  // Cassandra Connector
+  implicit val cassandraManager = new ClosableCassandraManager(applicationLifecycle)
+
   // Basic Play Api
   implicit val basicPlayApi = BasicPlayApi(
     langs, messagesApi, configuration, applicationLifecycle, actorSystem
@@ -45,9 +48,6 @@ class Components(context: Context)
   implicit val bandwidth   = new BandwidthService(basicPlayApi)
   implicit val mailService = new MailService(basicPlayApi)
   implicit val es          = new ElasticSearch(basicPlayApi)
-
-  // Cassandra Connector
-  implicit val cassandraManager = new ClosableCassandraManager(basicPlayApi)
 
   // Models
   implicit val _sysConfig      = new SysConfigs

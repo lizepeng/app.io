@@ -37,7 +37,7 @@ class ResourcesMediator(
   with ActorLogging {
 
   override def preStart() = {
-    log.info("started")
+    log.info("Started")
   }
 
   def receive = {

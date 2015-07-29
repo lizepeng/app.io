@@ -28,6 +28,7 @@
   <logger name="org.elasticsearch" level="ERROR" />
   <logger name="com.datastax.driver" level="ERROR" />
   <logger name="com.websudos.phantom" level="ERROR" />
+  <logger name="akka" level="WARN" />
 
   <logger name="controllers" level="TRACE" />
   <logger name="controllers.api" level="TRACE" />

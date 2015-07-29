@@ -31,10 +31,10 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
 
   var snapshots: Snapshots = _
 
-  context become awaitingCassandra
+  context become awaitingResources
   mediator ! ResourcesMediator.ModelRequired
 
-  def awaitingCassandra: Actor.Receive = {
+  def awaitingResources: Actor.Receive = {
     case (bpa: BasicPlayApi, cm: CassandraManager) =>
       snapshots = new Snapshots(bpa, cm)
       unstashAll()

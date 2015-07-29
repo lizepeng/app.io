@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 
 import com.websudos.phantom.connectors.DefaultCassandraManager
 import helpers._
+import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.Future
 
@@ -12,12 +13,11 @@ import scala.concurrent.Future
  */
 
 class ClosableCassandraManager(
-  val basicPlayApi: BasicPlayApi
+  val applicationLifecycle: ApplicationLifecycle
 )
   extends DefaultCassandraManager(
     Set(new InetSocketAddress("localhost", 9042))
   )
-  with BasicPlayComponents
   with Logging {
 
   applicationLifecycle.addStopHook { () =>

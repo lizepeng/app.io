@@ -107,7 +107,8 @@ akka {
   }
 
   log-config-on-start = "off"
-  loglevel=ERROR
+  loggers = ["akka.event.slf4j.Slf4jLogger"]
+  loglevel = "DEBUG"
 
   extensions = ["akka.contrib.pattern.DistributedPubSubExtension"]
 

@@ -31,10 +31,10 @@ class CassandraJournal extends AsyncWriteJournal with Stash {
   var journal   : Journal    = _
   var journalExt: JournalExt = _
 
-  context become awaitingCassandra
+  context become awaitingResources
   mediator ! ResourcesMediator.ModelRequired
 
-  def awaitingCassandra: Actor.Receive = {
+  def awaitingResources: Actor.Receive = {
     case (bpa: BasicPlayApi, cm: CassandraManager) =>
       journal = new Journal(bpa, cm)
       journalExt = new JournalExt(bpa, cm)
