@@ -23,8 +23,7 @@ class MailActor extends UserActor {
     super.preStart()
   }
 
-  def receiveCommand: Receive = {
-
+  def awaitingResources: Receive = {
     case mi: MailInbox =>
       _mailInbox = mi
       tryToBecomeReady()
@@ -32,25 +31,18 @@ class MailActor extends UserActor {
     case ms: MailSent =>
       _mailSent = ms
       tryToBecomeReady()
+
+    case msg => stash()
   }
 
-  def readyCommand: Receive = {
-
+  override def receiveCommand: Receive = super.receiveCommand orElse {
     case Envelope(uid, mail: Mail) =>
       _mailInbox.save(uid, mail)
       _mailSent.save(mail)
       sockets.route(mail, sender())
   }
 
-  def releaseResources(): Unit = {
-    _mailInbox = null
-    _mailSent = null
-  }
-
   def tryToBecomeReady(): Unit = {
-    if (_mailInbox != null && _mailSent != null) {
-      becomeReady()
-      context become readyCommand
-    }
+    if (_mailInbox != null && _mailSent != null) becomeReceive()
   }
 }

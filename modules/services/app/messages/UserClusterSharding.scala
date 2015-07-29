@@ -44,73 +44,66 @@ object UserActor {
 
   case class Connect(socket: ActorRef)
 
-  case object Ready
+  case object SetReceiveTimeout
 
 }
 
-abstract class UserActor
-  extends PersistentActor
-  with ActorLogging {
+abstract class UserActor extends PersistentActor with ActorLogging {
 
   import ShardRegion.Passivate
 
-  override def persistenceId: String =
-    s"${self.path.parent.name}-${self.path.name}"
+  val persistenceId  = s"${self.path.parent.name}-${self.path.name}"
+  val receiveTimeout = 2 minute
+  val mediator       = context.actorSelection(ResourcesMediator.actorPath)
 
-  protected val receiveTimeout = 2 minute
+  var sockets = Router(BroadcastRoutingLogic(), Vector())
 
-  protected val mediator = context.actorSelection(ResourcesMediator.actorPath)
+  context become awaitingResources
 
-  protected var sockets = Router(BroadcastRoutingLogic(), Vector())
+  def awaitingResources: Receive
 
-  private var isReady: Boolean = false
+  def receiveCommand: Receive = {
+    case Envelope(_, c: UserActor.Connect) =>
+      connect(c.socket)
+
+    case UserActor.SetReceiveTimeout =>
+      if (sockets.routees.isEmpty) {
+        log.debug(s"No connected sockets, passivate after $receiveTimeout.")
+        context.setReceiveTimeout(receiveTimeout)
+      }
+  }
 
   def receiveRecover: Receive = Actor.emptyBehavior
 
-  def releaseResources(): Unit
-
   override def unhandled(msg: Any): Unit = msg match {
-
-    case Envelope(_, c: UserActor.Connect) =>
-      connect(c.socket)
-      if (isReady) c.socket ! UserActor.Ready
 
     case Terminated(a) =>
       context unwatch a
       sockets = sockets.removeRoutee(a)
-      log.debug(s"${a.path} disconnected.")
-      trySetReceiveTimeout()
+      log.debug(s"Socket ${a.path} disconnected.")
+      self ! UserActor.SetReceiveTimeout
 
     case ReceiveTimeout =>
       if (sockets.routees.isEmpty) {
-        isReady = false
-        releaseResources()
         context.parent ! Passivate(stopMessage = PoisonPill)
-        log.debug("passivate!")
+        log.debug("Passivate!")
       }
 
     case _ =>
       super.unhandled(msg)
   }
 
-  def trySetReceiveTimeout(): Unit = {
-    if (sockets.routees.isEmpty) {
-      log.debug(s"no connected sockets, passivate after $receiveTimeout.")
-      context.setReceiveTimeout(receiveTimeout)
-    }
-  }
-
   def connect(a: ActorRef): Unit = {
     sockets = sockets.addRoutee(a)
     context watch a
     context.setReceiveTimeout(Duration.Undefined)
-    log.debug(s"${a.path} connected.")
+    log.debug(s"Socket ${a.path} connected.")
   }
 
-  def becomeReady(): Unit = {
-    isReady = true
-    log.info("ready.")
-    sockets.route(UserActor.Ready, self)
-    trySetReceiveTimeout()
+  def becomeReceive(): Unit = {
+    log.debug("Ready.")
+    self ! UserActor.SetReceiveTimeout
+    unstashAll()
+    context become receive
   }
 }

@@ -21,22 +21,17 @@ class ChatActor extends UserActor {
     super.preStart()
   }
 
-  def receiveCommand: Receive = {
-
+  def awaitingResources: Receive = {
     case ch: ChatHistories =>
       _chatHistories = ch
-      becomeReady()
-      context become readyCommand
+      becomeReceive()
+
+    case msg => stash()
   }
 
-  def readyCommand: Receive = {
-
+  override def receiveCommand: Receive = super.receiveCommand orElse {
     case Envelope(_, msg: ChatMessage) =>
       _chatHistories.save(msg)
       sockets.route(msg, sender())
-  }
-
-  def releaseResources(): Unit = {
-    _chatHistories = null
   }
 }

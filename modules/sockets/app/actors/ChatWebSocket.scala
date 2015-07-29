@@ -40,10 +40,6 @@ class ChatWebSocket(out: ActorRef, uid: UUID) extends Actor {
   chatActor ! Envelope(uid, UserActor.Connect(self))
 
   def receive: Receive = {
-    case UserActor.Ready => context become ready
-  }
-
-  def ready: Receive = {
 
     case Success(ChatWebSocket.Send(to, text)) =>
       if (text.nonEmpty)
