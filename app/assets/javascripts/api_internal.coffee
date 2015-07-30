@@ -3,10 +3,10 @@
 # -------------------------------------------------------- #
 
 angular.module 'api_internal', [
-  'api_internal.group',
-  'api_internal.user',
-  'api_internal.access_control',
-  'api_internal.cfs',
+  'api_internal.group'
+  'api_internal.user'
+  'api_internal.access_control'
+  'api_internal.cfs'
   'api_internal.helper'
 ]
 
