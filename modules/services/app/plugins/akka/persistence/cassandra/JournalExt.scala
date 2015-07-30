@@ -37,7 +37,7 @@ class JournalExt(
   with CassandraComponents
   with Logging {
 
-  create.ifNotExists.future()
+  def createIfNotExists(): Future[ResultSet] = create.ifNotExists.future()
 
   //Highest
 

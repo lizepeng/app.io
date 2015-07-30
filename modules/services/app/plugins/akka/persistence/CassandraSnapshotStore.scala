@@ -3,6 +3,7 @@ package plugins.akka.persistence
 import java.nio.ByteBuffer
 
 import akka.actor.{Actor, Stash}
+import akka.pattern.pipe
 import akka.persistence._
 import akka.persistence.serialization.Snapshot
 import akka.persistence.snapshot.SnapshotStore
@@ -37,6 +38,11 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
   def awaitingResources: Actor.Receive = {
     case (bpa: BasicPlayApi, cm: CassandraManager) =>
       snapshots = new Snapshots(bpa, cm)
+      (for {
+        _ <- snapshots.createIfNotExists()
+      } yield "ResourcesReady") pipeTo self
+
+    case "ResourcesReady" =>
       unstashAll()
       context become receive
 

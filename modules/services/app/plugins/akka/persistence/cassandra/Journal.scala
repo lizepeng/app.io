@@ -55,9 +55,9 @@ class Journal(
   with CassandraComponents
   with Logging {
 
-  create.ifNotExists.future()
-
   import JournalRecord._
+
+  def createIfNotExists(): Future[ResultSet] = create.ifNotExists.future()
 
   def save(
     messages: TraversableOnce[(Key, ByteBuffer)]

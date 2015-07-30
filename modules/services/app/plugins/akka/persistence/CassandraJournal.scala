@@ -3,6 +3,7 @@ package plugins.akka.persistence
 import java.nio.ByteBuffer
 
 import akka.actor.{Actor, Stash}
+import akka.pattern.pipe
 import akka.persistence._
 import akka.persistence.journal.AsyncWriteJournal
 import akka.serialization.SerializationExtension
@@ -38,6 +39,12 @@ class CassandraJournal extends AsyncWriteJournal with Stash {
     case (bpa: BasicPlayApi, cm: CassandraManager) =>
       journal = new Journal(bpa, cm)
       journalExt = new JournalExt(bpa, cm)
+      (for {
+        _ <- journal.createIfNotExists()
+        _ <- journalExt.createIfNotExists()
+      } yield "ResourcesReady") pipeTo self
+
+    case "ResourcesReady" =>
       unstashAll()
       context become receive
 
