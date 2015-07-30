@@ -2,8 +2,8 @@ this.views ?= {}
 this.views.groups ?= {}
 
 views.groups.show = angular.module('group.users.list', [
-  'internal_api.group'
-  'internal_api.helper'
+  'api_internal.group'
+  'api_internal.helper'
   'ui.parts'
 ])
 
@@ -63,7 +63,7 @@ views.groups.show.factory 'GroupUsersList', [
     $scope.GroupUsersList = GroupUsersList
 
     $scope.getUserEmails = (val) ->
-      $http.get '/internal_api/users', params : q : "*#{val}*"
+      $http.get '/api_internal/users', params : q : "*#{val}*"
       .then(
         (resp) ->
           resp.data.map (u) -> u.email)

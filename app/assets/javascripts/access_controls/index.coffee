@@ -4,10 +4,10 @@ this.views.access_controls ?= {}
 views.access_controls.index = angular.module 'access_controls.list', [
   'ui.bootstrap'
   'ui.parts'
-  'internal_api.access_control'
-  'internal_api.group'
-  'internal_api.user'
-  'internal_api.helper'
+  'api_internal.access_control'
+  'api_internal.group'
+  'api_internal.user'
+  'api_internal.helper'
 ]
 
 views.access_controls.index.factory 'ACList', [
@@ -115,7 +115,7 @@ views.access_controls.index.factory 'ACList', [
 
     $scope.getItems = (val) ->
       $http.get(
-        '/internal_api/search'
+        '/api_internal/search'
         params:
           types : types.join ','
           q     : "*#{val}*")

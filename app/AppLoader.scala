@@ -74,24 +74,24 @@ class Components(context: Context)
   val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
 
   // Internal Api Permission Checking
-  implicit val internalApiPermCheckRequired =
-    controllers.internal_api.PermCheckRequired(_users, _accessControls, _rateLimits)
+  implicit val apiInternalPermCheckRequired =
+    controllers.api_internal.PermCheckRequired(_users, _accessControls, _rateLimits)
 
   // Internal Api Controllers
-  val internalApiSearchCtrl         = new controllers.internal_api.SearchCtrl
-  val internalApiGroupsCtrl         = new controllers.internal_api.GroupsCtrl
-  val internalApiUsersCtrl          = new controllers.internal_api.UsersCtrl
-  val internalApiAccessControlsCtrl = new controllers.internal_api.AccessControlsCtrl
-  val internalApiFileSystemCtrl     = new controllers.internal_api.FileSystemCtrl
+  val apiInternalSearchCtrl         = new controllers.api_internal.SearchCtrl
+  val apiInternalGroupsCtrl         = new controllers.api_internal.GroupsCtrl
+  val apiInternalUsersCtrl          = new controllers.api_internal.UsersCtrl
+  val apiInternalAccessControlsCtrl = new controllers.api_internal.AccessControlsCtrl
+  val apiInternalFileSystemCtrl     = new controllers.api_internal.FileSystemCtrl
 
   // Internal Api Router
-  val internalApiRouter = new internal_api.Routes(
+  val apiInternalRouter = new api_internal.Routes(
     errorHandler,
-    internalApiSearchCtrl,
-    internalApiGroupsCtrl,
-    internalApiUsersCtrl,
-    internalApiAccessControlsCtrl,
-    internalApiFileSystemCtrl
+    apiInternalSearchCtrl,
+    apiInternalGroupsCtrl,
+    apiInternalUsersCtrl,
+    apiInternalAccessControlsCtrl,
+    apiInternalFileSystemCtrl
   )
 
   // Sockets Controllers
@@ -108,15 +108,15 @@ class Components(context: Context)
     messagesApi,
     Seq(
       controllers.AccessControlsCtrl,
-      controllers.internal_api.AccessControlsCtrl,
+      controllers.api_internal.AccessControlsCtrl,
       controllers.UsersCtrl,
-      controllers.internal_api.UsersCtrl,
+      controllers.api_internal.UsersCtrl,
       controllers.GroupsCtrl,
-      controllers.internal_api.GroupsCtrl,
+      controllers.api_internal.GroupsCtrl,
       controllers.FileSystemCtrl,
-      controllers.internal_api.FileSystemCtrl,
+      controllers.api_internal.FileSystemCtrl,
       controllers.EmailTemplatesCtrl,
-      controllers.internal_api.SearchCtrl
+      controllers.api_internal.SearchCtrl
     )
   )
 
@@ -139,7 +139,7 @@ class Components(context: Context)
   // Root Router
   lazy val router: Routes = new Routes(
     errorHandler,
-    internalApiRouter,
+    apiInternalRouter,
     socketsRouter,
     applicationCtrl,
     chatCtrl,

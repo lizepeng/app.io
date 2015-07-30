@@ -1,6 +1,6 @@
 Common.settings
 
-name := s"${Common.appName}.internal_api"
+name := s"${Common.appName}.api_internal"
 
 scalacOptions += "-feature"
 

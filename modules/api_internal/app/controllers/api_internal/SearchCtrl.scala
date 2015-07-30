@@ -1,4 +1,4 @@
-package controllers.internal_api
+package controllers.api_internal
 
 import elasticsearch._
 import helpers._

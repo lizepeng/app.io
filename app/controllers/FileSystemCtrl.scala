@@ -1,6 +1,6 @@
 package controllers
 
-import controllers.internal_api.Secured
+import controllers.api_internal.Secured
 import helpers._
 import models.cfs._
 import play.api.i18n._

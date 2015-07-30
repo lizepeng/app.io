@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.internal_api.Secured
+import controllers.api_internal.Secured
 import helpers._
 import models._
 import org.joda.time.DateTime

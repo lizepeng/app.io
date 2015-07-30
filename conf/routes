@@ -3,7 +3,7 @@
 # ~~~~
 
 # API routes
-->   /internal_api                          internal_api.Routes
+->   /api_internal                          api_internal.Routes
 ->   /sockets                               sockets.Routes
 
 # Home page

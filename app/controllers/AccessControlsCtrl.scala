@@ -1,6 +1,6 @@
 package controllers
 
-import controllers.internal_api.Secured
+import controllers.api_internal.Secured
 import elasticsearch.ElasticSearch
 import helpers._
 import models._

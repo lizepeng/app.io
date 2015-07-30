@@ -1,0 +1,31 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET    /search                           controllers.api_internal.SearchCtrl.index(types:Seq[String],q:Option[String],p:Pager?=Pager.first)
+
+GET    /groups                           controllers.api_internal.GroupsCtrl.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
+POST   /groups                           controllers.api_internal.GroupsCtrl.create
+GET    /groups/:id                       controllers.api_internal.GroupsCtrl.show(id:UUID)
+POST   /groups/:id                       controllers.api_internal.GroupsCtrl.save(id:UUID)
+DELETE /groups/:id                       controllers.api_internal.GroupsCtrl.destroy(id:UUID)
+GET    /groups/:id/users                 controllers.api_internal.GroupsCtrl.users(id:UUID,p:Pager?=Pager.first)
+POST   /groups/:id/users                 controllers.api_internal.GroupsCtrl.addUser(id:UUID)
+DELETE /groups/:id/users/:uid            controllers.api_internal.GroupsCtrl.delUser(id:UUID, uid:UUID)
+
+GET    /users                            controllers.api_internal.UsersCtrl.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
+POST   /users                            controllers.api_internal.UsersCtrl.create
+GET    /users/:id/groups                 controllers.api_internal.UsersCtrl.groups(id:UUID,options:Option[String])
+
+GET    /access_controls                  controllers.api_internal.AccessControlsCtrl.index(q:Option[String],p:Pager?=Pager.first)
+POST   /access_controls                  controllers.api_internal.AccessControlsCtrl.create
+GET    /access_controls/:prin/:res/:act  controllers.api_internal.AccessControlsCtrl.show(prin:UUID,res,act)
+POST   /access_controls/:prin/:res/:act  controllers.api_internal.AccessControlsCtrl.save(prin:UUID,res,act)
+DELETE /access_controls/:prin/:res/:act  controllers.api_internal.AccessControlsCtrl.destroy(prin:UUID,res,act)
+
+GET    /cfs/stream/$path<.*>             controllers.api_internal.FileSystemCtrl.stream(path:Path)
+GET    /cfs/download/$path<.*>           controllers.api_internal.FileSystemCtrl.download(path:Path,inline:Boolean?=false)
+GET    /cfs/list/$path<.*>               controllers.api_internal.FileSystemCtrl.index(path:Path,p:Pager?=Pager.first)
+GET    /cfs/$path<.*>                    controllers.api_internal.FileSystemCtrl.touch(path:Path)
+POST   /cfs/$path<.*>                    controllers.api_internal.FileSystemCtrl.create(path:Path)
+DELETE /cfs/$path<.*>                    controllers.api_internal.FileSystemCtrl.destroy(path:Path)

@@ -23,13 +23,13 @@ class ErrorHandler(
     message: String
   ) = {
     if (statusCode == play.api.http.Status.BAD_REQUEST) {
-      if (request.uri.startsWith("/internal_api")) {
+      if (request.uri.startsWith("/api_internal")) {
         Future.successful(Results.NotFound)
       }
     }
 
     if (statusCode == play.api.http.Status.NOT_FOUND) {
-      if (request.uri.startsWith("/internal_api")) {
+      if (request.uri.startsWith("/api_internal")) {
         Future.successful(Results.NotFound)
       }
     }
