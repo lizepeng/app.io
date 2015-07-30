@@ -8,28 +8,39 @@ LessKeys.compress in Assets := true
 
 pipelineStages := Seq(uglify, gzip)
 
-lazy val models   = (project in file("modules/models"))
-                    .enablePlugins(PlayScala)
+lazy val models =
+  (project in file("modules/models"))
+    .enablePlugins(PlayScala)
 
-lazy val security = (project in file("modules/security"))
-                    .enablePlugins(PlayScala)
-                    .dependsOn(models).aggregate(models)
+lazy val security =
+  (project in file("modules/security"))
+    .enablePlugins(PlayScala)
+    .dependsOn(models)
+    .aggregate(models)
 
-lazy val services = (project in file("modules/services"))
-                    .enablePlugins(PlayScala)
-                    .dependsOn(models).aggregate(models)
+lazy val services =
+  (project in file("modules/services"))
+    .enablePlugins(PlayScala)
+    .dependsOn(models)
+    .aggregate(models)
 
-lazy val api      = (project in file("modules/api"))
-                    .enablePlugins(PlayScala)
-                    .dependsOn(security, services).aggregate(security, services)
+lazy val internal_api =
+  (project in file("modules/internal_api"))
+    .enablePlugins(PlayScala)
+    .dependsOn(security, services)
+    .aggregate(security, services)
 
-lazy val sockets  = (project in file("modules/sockets"))
-                    .enablePlugins(PlayScala)
-                    .dependsOn(security, services).aggregate(security, services)
+lazy val sockets =
+  (project in file("modules/sockets"))
+    .enablePlugins(PlayScala)
+    .dependsOn(security, services)
+    .aggregate(security, services)
 
-lazy val root     = (project in file("."))
-                    .enablePlugins(PlayScala)
-                    .dependsOn(api, sockets).aggregate(api, sockets)
+lazy val root =
+  (project in file("."))
+    .enablePlugins(PlayScala)
+    .dependsOn(internal_api, sockets)
+    .aggregate(internal_api, sockets)
 
 routesGenerator := InjectedRoutesGenerator
 

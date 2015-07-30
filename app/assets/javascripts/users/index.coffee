@@ -3,8 +3,8 @@ this.views.users ?= {}
 
 views.users.index = angular.module 'users.list', [
   'ui.bootstrap'
-  'api.user'
-  'api.helper'
+  'internal_api.user'
+  'internal_api.helper'
   'ui.parts'
 ]
 

@@ -63,7 +63,7 @@ implicit req: UserRequest[_], messages: Messages)
               <td ng-if="!inode.is_directory">
                 <div class="btn-toolbar pull-right">
                   <div class="btn-group">
-                    <a ng-href="{{jsRoutes.controllers.api.FileSystemCtrl.download(inode.path).url}}">
+                    <a ng-href="{{jsRoutes.controllers.internal_api.FileSystemCtrl.download(inode.path).url}}">
                       <i class="fa fa-download fa-lg"></i>
                     </a>
                   </div>
@@ -84,7 +84,7 @@ implicit req: UserRequest[_], messages: Messages)
   </div>
 
   <div class="row">
-    <div flow-init="{target: '@api.routes.FileSystemCtrl.create(path)'}"
+    <div flow-init="{target: '@internal_api.routes.FileSystemCtrl.create(path)'}"
          flow-files-submitted="$flow.upload()"
          flow-file-success="$file.msg = $message"
          class="pull-right">
@@ -101,7 +101,7 @@ implicit req: UserRequest[_], messages: Messages)
   libs.webjars("js", "ng-flow"),
   libs.webjars("js", "xeditable"),
   libs.assets("js", "utility"),
-  libs.assets("js", "api"),
+  libs.assets("js", "internal_api"),
   libs.assets("js", "ui.parts"),
   libs.assets("js", "files/index"),
   jsRoutes,
@@ -112,8 +112,8 @@ implicit req: UserRequest[_], messages: Messages)
   @helper.javascriptRouter("jsRoutes")(
     routes.javascript.FileSystemCtrl.index,
     routes.javascript.FileSystemCtrl.show,
-    api.routes.javascript.FileSystemCtrl.download,
-    api.routes.javascript.FileSystemCtrl.destroy
+    internal_api.routes.javascript.FileSystemCtrl.download,
+    internal_api.routes.javascript.FileSystemCtrl.destroy
   )
 }
 

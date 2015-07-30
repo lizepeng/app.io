@@ -1,4 +1,4 @@
-package controllers.api
+package controllers.internal_api
 
 import helpers._
 import play.api.mvc.Call

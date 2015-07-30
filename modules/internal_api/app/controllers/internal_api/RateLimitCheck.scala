@@ -1,4 +1,4 @@
-package controllers.api
+package controllers.internal_api
 
 import helpers._
 import models.RateLimits
@@ -29,7 +29,7 @@ case class RateLimitCheck(
 
   override val basicName = "rate_limit"
 
-  val limit = config.getInt("limit").getOrElse(50)
+  val limit = config.getInt("limit").getOrElse(500)
   val span  = config.getInt("span").getOrElse(15)
 
   override def invokeBlock[A](

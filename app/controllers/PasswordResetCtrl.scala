@@ -1,7 +1,7 @@
 package controllers
 
 import controllers.UsersCtrl.{Password, Rules}
-import controllers.api.Secured
+import controllers.internal_api.Secured
 import helpers._
 import models._
 import models.sys.{SysConfig, SysConfigs}

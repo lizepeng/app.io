@@ -2,7 +2,7 @@ package controllers
 
 import java.util.UUID
 
-import controllers.api.Secured
+import controllers.internal_api.Secured
 import helpers._
 import models._
 import play.api.data.Forms._

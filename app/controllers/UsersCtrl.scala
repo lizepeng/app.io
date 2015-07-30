@@ -3,7 +3,7 @@ package controllers
 import java.util.UUID
 
 import controllers.UsersCtrl.{Password, Rules}
-import controllers.api.Secured
+import controllers.internal_api.Secured
 import elasticsearch.ElasticSearch
 import helpers._
 import models._

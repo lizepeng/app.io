@@ -14,7 +14,7 @@ import scala.language.implicitConversions
 /**
  * @author zepeng.li@gmail.com
  */
-package object api {
+package object internal_api {
 
   /**
    * `Writable` also Pretty Print for `JsValue` values - Json

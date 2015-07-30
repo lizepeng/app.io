@@ -3,8 +3,8 @@ this.views.files ?= {}
 
 views.files.index = angular.module 'files.list', [
   'xeditable'
-  'api.cfs'
-  'api.helper'
+  'internal_api.cfs'
+  'internal_api.helper'
   'ui.parts'
 ]
 

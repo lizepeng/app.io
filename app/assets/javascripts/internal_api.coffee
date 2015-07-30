@@ -1,16 +1,22 @@
 # -------------------------------------------------------- #
-# RESTful api client
+# RESTful internal api client
 # -------------------------------------------------------- #
 
-angular.module 'api', [ 'api.group', 'api.user', 'api.access_control' ]
+angular.module 'internal_api', [
+  'internal_api.group',
+  'internal_api.user',
+  'internal_api.access_control',
+  'internal_api.cfs',
+  'internal_api.helper'
+]
 
 # -------------------------------------------------------- #
 # Model Group
 # -------------------------------------------------------- #
-angular.module 'api.group', [ 'ngResource' ]
+angular.module 'internal_api.group', [ 'ngResource' ]
 
   .factory 'Group', [ '$resource', ($resource) ->
-    resource = $resource '/api/groups/:id/:relations/:uid', {
+    resource = $resource '/internal_api/groups/:id/:relations/:uid', {
         id        : '@id'
         relations : ''
         uid       : ''
@@ -46,10 +52,10 @@ angular.module 'api.group', [ 'ngResource' ]
 # -------------------------------------------------------- #
 # Model User
 # -------------------------------------------------------- #
-angular.module 'api.user', [ 'ngResource' ]
+angular.module 'internal_api.user', [ 'ngResource' ]
 
   .factory 'User', [ '$resource', ($resource) ->
-    resource = $resource '/api/users/:id/:relations', {
+    resource = $resource '/internal_api/users/:id/:relations', {
         id        : '@id'
         relations : ''
       }, {
@@ -79,10 +85,10 @@ angular.module 'api.user', [ 'ngResource' ]
 # -------------------------------------------------------- #
 # Model AccessControl
 # -------------------------------------------------------- #
-angular.module 'api.access_control', [ 'ngResource' ]
+angular.module 'internal_api.access_control', [ 'ngResource' ]
 
   .factory 'AccessControl', [ '$resource', ($resource) ->
-    resource = $resource '/api/access_controls/:principal/:resource/:action'
+    resource = $resource '/internal_api/access_controls/:principal/:resource/:action'
 
     resource.gids = (acs) ->
       _.chain acs
@@ -104,16 +110,16 @@ angular.module 'api.access_control', [ 'ngResource' ]
 # -------------------------------------------------------- #
 # Model CFS
 # -------------------------------------------------------- #
-angular.module 'api.cfs', []
+angular.module 'internal_api.cfs', []
 
   .factory 'CFS', [ '$http', ($http) ->
     resource = {}
 
     resource.find = (path) ->
-      $http.get "/api/cfs/list/#{path.encode()}"
+      $http.get "/internal_api/cfs/list/#{path.encode()}"
 
     resource.delete = (path) ->
-      $http.delete "/api/cfs/#{path.encode()}"
+      $http.delete "/internal_api/cfs/#{path.encode()}"
 
     return resource
   ]
@@ -121,7 +127,7 @@ angular.module 'api.cfs', []
 # -------------------------------------------------------- #
 # Helpers
 # -------------------------------------------------------- #
-angular.module 'api.helper', []
+angular.module 'internal_api.helper', []
 
   #
   # Helper to display json error message

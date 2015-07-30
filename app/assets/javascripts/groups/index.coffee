@@ -3,8 +3,8 @@ this.views.groups ?= {}
 
 views.groups.index = angular.module 'groups.list', [
   'xeditable'
-  'api.group'
-  'api.helper'
+  'internal_api.group'
+  'internal_api.helper'
   'ui.parts'
 ]
 

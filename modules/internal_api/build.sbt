@@ -1,12 +1,13 @@
 Common.settings
 
-name := s"${Common.appName}.api"
+name := s"${Common.appName}.internal_api"
 
 scalacOptions += "-feature"
 
 routesGenerator := InjectedRoutesGenerator
 
 routesImport ++= Seq(
+  "helpers.ExtBindable._",
   "helpers.Pager",
   "java.util.UUID",
   "models.cfs._",

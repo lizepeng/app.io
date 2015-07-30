@@ -20,13 +20,13 @@ implicit req: UserRequest[_], messages: Messages)
   </div>
 }()(
   libs.webjars("js", "angular-resource"),
-  libs.assets("js", "api"),
+  libs.assets("js", "internal_api"),
   controller
 )
 
 @controller = {
   <script>
-    angular.module('users.show', ['ui.bootstrap', 'api.user'])
+    angular.module('users.show', ['ui.bootstrap', 'internal_api.user'])
       .controller('InfoCtrl',
         ['$scope', '$attrs', 'User',
         function ($scope, $attrs, User) {

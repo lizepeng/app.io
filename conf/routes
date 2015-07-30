@@ -3,7 +3,7 @@
 # ~~~~
 
 # API routes
-->   /api                                   api.Routes
+->   /internal_api                          internal_api.Routes
 ->   /sockets                               sockets.Routes
 
 # Home page
@@ -52,7 +52,7 @@ POST /email_templates/new                   controllers.EmailTemplatesCtrl.creat
 GET  /email_templates/edit/:id              controllers.EmailTemplatesCtrl.edit(id:UUID,lang:Lang)
 GET  /email_templates/show/:id              controllers.EmailTemplatesCtrl.show(id:UUID,lang:Lang,updated_at:Option[DateTime]?=None)
 POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(id:UUID,lang:Lang)
-GET  /email_templates/hisotry/:id           controllers.EmailTemplatesCtrl.history(id:UUID,lang:Lang,p:Pager?=Pager.first)
+GET  /email_templates/history/:id           controllers.EmailTemplatesCtrl.history(id:UUID,lang:Lang,p:Pager?=Pager.first)
 POST /email_templates/destroy/:id           controllers.EmailTemplatesCtrl.destroy(id:UUID,lang:Lang)
 
 GET  /access_controls                       controllers.AccessControlsCtrl.index(p:Pager?=Pager.first)
