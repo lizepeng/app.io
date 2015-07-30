@@ -12,14 +12,14 @@ import scala.util.Failure
 /**
  * @author zepeng.li@gmail.com
  */
-trait AuthorizedBodyParser[A]
+trait AuthenticatedBodyParser[A]
   extends BodyParser[A]
   with BasicPlayComponents
   with DefaultPlayExecutor
-  with Session
+  with Authentication
   with Logging {
 
-  def onUnauthorized: RequestHeader => Result
+  def onUnauthenticated: RequestHeader => Result
 
   def onBaseException: RequestHeader => Result
 
@@ -27,15 +27,15 @@ trait AuthorizedBodyParser[A]
 
   override def apply(req: RequestHeader): Iteratee[Array[Byte], Either[Result, A]] = {
     Iteratee.flatten {
-      req.user.flatMap {
+      pam(_users)(req).flatMap {
         user => invokeParser(req)(user)
       }.andThen {
         case Failure(e: BaseException) => Logger.trace(e.reason)
       }.recover {
         case e: User.NoCredentials =>
-          parse.error(Future.successful(onUnauthorized(req)))
+          parse.error(Future.successful(onUnauthenticated(req)))
         case e: User.SaltNotMatch  =>
-          parse.error(Future.successful(onUnauthorized(req)))
+          parse.error(Future.successful(onUnauthenticated(req)))
         case e: BaseException      =>
           parse.error(Future.successful(onBaseException(req)))
       }.map(_.apply(req))

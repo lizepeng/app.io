@@ -10,7 +10,7 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 trait PermissionCheckedBodyParser[A]
-  extends AuthorizedBodyParser[A] with PermissionCheck {
+  extends AuthenticatedBodyParser[A] with PermissionCheck {
 
   def onPermDenied: RequestHeader => Result
 

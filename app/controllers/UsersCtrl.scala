@@ -29,12 +29,12 @@ class UsersCtrl(
 )
   extends Secured(UsersCtrl)
   with Controller
+  with security.Session
   with BasicPlayComponents
   with InternalGroupsComponents
   with PermCheckComponents
   with DefaultPlayExecutor
-  with I18nSupport
-  with security.Session {
+  with I18nSupport {
 
   val signUpFM = Form[SignUpFD](
     mapping(

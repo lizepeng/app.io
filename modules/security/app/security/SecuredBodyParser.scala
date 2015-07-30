@@ -11,7 +11,7 @@ import scala.concurrent.Future
  */
 case class SecuredBodyParser[A](
   action: (CheckedActions) => CheckedAction,
-  onUnauthorized: RequestHeader => Result = req => Results.NotFound,
+  onUnauthenticated: RequestHeader => Result = req => Results.NotFound,
   onPermDenied: RequestHeader => Result = req => Results.NotFound,
   onBaseException: RequestHeader => Result = req => Results.NotFound
 )(bodyParser: RequestHeader => User => Future[BodyParser[A]])(
@@ -25,4 +25,6 @@ case class SecuredBodyParser[A](
   override def parser(req: RequestHeader)(
     implicit user: User
   ): Future[BodyParser[A]] = bodyParser(req)(user)
+
+  override def pam: PAM = AuthenticateBySession()
 }

@@ -245,9 +245,9 @@ log.models.access_controls.groups.perm.denied    = Denied:    [Groups, {0}, {1},
 log.models.expirable_links.not.found             =Expirable Link {0} not found.
 
 # security
-msg.security.unauthorized                        =Authorization Failed.
+msg.security.unauthenticated                     =Authentication Failed.
 
-log.security.unauthorized                        =Authorization Failed.
+log.security.unauthenticated                     =Authentication Failed.
 
 # search
 controllers.internal_api.search.name             =Internal API: Search Engine

@@ -250,7 +250,7 @@ class FileSystemCtrl(
 
   def CFSBodyParser(
     path: Path,
-    onUnauthorized: RequestHeader => Result = AuthCheck.onUnauthorized,
+    onUnauthenticated: RequestHeader => Result = AuthCheck.onUnauthenticated,
     onPermDenied: RequestHeader => Result = req => NotFound,
     onPathNotFound: RequestHeader => Result = req => NotFound,
     onFilePermDenied: RequestHeader => Result = req => NotFound,
@@ -266,7 +266,7 @@ class FileSystemCtrl(
 
     SecuredBodyParser(
       _.Create,
-      onUnauthorized,
+      onUnauthenticated,
       onPermDenied,
       onBaseException
     ) {

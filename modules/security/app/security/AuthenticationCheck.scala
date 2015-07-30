@@ -7,7 +7,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-trait AuthorizationCheck
+trait AuthenticationCheck
   extends ActionRefiner[MaybeUserRequest, UserRequest] {
 
   /**
@@ -16,14 +16,14 @@ trait AuthorizationCheck
    * @param req
    * @return
    */
-  def onUnauthorized(req: RequestHeader): Result = throw Unauthorized()
+  def onUnauthenticated(req: RequestHeader): Result = throw Unauthenticated()
 
   override protected def refine[A](
     req: MaybeUserRequest[A]
   ): Future[Either[Result, UserRequest[A]]] = {
     Future.successful {
       req.maybeUser match {
-        case None    => Left(onUnauthorized(req.inner))
+        case None    => Left(onUnauthenticated(req.inner))
         case Some(u) => Right(UserRequest[A](u, req.inner))
       }
     }

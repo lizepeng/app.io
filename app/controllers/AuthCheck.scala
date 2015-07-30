@@ -6,8 +6,8 @@ import security._
 /**
  * @author zepeng.li@gmail.com
  */
-object AuthCheck extends AuthorizationCheck {
+object AuthCheck extends AuthenticationCheck {
 
-  override def onUnauthorized(req: RequestHeader) =
+  override def onUnauthenticated(req: RequestHeader) =
     Results.Redirect(routes.SessionsCtrl.nnew())
 }
