@@ -1,7 +1,6 @@
-package controllers.api_internal
+package security
 
 import helpers._
-import security._
 
 /**
  * @author zepeng.li@gmail.com

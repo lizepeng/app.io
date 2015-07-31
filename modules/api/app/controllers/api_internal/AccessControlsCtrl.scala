@@ -9,6 +9,8 @@ import play.api.i18n._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
+import protocols._
+import security._
 
 /**
  * @author zepeng.li@gmail.com

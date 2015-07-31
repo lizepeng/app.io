@@ -6,6 +6,8 @@ import models._
 import play.api.i18n._
 import play.api.libs.json.Json
 import play.api.mvc.Controller
+import protocols._
+import security._
 
 import scala.concurrent.Future
 
@@ -28,7 +30,7 @@ class SearchCtrl(
   with I18nSupport {
 
   def index(types: Seq[String], q: Option[String], p: Pager) =
-    PermCheck(_.Index).async { implicit req =>
+    PermCheck(_.Index, rateLimit = 2000).async { implicit req =>
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {

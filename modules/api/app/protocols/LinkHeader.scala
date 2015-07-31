@@ -1,4 +1,4 @@
-package controllers.api_internal
+package protocols
 
 import helpers._
 import play.api.mvc.Call
@@ -31,12 +31,4 @@ trait LinkHeader extends AppConfig with ExHeaders {
 
     LINK -> (next ++ prev).mkString(",")
   }
-}
-
-trait ExHeaders {
-
-  val LINK                   = "Link"
-  val X_RATE_LIMIT_LIMIT     = "X-Rate-Limit-Limit"
-  val X_RATE_LIMIT_REMAINING = "X-Rate-Limit-Remaining"
-  val X_RATE_LIMIT_RESET     = "X-Rate-Limit-Reset"
 }

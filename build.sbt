@@ -24,14 +24,8 @@ lazy val services =
     .dependsOn(models)
     .aggregate(models)
 
-lazy val api_internal =
-  (project in file("modules/api_internal"))
-    .enablePlugins(PlayScala)
-    .dependsOn(security, services)
-    .aggregate(security, services)
-
-lazy val sockets =
-  (project in file("modules/sockets"))
+lazy val api =
+  (project in file("modules/api"))
     .enablePlugins(PlayScala)
     .dependsOn(security, services)
     .aggregate(security, services)
@@ -39,8 +33,8 @@ lazy val sockets =
 lazy val root =
   (project in file("."))
     .enablePlugins(PlayScala)
-    .dependsOn(api_internal, sockets)
-    .aggregate(api_internal, sockets)
+    .dependsOn(api)
+    .aggregate(api)
 
 routesGenerator := InjectedRoutesGenerator
 

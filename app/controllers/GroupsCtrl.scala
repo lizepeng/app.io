@@ -2,13 +2,13 @@ package controllers
 
 import java.util.UUID
 
-import controllers.api_internal.Secured
 import helpers._
 import models._
 import play.api.data.Forms._
 import play.api.i18n._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
+import security._
 import views._
 
 import scala.concurrent.Future

@@ -1,12 +1,11 @@
 package controllers
 
-import controllers.api_internal.Secured
 import elasticsearch.ElasticSearch
 import helpers._
 import models._
 import play.api.i18n._
 import play.api.mvc.Controller
-import security.CheckedActions
+import security._
 import views._
 
 import scala.concurrent.{ExecutionContext, Future}

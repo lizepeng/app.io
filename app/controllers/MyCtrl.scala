@@ -1,7 +1,6 @@
 package controllers
 
 import controllers.UsersCtrl.{Password, Rules}
-import controllers.api_internal.Secured
 import elasticsearch.ElasticSearch
 import helpers._
 import models._

@@ -1,5 +1,6 @@
 package controllers.api_internal
 
+import controllers.RateLimitCheck
 import helpers.BasicPlayApi
 import models._
 import play.api.mvc._
@@ -32,7 +33,9 @@ object PermCheck {
   def apply(
     action: CheckedActions => CheckedAction,
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
-    = (_, _, _) => Results.NotFound
+    = (_, _, _) => Results.NotFound,
+    rateLimit: Int = 500,
+    rateLimitSpan: Int = 15
   )(
     implicit
     resource: CheckedResource,
@@ -43,7 +46,7 @@ object PermCheck {
   ): ActionBuilder[UserRequest] =
     MaybeUserAction() andThen
       AuthCheck andThen
-      RateLimitCheck() andThen
+      RateLimitCheck(rateLimit, rateLimitSpan) andThen
       PermissionChecker(action, onDenied, resource)
 }
 

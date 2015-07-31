@@ -1,10 +1,11 @@
-package controllers.api_internal
+package controllers
 
 import helpers._
 import models.RateLimits
 import org.joda.time.DateTime
 import play.api.i18n.I18nSupport
 import play.api.mvc._
+import protocols.ExHeaders
 import protocols.JsonProtocol._
 import security._
 
@@ -14,6 +15,9 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class RateLimitCheck(
+  limit: Int = 500,
+  span: Int = 15
+)(
   implicit
   val resource: CheckedResource,
   val basicPlayApi: BasicPlayApi,
@@ -28,9 +32,6 @@ case class RateLimitCheck(
   with AppConfig {
 
   override val basicName = "rate_limit"
-
-  val limit = config.getInt("limit").getOrElse(500)
-  val span  = config.getInt("span").getOrElse(15)
 
   override def invokeBlock[A](
     req: UserRequest[A],
