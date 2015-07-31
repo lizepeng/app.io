@@ -11,6 +11,8 @@ import scala.language.higherKinds
  * @author zepeng.li@gmail.com
  */
 case class MaybeUserAction(
+  pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
+)(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _users: Users
@@ -21,7 +23,7 @@ case class MaybeUserAction(
   with DefaultPlayExecutor
   with Authentication {
 
-  def pam: PAM = AuthenticateBySession()
+  def pam: PAM = pamBuilder(basicPlayApi)
 
   def transform[A](req: Request[A]): Future[MaybeUserRequest[A]] = {
     pam(_users)(req).map(Some(_)).recover {

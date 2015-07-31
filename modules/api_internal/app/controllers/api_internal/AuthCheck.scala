@@ -8,5 +8,5 @@ import security._
  */
 object AuthCheck extends AuthenticationCheck {
 
-  override def onUnauthenticated(req: RequestHeader) = Results.NotFound
+  override def onUnauthorized(req: RequestHeader) = Results.NotFound
 }

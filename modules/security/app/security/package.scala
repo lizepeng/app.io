@@ -12,10 +12,10 @@ package object security {
    * May be caused by [[User.SaltNotMatch]] or [[User.NoCredentials]]
    *
    * @see [[AuthenticateBySession.apply]]
-   * @see [[AuthenticationCheck.onUnauthenticated]]
+   * @see [[AuthenticationCheck.onUnauthorized]]
    */
-  case class Unauthenticated()
-    extends BaseException("security.unauthenticated")
+  case class Unauthorized()
+    extends BaseException("security.unauthorized")
 
   case class CheckedAction(name: String) extends AnyVal
 

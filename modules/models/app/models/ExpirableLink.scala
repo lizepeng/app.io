@@ -5,6 +5,7 @@ import com.websudos.phantom.dsl._
 import helpers.ExtCrypto._
 import helpers._
 import models.cassandra._
+import org.joda.time.DateTime
 
 import scala.concurrent.Future
 
@@ -73,7 +74,7 @@ class ExpirableLinks(
   def nnew(module: String)(
     implicit user: User
   ): Future[ExpirableLink] = {
-    val id = Crypto.sha2(user.salt, 512)
+    val id = Crypto.sha2(s"${user.id.toString}--${DateTime.now}", 512)
     CQL {
       insert.value(_.id, id)
         .value(_.user_id, user.id)

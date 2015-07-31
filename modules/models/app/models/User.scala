@@ -103,6 +103,9 @@ sealed abstract class UserTable
   object external_groups
     extends SetColumn[UserTable, User, UUID](this)
 
+  object access_token
+    extends StringColumn(this)
+
   object updated_at
     extends DateTimeColumn(this)
 
@@ -125,6 +128,9 @@ object User
 
   case class SaltNotMatch(id: UUID)
     extends BaseException(error_code("salt.not.match"))
+
+  case class AccessTokenNotMatch(id: UUID)
+    extends BaseException(error_code("access_token.not.match"))
 
   case class AuthFailed()
     extends BaseException(error_code("auth.failed"))
@@ -158,8 +164,6 @@ object User
     ) extends AC.Granted[UUID](action, resource, basicName)
 
   }
-
-  case class Credentials(id: UUID, salt: String)
 
   val idReads    = JsonReads.idReads
   val nameReads  = JsonReads.nameReads
@@ -326,17 +330,8 @@ class Users(
   }
 
   ////////////////////////////////////////////////////////////////
-
-  /**
-   *
-   * @param cred credentials
-   * @return
-   */
-  def auth(cred: User.Credentials): Future[User] = {
-    find(cred.id).map { u =>
-      if (u.salt == cred.salt) u
-      else throw User.SaltNotMatch(cred.id)
-    }
+  def findAccessToken(id: UUID): Future[Option[String]] = {
+    CQL(select(_.access_token).where(_.id eqs id)).one()
   }
 
   def auth(email: String, passwd: String): Future[User] = {

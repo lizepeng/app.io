@@ -16,14 +16,14 @@ trait AuthenticationCheck
    * @param req
    * @return
    */
-  def onUnauthenticated(req: RequestHeader): Result = throw Unauthenticated()
+  def onUnauthorized(req: RequestHeader): Result = throw Unauthorized()
 
   override protected def refine[A](
     req: MaybeUserRequest[A]
   ): Future[Either[Result, UserRequest[A]]] = {
     Future.successful {
       req.maybeUser match {
-        case None    => Left(onUnauthenticated(req.inner))
+        case None    => Left(onUnauthorized(req.inner))
         case Some(u) => Right(UserRequest[A](u, req.inner))
       }
     }

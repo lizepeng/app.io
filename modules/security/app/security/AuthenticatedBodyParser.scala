@@ -19,7 +19,7 @@ trait AuthenticatedBodyParser[A]
   with Authentication
   with Logging {
 
-  def onUnauthenticated: RequestHeader => Result
+  def onUnauthorized: RequestHeader => Result
 
   def onBaseException: RequestHeader => Result
 
@@ -33,9 +33,9 @@ trait AuthenticatedBodyParser[A]
         case Failure(e: BaseException) => Logger.trace(e.reason)
       }.recover {
         case e: User.NoCredentials =>
-          parse.error(Future.successful(onUnauthenticated(req)))
+          parse.error(Future.successful(onUnauthorized(req)))
         case e: User.SaltNotMatch  =>
-          parse.error(Future.successful(onUnauthenticated(req)))
+          parse.error(Future.successful(onUnauthorized(req)))
         case e: BaseException      =>
           parse.error(Future.successful(onBaseException(req)))
       }.map(_.apply(req))

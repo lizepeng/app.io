@@ -11,9 +11,10 @@ import scala.concurrent.Future
  */
 case class SecuredBodyParser[A](
   action: (CheckedActions) => CheckedAction,
-  onUnauthenticated: RequestHeader => Result = req => Results.NotFound,
+  onUnauthorized: RequestHeader => Result = req => Results.NotFound,
   onPermDenied: RequestHeader => Result = req => Results.NotFound,
-  onBaseException: RequestHeader => Result = req => Results.NotFound
+  onBaseException: RequestHeader => Result = req => Results.NotFound,
+  pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
 )(bodyParser: RequestHeader => User => Future[BodyParser[A]])(
   implicit
   val resource: CheckedResource,
@@ -26,5 +27,5 @@ case class SecuredBodyParser[A](
     implicit user: User
   ): Future[BodyParser[A]] = bodyParser(req)(user)
 
-  override def pam: PAM = AuthenticateBySession()
+  override def pam: PAM = pamBuilder(basicPlayApi)
 }
