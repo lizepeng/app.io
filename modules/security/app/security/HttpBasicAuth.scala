@@ -29,7 +29,7 @@ object HttpBasicAuth {
     }
   }
 
-  def unauthorized(realm: String): Result = {
+  def onUnauthorized(realm: String): Result = {
     Results.Unauthorized.withHeaders(
       HeaderNames.WWW_AUTHENTICATE -> s"""Basic realm="$realm""""
     )

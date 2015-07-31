@@ -5,6 +5,7 @@
 # API routes
 ->   /api_internal                          api_internal.Routes
 ->   /sockets                               sockets.Routes
+->   /api_private                           api_private.Routes
 
 # Home page
 GET  /                                      controllers.Application.index

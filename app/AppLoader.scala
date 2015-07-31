@@ -103,6 +103,15 @@ class Components(context: Context)
     socketsChatCtrl
   )
 
+  // Private Api Controllers
+  val apiPrivatePingCtrl = new controllers.api_private.PingCtrl
+
+  // Private Api Router
+  val apiPrivateRouter = new api_private.Routes(
+    errorHandler,
+    apiPrivatePingCtrl
+  )
+
   // Register permission checkable controllers
   implicit val secured = new controllers.RegisteredSecured(
     messagesApi,
@@ -141,6 +150,7 @@ class Components(context: Context)
     errorHandler,
     apiInternalRouter,
     socketsRouter,
+    apiPrivateRouter,
     applicationCtrl,
     chatCtrl,
     new controllers.Assets(errorHandler),
