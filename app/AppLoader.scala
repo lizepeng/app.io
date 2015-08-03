@@ -36,6 +36,11 @@ class Components(context: Context)
 
   play.api.Logger.configure(context.environment)
 
+  // Prevent thread leaks in dev mode
+  applicationLifecycle.addStopHook(() => LeakedThreadsKiller.killScalaGlobalExecutionContext())
+  applicationLifecycle.addStopHook(() => LeakedThreadsKiller.killPlayInternalExecutionContext())
+  applicationLifecycle.addStopHook(() => LeakedThreadsKiller.killTimerInConcurrent())
+
   // Cassandra Connector
   implicit val cassandraManager = new ClosableCassandraManager(applicationLifecycle)
 

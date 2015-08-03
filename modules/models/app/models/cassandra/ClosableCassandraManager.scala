@@ -2,6 +2,7 @@ package models.cassandra
 
 import java.net.InetSocketAddress
 
+import com.websudos.phantom.Manager
 import com.websudos.phantom.connectors.DefaultCassandraManager
 import helpers._
 import play.api.inject.ApplicationLifecycle
@@ -21,10 +22,11 @@ class ClosableCassandraManager(
   with Logging {
 
   applicationLifecycle.addStopHook { () =>
-    Logger.info("Shutdown Cassandra Client")
+    Logger.info("Shutdown Cassandra Client.")
     Future.successful {
       session.close()
       cluster.close()
+      Manager.shutdown()
     }
   }
 }
