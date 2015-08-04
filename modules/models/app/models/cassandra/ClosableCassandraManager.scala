@@ -26,7 +26,7 @@ class ClosableCassandraManager(
     Future.successful {
       session.close()
       cluster.close()
-      Manager.shutdown()
+      //Manager.shutdown()
     }
   }
 }
