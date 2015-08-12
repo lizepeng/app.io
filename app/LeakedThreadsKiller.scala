@@ -20,8 +20,8 @@ object LeakedThreadsKiller extends CanonicalNamed with Logging {
    * @see [[scala.concurrent.impl.ExecutionContextImpl]]
    */
   def killScalaGlobalExecutionContext(): Future[Unit] = Future.successful {
-    val executorM = executorMirror(scala.concurrent.ExecutionContext.global)
-    val executor = executorM.apply().asInstanceOf[scala.concurrent.forkjoin.ForkJoinPool]
+//    val executorM = executorMirror(scala.concurrent.ExecutionContext.global)
+//    val executor = executorM.apply().asInstanceOf[scala.concurrent.forkjoin.ForkJoinPool]
 
 //    executor.shutdown()
 //    Logger.info("Kill Scala Global ExecutionContext.")

@@ -27,11 +27,16 @@ import scala.concurrent.Future
 class AppLoader extends play.api.ApplicationLoader {
 
   def load(context: Context) = {
-    new Components(context).application
+    new Components(context) {
+      def start(): Unit = {
+        startActors()
+        startSystem()
+      }
+    }.application
   }
 }
 
-class Components(context: Context)
+abstract class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
   with I18nComponents
   with NingWSComponents
@@ -203,21 +208,27 @@ class Components(context: Context)
     }
   )
 
-  //Start Actors
-  actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
+  start()
 
-  //Start Actor ShardRegion
-  MailActor.startRegion(actorSystem)
-  ChatActor.startRegion(actorSystem)
+  def start(): Unit
 
-  //Start System
-  Future.sequence(
-    Seq(
-      controllers.Layouts.init,
-      controllers.AccessControlsCtrl.initIfEmpty
-    )
-  ).onSuccess {
-    case _ => play.api.Logger.info("System has started")
+  def startActors(): Unit = {
+    actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
+
+    //Start Actor ShardRegion
+    MailActor.startRegion(actorSystem)
+    ChatActor.startRegion(actorSystem)
+  }
+
+  def startSystem(): Unit = {
+    Future.sequence(
+      Seq(
+        controllers.Layouts.init,
+        controllers.AccessControlsCtrl.initIfEmpty
+      )
+    ).onSuccess {
+      case _ => play.api.Logger.info("System has started")
+    }
   }
 
   // temporary workaround until issue #4614 in play framework is fixed. See https://github.com/playframework/playframework/issues/4614
