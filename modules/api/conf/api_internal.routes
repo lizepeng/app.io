@@ -3,6 +3,7 @@
 # ~~~~
 
 GET    /search                           controllers.api_internal.SearchCtrl.index(types:Seq[String],q:Option[String],p:Pager?=Pager.first)
+GET    /ip/search/:ip                    controllers.api_internal.IPCtrl.show(ip:String)
 
 GET    /groups                           controllers.api_internal.GroupsCtrl.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
 POST   /groups                           controllers.api_internal.GroupsCtrl.create

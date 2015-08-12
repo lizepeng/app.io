@@ -12,9 +12,11 @@ import play.api.Logger
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.i18n._
 import play.api.inject.{NewInstanceInjector, SimpleInjector}
+import play.api.libs.ws.ning.NingWSComponents
 import play.api.mvc._
 import play.filters.gzip.GzipFilter
 import router.Routes
+import services.web.ip_api.IPService
 import services.{BandwidthService, MailService}
 
 import scala.concurrent.Future
@@ -32,6 +34,7 @@ class AppLoader extends play.api.ApplicationLoader {
 class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
   with I18nComponents
+  with NingWSComponents
   with DefaultPlayExecutor {
 
   play.api.Logger.configure(context.environment)
@@ -53,6 +56,7 @@ class Components(context: Context)
   implicit val bandwidth   = new BandwidthService(basicPlayApi)
   implicit val mailService = new MailService(basicPlayApi)
   implicit val es          = new ElasticSearch(basicPlayApi)
+  implicit val ipService   = new IPService(basicPlayApi, wsClient)
 
   // Models
   implicit val _sysConfig      = new SysConfigs
@@ -84,6 +88,7 @@ class Components(context: Context)
 
   // Internal Api Controllers
   val apiInternalSearchCtrl         = new controllers.api_internal.SearchCtrl
+  val apiInternalIPCtrl             = new controllers.api_internal.IPCtrl
   val apiInternalGroupsCtrl         = new controllers.api_internal.GroupsCtrl
   val apiInternalUsersCtrl          = new controllers.api_internal.UsersCtrl
   val apiInternalAccessControlsCtrl = new controllers.api_internal.AccessControlsCtrl
@@ -93,6 +98,7 @@ class Components(context: Context)
   val apiInternalRouter = new api_internal.Routes(
     errorHandler,
     apiInternalSearchCtrl,
+    apiInternalIPCtrl,
     apiInternalGroupsCtrl,
     apiInternalUsersCtrl,
     apiInternalAccessControlsCtrl,
