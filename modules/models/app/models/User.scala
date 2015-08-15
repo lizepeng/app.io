@@ -195,7 +195,7 @@ class Users(
   with SysConfig
   with Logging {
 
-  val UserByEmail = new UserByEmail
+  val _usersByEmail = new UsersByEmail
 
   create.ifNotExists.future()
 
@@ -233,7 +233,7 @@ class Users(
   }
 
   def find(email: String): Future[User] = {
-    UserByEmail.find(email).flatMap { case (_, id) => find(id) }
+    _usersByEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
   def find(ids: TraversableOnce[UUID]): Future[Seq[User]] = CQL {
@@ -242,7 +242,7 @@ class Users(
   }.fetch()
 
   def checkEmail(email: String): Future[Boolean] = {
-    UserByEmail.cql_check(email).one().map {
+    _usersByEmail.cql_check(email).one().map {
       case None => true
       case _    => throw User.EmailTaken(email)
     }
@@ -256,7 +256,7 @@ class Users(
   def save(user: User): Future[User] = {
     val u = user.encryptPassword
     for {
-      done <- UserByEmail.save(u.email, u.id)
+      done <- _usersByEmail.save(u.email, u.id)
       user <- if (done) CQL {
         insert
           .value(_.id, u.id)
@@ -294,7 +294,7 @@ class Users(
     find(id).flatMap { user =>
       CQL {
         Batch.logged
-          .add(UserByEmail.cql_del(user.email))
+          .add(_usersByEmail.cql_del(user.email))
           .add(delete.where(_.id eqs id))
       }.future()
     }
@@ -342,8 +342,8 @@ class Users(
   }
 }
 
-sealed class UserByEmailIndex
-  extends CassandraTable[UserByEmailIndex, (String, UUID)] {
+sealed class UsersByEmailIndex
+  extends CassandraTable[UsersByEmailIndex, (String, UUID)] {
 
   override val tableName = "users_email_index"
 
@@ -356,13 +356,13 @@ sealed class UserByEmailIndex
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
 }
 
-class UserByEmail(
+class UsersByEmail(
   implicit
   val basicPlayApi: BasicPlayApi,
   val cassandraManager: CassandraManager
 )
-  extends UserByEmailIndex
-  with ExtCQL[UserByEmailIndex, (String, UUID)]
+  extends UsersByEmailIndex
+  with ExtCQL[UsersByEmailIndex, (String, UUID)]
   with BasicPlayComponents
   with CassandraComponents
   with Logging {

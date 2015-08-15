@@ -52,8 +52,9 @@ case class AddressInChina(
   city: String = "",
   street1: String = "",
   street2: String = "",
-  postal_code: String = ""
-) extends Address {val country = CountryCode.China}
+  postal_code: String = "",
+  country: CountryCode = CountryCode.China
+) extends Address
 
 object AddressInChina {
 
@@ -65,8 +66,9 @@ case class AddressInJapan(
   prefecture: String = "",
   country_city: String = "",
   further_divisions1: String = "",
-  further_divisions2: String = ""
-) extends Address {val country = CountryCode.Japan}
+  further_divisions2: String = "",
+  country: CountryCode = CountryCode.Japan
+) extends Address
 
 object AddressInJapan {
 
@@ -78,8 +80,9 @@ case class AddressInUnitedStates(
   street2: String = "",
   city: String = "",
   state: String = "",
-  zip: String = ""
-) extends Address {val country = CountryCode.UnitedStates}
+  zip: String = "",
+  country: CountryCode = CountryCode.UnitedStates
+) extends Address
 
 object AddressInUnitedStates {
 
