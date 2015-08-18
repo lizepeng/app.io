@@ -10,8 +10,9 @@ import scala.concurrent.Future
  */
 trait EntityTable[R] extends Indexable[R] {
   self: CassandraTable[_, R] =>
+}
+
+trait Indexable[R] extends CanonicalNamed {
 
   def isEmpty: Future[Boolean]
 }
-
-trait Indexable[R] extends CanonicalNamed
