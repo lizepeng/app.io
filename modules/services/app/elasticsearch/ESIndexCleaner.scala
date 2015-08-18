@@ -1,7 +1,7 @@
 package elasticsearch
 
 import helpers.Logging
-import models.cassandra.EntityTable
+import models.cassandra.Indexable
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
@@ -10,7 +10,7 @@ import scala.util.Success
  * @author zepeng.li@gmail.com
  */
 case class ESIndexCleaner(
-  tables: EntityTable[_]*
+  tables: Indexable[_]*
 )(implicit es: ElasticSearch, ec: ExecutionContext) extends Logging {
 
   def dropIndexIfEmpty: Future[Boolean] = {
