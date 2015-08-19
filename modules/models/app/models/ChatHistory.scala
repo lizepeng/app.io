@@ -60,7 +60,7 @@ object ChatHistory
 class ChatHistories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends ChatHistoryTable
   with ExtCQL[ChatHistoryTable, ChatMessage]

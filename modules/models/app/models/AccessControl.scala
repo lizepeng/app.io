@@ -114,7 +114,7 @@ object AccessControl
 class AccessControls(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends AccessControlTable
   with EntityTable[AccessControl]

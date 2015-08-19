@@ -189,7 +189,7 @@ object Directory extends CanonicalNamed with ExceptionDefining {
 class Directories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager,
+  val contactPoint: KeySpaceBuilder,
   val _inodes: INodes,
   val _files: Files
 )

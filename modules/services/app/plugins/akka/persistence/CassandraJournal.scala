@@ -8,9 +8,9 @@ import akka.persistence._
 import akka.persistence.journal.AsyncWriteJournal
 import akka.serialization.SerializationExtension
 import com.datastax.driver.core.utils.Bytes
-import com.websudos.phantom.connectors.CassandraManager
 import helpers._
 import models.actors.ResourcesMediator
+import models.cassandra.KeySpaceBuilder
 import play.api.libs.iteratee._
 import plugins.akka.persistence.cassandra._
 
@@ -36,9 +36,9 @@ class CassandraJournal extends AsyncWriteJournal with Stash {
   mediator ! ResourcesMediator.ModelRequired
 
   def awaitingResources: Actor.Receive = {
-    case (bpa: BasicPlayApi, cm: CassandraManager) =>
-      journal = new Journal(bpa, cm)
-      journalExt = new JournalExt(bpa, cm)
+    case (bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
+      journal = new Journal(bpa, cp)
+      journalExt = new JournalExt(bpa, cp)
       (for {
         _ <- journal.createIfNotExists()
         _ <- journalExt.createIfNotExists()

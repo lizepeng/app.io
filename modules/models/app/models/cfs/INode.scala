@@ -148,7 +148,7 @@ object INode extends INodeCanonicalNamed {
 class INodes(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends INodeTable
   with ExtCQL[INodeTable, Row]

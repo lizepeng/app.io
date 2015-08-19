@@ -100,7 +100,7 @@ object File extends CanonicalNamed with ExceptionDefining {
 class Files(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager,
+  val contactPoint: KeySpaceBuilder,
   val _blocks: Blocks,
   val _indirectBlocks: IndirectBlocks
 )

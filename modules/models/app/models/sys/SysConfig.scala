@@ -7,7 +7,7 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import helpers._
-import models.cassandra.{CassandraComponents, ExtCQL}
+import models.cassandra._
 
 import scala.concurrent.Future
 
@@ -92,7 +92,7 @@ object SysConfig {
 class SysConfigs(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends SysConfigTable
   with ExtCQL[SysConfigTable, SysConfigEntry]

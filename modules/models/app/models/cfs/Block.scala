@@ -7,7 +7,7 @@ import com.datastax.driver.core.utils.Bytes
 import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.dsl._
 import helpers.CanonicalNamed
-import models.cassandra.{CassandraComponents, NamedCassandraTable}
+import models.cassandra._
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
@@ -53,7 +53,7 @@ object Block extends BlockCanonicalNamed {
 
 class Blocks(
   implicit
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends BlockTable
   with CassandraComponents {

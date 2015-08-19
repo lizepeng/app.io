@@ -47,7 +47,7 @@ sealed class JournalTable
 
 class Journal(
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends JournalTable
   with ExtCQL[JournalTable, JournalRecord.Value]

@@ -126,7 +126,7 @@ object EmailTemplate
 class EmailTemplates(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends EmailTemplateTable
   with ExtCQL[EmailTemplateTable, ET]
@@ -252,7 +252,7 @@ object EmailTemplateHistory
 class EmailTemplateHistories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends EmailTemplateHistoryTable
   with ExtCQL[EmailTemplateHistoryTable, ETH]

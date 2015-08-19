@@ -54,7 +54,7 @@ sealed class SnapshotTable
 
 class Snapshots(
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends SnapshotTable
   with ExtCQL[SnapshotTable, SnapshotRecord]

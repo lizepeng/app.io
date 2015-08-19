@@ -46,7 +46,7 @@ object SessionData
 class SessionData(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends SessionDataTable
   with ExtCQL[SessionDataTable, UUID]

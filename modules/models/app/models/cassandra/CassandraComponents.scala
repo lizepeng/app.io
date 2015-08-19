@@ -15,12 +15,9 @@ trait CassandraComponents {
 
   implicit val keySpace: KeySpace = KeySpace("app")
 
-  def cassandraManager: CassandraManager
+  def contactPoint: KeySpaceBuilder
 
-  implicit val session: Session = {
-    cassandraManager.initIfNotInited(keySpace.name)
-    cassandraManager.session
-  }
+  implicit lazy val session: Session = contactPoint.keySpace(keySpace.name).session
 }
 
 // Workaround since phantom 1.8.12 do not support static collection column?

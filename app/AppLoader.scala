@@ -1,10 +1,11 @@
 import batches.ReIndexInternalGroups
+import com.websudos.phantom.connectors.ContactPoint.DefaultPorts
 import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import helpers._
 import messages.{ChatActor, MailActor}
 import models._
 import models.actors.ResourcesMediator
-import models.cassandra.ClosableCassandraManager
+import models.cassandra.KeySpaceBuilder
 import models.cfs._
 import models.sys.SysConfigs
 import play.api.ApplicationLoader.Context
@@ -50,7 +51,8 @@ abstract class Components(context: Context)
   applicationLifecycle.addStopHook(() => LeakedThreadsKiller.killTimerInConcurrent())
 
   // Cassandra Connector
-  implicit val cassandraManager = new ClosableCassandraManager(applicationLifecycle)
+  implicit val contactPoint: KeySpaceBuilder =
+    new KeySpaceBuilder(applicationLifecycle, _.addContactPoint("localhost").withPort(DefaultPorts.live))
 
   // Basic Play Api
   implicit val basicPlayApi = BasicPlayApi(

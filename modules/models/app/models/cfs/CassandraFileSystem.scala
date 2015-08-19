@@ -2,6 +2,7 @@ package models.cfs
 
 import com.websudos.phantom.dsl._
 import helpers._
+import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
 import models.{User, Users}
 
@@ -13,7 +14,7 @@ import scala.concurrent.Future
 class CassandraFileSystem(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager,
+  val contactPoint: KeySpaceBuilder,
   val _users: Users,
   val _sysConfig: SysConfigs
 )

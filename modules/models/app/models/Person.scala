@@ -66,7 +66,7 @@ object Person
 class Persons(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends PersonTable
   with EntityTable[Person]

@@ -183,7 +183,7 @@ object User
 class Users(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager,
+  val contactPoint: KeySpaceBuilder,
   val _sysConfig: SysConfigs,
   val _internalGroups: InternalGroups
 )
@@ -359,7 +359,7 @@ sealed class UsersByEmailIndex
 class UsersByEmail(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager
+  val contactPoint: KeySpaceBuilder
 )
   extends UsersByEmailIndex
   with ExtCQL[UsersByEmailIndex, (String, UUID)]

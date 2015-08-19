@@ -131,7 +131,7 @@ object Group
 class Groups(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager,
+  val contactPoint: KeySpaceBuilder,
   val _users: Users,
   val _sysConfig: SysConfigs
 )
@@ -290,7 +290,7 @@ class InternalGroups(
 )(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val cassandraManager: CassandraManager,
+  val contactPoint: KeySpaceBuilder,
   val _sysConfig: SysConfigs
 )
   extends GroupTable
