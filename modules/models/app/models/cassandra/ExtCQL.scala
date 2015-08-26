@@ -25,8 +25,10 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
     case "delete" => 0x01
   }.foldLeft(0)(_ | _)
 
-  def CQL(cql: BatchQuery) =
-    trace(cql, cql.queryString, (flags & 0x10) != 0)
+  def CQL[
+    Status <: ConsistencyBound](
+    cql: BatchQuery[Status]
+  ) = trace(cql, cql.queryString, (flags & 0x10) != 0)
 
   def CQL[
     T1 <: CassandraTable[T1, _],
