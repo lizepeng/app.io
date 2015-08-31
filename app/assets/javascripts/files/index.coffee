@@ -2,7 +2,6 @@ this.views ?= {}
 this.views.files ?= {}
 
 views.files.index = angular.module 'files.list', [
-  'xeditable'
   'api_internal.cfs'
   'api_internal.helper'
   'ui.parts'
@@ -98,7 +97,5 @@ views.files.index
       return "#{Math.round10(input, -2)} GB"
     input /= k
     return   "#{Math.round10(input, -3)} TB"
-
-.run (editableOptions) -> editableOptions.theme = 'bs3'
 
 angular.module('app').requires.push 'files.list', 'flow'

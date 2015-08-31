@@ -55,7 +55,7 @@ views.groups.index.factory 'GroupList', [
 
     $scope.checkName = (data) ->
       d = $q.defer()
-      $http.post jsRoutes.controllers.Groups.checkName(data).url, name: data
+      $http.post jsRoutes.controllers.GroupsCtrl.checkName(data).url, name: data
       .success (res) -> d.resolve()
       .error (data, status) -> d.resolve ClientError.firstMsg(data, status)
       d.promise
