@@ -8,8 +8,8 @@
 
       case "bootstrap" => {
         @css(
-          "lib/bootstrap/css/bootstrap.css",
-          "lib/bootstrap/css/bootstrap.min.css")
+          "lib/bootstrap/dist/css/bootstrap.css",
+          "lib/bootstrap/dist/css/bootstrap.min.css")
         @*css(
           "lib/bootstrap/css/bootstrap-responsive.css",
           "lib/bootstrap/css/bootstrap-responsive.min.css")*@
@@ -84,6 +84,12 @@
         @js(
           "lib/angular-sanitize/angular-sanitize.js",
           "lib/angular-sanitize/angular-sanitize.min.js")
+      }
+
+      case "angular-animate" => {
+        @js(
+          "lib/angular-animate/angular-animate.js",
+          "lib/angular-animate/angular-animate.min.js")
       }
 
       case "angular-bootstrap" => {

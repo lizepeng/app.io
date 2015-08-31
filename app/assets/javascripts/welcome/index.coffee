@@ -1,7 +1,7 @@
 this.views ?= {}
 this.views.welcome ?= {}
 
-views.welcome.index = angular.module 'welcome.index', [ 'ngSanitize' ]
+views.welcome.index = angular.module 'welcome.index', [ 'ngSanitize', 'ngAnimate' ]
 
 .controller 'CarouselCtrl', [
   '$scope'

@@ -49,8 +49,9 @@ libraryDependencies ++= Seq(
   "org.webjars.bower" % "holderjs"           % "2.6.0",
   "org.webjars.bower" % "fuelux"             % "3.10.0",
   "org.webjars.bower" % "angular-xeditable"  % "0.1.9",
-  "org.webjars.bower" % "angular-bootstrap"  % "0.12.1",
+  "org.webjars.bower" % "angular-bootstrap"  % "0.13.3",
   "org.webjars.bower" % "angular-resource"   % "1.4.4",
+  "org.webjars.bower" % "angular-animate"    % "1.4.4",
   "org.webjars.bower" % "angular-sanitize"   % "1.4.4",
   "org.webjars.bower" % "underscore"         % "1.8.3",
   "org.webjars"       % "ng-flow"            % "2.6.1"
