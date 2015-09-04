@@ -15,19 +15,6 @@ object LeakedThreadsKiller extends CanonicalNamed with Logging {
   val mirror = ru.runtimeMirror(getClass.getClassLoader)
 
   /**
-   * A workaround for akka bug #17729
-   *
-   * @see [[scala.concurrent.impl.ExecutionContextImpl]]
-   */
-  def killScalaGlobalExecutionContext(): Future[Unit] = Future.successful {
-//    val executorM = executorMirror(scala.concurrent.ExecutionContext.global)
-//    val executor = executorM.apply().asInstanceOf[scala.concurrent.forkjoin.ForkJoinPool]
-
-//    executor.shutdown()
-//    Logger.info("Kill Scala Global ExecutionContext.")
-  }
-
-  /**
    * Stop leaking thread "Time-n"
    *
    * @see [[play.api.libs.iteratee.Concurrent]]
