@@ -1,6 +1,8 @@
 package helpers
 
-import play.api.mvc.QueryStringBindable
+import play.api.http._
+import play.api.libs.json.{Json, Writes}
+import play.api.mvc.{Codec, QueryStringBindable}
 
 import scala.collection.Iterable
 import scala.language.implicitConversions
@@ -18,6 +20,16 @@ object Page {
 
   implicit def PageToIterator[E](p: Page[E]): Iterable[E] =
     p.elements.take(p.pager.pageSize)
+
+  implicit def writableOf_Page[E](
+    implicit codec: Codec, tjs: Writes[E]
+  ): Writeable[Page[E]] = {
+    import play.api.libs.iteratee.Execution.Implicits.trampoline
+    Writeable(
+      p => codec.encode(Json.prettyPrint(Json.toJson(p.elements))),
+      Some(ContentTypes.JSON)
+    )
+  }
 }
 
 trait PageLike {

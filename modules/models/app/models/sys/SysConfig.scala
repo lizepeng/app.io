@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
-import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
@@ -25,7 +24,7 @@ trait SysConfig {
       implicit serializer: Serializer[T],
       sysConfig: SysConfigs
     ) = {
-      sysConfig.getOrElseInsert(
+      sysConfig.getOrElseUpdate(
         canonicalName, key, default
       )(serializer)
     }
@@ -33,7 +32,7 @@ trait SysConfig {
     def UUID(key: String)(
       implicit sysConfig: SysConfigs
     ) = {
-      sysConfig.getOrElseInsert(
+      sysConfig.getOrElseUpdate(
         canonicalName, key, UUIDs.timeBased()
       )(uuidSerializer)
     }
@@ -48,9 +47,8 @@ case class SysConfigEntry(
 )
 
 sealed class SysConfigTable
-  extends CassandraTable[SysConfigTable, SysConfigEntry] {
-
-  override val tableName = "system_config"
+  extends NamedCassandraTable[SysConfigTable, SysConfigEntry]
+  with SysConfigCanonicalNamed {
 
   object module
     extends StringColumn(this)
@@ -67,7 +65,17 @@ sealed class SysConfigTable
   }
 }
 
-object SysConfig {
+trait SysConfigCanonicalNamed extends CanonicalNamed {
+
+  override val basicName = "system_config"
+}
+
+object SysConfig
+  extends SysConfigCanonicalNamed
+  with ExceptionDefining {
+
+  case class NotFound(module: String, key: String)
+    extends BaseException(error_code("not.found"))
 
   trait Serializer[T] {
 
@@ -104,7 +112,34 @@ class SysConfigs(
 
   import SysConfig._
 
-  def getOrElseInsert[T](
+  def find(module: String, key: String): Future[SysConfigEntry] = CQL {
+    select.where(_.module eqs module).and(_.key eqs key)
+  }.one().map {
+    case None        => throw NotFound(module, key)
+    case Some(entry) => entry
+  }
+
+  def find(
+    module: String,
+    ids: Iterable[String]
+  ): Future[List[SysConfigEntry]] = CQL {
+    select
+      .where(_.module eqs module)
+      .and(_.key in ids.toList.distinct)
+  }.fetch()
+
+  def save(entry: SysConfigEntry): Future[SysConfigEntry] = CQL {
+    update
+      .where(_.module eqs entry.module)
+      .and(_.key eqs entry.key)
+      .modify(_.value setTo entry.value)
+  }.future().map(_ => entry)
+
+  def remove(module: String, key: String): Future[ResultSet] = CQL {
+    delete.where(_.module eqs module).and(_.key eqs key)
+  }.future()
+
+  def getOrElseUpdate[T](
     module: String,
     key: String,
     op: => T
@@ -118,19 +153,25 @@ class SysConfigs(
       value <- maybe match {
         case None    =>
           val v: T = op
-          CQL {
-            insert
-              .value(_.module, module)
-              .value(_.key, key)
-              .value(_.value, v >>: serializer)
-              .ifNotExists()
-          }.future().flatMap { rs =>
-            if (rs.wasApplied()) Future.successful(v)
-            else getOrElseInsert(module, key, op)
+          persist(module, key, v >>: serializer).flatMap { applied =>
+            if (applied) Future.successful(v)
+            else getOrElseUpdate(module, key, op)
           }
         case Some(v) =>
           Future.successful(serializer << v)
       }
     } yield value
   }
+
+  def persist(
+    module: String,
+    key: String,
+    value: String
+  ): Future[Boolean] = CQL {
+    insert
+      .value(_.module, module)
+      .value(_.key, key)
+      .value(_.value, value)
+      .ifNotExists()
+  }.future().map(_.wasApplied())
 }

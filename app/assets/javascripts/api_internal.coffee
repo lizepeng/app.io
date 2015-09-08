@@ -15,7 +15,7 @@ angular.module 'api_internal', [
 # -------------------------------------------------------- #
 angular.module 'api_internal.group', [ 'ngResource' ]
 
-  .factory 'Group', [ '$resource', ($resource) ->
+  .factory 'Group', [ '$resource', '$http', ($resource, $http) ->
     resource = $resource '/api_internal/groups/:id/:relations/:uid', {
         id        : '@id'
         relations : ''
@@ -39,6 +39,15 @@ angular.module 'api_internal.group', [ 'ngResource' ]
             relations : 'users'
             uid       : '@uid'
       }
+
+    resource.layouts = (ids) ->
+      $http.get "/api_internal/layouts", params : ids : ids.join(',')
+
+    resource.setLayout = (gid, layout) ->
+      $http.post "/api_internal/layouts/#{gid}", layout : layout
+
+    resource.delLayout = (gid) ->
+      $http.delete "/api_internal/layouts/#{gid}"
 
     resource.toMap = (grps) ->
       _.chain grps

@@ -13,6 +13,8 @@ DELETE /groups/:id                       controllers.api_internal.GroupsCtrl.des
 GET    /groups/:id/users                 controllers.api_internal.GroupsCtrl.users(id:UUID,p:Pager?=Pager.first)
 POST   /groups/:id/users                 controllers.api_internal.GroupsCtrl.addUser(id:UUID)
 DELETE /groups/:id/users/:uid            controllers.api_internal.GroupsCtrl.delUser(id:UUID, uid:UUID)
+GET    /layouts                          controllers.api_internal.GroupsCtrl.layouts(ids:Seq[UUID])
+POST   /layouts/:gid                     controllers.api_internal.GroupsCtrl.setLayout(gid:UUID)
 
 GET    /users                            controllers.api_internal.UsersCtrl.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
 POST   /users                            controllers.api_internal.UsersCtrl.create

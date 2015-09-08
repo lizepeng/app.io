@@ -6,6 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
 import models._
+import models.sys.SysConfigs
 import play.api.i18n._
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -23,6 +24,7 @@ class GroupsCtrl(
   val basicPlayApi: BasicPlayApi,
   val permCheckRequired: PermCheckRequired,
   val es: ElasticSearch,
+  val sysConfig: SysConfigs,
   val _groups: Groups
 )
   extends Secured(GroupsCtrl)
@@ -154,6 +156,27 @@ class GroupsCtrl(
   def delUser(id: UUID, uid: UUID) =
     PermCheck(_.Destroy).async { implicit req =>
       _groups.delChild(id, uid).map { _ => NoContent }
+    }
+
+  import controllers.api_internal.{Group2Layout => G2L}
+
+  def layouts(ids: Seq[UUID]) =
+    PermCheck(_.Index).async { implicit req =>
+      val module = G2L.canonicalName
+      sysConfig.find(module, ids.map(_.toString)).map { list =>
+        Ok(Json.toJson(list.map(kv => kv.key -> kv.value).toMap))
+      }
+    }
+
+  def setLayout(gid: UUID) =
+    PermCheck(_.Save).async { implicit req =>
+      BindJson().as[G2L.Layout] { success =>
+        G2L.save(gid, success).map { saved =>
+          Ok(Json.toJson(saved))
+        }
+      }.recover {
+        case e: BaseException => NotFound(JsonMessage(e))
+      }
     }
 }
 
