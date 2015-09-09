@@ -135,7 +135,7 @@ class FileSystemCtrl(
     }
 
   def create(path: Path) =
-    (MaybeUserAction() >> AuthCheck).async(CFSBodyParser(path)) { implicit req =>
+    PermCheck(_.Create).async(CFSBodyParser(path)) { implicit req =>
       val flow = new Flow(req.body.asFormUrlEncoded)
 
       def tempFiles(temp: Directory) =

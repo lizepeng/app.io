@@ -158,20 +158,21 @@ class GroupsCtrl(
       _groups.delChild(id, uid).map { _ => NoContent }
     }
 
-  import controllers.api_internal.{Group2Layout => G2L}
-
   def layouts(ids: Seq[UUID]) =
     PermCheck(_.Index).async { implicit req =>
-      val module = G2L.canonicalName
-      sysConfig.find(module, ids.map(_.toString)).map { list =>
-        Ok(Json.toJson(list.map(kv => kv.key -> kv.value).toMap))
+      _groups.findLayouts(ids).map { layouts =>
+        val map = layouts.collect {
+          case (gid, layout) if layout.isDefined =>
+            gid.toString -> layout.get
+        }.toMap
+        Ok(Json.toJson(map))
       }
     }
 
   def setLayout(gid: UUID) =
     PermCheck(_.Save).async { implicit req =>
-      BindJson().as[G2L.Layout] { success =>
-        G2L.save(gid, success).map { saved =>
+      BindJson().as[Layout] { success =>
+        _groups.setLayout(gid, success).map { saved =>
           Ok(Json.toJson(saved))
         }
       }.recover {

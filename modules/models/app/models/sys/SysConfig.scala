@@ -1,7 +1,5 @@
 package models.sys
 
-import java.util.UUID
-
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
@@ -16,12 +14,10 @@ import scala.concurrent.Future
 trait SysConfig {
   self: CanonicalNamed =>
 
-  import SysConfig._
-
   object System {
 
     def config[T](key: String, default: T)(
-      implicit serializer: Serializer[T],
+      implicit serializer: Stringifier[T],
       sysConfig: SysConfigs
     ) = {
       sysConfig.getOrElseUpdate(
@@ -34,7 +30,7 @@ trait SysConfig {
     ) = {
       sysConfig.getOrElseUpdate(
         canonicalName, key, UUIDs.timeBased()
-      )(uuidSerializer)
+      )
     }
   }
 
@@ -77,24 +73,6 @@ object SysConfig
   case class NotFound(module: String, key: String)
     extends BaseException(error_code("not.found"))
 
-  trait Serializer[T] {
-
-    def << : String => T
-
-    def >>: : T => String
-  }
-
-  implicit val uuidSerializer = new Serializer[UUID] {
-    def << = UUID.fromString
-
-    def >>: = _.toString
-  }
-
-  implicit val stringSerializer = new Serializer[String] {
-    def << = s => s
-
-    def >>: = s => s
-  }
 }
 
 class SysConfigs(
@@ -110,12 +88,10 @@ class SysConfigs(
 
   create.ifNotExists.future()
 
-  import SysConfig._
-
   def find(module: String, key: String): Future[SysConfigEntry] = CQL {
     select.where(_.module eqs module).and(_.key eqs key)
   }.one().map {
-    case None        => throw NotFound(module, key)
+    case None        => throw SysConfig.NotFound(module, key)
     case Some(entry) => entry
   }
 
@@ -143,7 +119,7 @@ class SysConfigs(
     module: String,
     key: String,
     op: => T
-  )(implicit serializer: Serializer[T]): Future[T] = {
+  )(implicit serializer: Stringifier[T]): Future[T] = {
     for {
       maybe <- CQL {
         select(_.value)

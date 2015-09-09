@@ -148,7 +148,7 @@ abstract class Components(context: Context)
 
   // Permission Checking
   implicit val permCheckRequired =
-    controllers.PermCheckRequired(_users, _accessControls)
+    controllers.PermCheckRequired(_groups, _accessControls)
 
   // Root Controllers
   val applicationCtrl    = new controllers.Application()
