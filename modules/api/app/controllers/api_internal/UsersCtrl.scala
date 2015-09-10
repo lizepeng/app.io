@@ -20,7 +20,7 @@ import security._
 class UsersCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
   val _groups: Groups
 )
@@ -29,7 +29,7 @@ class UsersCtrl(
   with LinkHeader
   with BasicPlayComponents
   with InternalGroupsComponents
-  with PermCheckComponents
+  with UserActionComponents
   with DefaultPlayExecutor
   with I18nSupport
   with Logging {
@@ -37,7 +37,7 @@ class UsersCtrl(
   ESIndexCleaner(_users).dropIndexIfEmpty
 
   def groups(id: UUID, options: Option[String]) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       (for {
         user <- _users.find(id)
         grps <- _groups.find(
@@ -55,7 +55,7 @@ class UsersCtrl(
     }
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
-    PermCheck(_.Index).async { implicit req =>
+    UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _users.find(ids).map { usrs =>
           Ok(Json.toJson(usrs))
@@ -69,7 +69,7 @@ class UsersCtrl(
     }
 
   def create =
-    PermCheck(_.Save).async { implicit req =>
+    UserAction(_.Save).async { implicit req =>
       BindJson().as[UserInfo] {
         success => (for {
           saved <- User().copy(name = success.name, email = success.email).save

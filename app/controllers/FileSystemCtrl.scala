@@ -13,23 +13,23 @@ import views._
 class FileSystemCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val _cfs: CassandraFileSystem
 )
   extends Secured(FileSystemCtrl)
   with Controller
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
   with DefaultPlayExecutor
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =
-    PermCheck(_.Index).apply { implicit req =>
+    UserAction(_.Index).apply { implicit req =>
       Ok(html.file_system.index(path, pager))
     }
 
   def show(path: Path) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       (for {
         home <- _cfs.home(req.user)
         file <- home.file(path)

@@ -54,6 +54,12 @@ deny                                             =Deny
 first_name                                       =First Name
 last_name                                        =Last Name
 
+# layout
+layout                                           =Layout
+layout.admin                                     =Admin
+layout.normal                                    =Normal
+layout.nothing                                   =------
+
 # action
 actions.nnew                                     =New
 actions.create                                   =Create

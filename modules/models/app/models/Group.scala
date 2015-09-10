@@ -62,6 +62,10 @@ sealed trait GroupTable
     extends OptionalBooleanColumn(this)
     with StaticColumn[Option[Boolean]]
 
+  object layout
+    extends OptionalStringColumn(this)
+    with StaticColumn[Option[String]]
+
   object updated_at
     extends DateTimeColumn(this)
     with StaticColumn[DateTime]
@@ -237,6 +241,30 @@ class Groups(
         Iteratee.getChunks
     } &> Enumeratee.mapFlatten(_internalGroups.stream)
 
+  def findLayouts(
+    ids: TraversableOnce[UUID]
+  ): Future[List[(UUID, Option[String])]] = CQL {
+    select(_.id, _.layout).where(_.id in ids.toList.distinct)
+  }.fetch()
+
+  def setLayout(id: UUID, layout: Layout): Future[Layout] = CQL {
+    update
+      .where(_.id eqs id)
+      .modify(
+        _.layout setTo {
+          if (layout.layout.isEmpty) None
+          else Some(layout.layout)
+        }
+      )
+  }.future().map(_ => layout)
+
+  def setLayoutIfEmpty(id: UUID, layout: Layout): Future[Boolean] = CQL {
+    insert
+      .value(_.id, id)
+      .value(_.layout, Some(layout.layout))
+      .ifNotExists()
+  }.future().map(_.wasApplied)
+
   def isEmpty: Future[Boolean] = _internalGroups.isEmpty
 
 }
@@ -384,4 +412,9 @@ trait InternalGroupsComponents {
   def _users: Users
 
   implicit def _internalGroups: InternalGroups = _users._internalGroups
+}
+
+object InternalGroupsComponents {
+
+  implicit def _internalGroups(implicit _users: Users): InternalGroups = _users._internalGroups
 }

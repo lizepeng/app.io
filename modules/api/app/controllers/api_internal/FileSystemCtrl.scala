@@ -27,7 +27,7 @@ import scala.util.Failure
 class FileSystemCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val bandwidth: BandwidthService,
   val _cfs: CassandraFileSystem
 )
@@ -35,7 +35,7 @@ class FileSystemCtrl(
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
   with DefaultPlayExecutor
   with ExceptionDefining
   with I18nSupport
@@ -53,7 +53,7 @@ class FileSystemCtrl(
     config.getBytes(s"bandwidth.$key").map(_.toInt)
 
   def download(path: Path, inline: Boolean) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       under(path) { file =>
         val stm = streamWhole(file)
         if (inline) stm
@@ -65,7 +65,7 @@ class FileSystemCtrl(
     }
 
   def stream(path: Path) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       under(path) { file =>
         val size = file.size
         val byte_range_spec = """bytes=(\d+)-(\d*)""".r
@@ -90,7 +90,7 @@ class FileSystemCtrl(
     }
 
   def index(path: Path, pager: Pager) =
-    PermCheck(_.Index).async { implicit req =>
+    UserAction(_.Index).async { implicit req =>
       (for {
         root <- _cfs.root
         curr <- root.dir(path) if FilePerm(curr).rx.?
@@ -108,7 +108,7 @@ class FileSystemCtrl(
     }
 
   def touch(path: Path) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       val flow = new Flow(req.queryString)
       (for {
         temp <- _cfs.temp
@@ -123,7 +123,7 @@ class FileSystemCtrl(
     }
 
   def destroy(path: Path) =
-    PermCheck(_.Destroy).async { implicit req =>
+    UserAction(_.Destroy).async { implicit req =>
       (for {
         root <- _cfs.root
         file <- root.file(path)
@@ -135,7 +135,7 @@ class FileSystemCtrl(
     }
 
   def create(path: Path) =
-    (MaybeUserAction() >> AuthCheck).async(CFSBodyParser(path)) { implicit req =>
+    UserAction(_.Create).async(CFSBodyParser(path)) { implicit req =>
       val flow = new Flow(req.body.asFormUrlEncoded)
 
       def tempFiles(temp: Directory) =
@@ -251,7 +251,7 @@ class FileSystemCtrl(
 
   def CFSBodyParser(
     path: Path,
-    onUnauthorized: RequestHeader => Result = AuthCheck.onUnauthorized,
+    onUnauthorized: RequestHeader => Result = AuthChecker.onUnauthorized,
     onPermDenied: RequestHeader => Result = req => NotFound,
     onPathNotFound: RequestHeader => Result = req => NotFound,
     onFilePermDenied: RequestHeader => Result = req => NotFound,

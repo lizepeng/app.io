@@ -6,7 +6,6 @@ import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n._
 import play.api.mvc._
-import security._
 import views._
 
 import scala.concurrent.Future
@@ -18,11 +17,12 @@ import scala.concurrent.Future
 class SessionsCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _users: Users
+  val _groups: Groups
 )
   extends Controller
   with security.Session
   with BasicPlayComponents
+  with UsersComponents
   with DefaultPlayExecutor
   with I18nSupport
   with Logging {

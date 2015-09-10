@@ -6,6 +6,7 @@ import com.datastax.driver.core.utils.UUIDs
 import elasticsearch._
 import helpers._
 import models._
+import models.sys.SysConfigs
 import play.api.i18n._
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -21,21 +22,22 @@ import scala.concurrent.Future
 class GroupsCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
+  val sysConfig: SysConfigs,
   val _groups: Groups
 )
   extends Secured(GroupsCtrl)
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
   with DefaultPlayExecutor
   with I18nSupport
   with Logging {
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
-    PermCheck(_.Index).async { implicit req =>
+    UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _groups.find(ids).map { grps =>
           Ok(Json.toJson(grps))
@@ -49,7 +51,7 @@ class GroupsCtrl(
     }
 
   def show(id: UUID) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       _groups.find(id).map {
         NotModifiedOrElse { grp =>
           Ok(Json.toJson(grp))
@@ -60,7 +62,7 @@ class GroupsCtrl(
     }
 
   def create =
-    PermCheck(_.Save).async { implicit req =>
+    UserAction(_.Save).async { implicit req =>
       BindJson.and(
         Json.obj(
           "id" -> UUIDs.timeBased(),
@@ -79,7 +81,7 @@ class GroupsCtrl(
     }
 
   def destroy(id: UUID) =
-    PermCheck(_.Destroy).async { implicit req =>
+    UserAction(_.Destroy).async { implicit req =>
       (for {
         ___ <- es.Delete(id) from _groups
         grp <- _groups.find(id)
@@ -97,7 +99,7 @@ class GroupsCtrl(
     }
 
   def save(id: UUID) =
-    PermCheck(_.Save).async { implicit req =>
+    UserAction(_.Save).async { implicit req =>
       BindJson().as[Group] { grp =>
         (for {
           _____ <- _groups.find(id)
@@ -112,7 +114,7 @@ class GroupsCtrl(
     }
 
   def users(id: UUID, pager: Pager) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       (for {
         page <- _groups.children(id, pager)
         usrs <- _users.find(page)
@@ -125,7 +127,7 @@ class GroupsCtrl(
     }
 
   def addUser(id: UUID) =
-    PermCheck(_.Save).async { implicit req =>
+    UserAction(_.Save).async { implicit req =>
       BodyIsJsObject { obj =>
         obj.validate[UUID](User.idReads).map(_users.find)
           .orElse(
@@ -152,8 +154,30 @@ class GroupsCtrl(
     }
 
   def delUser(id: UUID, uid: UUID) =
-    PermCheck(_.Destroy).async { implicit req =>
+    UserAction(_.Destroy).async { implicit req =>
       _groups.delChild(id, uid).map { _ => NoContent }
+    }
+
+  def layouts(ids: Seq[UUID]) =
+    UserAction(_.Index).async { implicit req =>
+      _groups.findLayouts(ids).map { layouts =>
+        val map = layouts.collect {
+          case (gid, layout) if layout.isDefined =>
+            gid.toString -> layout.get
+        }.toMap
+        Ok(Json.toJson(map))
+      }
+    }
+
+  def setLayout(gid: UUID) =
+    UserAction(_.Save).async { implicit req =>
+      BindJson().as[Layout] { success =>
+        _groups.setLayout(gid, success).map { saved =>
+          Ok(Json.toJson(saved))
+        }
+      }.recover {
+        case e: BaseException => NotFound(JsonMessage(e))
+      }
     }
 }
 

@@ -30,11 +30,12 @@ case class User(
   external_groups: Set[UUID] = Set(),
   password: String = "",
   remember_me: Boolean = false,
+  preferences: Preferences = Preferences(),
   updated_at: DateTime = DateTime.now
-)(implicit val internalGroups: InternalGroups) extends HasUUID with TimeBased {
+)(implicit val _internalGroups: InternalGroups) extends HasUUID with TimeBased {
 
   lazy val internal_groups: Set[UUID] =
-    internalGroups.map(internal_groups_code)
+    _internalGroups.map(internal_groups_code)
 
   def groups: Set[UUID] = external_groups union internal_groups
 
@@ -210,6 +211,7 @@ class Users(
       external_groups(r),
       "",
       remember_me = false,
+      preferences = Preferences(),
       updated_at(r)
     )
   }
@@ -397,4 +399,15 @@ class UsersByEmail(
   def remove(email: String): Future[ResultSet] = {
     cql_del(email).future()
   }
+}
+
+trait UsersComponents {
+
+  def _groups: Groups
+
+  implicit def _users: Users = _groups._users
+}
+object UsersComponents {
+
+  implicit def _users(implicit _groups: Groups): Users = _groups._users
 }

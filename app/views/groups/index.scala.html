@@ -24,16 +24,19 @@ implicit req: UserRequest[_], messages: Messages)
         <table class="table table-hover table-ellipsis">
           <thead>
             <tr>
-              <th class="hidden-xs col-sm-4">
+              <th class="hidden-xs col-sm-4 col-md-3">
                 @MSG("id")
               </th>
-              <th class="col-xs-7 col-sm-3">
+              <th class="col-xs-7 col-sm-3 col-md-2">
                 @MSG("name")
               </th>
-              <th class="hidden-xs col-sm-2">
+              <th class="hidden-xs hidden-sm col-md-2">
                 @MSG("description")
               </th>
-              <th class="col-xs-2  col-sm-1 text-right">
+              <th class="hidden-xs col-sm-2 col-md-2">
+                @MSG("layout")
+              </th>
+              <th class="col-xs-2 col-sm-1 col-md-1 text-right">
                 @MSG("action")
               </th>
             </tr>
@@ -58,9 +61,14 @@ implicit req: UserRequest[_], messages: Messages)
                 </a>
               </td>
 
-              <td class="hidden-xs">
+              <td class="hidden-xs hidden-sm">
                 {{ grp.description }}
               </td>
+
+              <td class="hidden-xs">
+                <select class="form-control input-sm" ng-options="k as v for (k,v) in Layouts" ng-model="grp.layout" ng-change="setLayout(grp.id, grp.layout)"></select>
+              </td>
+
               <td>
                 <button type="button" class="btn btn-danger btn-xs pull-right"
                   ng-show="!grp.is_internal"
@@ -128,6 +136,7 @@ implicit req: UserRequest[_], messages: Messages)
 @controller = {
   <script>
     views.groups.index.run(['GroupList', function(GroupList) {
+      GroupList.Layouts = @Html(Layouts.toJson);
       GroupList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,

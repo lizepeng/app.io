@@ -14,7 +14,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-case class RateLimitCheck(
+case class RateLimitChecker(
   limit: Int = 500,
   span: Int = 15
 )(

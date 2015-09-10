@@ -1,11 +1,10 @@
 package controllers
 
-import java.util.UUID
-
-import helpers.Logging
+import helpers._
 import models.Groups
-import models.sys.{SysConfig, SysConfigs}
-import play.api.libs.iteratee.Iteratee
+import models.sys.SysConfigs
+import play.api.i18n.Messages
+import play.api.libs.json.Json
 import views.html
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,40 +13,32 @@ import scala.util.Success
 /**
  * @author zepeng.li@gmail.com
  */
-
-object Layouts
-  extends SysConfig
-  with Logging {
+object Layouts extends Logging {
 
   import html.layouts._
 
-  val layout_admin  = base_admin.getClass.getCanonicalName
-  val layout_normal = base_normal.getClass.getCanonicalName
+  val layout_admin  = Layout(base_admin.getClass.getCanonicalName)
+  val layout_normal = Layout(base_normal.getClass.getCanonicalName)
 
-  @volatile private var _gid2layouts: Map[UUID, String] = Map()
+  def toJson(implicit messages: Messages) =
+    Json.prettyPrint(
+      Json.obj(
+        layout_admin.layout -> messages("layout.admin"),
+        layout_normal.layout -> messages("layout.normal"),
+        "" -> messages("layout.nothing")
+      )
+    )
 
   def init(
     implicit
-    groups: Groups,
-    sysConfig: SysConfigs,
+    _groups: Groups,
+    _sysConfig: SysConfigs,
     ec: ExecutionContext
-  ): Future[Map[UUID, String]] = {
-    groups.all |>>> Iteratee.foldM(Map[UUID, String]()) { (map, grp) =>
-      for (
-        conf <-
-        if (grp.id == groups._internalGroups.AnyoneId)
-          System.config(grp.id.toString, layout_admin).map(grp.id -> _)
-        else
-          System.config(grp.id.toString, layout_normal).map(grp.id -> _)
-      ) yield map + conf
+  ): Future[Boolean] = {
+    _groups
+      .setLayoutIfEmpty(_groups._internalGroups.AnyoneId, layout_admin)
+      .andThen {
+      case Success(true) => Logger.debug("Initialized layout of Anyone")
     }
-  }.andThen {
-    case Success(map) =>
-      _gid2layouts = map
-      Logger.info("Map(Group -> Layout) has been initialized.")
-  }
-
-  def apply(ids: Traversable[UUID]): Set[String] = {
-    ids.flatMap(_gid2layouts.get).toSet
   }
 }

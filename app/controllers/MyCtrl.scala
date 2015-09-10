@@ -19,13 +19,14 @@ import scala.concurrent.Future
 class MyCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _users: Users,
+  val _groups: Groups,
   val _persons: Persons,
   val es: ElasticSearch
 )
   extends Secured(User)
   with Controller
   with BasicPlayComponents
+  with UsersComponents
   with DefaultPlayExecutor
   with I18nSupport
   with Session
@@ -55,17 +56,17 @@ class MyCtrl(
   )
 
   def dashboard =
-    (MaybeUserAction() >> AuthCheck) { implicit req =>
+    (MaybeUserAction() andThen AuthChecker) { implicit req =>
       Ok(html.my.dashboard())
     }
 
   def account =
-    (MaybeUserAction() >> AuthCheck) { implicit req =>
+    (MaybeUserAction() andThen AuthChecker) { implicit req =>
       Ok(html.my.account(ChangePasswordFM))
     }
 
   def changePassword =
-    (MaybeUserAction() >> AuthCheck).async { implicit req =>
+    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
 
       val bound = ChangePasswordFM.bindFromRequest()
       bound.fold(
@@ -95,7 +96,7 @@ class MyCtrl(
     }
 
   def profile =
-    (MaybeUserAction() >> AuthCheck).async { implicit req =>
+    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
       _persons.find(req.user.id).map { p =>
         Ok(html.my.profile(filledWith(p)))
       }.recover {
@@ -105,7 +106,7 @@ class MyCtrl(
     }
 
   def changeProfile =
-    (MaybeUserAction() >> AuthCheck).async { implicit req =>
+    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
       val bound = ProfileFM.bindFromRequest()
 
       bound.fold(
