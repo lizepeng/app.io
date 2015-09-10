@@ -142,8 +142,11 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
   </div>
 }()(
   libs.webjars("js", "angular-resource"),
-  libs.assets("js", "api_internal"),
+  libs.assets("js", "api.helper"),
   libs.assets("js", "ui.parts"),
+  libs.assets("js", "api_internal/groups"),
+  libs.assets("js", "api_internal/users"),
+  libs.assets("js", "api_internal/access_controls"),
   libs.assets("js", "access_controls/index"),
   jsRoutes,
   controller

@@ -4,7 +4,7 @@ this.views.groups ?= {}
 views.groups.index = angular.module 'groups.list', [
   'xeditable'
   'api_internal.group'
-  'api_internal.helper'
+  'api.helper'
   'ui.parts'
 ]
 

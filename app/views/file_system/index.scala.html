@@ -100,9 +100,10 @@ implicit req: UserRequest[_], messages: Messages)
   libs.webjars("js", "angular-resource"),
   libs.webjars("js", "ng-flow"),
   libs.assets("js", "utility"),
-  libs.assets("js", "api_internal"),
   libs.assets("js", "ui.parts"),
-  libs.assets("js", "files/index"),
+  libs.assets("js", "api.helper"),
+  libs.assets("js", "api_internal/file_system"),
+  libs.assets("js", "file_system/index"),
   jsRoutes,
   controller
 )

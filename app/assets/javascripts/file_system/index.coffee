@@ -3,7 +3,7 @@ this.views.files ?= {}
 
 views.files.index = angular.module 'files.list', [
   'api_internal.cfs'
-  'api_internal.helper'
+  'api.helper'
   'ui.parts'
 ]
 

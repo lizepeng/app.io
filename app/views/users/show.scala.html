@@ -20,7 +20,8 @@ implicit req: UserRequest[_], messages: Messages)
   </div>
 }()(
   libs.webjars("js", "angular-resource"),
-  libs.assets("js", "api_internal"),
+  libs.assets("js", "api.helper"),
+  libs.assets("js", "api_internal/users"),
   controller
 )
 

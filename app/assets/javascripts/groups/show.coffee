@@ -3,7 +3,7 @@ this.views.groups ?= {}
 
 views.groups.show = angular.module('group.users.list', [
   'api_internal.group'
-  'api_internal.helper'
+  'api.helper'
   'ui.parts'
 ])
 

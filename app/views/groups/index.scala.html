@@ -119,8 +119,9 @@ implicit req: UserRequest[_], messages: Messages)
 )(
   libs.webjars("js", "angular-resource"),
   libs.webjars("js", "xeditable"),
-  libs.assets("js", "api_internal"),
+  libs.assets("js", "api.helper"),
   libs.assets("js", "ui.parts"),
+  libs.assets("js", "api_internal/groups"),
   libs.assets("js", "groups/index"),
   jsRoutes,
   controller

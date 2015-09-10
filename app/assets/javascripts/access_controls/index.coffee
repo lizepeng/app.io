@@ -7,7 +7,7 @@ views.access_controls.index = angular.module 'access_controls.list', [
   'api_internal.access_control'
   'api_internal.group'
   'api_internal.user'
-  'api_internal.helper'
+  'api.helper'
 ]
 
 views.access_controls.index.factory 'ACList', [
