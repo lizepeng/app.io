@@ -23,15 +23,16 @@ import scala.concurrent.Future
 class UsersCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val es: ElasticSearch
 )
   extends Secured(UsersCtrl)
   with Controller
   with security.Session
   with BasicPlayComponents
+  with UserActionComponents
+  with UsersComponents
   with InternalGroupsComponents
-  with PermCheckComponents
   with DefaultPlayExecutor
   with I18nSupport {
 
@@ -52,14 +53,14 @@ class UsersCtrl(
   )
 
   def show(id: UUID) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       _users.find(id).map { user =>
         Ok(html.users.show(user))
       }
     }
 
   def index(pager: Pager) =
-    PermCheck(_.Index).apply { implicit req =>
+    UserAction(_.Index).apply { implicit req =>
       Ok(html.users.index(pager))
     }
 

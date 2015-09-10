@@ -90,7 +90,7 @@ abstract class Components(context: Context)
 
   // Internal Api Permission Checking
   implicit val apiInternalPermCheckRequired =
-    controllers.api_internal.PermCheckRequired(_users, _accessControls, _rateLimits)
+    controllers.api_internal.UserActionRequired(_users, _accessControls, _rateLimits)
 
   // Internal Api Controllers
   val apiInternalSearchCtrl         = new controllers.api_internal.SearchCtrl
@@ -148,7 +148,7 @@ abstract class Components(context: Context)
 
   // Permission Checking
   implicit val permCheckRequired =
-    controllers.PermCheckRequired(_groups, _accessControls)
+    controllers.UserActionRequired(_groups, _accessControls)
 
   // Root Controllers
   val applicationCtrl    = new controllers.Application()

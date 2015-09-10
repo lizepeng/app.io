@@ -19,7 +19,7 @@ import scala.language.implicitConversions
 class EmailTemplatesCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val _sessionData: SessionData,
   val _emailTemplates: EmailTemplates,
   val _emailTemplateHistories: EmailTemplateHistories
@@ -27,7 +27,8 @@ class EmailTemplatesCtrl(
   extends Secured(EmailTemplatesCtrl)
   with Controller
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
+  with UsersComponents
   with DefaultPlayExecutor
   with CanonicalNameBasedMessages
   with I18nSupport {
@@ -53,7 +54,7 @@ class EmailTemplatesCtrl(
   }
 
   def index(pager: Pager) =
-    PermCheck(_.Index).async { implicit req =>
+    UserAction(_.Index).async { implicit req =>
       _emailTemplates.list(pager).map { list =>
         Ok(html.email_templates.index(Page(pager, list)))
       }.recover {
@@ -62,7 +63,7 @@ class EmailTemplatesCtrl(
     }
 
   def show(id: UUID, lang: Lang, updated_at: Option[DateTime] = None) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       for {
         tmpl <- _emailTemplates.find(id, lang, updated_at)
         usr1 <- _users.find(tmpl.updated_by)
@@ -73,14 +74,14 @@ class EmailTemplatesCtrl(
     }
 
   def nnew() =
-    PermCheck(_.NNew).async { implicit req =>
+    UserAction(_.NNew).async { implicit req =>
       Future.successful {
         Ok(html.email_templates.nnew(TemplateFM))
       }
     }
 
   def create =
-    PermCheck(_.Create).async { implicit req =>
+    UserAction(_.Create).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure => Future.successful {
@@ -109,7 +110,7 @@ class EmailTemplatesCtrl(
     }
 
   def edit(id: UUID, lang: Lang) =
-    PermCheck(_.Edit).async { implicit req =>
+    UserAction(_.Edit).async { implicit req =>
       val result =
         for {
           tmpl <- _emailTemplates.find(id, lang)
@@ -129,7 +130,7 @@ class EmailTemplatesCtrl(
     }
 
   def save(id: UUID, lang: Lang) =
-    PermCheck(_.Save).async { implicit req =>
+    UserAction(_.Save).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure =>
@@ -168,7 +169,7 @@ class EmailTemplatesCtrl(
     }
 
   def history(id: UUID, lang: Lang, pager: Pager) =
-    PermCheck(_.HistoryIndex).async { implicit req =>
+    UserAction(_.HistoryIndex).async { implicit req =>
       for {
         tmpl <- _emailTemplates.find(id, lang)
         list <- _emailTemplateHistories.list(id, lang, pager)
@@ -182,7 +183,7 @@ class EmailTemplatesCtrl(
     }
 
   def destroy(id: UUID, lang: Lang) =
-    PermCheck(_.Destroy).async { implicit req => {
+    UserAction(_.Destroy).async { implicit req => {
       for {
         tmpl <- _emailTemplates.find(id, lang)
         ___ <- _emailTemplates.destroy(id, lang)

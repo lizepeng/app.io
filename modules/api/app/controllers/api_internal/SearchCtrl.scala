@@ -17,7 +17,7 @@ import scala.concurrent.Future
 class SearchCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
   val _groups: Groups
 )
@@ -25,12 +25,12 @@ class SearchCtrl(
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
   with DefaultPlayExecutor
   with I18nSupport {
 
   def index(types: Seq[String], q: Option[String], p: Pager) =
-    PermCheck(_.Index, rateLimit = 2000).async { implicit req =>
+    UserAction(_.Index, rateLimit = 2000).async { implicit req =>
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {

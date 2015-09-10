@@ -6,7 +6,7 @@ import security._
 /**
  * @author zepeng.li@gmail.com
  */
-object AuthCheck extends AuthenticationCheck {
+object AuthChecker extends AuthenticationCheck {
 
   override def onUnauthorized(req: RequestHeader) = Results.NotFound
 }

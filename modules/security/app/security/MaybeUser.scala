@@ -10,7 +10,7 @@ import scala.language.higherKinds
 /**
  * @author zepeng.li@gmail.com
  */
-case class MaybeUserAction(
+case class MaybeUser(
   pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
 )(
   implicit

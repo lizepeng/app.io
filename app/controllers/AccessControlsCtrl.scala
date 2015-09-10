@@ -17,17 +17,17 @@ import scala.util.Success
 class AccessControlsCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val secured: RegisteredSecured
 )
   extends Secured(AccessControlsCtrl)
   with Controller
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
   with I18nSupport {
 
   def index(pager: Pager) =
-    PermCheck(_.Index).apply { implicit req =>
+    UserAction(_.Index).apply { implicit req =>
       Ok(html.access_controls.index(pager))
     }
 

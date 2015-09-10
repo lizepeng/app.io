@@ -413,3 +413,8 @@ trait InternalGroupsComponents {
 
   implicit def _internalGroups: InternalGroups = _users._internalGroups
 }
+
+object InternalGroupsComponents {
+
+  implicit def _internalGroups(implicit _users: Users): InternalGroups = _users._internalGroups
+}

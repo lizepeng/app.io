@@ -1,17 +1,16 @@
 package controllers
 
 import helpers._
-import models.Users
+import models.Groups
 import models.cfs.Path
 import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
-import security._
 import views._
 
 class Application(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _users: Users
+  val _groups: Groups
 )
   extends Controller
   with BasicPlayComponents

@@ -19,24 +19,24 @@ import scala.concurrent.Future
 class GroupsCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired
+  val userActionRequired: UserActionRequired
 )
   extends Secured(GroupsCtrl)
   with Controller
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
   with DefaultPlayExecutor
   with I18nSupport {
 
   val mapping_name = "name" -> nonEmptyText(2, 255)
 
   def index(pager: Pager) =
-    PermCheck(_.Index).apply { implicit req =>
+    UserAction(_.Index).apply { implicit req =>
       Ok(html.groups.index(pager))
     }
 
   def show(id: UUID) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       _groups.find(id).map { grp =>
         Ok(html.groups.show(grp))
       }.recover {
@@ -45,7 +45,7 @@ class GroupsCtrl(
     }
 
   def checkName =
-    PermCheck(_.Show).async(parse.json) { implicit req =>
+    UserAction(_.Show).async(parse.json) { implicit req =>
       Future.successful {
         req.body.validate(Group.nameReads).fold(
           failure => UnprocessableEntity(JsonClientErrors(failure)),

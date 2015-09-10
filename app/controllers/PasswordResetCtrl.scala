@@ -20,8 +20,8 @@ import scala.concurrent.Future
 class PasswordResetCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _users: Users,
   val mailService: MailService,
+  val _groups: Groups,
   val _expirableLinks: ExpirableLinks,
   val _emailTemplates: EmailTemplates,
   val _sysConfig: SysConfigs
@@ -29,6 +29,7 @@ class PasswordResetCtrl(
   extends Secured(PasswordResetCtrl)
   with Controller
   with BasicPlayComponents
+  with UsersComponents
   with InternalGroupsComponents
   with DefaultPlayExecutor
   with I18nSupport

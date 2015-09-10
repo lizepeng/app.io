@@ -1,10 +1,9 @@
 package controllers
 
 import helpers.{BasicPlayApi, BasicPlayComponents}
-import models.Users
+import models.Groups
 import play.api.i18n.I18nSupport
 import play.api.mvc.Controller
-import security.MaybeUserAction
 import views.html
 
 /**
@@ -13,7 +12,7 @@ import views.html
 class ChatCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _users: Users
+  val _groups: Groups
 )
   extends Controller
   with BasicPlayComponents

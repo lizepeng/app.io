@@ -11,7 +11,7 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-case class LayoutPreference(
+case class LayoutLoader(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _groups: Groups

@@ -18,7 +18,7 @@ import security._
 class AccessControlsCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val permCheckRequired: PermCheckRequired,
+  val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
   val _groups: Groups
 )
@@ -26,7 +26,7 @@ class AccessControlsCtrl(
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with PermCheckComponents
+  with UserActionComponents
   with DefaultPlayExecutor
   with I18nSupport
   with Logging {
@@ -34,7 +34,7 @@ class AccessControlsCtrl(
   ESIndexCleaner(_accessControls).dropIndexIfEmpty
 
   def index(q: Option[String], p: Pager) =
-    PermCheck(_.Index).async { implicit req =>
+    UserAction(_.Index).async { implicit req =>
       (es.Search(q, p) in _accessControls future()).map { page =>
         Ok(page).withHeaders(
           linkHeader(page, routes.AccessControlsCtrl.index(q, _))
@@ -43,7 +43,7 @@ class AccessControlsCtrl(
     }
 
   def show(id: UUID, res: String, act: String) =
-    PermCheck(_.Show).async { implicit req =>
+    UserAction(_.Show).async { implicit req =>
       _accessControls.find(id, res, act).map { ac =>
         Ok(Json.toJson(ac))
       }.recover {
@@ -52,7 +52,7 @@ class AccessControlsCtrl(
     }
 
   def create =
-    PermCheck(_.Create).async { implicit req =>
+    UserAction(_.Create).async { implicit req =>
       BindJson().as[AccessControl] { success =>
         _accessControls.find(success).map { found =>
           Ok(Json.toJson(found))
@@ -82,7 +82,7 @@ class AccessControlsCtrl(
     }
 
   def destroy(id: UUID, res: String, act: String) =
-    PermCheck(_.Destroy).async { implicit req =>
+    UserAction(_.Destroy).async { implicit req =>
       (for {
         __ <- es.Delete(AccessControl.genId(res, act, id)) from _accessControls
         ac <- _accessControls.find(id, res, act)
@@ -95,7 +95,7 @@ class AccessControlsCtrl(
     }
 
   def save(id: UUID, res: String, act: String) =
-    PermCheck(_.Save).async { implicit req =>
+    UserAction(_.Save).async { implicit req =>
       BindJson().as[AccessControl] { ac =>
         (for {
           _____ <- _accessControls.find(id, res, act)
