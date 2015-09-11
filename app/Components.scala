@@ -57,6 +57,7 @@ abstract class Components(context: Context)
     ReIndexInternalGroups(es, _).start()
   )
 
+  implicit val _ipRateLimits           = new IPRateLimits
   implicit val _users                  = new Users
   implicit val _accessControls         = new AccessControls
   implicit val _sessionData            = new SessionData
@@ -170,6 +171,8 @@ abstract class Components(context: Context)
   // Http Filters
   override lazy val httpFilters: Seq[EssentialFilter] =
     configuration.getStringSeq("app.http.filters").getOrElse(Nil).collect {
+      case "LoopbackIPFilter"  => new LoopbackIPFilter()
+      case "ClientIPFilter"    => new ClientIPFilter()
       case "Compressor"        => new Compressor()
       case "RequestLogger"     => new RequestLogger()
       case "RequestTimeLogger" => new RequestTimeLogger()

@@ -1,6 +1,6 @@
 package models
 
-import java.util.UUID
+import java.net.InetAddress
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
@@ -13,22 +13,18 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-trait RateLimitCanonicalNamed extends CanonicalNamed {
+trait IPRateLimitCanonicalNamed extends CanonicalNamed {
 
-  override val basicName = "rate_limits"
+  override val basicName = "ip_rate_limits"
 }
 
-sealed class RateLimitTable
-  extends NamedCassandraTable[RateLimitTable, UUID]
-  with RateLimitCanonicalNamed {
+sealed class IPRateLimitTable
+  extends NamedCassandraTable[IPRateLimitTable, InetAddress]
+  with IPRateLimitCanonicalNamed {
 
-  object user_id
-    extends UUIDColumn(this)
-    with PartitionKey[UUID]
-
-  object resource
-    extends StringColumn(this)
-    with PrimaryKey[String]
+  object ip
+    extends InetAddressColumn(this)
+    with PartitionKey[InetAddress]
 
   object datetime
     extends DateTimeColumn(this)
@@ -37,19 +33,19 @@ sealed class RateLimitTable
   object counter
     extends CounterColumn(this)
 
-  override def fromRow(r: Row): UUID = user_id(r)
+  override def fromRow(r: Row): InetAddress = ip(r)
 }
 
-object RateLimits
-  extends RateLimitCanonicalNamed
+object IPRateLimits
+  extends IPRateLimitCanonicalNamed
 
-class RateLimits(
+class IPRateLimits(
   implicit
   val basicPlayApi: BasicPlayApi,
   val contactPoint: KeySpaceBuilder
 )
-  extends RateLimitTable
-  with ExtCQL[RateLimitTable, UUID]
+  extends IPRateLimitTable
+  with ExtCQL[IPRateLimitTable, InetAddress]
   with BasicPlayComponents
   with CassandraComponents
   with Logging {
@@ -57,27 +53,21 @@ class RateLimits(
   create.ifNotExists.future()
 
   def get(
-    resource: String,
+    ip: InetAddress,
     datetime: DateTime
-  )(
-    implicit user: User
   ): Future[Long] = CQL {
     select(_.counter)
-      .where(_.user_id eqs user.id)
-      .and(_.resource eqs resource)
+      .where(_.ip eqs ip)
       .and(_.datetime eqs datetime)
   }.one().map(_.getOrElse(0L))
 
   def inc(
-    resource: String,
+    ip: InetAddress,
     datetime: DateTime,
     delta: Long = 1L
-  )(
-    implicit user: User
   ): Future[ResultSet] = CQL {
     update
-      .where(_.user_id eqs user.id)
-      .and(_.resource eqs resource)
+      .where(_.ip eqs ip)
       .and(_.datetime eqs datetime)
       .modify(_.counter += delta)
   }.future()

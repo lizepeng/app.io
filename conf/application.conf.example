@@ -61,10 +61,15 @@ app.hostname="http://127.0.0.1:9000"
 play.application.loader=AppLoader
 
 # app.http.filters=[
+#   LoopbackIPFilter,
+#   ClientIPFilter,
 #   RequestLogger,
 #   Compressor,
 #   RequestTimeLogger
 # ]
+
+app.http.ip_filter.limit=90000
+app.http.ip_filter.span=15
 
 contexts {
   mailer {
