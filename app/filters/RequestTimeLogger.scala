@@ -12,23 +12,19 @@ class RequestTimeLogger(
   implicit val ec: ExecutionContext
 ) extends Filter {
 
-  def apply(
-    nextFilter: RequestHeader => Future[Result]
-  )(
-    requestHeader: RequestHeader
+  def apply(next: RequestHeader => Future[Result])(
+    req: RequestHeader
   ): Future[Result] = {
     def now = System.currentTimeMillis
-
-    val startTime = now
-    nextFilter(requestHeader).map { result =>
-      val endTime = now
-      val requestTime = endTime - startTime
-      if (!requestHeader.uri.contains("assets")) {
+    val start = now
+    next(req).map { result =>
+      val took = now - start
+      if (!req.uri.contains("assets")) {
         Logger.trace(
-          f"${result.header.status}, took $requestTime%4d ms, ${requestHeader.method} ${requestHeader.uri}"
+          f"${result.header.status}, took $took%4d ms, ${req.method} ${req.uri}"
         )
       }
-      result.withHeaders("Request-Time" -> requestTime.toString)
+      result.withHeaders("Request-Time" -> took.toString)
     }
   }
 }

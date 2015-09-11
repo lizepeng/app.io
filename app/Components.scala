@@ -171,7 +171,7 @@ abstract class Components(context: Context)
   override lazy val httpFilters: Seq[EssentialFilter] =
     configuration.getStringSeq("app.http.filters").getOrElse(Nil).collect {
       case "Compressor"        => new Compressor()
-      case "HeadersLogger"     => new HeadersLogger()
+      case "RequestLogger"     => new RequestLogger()
       case "RequestTimeLogger" => new RequestTimeLogger()
     }
 

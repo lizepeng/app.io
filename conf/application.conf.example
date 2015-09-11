@@ -61,7 +61,7 @@ app.hostname="http://127.0.0.1:9000"
 play.application.loader=AppLoader
 
 # app.http.filters=[
-#   HeadersLogger,
+#   RequestLogger,
 #   Compressor,
 #   RequestTimeLogger
 # ]
