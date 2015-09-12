@@ -1,5 +1,6 @@
 package controllers.api_internal
 
+import controllers.RateLimitConfig
 import elasticsearch._
 import helpers._
 import models._
@@ -27,10 +28,11 @@ class SearchCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
+  with RateLimitConfig
   with I18nSupport {
 
   def index(types: Seq[String], q: Option[String], p: Pager) =
-    UserAction(_.Index, rateLimit = 2000).async { implicit req =>
+    UserAction(_.Index).async { implicit req =>
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {

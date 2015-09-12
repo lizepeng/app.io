@@ -1,6 +1,6 @@
 package controllers.api_internal
 
-import controllers.RateLimitChecker
+import controllers.{RateLimitChecker, RateLimitUnit}
 import helpers.BasicPlayApi
 import models._
 import play.api.mvc._
@@ -16,18 +16,17 @@ object UserAction {
   def apply(
     action: CheckedActions => CheckedAction,
     onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
-    = (_, _, _) => Results.NotFound,
-    rateLimit: Int = 500,
-    rateLimitSpan: Int = 15
+    = (_, _, _) => Results.NotFound
   )(
     implicit
     resource: CheckedResource,
     basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired
+    userActionRequired: UserActionRequired,
+    rateLimitUnit: RateLimitUnit
   ): ActionBuilder[UserRequest] =
     MaybeUser() andThen
       AuthChecker andThen
-      RateLimitChecker(rateLimit, rateLimitSpan) andThen
+      RateLimitChecker() andThen
       PermissionChecker(action, onDenied, resource)
 }
 

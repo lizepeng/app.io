@@ -2,6 +2,7 @@ package controllers.api_internal
 
 import java.util.UUID
 
+import controllers.RateLimitConfig
 import elasticsearch._
 import helpers._
 import models._
@@ -31,6 +32,7 @@ class UsersCtrl(
   with InternalGroupsComponents
   with UserActionComponents
   with DefaultPlayExecutor
+  with RateLimitConfig
   with I18nSupport
   with Logging {
 

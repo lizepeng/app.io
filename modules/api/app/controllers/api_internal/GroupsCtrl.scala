@@ -3,6 +3,7 @@ package controllers.api_internal
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
+import controllers.RateLimitConfig
 import elasticsearch._
 import helpers._
 import models._
@@ -33,6 +34,7 @@ class GroupsCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
+  with RateLimitConfig
   with I18nSupport
   with Logging {
 
