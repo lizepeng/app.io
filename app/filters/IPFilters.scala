@@ -2,10 +2,10 @@ package filters
 
 import java.net.InetAddress
 
+import helpers.ExtRequest._
 import helpers._
 import models.IPRateLimits
 import org.joda.time.DateTime
-import play.api.http.HeaderNames
 import play.api.mvc._
 
 import scala.concurrent._
@@ -29,19 +29,11 @@ abstract class AbstractIPFilter(shouldBlock: InetAddress => Boolean)
   val limit = configuration.getInt("app.http.ip_filter.limit").getOrElse(90000)
   val span  = configuration.getInt("app.http.ip_filter.span").getOrElse(15)
 
-  def clientIP(req: RequestHeader) = {
-    req.headers
-      .get(HeaderNames.X_FORWARDED_FOR) // X-Forwarded-For: client, proxy1, proxy2
-      .flatMap(_.split(",").headOption.map(_.trim))
-      .getOrElse(req.remoteAddress)
-  }
-
   def apply(next: RequestHeader => Future[Result])(
     req: RequestHeader
   ): Future[Result] = {
 
-    Try(InetAddress.getByName(clientIP(req)))
-      .filter(!shouldBlock(_)) match {
+    req.clientIP.filter(!shouldBlock(_)) match {
       case Success(ip) =>
         val now = DateTime.now
         val minutes = now.getMinuteOfHour

@@ -1,5 +1,6 @@
 package controllers
 
+import helpers.ExtRequest._
 import helpers._
 import models._
 import play.api.data.Forms._
@@ -9,6 +10,7 @@ import play.api.mvc._
 import views._
 
 import scala.concurrent.Future
+import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
@@ -17,7 +19,8 @@ import scala.concurrent.Future
 class SessionsCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _groups: Groups
+  val _groups: Groups,
+  val _userLoginIPs: UserLoginIPs
 )
   extends Controller
   with security.Session
@@ -55,6 +58,8 @@ class SessionsCtrl(
       success => _users.auth(success.email, success.password).recover {
         case e: User.NotFound      => Logger.warn(e.reason); throw User.AuthFailed()
         case e: User.WrongPassword => Logger.warn(e.reason); throw User.AuthFailed()
+      }.andThen {
+        case Success(user) => req.clientIP.map(_userLoginIPs.log(user.id, _))
       }.map { implicit user =>
         Redirect(routes.MyCtrl.dashboard()).createSession(success.remember_me)
       }.recover { case e: BaseException =>

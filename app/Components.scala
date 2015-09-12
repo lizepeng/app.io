@@ -58,6 +58,7 @@ abstract class Components(context: Context)
   )
 
   implicit val _ipRateLimits           = new IPRateLimits
+  implicit val _userLoginIPs           = new UserLoginIPs
   implicit val _users                  = new Users
   implicit val _accessControls         = new AccessControls
   implicit val _sessionData            = new SessionData
