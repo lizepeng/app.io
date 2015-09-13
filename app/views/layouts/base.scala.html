@@ -5,18 +5,17 @@
   implicit req: MaybeUserRequest[_], messages: Messages)
 
 @layoutsOpt = @{req.maybeUser.flatMap(_.preferences.get[List[String]]("layouts"))}
+@baseAdmin  = @{base_admin.getClass.getCanonicalName}
 
-@{
-  layoutsOpt match {
-    case Some(layouts) => {
-      if(layouts.contains(base_admin.getClass.getCanonicalName)) {
-        base_admin(title, above_content)(content)(css:_*)(js:_*)
-      } else {
-        base_normal(title, above_content)(content)(css:_*)(js:_*)
-      }
+@layoutsOpt match {
+  case Some(layouts) => {
+    @if(layouts.contains(baseAdmin)) {
+      @base_admin(title, above_content)(content)(css:_*)(js:_*)
+    } else {
+      @base_normal(title, above_content)(content)(css:_*)(js:_*)
     }
-    case None => {
-      base_normal(title, above_content)(content)(css:_*)(js:_*)
-    }
+  }
+  case None => {
+    @base_normal(title, above_content)(content)(css:_*)(js:_*)
   }
 }
