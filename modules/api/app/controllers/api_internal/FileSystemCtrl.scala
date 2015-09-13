@@ -158,7 +158,8 @@ class FileSystemCtrl(
           } yield stat).flatMap { case (cnt, size) =>
             if (flow.isLastChunk(cnt, size)) {
               (for {
-                curr <- _cfs.home(req.user).flatMap(_.dir(path))
+                home <- _cfs.home(req.user)
+                curr <- home.dir(path)
                 file <- _cfs.temp.flatMap { t =>
                   tempFiles(t) &>
                     Enumeratee.mapFlatten[File] { f =>

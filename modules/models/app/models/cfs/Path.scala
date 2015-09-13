@@ -14,9 +14,23 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
 
   def /(dir: String) = if (dir == ".") this else copy(parts ++ Seq(dir))
 
+  def /(sub: Path) = copy(parts ++ sub.parts)
+
   def /:(dir: String) = if (dir == ".") this else copy(Seq(dir) ++ parts)
 
   def +(filename: String) = copy(filename = Some(filename))
+
+  def compact = copy(
+    parts = parts.foldRight(List[String]()) {
+      case (curr, list) => list match {
+        case ".." :: tail => tail
+        case _            => curr match {
+          case "." => list
+          case _   => curr :: list
+        }
+      }
+    }
+  )
 
   def subPaths = {
     for (i <- 0 to parts.size)
@@ -26,7 +40,7 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
   }
 }
 
-object Path extends PathJsonStringifier{
+object Path extends PathJsonStringifier {
 
   def root = Path()
 

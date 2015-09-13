@@ -69,7 +69,7 @@ case class Directory(
       Future.failed(Directory.NotDirectory(path))
     else find(path.parts).flatMap {
       case (n, i) => cfs._directories.find(i)(
-        _.copy(name = n, path = path)
+        _.copy(name = n, path = this.path / path)
       )
     }
 
@@ -210,6 +210,13 @@ class Directories(
     case Some(id) => (name, id)
   }
 
+  /**
+   * Note: After calling this method, you have to set path to correct value
+   *
+   * @param id inode_id
+   * @param onFound will be called after inode being found
+   * @return found inode
+   */
   def find(id: UUID)(
     implicit onFound: Directory => Directory
   ): Future[Directory] = CQL {
@@ -286,7 +293,9 @@ class Directories(
       }.future()
       crs <- {
         if (!prs.wasApplied()) {
-          this.find(child_id(prs.one()))
+          this.find(child_id(prs.one()))(
+            _.copy(name = dir.name, path = dir.path)
+          )
         } else {
           cql_write(dir).future().map(_ => dir)
         }

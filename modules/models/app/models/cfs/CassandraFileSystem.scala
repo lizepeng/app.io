@@ -29,7 +29,12 @@ class CassandraFileSystem(
   implicit val _directories    = new Directories
 
   def home(implicit user: User): Future[Directory] = {
-    _directories.find(user.id).recoverWith {
+    _directories.find(user.id)(
+      _.copy(
+        name = user.id.toString,
+        path = Path.root / user.id.toString
+      )
+    ).recoverWith {
       case Directory.NotFound(id) =>
         root.flatMap { root =>
           Directory(
