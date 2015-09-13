@@ -31,7 +31,7 @@ implicit req: UserRequest[_], messages: Messages)
             </tr>
           </thead>
           <tbody>
-            <tr class="ng-cloak" ng-repeat="inode in INodeList.inodes">
+            <tr class="ng-cloak" ng-repeat="inode in INodeList.inodes | orderBy:['is_file','name']">
               <!-- Directory -->
               <td ng-if="inode.is_directory">
                 <i class="fa fa-2x fa-folder fa-fw text-info"></i>
@@ -81,21 +81,21 @@ implicit req: UserRequest[_], messages: Messages)
     <div class="row">
       @ng._pager("GroupList.links")
     </div>
-  </div>
 
-  <div class="row">
-    <div flow-init="{target: '@api_internal.routes.FileSystemCtrl.create(path)'}"
-         flow-files-submitted="$flow.upload()"
-         flow-file-success="$file.msg = $message"
-         class="pull-right">
+    <div class="row">
+      <div flow-init="{target: '@api_internal.routes.FileSystemCtrl.create(path)'}"
+           flow-files-submitted="$flow.upload()"
+           flow-file-success="success($file, $message)"
+           class="pull-right">
 
-      <span class="btn btn-success" flow-btn>
-        <i class="fa fa-upload"></i>
-        <strong>Upload new file</strong>
-      </span>
+        <span class="btn btn-success" flow-btn>
+          <i class="fa fa-upload"></i>
+          <strong>Upload new file</strong>
+        </span>
+      </div>
     </div>
-  </div>
 
+  </div>
 }()(
   libs.webjars("js", "angular-resource"),
   libs.webjars("js", "ng-flow"),

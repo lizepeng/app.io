@@ -166,7 +166,7 @@ class FileSystemCtrl(
                     } |>>> curr.save(flow.fileName)
                 }
               } yield file).map {
-                _ => Created
+                saved => Created(Json.toJson(saved)(File.jsonWrites))
               }.recover {
                 case e: Directory.ChildExists => Accepted
               }

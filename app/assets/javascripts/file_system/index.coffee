@@ -50,34 +50,33 @@ views.files.index
             type : 'danger'
             msg  : data.message
 
+    service.created = (file) ->
+      file.path = Path.create(file.path)
+      service.inodes.push file
+
     service
 ]
 
 .controller 'FilesCtrl', [
   '$scope'
-  '$http'
-  '$q'
-  'ClientError'
   'INodeList'
   'ModalDialog'
-  ($scope, $http, $q, ClientError, INodeList, ModalDialog) ->
+  'Alert'
+  ($scope, INodeList, ModalDialog, Alert) ->
     $scope.INodeList        = INodeList
     $scope.jsRoutes         = jsRoutes
     $scope.path             = INodeList.path
     $scope.realPath         = INodeList.realPath
     ModalDialog.templateUrl = 'confirm_delete.html'
 
-    $scope.checkName = (data) ->
-      d = $q.defer()
-      $http.post jsRoutes.controllers.Files.checkName(data).url, name: data
-      .success (res) -> d.resolve()
-      .error (data, status) -> d.resolve ClientError.firstMsg(data, status)
-      d.promise
-
     $scope.confirmDelete = (file) ->
       ModalDialog.open().result.then(
         -> INodeList.delete file
         ->)
+
+    $scope.success = ($file, resp) ->
+      INodeList.created(JSON.parse(resp))
+
     return
 ]
 
