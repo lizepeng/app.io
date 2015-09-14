@@ -1,0 +1,79 @@
+@(main_menu: Html)(implicit req: MaybeUserRequest[_], messages: Messages)
+
+@import helper._
+
+<div class="navbar-wrapper">
+
+  <div class="navbar navbar-default navbar-static-top" role="navigation" ng-controller="NavbarCtrl">
+    <div class="container">
+
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="@routes.Application.index">
+          <i class="fa fa-foursquare fa-lg"></i> @MSG("app.name")
+        </a>
+      </div>
+
+      <div class="navbar-collapse collapse" collapse="isCollapsed">
+        <ul class="nav navbar-nav" >
+          @main_menu
+        </ul>
+        @user_sub_menu
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+@user_sub_menu = {
+  @req.maybeUser match {
+    case None => {
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="@routes.SessionsCtrl.nnew">@MSG("sign.in")</a></li>
+      </ul>
+    }
+    case Some(u) => {
+      <ul class="nav navbar-nav user-nav navbar-right">
+        <li>
+          <a href="@routes.MyCtrl.dashboard" title="">
+            <span class="hidden-xs">
+              @u.email
+            </span>
+            <span class="visible-xs">
+              <i class="fa fa-user fa-lg"></i>
+              @MSG("dashboard")
+            </span>
+          </a>
+        </li>
+        <li class="hidden-xs"><a href="#">
+          <i class="fa fa-plus fa-lg"></i>
+        </a></li>
+        <li class="hidden-xs"><a href="#" >
+          <i class="fa fa-inbox fa-lg"></i>
+        </a></li>
+        <li><a href="@routes.MyCtrl.profile">
+          <i class="fa fa-cog fa-lg"></i>
+          <span class="hidden-sm hidden-md hidden-lg">
+            @MSG("settings")
+          </span>
+        </a></li>
+        <li class="divider"></li>
+        <li>
+          @form(routes.SessionsCtrl.destroy, 'class -> "navbar-form") {
+            <button type="submit" class="btn form-inline-btn">
+              <i class="fa fa-sign-out fa-lg"></i>
+              <span class="hidden-sm hidden-md hidden-lg">
+                @MSG("sign.out")
+              </span>
+            </button>
+          }
+        </li>
+      </ul>
+    }
+  }
+}

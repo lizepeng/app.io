@@ -1,0 +1,47 @@
+@(title: String, above_content: Html = Html(""), main_menu: Html = Html(""))(
+  content: Html)(
+  css: Html *)(
+  js: Html *)(
+  implicit req: MaybeUserRequest[_], messages: Messages)
+
+@import helper._
+
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+  <head>
+    <title>@title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    @libs.webjars("css", "bootstrap")
+    @libs.webjars("css", "font-awesome")
+    @libs.assets("css", "main")
+    @css
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../assets/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    @{_navbar(main_menu)}
+    @above_content
+    <div class="container">
+      @content
+    </div>
+    @{_footer()}
+  </body>
+
+  <link rel="shortcut icon" type="image/png"
+    href="@routes.Assets.at("images/favicon.png")">
+  @libs.webjars("js", "angular")
+  @libs.webjars("js", "angular-bootstrap-tpls")
+  @libs.webjars("js", "underscore")
+  <script>
+    angular.module('app', ['ui.bootstrap'])
+      .controller('NavbarCtrl', ['$scope', function($scope){
+        $scope.isCollapsed = true;
+      }]);
+  </script>
+  @js
+</html>

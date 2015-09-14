@@ -1,0 +1,17 @@
+@()(implicit messages: Messages)
+
+<div class="site-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-7">
+        <p class="text-muted">© 2015 zepeng.li@@gmail.com</p>
+      </div>
+      <div class="col-xs-5">
+        <ul class="list-inline">
+          <li><a href="#contact"> @MSG("contact")</a></li>
+          <li><a href="@routes.Application.about()">@MSG("about")</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
