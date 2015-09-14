@@ -46,17 +46,20 @@ implicit req: UserRequest[_], messages: Messages)
                 <a ng-if="!grp.is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}">
                   <code>{{ grp.id }}</code>
                 </a>
-                <code class="bg-primary" ng-if="grp.is_internal">{{ grp.id }}</code>
+                <code ng-if="grp.is_internal" class="bg-primary">{{ grp.id }}</code>
               </td>
 
               <td>
-                <a ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}" class="hidden-sm hidden-md hidden-lg">
-                  <i class="fa fa-info-circle fa-lg text-info"></i>
-                </a>
+                <div class="hidden-sm hidden-md hidden-lg pull-left" style="margin-right:5px;">
+                  <a ng-if="!grp.is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}">
+                    <i class="fa fa-info-circle fa-lg text-info"></i>
+                  </a>
+                  <i ng-if="grp.is_internal" class="fa fa-info-circle fa-lg"></i>
+                </div>
 
                 <a href="#" editable-text="grp.name" buttons="no"
-                onbeforesave="checkName($data)"
-                onaftersave="grp.$save()">
+                  onbeforesave="checkName($data)"
+                  onaftersave="grp.$save()">
                   {{ grp.name }}
                 </a>
               </td>
@@ -66,7 +69,11 @@ implicit req: UserRequest[_], messages: Messages)
               </td>
 
               <td class="hidden-xs">
-                <select class="form-control input-sm" ng-options="k as v for (k,v) in Layouts" ng-model="grp.layout" ng-change="setLayout(grp.id, grp.layout)"></select>
+                <select class="form-control input-sm"
+                  ng-options="k as v for (k,v) in Layouts"
+                  ng-model="grp.layout"
+                  ng-change="setLayout(grp.id, grp.layout)">
+                </select>
               </td>
 
               <td>
