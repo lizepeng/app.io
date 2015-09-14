@@ -83,6 +83,6 @@ views.groups.index.factory 'GroupList', [
     return
 ]
 
-.run (editableOptions) -> editableOptions.theme = 'bs3'
+.run ['editableOptions', (editableOptions) -> editableOptions.theme = 'bs3']
 
 angular.module('app').requires.push 'groups.list'
