@@ -37,16 +37,16 @@ implicit req: UserRequest[_], messages: Messages)
                 @MSG("layout")
               </th>
               <th class="col-xs-2 col-sm-1 col-md-1 text-right">
-                @MSG("action")
               </th>
             </tr>
           </thead>
           <tbody>
             <tr class="ng-cloak" ng-repeat="grp in GroupList.groups">
               <td class="hidden-xs">
-                <a ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}">
+                <a ng-if="!grp.is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}">
                   <code>{{ grp.id }}</code>
                 </a>
+                <code class="bg-primary" ng-if="grp.is_internal">{{ grp.id }}</code>
               </td>
 
               <td>

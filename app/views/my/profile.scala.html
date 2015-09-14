@@ -32,8 +32,9 @@
 
           <div class="panel-body">
 
-            @ng._form_group_static("Profile picture",
-            '_inline      -> false
+            @ng._form_group_static("profile.picture",
+              '_type   -> MSG("profile.picture"),
+              '_inline -> false
             ){
               <div class="row">
                 <div class="col-xs-4 col-sm-2">
@@ -45,7 +46,7 @@
                        flow-file-success="$file.msg = $message">
 
                     <span class="btn btn-default" flow-btn>
-                      <strong>Upload new picture</strong>
+                      <strong>@MSG("profile.picture.upload")</strong>
                     </span>
 
                     <table>

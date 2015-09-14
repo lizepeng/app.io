@@ -119,19 +119,16 @@ abstract class Components(context: Context)
 
   // Register permission checkable controllers
   implicit val secured = new controllers.RegisteredSecured(
-    messagesApi,
-    Seq(
-      controllers.AccessControlsCtrl,
-      controllers.api_internal.AccessControlsCtrl,
-      controllers.UsersCtrl,
-      controllers.api_internal.UsersCtrl,
-      controllers.GroupsCtrl,
-      controllers.api_internal.GroupsCtrl,
-      controllers.FileSystemCtrl,
-      controllers.api_internal.FileSystemCtrl,
-      controllers.EmailTemplatesCtrl,
-      controllers.api_internal.SearchCtrl
-    )
+    controllers.AccessControlsCtrl,
+    controllers.api_internal.AccessControlsCtrl,
+    controllers.UsersCtrl,
+    controllers.api_internal.UsersCtrl,
+    controllers.GroupsCtrl,
+    controllers.api_internal.GroupsCtrl,
+    controllers.FileSystemCtrl,
+    controllers.api_internal.FileSystemCtrl,
+    controllers.EmailTemplatesCtrl,
+    controllers.api_internal.SearchCtrl
   )
 
   // Permission Checking

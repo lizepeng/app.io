@@ -8,6 +8,7 @@ contact                                          =Contact
 com.profile                                      =Corporate Profile
 id                                               =Id
 user                                             =User
+password                                         =Password
 email                                            =Email address
 submit                                           =Submit
 action                                           =Action
@@ -53,6 +54,10 @@ allow                                            =Allow
 deny                                             =Deny
 first_name                                       =First Name
 last_name                                        =Last Name
+settings                                         =Settings
+dashboard                                        =Dashboard
+profile.picture                                  =Profile Picture
+profile.picture.upload                           =Upload new Picture
 
 # layout
 layout                                           =Layout
@@ -95,14 +100,57 @@ password.all_upper                               =Password need at least one low
 password.all_lower                               =Password need at least one uppercase letter
 password.not.confirmed                           =Password doesn''t match the confirmation
 
+# --- Constraints
+constraint.required                              =Required
+constraint.min                                   =Minimum value: {0}
+constraint.max                                   =Maximum value: {0}
+constraint.minLength                             =Minimum length: {0}
+constraint.maxLength                             =Maximum length: {0}
+constraint.email                                 =Email
+
+# --- Formats
+format.date                                      =Date (''{0}'')
+format.numeric                                   =Numeric
+format.real                                      =Real
+format.uuid                                      =UUID
+
+# --- Errors
+error.invalid                                    =Invalid value
+error.invalid.java.util.Date                     =Invalid date value
 error.required                                   = This field is required
-error.uuid                                       =UUID is invalid
+error.number                                     =Numeric value expected
+error.real                                       =Real number value expected
+error.real.precision                             =Real number value with no more than {0} digit(s) including {1} decimal(s) expected
+error.min                                        =Must be greater or equal to {0}
+error.min.strict                                 =Must be strictly greater than {0}
+error.max                                        =Must be less or equal to {0}
+error.max.strict                                 =Must be strictly less than {0}
 error.minLength                                  = Minimum length is {0}
 error.maxLength                                  = Maximum length is {0}
-error.min                                        =TODO
-error.min.strict                                 =TODO
-error.max                                        =TODO
-error.max.strict                                 =TODO
+error.email                                      =Valid email required
+error.pattern                                    =Must satisfy {0}
+error.date                                       =Valid date required
+error.uuid                                       =Valid UUID required
+
+error.expected.date                              =Date value expected
+error.expected.date.isoformat                    =Iso date value expected
+error.expected.time                              =Time value expected
+error.expected.jodadate.format                   =Joda date value expected
+error.expected.jodatime.format                   =Joda time value expected
+error.expected.jsarray                           =Array value expected
+error.expected.jsboolean                         =Boolean value expected
+error.expected.jsnumber                          =Number value expected
+error.expected.jsobject                          =Object value expected
+error.expected.jsstring                          =String value expected
+error.expected.jsnumberorjsstring                =String or number expected
+error.expected.keypathnode                       =Node value expected
+error.expected.uuid                              =UUID value expected
+error.expected.validenumvalue                    =Valid enumeration value expected
+error.expected.enumstring                        =String value expected
+
+error.path.empty                                 =Empty path
+error.path.missing                               =Missing path
+error.path.result.multiple                       =Multiple results for the given path
 
 query.params.page.lte.zero                       =Param page/per_page must be greater than zero
 query.params.page.failed                         =Unable to bind page/per_page
@@ -122,6 +170,7 @@ sign.up.head                                     =Join App.io
 sign.up.failed                                   =There were problems creating your account.
 
 sign.in.msg.error                                =TODO
+account.create                                   =Create an account
 
 # Settings
 settings.personal                                =Personal settings
@@ -141,7 +190,7 @@ password.update                                  =Update password
 password.forgot                                  =I forgot my password
 
 # groups
-controllers.api_internal.groups.name             =Internal API: Groups
+controllers.api_internal.groups.name             =Groups(Internal API)
 controllers.groups.name                          =Groups
 controllers.groups.created                       =New group created
 
@@ -156,7 +205,7 @@ msg.models.groups.not.empty                      =Group is not empty
 msg.models.groups.not.writable                   =Group is not writable
 
 # users
-controllers.api_internal.users.name              =Internal API: Users
+controllers.api_internal.users.name              =Users(Internal API)
 controllers.users.name                           =Users
 controllers.users.password.changed               =Password changed successfully
 controllers.users.old.password.invalid           =Old Password is invalid
@@ -181,7 +230,7 @@ log.models.users.auth.failed                     =TODO
 log.models.users.no.credentials                  =TODO
 
 # file_system
-controllers.api_internal.file_system.name        =Internal API: File System
+controllers.api_internal.file_system.name        =File System(Internal API)
 controllers.file_system.name                     =File System
 controllers.file_system.missing                  =Missing File
 controllers.file_system.uploaded                 ={0} Uploaded
@@ -190,6 +239,11 @@ controllers.file_system.not.found                ={0} Not Found
 
 views.file_system.title                          =File System
 views.file_system.head                           =File System
+
+views.file_system.name                           =Name
+views.file_system.size                           =Size
+views.file_system.created_at                     =Date Created
+views.file_system.upload.new.file                =Upload New File
 
 log.models.cfs.dir.child.not.found               =No such child {1} in dir {0}
 log.models.cfs.dir.child.exists                  =There already exists child {1} in dir {0}
@@ -231,7 +285,7 @@ log.models.email_templates.not.found             =Email Template {0}, {1} not fo
 log.models.email_templates.updated.by.others     =Email Template has been edited by other users.
 
 # access_controls
-controllers.api_internal.access_controls.name    =Internal API: Access Control List
+controllers.api_internal.access_controls.name    =Access Control List(Internal API)
 controllers.access_controls.name                 =Access Control List
 controllers.access_controls.entry.deleted        =Access Control Entry deleted
 controllers.access_controls.entry.created        =Access Control Entry created
@@ -239,6 +293,11 @@ controllers.access_controls.entry.created        =Access Control Entry created
 views.access_controls.title                      =Access Control
 views.access_controls.head                       =Access Control
 views.access_controls.principal.placeholder      =Enter a User Email or Group Name
+
+views.access_controls.principal                  =Principal
+views.access_controls.resource                   =Resource
+views.access_controls.action                     =Action
+views.access_controls.granted                    =Granted
 
 log.models.access_controls.users.perm.undefined  = Undefined: [User,   {0}, {1}, {2}]
 log.models.access_controls.groups.perm.undefined = Undefined: [Groups, {0}, {1}, {2}]
@@ -256,7 +315,7 @@ msg.security.onUnauthorized                      =Authentication Failed.
 log.security.onUnauthorized                      =Authentication Failed.
 
 # search
-controllers.api_internal.search.name             =Internal API: Search Engine
+controllers.api_internal.search.name             =Search Engine(Internal API)
 
 # alert
 alert.success.title                              =Success!

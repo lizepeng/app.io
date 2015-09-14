@@ -21,6 +21,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
     <form name="form" ng-controller="NewEntryCtrl">
       <div class="col-xs-12 col-sm-6 col-md-4">
         @ng._form_control("principal",
+          '_label       -> AccessControlsCtrl.msg("principal"),
           '_inline      -> false,
           'tabindex     -> 1,
           'placeholder  -> AccessControlsCtrl.msg("principal.placeholder"),
@@ -32,6 +33,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
       <div class="col-xs-12 col-sm-6 col-md-2">
         @ng._select("resource",
+          '_label       -> AccessControlsCtrl.msg("resource"),
           '_inline      -> false,
           'tabindex     -> 2,
           Symbol("ng-model")   -> "ac.resource",
@@ -41,6 +43,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
       <div class="col-xs-12 col-sm-6 col-md-2">
         @ng._select("action",
+          '_label       -> AccessControlsCtrl.msg("action"),
           '_inline      -> false,
           'tabindex     -> 3,
           Symbol("ng-model")   -> "ac.action",
@@ -50,6 +53,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
       <div class="col-xs-12 col-sm-5 col-md-3">
         @ng._form_group_static("granted",
+          '_label       -> AccessControlsCtrl.msg("granted"),
           '_inline      -> false
         ){
           <div class="btn-group">
@@ -86,13 +90,13 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
           <thead>
             <tr>
               <th class="col-xs-4  col-sm-4 ">
-                @MSG("principal")
+                @AccessControlsCtrl.msg("principal")
               </th>
               <th class="col-xs-2  col-sm-4 ">
-                @MSG("resource")
+                @AccessControlsCtrl.msg("resource")
               </th>
               <th class="col-xs-1  col-sm-2 ">
-                @MSG("action")
+                @AccessControlsCtrl.msg("action")
               </th>
               <th class="col-xs-2  col-sm-2 text-right">
               </th>

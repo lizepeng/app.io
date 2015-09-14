@@ -28,7 +28,7 @@ implicit req: UserRequest[_], messages: Messages)
               <i class="fa fa-search"></i>
             </div>
             <input type="search" class="form-control" id="search-users"
-              placeholder="@UsersCtrl.msg("search.label")"
+              placeholder="@UsersCtrl.msg("search.placeholder")"
               autocomplete="off"
               ng-model="keyword">
           </div>
@@ -48,10 +48,9 @@ implicit req: UserRequest[_], messages: Messages)
                 @MSG("email")
               </th>
               <th class="hidden-xs hidden-sm col-md-3">
-                @MSG("name")
+                @MSG("user.name")
               </th>
               <th class="col-xs-4  col-sm-3  col-md-1 text-right">
-                @MSG("action")
               </th>
             </tr>
           </thead>

@@ -22,12 +22,12 @@ implicit req: UserRequest[_], messages: Messages)
         <table class="table table-hover table-ellipsis">
           <thead>
             <tr>
-              <th class="col-xs-5">@MSG("name")</th>
-              <th class="col-xs-2 text-right">@MSG("size")</th>
+              <th class="col-xs-5">@FileSystemCtrl.msg("name")</th>
+              <th class="col-xs-2 text-right">@FileSystemCtrl.msg("size")</th>
               <th class="col-xs-3 text-right hidden-xs hidden-sm">
-                @MSG("created_at")
+                @FileSystemCtrl.msg("created_at")
               </th>
-              <th class="col-xs-2 text-right">@MSG("action")</th>
+              <th class="col-xs-2 text-right"></th>
             </tr>
           </thead>
           <tbody>
@@ -90,7 +90,7 @@ implicit req: UserRequest[_], messages: Messages)
 
         <span class="btn btn-success" flow-btn>
           <i class="fa fa-upload"></i>
-          <strong>Upload new file</strong>
+          <strong>@FileSystemCtrl.msg("upload.new.file")</strong>
         </span>
       </div>
     </div>

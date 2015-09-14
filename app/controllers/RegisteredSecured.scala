@@ -1,6 +1,6 @@
 package controllers
 
-import play.api.i18n.MessagesApi
+import play.api.i18n.Messages
 import play.api.libs.json._
 import security._
 
@@ -8,18 +8,17 @@ import security._
  * @author zepeng.li@gmail.com
  */
 class RegisteredSecured(
-  val messagesApi: MessagesApi,
-  val modules: Seq[PermissionCheckable]
+  val modules: PermissionCheckable*
 ) {
 
   object Modules {
 
     def names: Seq[String] = modules.map(_.CheckedModuleName.name)
 
-    def toJson = Json.prettyPrint(
+    def toJson(implicit messages: Messages) = Json.prettyPrint(
       JsObject(
         names.map { name =>
-          (name, JsString(messagesApi(s"$name.name")))
+          (name, JsString(messages(s"$name.name")))
         }
       )
     )
@@ -29,10 +28,10 @@ class RegisteredSecured(
 
     def names: Seq[String] = actions.map(_.name)
 
-    def toJson = Json.prettyPrint(
+    def toJson(implicit messages: Messages) = Json.prettyPrint(
       JsObject(
         names.map { name =>
-          (name, JsString(messagesApi(s"actions.$name")))
+          (name, JsString(messages(s"actions.$name")))
         }
       )
     )
