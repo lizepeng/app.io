@@ -2,17 +2,18 @@ package messages
 
 import akka.actor._
 import models._
+import services.actors._
 
 import scala.language.postfixOps
 
-object ChatActor extends UserClusterSharding {
+object ChatActor extends ActorClusterSharding {
 
   val shardName: String = "chat_actors"
 
   def props: Props = Props(classOf[ChatActor])
 }
 
-class ChatActor extends UserActor {
+class ChatActor extends UserMessageActor {
 
   var _chatHistories: ChatHistories = _
 

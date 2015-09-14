@@ -2,8 +2,8 @@ package controllers.sockets
 
 import java.util.UUID
 
-import actors.ChatWebSocket
-import actors.ChatWebSocket._
+import controllers.actors.ChatWebSocket
+import controllers.actors.ChatWebSocket._
 import helpers.{BasicPlayApi, BasicPlayComponents}
 import play.api.Play.current
 import play.api.i18n.I18nSupport

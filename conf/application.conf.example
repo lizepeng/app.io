@@ -71,6 +71,8 @@ play.application.loader=AppLoader
 app.http.ip_filter.limit=90000
 app.http.ip_filter.span=15
 
+app.akka.cluster.number_of_nodes=10
+
 controllers.api_internal.search.rate_limit.limit=3600
 controllers.api_internal.search.rate_limit.span=15
 
@@ -102,6 +104,10 @@ controllers.api.files.bandwidth.stream=1M
 services.mailer.admin.email-addresses=["admin@app.io"]
 
 akka {
+  log-config-on-start = "off"
+  loggers = ["akka.event.slf4j.Slf4jLogger"]
+  loglevel = "DEBUG"
+
   actor.provider = "akka.cluster.ClusterActorRefProvider"
 
   remote {
@@ -119,10 +125,6 @@ akka {
     ]
     auto-down-unreachable-after = 10s
   }
-
-  log-config-on-start = "off"
-  loggers = ["akka.event.slf4j.Slf4jLogger"]
-  loglevel = "DEBUG"
 
   extensions = ["akka.contrib.pattern.DistributedPubSubExtension"]
 

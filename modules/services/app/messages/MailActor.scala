@@ -2,17 +2,18 @@ package messages
 
 import akka.actor._
 import models._
+import services.actors._
 
 import scala.language.postfixOps
 
-object MailActor extends UserClusterSharding {
+object MailActor extends ActorClusterSharding {
 
   val shardName: String = "mail_actors"
 
   def props: Props = Props(classOf[MailActor])
 }
 
-class MailActor extends UserActor {
+class MailActor extends UserMessageActor {
 
   var _mailInbox: MailInbox = _
   var _mailSent : MailSent  = _

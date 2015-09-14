@@ -1,4 +1,4 @@
-package actors
+package controllers.actors
 
 import java.util.UUID
 
@@ -8,9 +8,10 @@ import models._
 import play.api.i18n.Messages
 import play.api.libs.json._
 import play.api.mvc.WebSocket.FrameFormatter
+import services.actors.Envelope
 
 import scala.language.{implicitConversions, postfixOps}
-import scala.util.{Success, Try}
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -37,7 +38,7 @@ class ChatWebSocket(out: ActorRef, uid: UUID) extends Actor {
 
   val chatActor = ChatActor.getRegion(context.system)
 
-  chatActor ! Envelope(uid, UserActor.Connect(self))
+  chatActor ! Envelope(uid, UserMessageActor.Connect(self))
 
   def receive: Receive = {
 

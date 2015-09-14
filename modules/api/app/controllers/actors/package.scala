@@ -1,10 +1,11 @@
-import protocols.JsonProtocol
+package controllers
+
 import helpers.BaseException
 import play.api.data.validation.ValidationError
 import play.api.i18n.Messages
 import play.api.libs.json._
 import play.api.mvc.WebSocket.FrameFormatter
-import JsonProtocol._
+import protocols.JsonProtocol._
 
 import scala.util._
 

@@ -187,8 +187,8 @@ abstract class Components(context: Context)
     actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
 
     //Start Actor ShardRegion
-    MailActor.startRegion(actorSystem)
-    ChatActor.startRegion(actorSystem)
+    MailActor.startRegion(configuration, actorSystem)
+    ChatActor.startRegion(configuration, actorSystem)
   }
 
   def startSystem(): Unit = {

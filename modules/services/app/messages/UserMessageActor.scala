@@ -1,10 +1,11 @@
 package messages
 
 import akka.actor._
-import akka.contrib.pattern.{ClusterSharding, ShardRegion}
+import akka.contrib.pattern.ShardRegion
 import akka.persistence.PersistentActor
 import akka.routing.{BroadcastRoutingLogic, Router}
 import models.actors.ResourcesMediator
+import services.actors.Envelope
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -12,35 +13,8 @@ import scala.language.postfixOps
 /**
  * @author zepeng.li@gmail.com
  */
-trait UserClusterSharding {
 
-  def shardName: String
-
-  def props: Props
-
-  def startRegion(system: ActorSystem) = {
-    ClusterSharding(system).start(
-      typeName = shardName,
-      entryProps = Some(props),
-      idExtractor = idExtractor,
-      shardResolver = shardResolver
-    )
-  }
-
-  def getRegion(system: ActorSystem) = {
-    ClusterSharding(system).shardRegion(shardName)
-  }
-
-  val idExtractor: ShardRegion.IdExtractor = {
-    case env@Envelope(uid, _) => (uid.toString, env)
-  }
-
-  val shardResolver: ShardRegion.ShardResolver = {
-    case Envelope(uid, _) => (math.abs(uid.hashCode) % 20000).toString
-  }
-}
-
-object UserActor {
+object UserMessageActor {
 
   case class Connect(socket: ActorRef)
 
@@ -48,7 +22,7 @@ object UserActor {
 
 }
 
-abstract class UserActor extends PersistentActor with ActorLogging {
+abstract class UserMessageActor extends PersistentActor with ActorLogging {
 
   import ShardRegion.Passivate
 
@@ -63,10 +37,10 @@ abstract class UserActor extends PersistentActor with ActorLogging {
   def awaitingResources: Receive
 
   def receiveCommand: Receive = {
-    case Envelope(_, c: UserActor.Connect) =>
+    case Envelope(_, c: UserMessageActor.Connect) =>
       connect(c.socket)
 
-    case UserActor.SetReceiveTimeout =>
+    case UserMessageActor.SetReceiveTimeout =>
       if (sockets.routees.isEmpty) {
         log.debug(s"No connected sockets, passivate after $receiveTimeout.")
         context.setReceiveTimeout(receiveTimeout)
@@ -81,7 +55,7 @@ abstract class UserActor extends PersistentActor with ActorLogging {
       context unwatch a
       sockets = sockets.removeRoutee(a)
       log.debug(s"Socket ${a.path} disconnected.")
-      self ! UserActor.SetReceiveTimeout
+      self ! UserMessageActor.SetReceiveTimeout
 
     case ReceiveTimeout =>
       if (sockets.routees.isEmpty) {
@@ -102,7 +76,7 @@ abstract class UserActor extends PersistentActor with ActorLogging {
 
   def becomeReceive(): Unit = {
     log.debug("Ready.")
-    self ! UserActor.SetReceiveTimeout
+    self ! UserMessageActor.SetReceiveTimeout
     unstashAll()
     context become receive
   }
