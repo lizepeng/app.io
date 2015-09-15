@@ -11,6 +11,8 @@ import protocols.JsonProtocol._
 import security._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
@@ -85,7 +87,14 @@ trait RateLimitConfig {
   def configuration: Configuration
 
   implicit lazy val rateLimitUnit = RateLimitUnit(
-    configuration.getInt(s"$canonicalName.rate_limit.limit").getOrElse(900),
-    configuration.getInt(s"$canonicalName.rate_limit.span").getOrElse(15)
+    configuration
+      .getInt(s"$canonicalName.rate_limit.limit")
+      .orElse(configuration.getInt(s"$packageName.rate_limit.limit"))
+      .getOrElse(900),
+    configuration
+      .getMilliseconds(s"$canonicalName.rate_limit.span")
+      .orElse(configuration.getMilliseconds(s"$packageName.rate_limit.span"))
+      .map(_ millis)
+      .map(_.toMinutes.toInt).getOrElse(15)
   )
 }

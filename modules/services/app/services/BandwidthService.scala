@@ -72,7 +72,7 @@ class BandwidthService(
       case in@Input.El(block) if remaining > 1 =>
         new CheckDone[BLK, BLK] {
           def continue[A](k: K[BLK, A]) =
-            Cont(step(remaining - block.size, start)(k))
+            Cont(step(remaining - block.length, start)(k))
         } &> k(in)
 
       case Input.Empty if remaining > 0 =>

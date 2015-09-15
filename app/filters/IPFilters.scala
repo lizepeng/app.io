@@ -9,6 +9,8 @@ import org.joda.time.DateTime
 import play.api.mvc._
 
 import scala.concurrent._
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util._
 
 /**
@@ -26,8 +28,14 @@ abstract class AbstractIPFilter(shouldBlock: InetAddress => Boolean)
   def _ipRateLimits: IPRateLimits
 
   // default 90000 requests per 15 minutes
-  val limit = configuration.getInt("app.http.ip_filter.limit").getOrElse(90000)
-  val span  = configuration.getInt("app.http.ip_filter.span").getOrElse(15)
+  val limit = configuration
+    .getInt("app.http.ip_filter.limit")
+    .getOrElse(90000)
+
+  val span = configuration
+    .getMilliseconds("app.http.ip_filter.span")
+    .map(_ millis)
+    .map(_.toMinutes.toInt).getOrElse(15)
 
   def apply(next: RequestHeader => Future[Result])(
     req: RequestHeader

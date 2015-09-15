@@ -12,7 +12,8 @@ trait CanonicalNamed {
    */
   def basicName: String = ""
 
+  def packageName: String = this.getClass.getPackage.getName
+
   def canonicalName: String =
-    this.getClass.getPackage.getName +
-      (if (basicName.isEmpty) "" else s".$basicName")
+    packageName + (if (basicName.isEmpty) "" else s".$basicName")
 }

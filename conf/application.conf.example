@@ -8,11 +8,11 @@
 # This must be changed for production, but we recommend not changing it in this file.
 #
 # See http://www.playframework.com/documentation/latest/ApplicationSecret for more details.
-play.crypto.secret="XH33fTcx3S/lE`xweDgA5[BZTMR=JmesvVQVw=UH`@yCHyyW14:NED`^r7K>HwRA"
+play.crypto.secret = "XH33fTcx3S/lE`xweDgA5[BZTMR=JmesvVQVw=UH`@yCHyyW14:NED`^r7K>HwRA"
 
 # The application languages
 # ~~~~~
-play.i18n.langs=[ "en-US", "zh", "ja" ]
+play.i18n.langs = ["en-US", "zh", "ja"]
 
 # Global object class
 # ~~~~~
@@ -55,10 +55,10 @@ play.i18n.langs=[ "en-US", "zh", "ja" ]
 # logger.application=DEBUG
 # logger.models=DEBUG
 
-app.domain=app.io
-app.hostname="http://127.0.0.1:9000"
+app.domain = app.io
+app.hostname = "http://127.0.0.1:9000"
 
-play.application.loader=AppLoader
+play.application.loader = AppLoader
 
 # app.http.filters=[
 #   LoopbackIPFilter,
@@ -68,16 +68,15 @@ play.application.loader=AppLoader
 #   RequestTimeLogger
 # ]
 
-app.http.ip_filter.limit=90000
-app.http.ip_filter.span=15
+app.http.ip_filter {
+  limit = 90000
+  span = 15 minutes
+}
 
 app.akka.cluster {
   number_of_nodes = 10
   entity_actor.receive_timeout = 5 minutes
 }
-
-controllers.api_internal.search.rate_limit.limit=3600
-controllers.api_internal.search.rate_limit.span=15
 
 contexts {
   mailer {
@@ -91,20 +90,31 @@ contexts {
 # cassandra.cql.log=[batch,select,insert,update,delete]
 cassandra.cql.log=[]
 
-elasticsearch.client.uri="elasticsearch://127.0.0.1:9300"
-elasticsearch.cluster.name=elasticsearch_name
+# TODO replace elasticsearch_name with your own cluster name
+elasticsearch.client.uri = "elasticsearch://127.0.0.1:9300"
+elasticsearch.cluster.name = elasticsearch_name
 
-controllers.api.rate_limit.limit=5000
-controllers.api.rate_limit.span=15
+services.bandwidth.max = 5M
+services.bandwidth.min = 200K
 
-services.bandwidth.max=5M
-services.bandwidth.min=200K
+controllers.api_internal {
 
-controllers.api.files.bandwidth.upload=1.5M
-controllers.api.files.bandwidth.download=1M
-controllers.api.files.bandwidth.stream=1M
+  rate_limit.limit = 900
+  rate_limit.span = 15 minutes
 
-services.mailer.admin.email-addresses=["admin@app.io"]
+  search {
+    rate_limit.limit = 3600
+    rate_limit.span = 15 minutes
+  }
+
+  file_system {
+    bandwidth.upload = 1.5M
+    bandwidth.download = 1M
+    bandwidth.stream = 1M
+  }
+}
+
+services.mailer.admin.email-addresses = ["admin@app.io"]
 
 akka {
   log-config-on-start = "off"
@@ -160,21 +170,21 @@ mimetype {
   mkv:video/x-matroska
 }
 
-app.wiki.video=wiki.mp4
+app.wiki.video = wiki.mp4
 
 mailer {
   noreply {
-    smtp.host=smtp.app.io
-    smtp.port=465
-    smtp.ssl=yes
-    smtp.user="noreply@app.io"
-    smtp.password="******"
+    smtp.host = smtp.app.io
+    smtp.port = 465
+    smtp.ssl = yes
+    smtp.user = "noreply@app.io"
+    smtp.password = "******"
   },
   support {
-    smtp.host=smtp.app.io
-    smtp.port=465
-    smtp.ssl=yes
-    smtp.user="support@app.io"
-    smtp.password="******"
+    smtp.host = smtp.app.io
+    smtp.port = 465
+    smtp.ssl = yes
+    smtp.user = "support@app.io"
+    smtp.password = "******"
   }
 }
