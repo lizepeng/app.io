@@ -18,17 +18,17 @@ class ChatActor extends UserMessageActor {
   var _chatHistories: ChatHistories = _
 
   override def preStart() = {
-    mediator ! ChatHistory.basicName
     super.preStart()
+    mediator ! ChatHistory.basicName
   }
 
-  def awaitingResources: Receive = {
+  override def isReady = super.isReady && _chatHistories != null
+
+  override def awaitingResources: Receive = ({
     case ch: ChatHistories =>
       _chatHistories = ch
-      becomeReceive()
-
-    case msg => stash()
-  }
+      tryToBecomeReceive()
+  }: Receive) orElse super.awaitingResources
 
   override def receiveCommand: Receive = super.receiveCommand orElse {
     case Envelope(_, msg: ChatMessage) =>

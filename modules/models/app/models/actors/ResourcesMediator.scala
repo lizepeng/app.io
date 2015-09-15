@@ -1,9 +1,9 @@
 package models.actors
 
 import akka.actor._
-import models.cassandra.KeySpaceBuilder
 import helpers.BasicPlayApi
 import models._
+import models.cassandra.KeySpaceBuilder
 
 /**
  * @author zepeng.li@gmail.com
@@ -22,7 +22,7 @@ object ResourcesMediator extends CanonicalNamedActor {
   ): Props = Props(new ResourcesMediator)
 
   case object ModelRequired
-
+  case object GetBasicPlayApi
 }
 
 class ResourcesMediator(
@@ -41,9 +41,10 @@ class ResourcesMediator(
   }
 
   def receive = {
-    case ResourcesMediator.ModelRequired => sender !(basicPlayApi, contactPoint)
-    case ChatHistory.basicName           => sender ! _chatHistories
-    case MailInbox.basicName             => sender ! _mailInbox
-    case MailSent.basicName              => sender ! _mailSent
+    case ResourcesMediator.ModelRequired   => sender !(basicPlayApi, contactPoint)
+    case ResourcesMediator.GetBasicPlayApi => sender ! basicPlayApi
+    case ChatHistory.basicName             => sender ! _chatHistories
+    case MailInbox.basicName               => sender ! _mailInbox
+    case MailSent.basicName                => sender ! _mailSent
   }
 }

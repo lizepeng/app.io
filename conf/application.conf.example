@@ -71,7 +71,10 @@ play.application.loader=AppLoader
 app.http.ip_filter.limit=90000
 app.http.ip_filter.span=15
 
-app.akka.cluster.number_of_nodes=10
+app.akka.cluster {
+  number_of_nodes = 10
+  entity_actor.receive_timeout = 5 minutes
+}
 
 controllers.api_internal.search.rate_limit.limit=3600
 controllers.api_internal.search.rate_limit.span=15
