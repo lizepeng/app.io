@@ -67,6 +67,7 @@ views.files.index
     $scope.path             = INodeList.path
     $scope.realPath         = INodeList.realPath
     ModalDialog.templateUrl = 'confirm_delete.html'
+    $scope.uploading        = false
 
     $scope.confirmDelete = (file) ->
       ModalDialog.open().result.then(
@@ -75,6 +76,10 @@ views.files.index
 
     $scope.success = ($file, resp) ->
       INodeList.created(JSON.parse(resp))
+      $scope.uploading = false
+
+    $scope.startUpload = ->
+      $scope.uploading = true
 
     return
 ]
