@@ -29,7 +29,7 @@ views.files.index
       service.realPath = Path.create(service.path.prepend(params.userId))
 
       CFS.find(service.realPath)
-        .success (data, status, headers, config) ->
+        .success (data, status, headers) ->
           service.inodes =
             _.chain data
               .filter (inode) -> inode.name != '.'
@@ -42,10 +42,10 @@ views.files.index
 
     service.delete = (file) ->
       CFS.delete(file.path)
-        .success (data, status, headers, config) ->
+        .success ->
           idx = service.inodes.indexOf(file)
           service.inodes.splice idx, 1
-        .error (data, status, headers, config) ->
+        .error (data) ->
           Alert.push
             type : 'danger'
             msg  : data.message
@@ -61,8 +61,7 @@ views.files.index
   '$scope'
   'INodeList'
   'ModalDialog'
-  'Alert'
-  ($scope, INodeList, ModalDialog, Alert) ->
+  ($scope, INodeList, ModalDialog) ->
     $scope.INodeList        = INodeList
     $scope.jsRoutes         = jsRoutes
     $scope.path             = INodeList.path

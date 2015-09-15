@@ -47,8 +47,9 @@ views.users.index.factory 'UserList', [
     $scope.jsRoutes = jsRoutes
     $scope.keyword  = ''
 
-    $scope.$watch 'keyword', (nv, ov) ->
+    $scope.$watch 'keyword', (nv) ->
       UserList.reload nv
+
     return
 ]
 

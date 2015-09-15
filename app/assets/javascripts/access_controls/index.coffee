@@ -31,10 +31,10 @@ views.access_controls.index.factory 'ACList', [
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers
           Group.query
             ids: AC.gids(acs).join(','),
-            (grps, headers) -> service.groups = Group.toMap grps
+            (grps) -> service.groups = Group.toMap grps
           User.query
             ids: AC.uids(acs).join(','),
-            (usrs, headers) -> service.users  = User.toMap usrs
+            (usrs) -> service.users  = User.toMap usrs
 
     service.create = (data, principal) ->
       new AC(data).$save(
@@ -55,7 +55,7 @@ views.access_controls.index.factory 'ACList', [
 
     service.delete = (data) ->
       data.$delete data,
-        () ->
+        ->
           idx = service.acs.indexOf(data)
           service.acs.splice idx, 1
         (res) ->
@@ -65,8 +65,8 @@ views.access_controls.index.factory 'ACList', [
 
     service.save = (data) ->
       data.$save data,
-        (value) ->
-        (res)   ->
+        ->
+        (res) ->
           Alert.push
             type : 'danger'
             msg  : res.data.message
