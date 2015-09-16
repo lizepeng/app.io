@@ -21,7 +21,7 @@
     if(path.filename.nonEmpty) {
       path.filename
     } else if (path.parts.isEmpty){
-      MSG("home")
+      FileSystemCtrl.msg("home")
     } else {
       path.parts.last
     }

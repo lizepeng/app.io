@@ -240,6 +240,7 @@ controllers.file_system.not.found                ={0} Not Found
 views.file_system.title                          =File System
 views.file_system.head                           =File System
 
+views.file_system.home                           =Home
 views.file_system.name                           =Name
 views.file_system.size                           =Size
 views.file_system.created_at                     =Date Created
