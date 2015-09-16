@@ -128,7 +128,7 @@ class Files(
       Iteratee.foldM[BLK, IndirectBlock](new IndirectBlock(inode.id)) {
         (curr, blk) =>
           _blocks.write(curr.id, curr.length, blk)
-          val next = curr + blk.size
+          val next = curr + blk.length
 
           next.length < inode.indirect_block_size match {
             case true  => Future.successful(next)

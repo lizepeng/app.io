@@ -248,17 +248,11 @@ class Directories(
       .and(_.name eqs inode.name)
   }.future().map(_ => dir)
 
-  /**
-   * TODO We will lost original file content by specifying force flag.
-   * But it is still there in DB like a fragment, so we'll need some
-   * batch job to remove these orphan files.
-   */
   def renameChild(
     dir: Directory,
     inode: INode,
-    newName: String,
-    force: Boolean = false
-  ): Future[INode] = CQL {
+    newName: String
+  ): Future[Boolean] = CQL {
     Batch.logged
       .add {
       delete
@@ -266,18 +260,17 @@ class Directories(
         .and(_.name eqs inode.name)
     }
       .add {
-      val cql_insert = insert
+      insert
         .value(_.inode_id, dir.id)
         .value(_.name, newName)
-        .value(_.child_id, inode.id)
-      if (force) cql_insert
-      else cql_insert.ifNotExists()
+        .value(_.child_id, inode.id).ifNotExists()
     }
-  }.future().map(_ => inode)
+  }.future().map(_.wasApplied)
 
   /**
-   * write name in children list of its parent
-   * @param dir
+   * Write name in children list of its parent
+   *
+   * @param dir target Directory
    * @return
    */
   def write(dir: Directory): Future[Directory] =

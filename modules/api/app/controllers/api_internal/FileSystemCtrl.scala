@@ -4,6 +4,7 @@ import controllers.RateLimitConfig
 import helpers.ExtEnumeratee._
 import helpers._
 import models._
+import models.cfs.Directory.{ChildExists, ChildNotFound}
 import models.cfs._
 import play.api.http.ContentTypes
 import play.api.i18n._
@@ -13,6 +14,7 @@ import play.api.libs.json.Json
 import play.api.mvc.BodyParsers.parse._
 import play.api.mvc._
 import play.core.parsers.Multipart._
+import protocols.JsonProtocol.JsonMessage
 import protocols._
 import security.{FilePermission => FilePerm, _}
 import services.BandwidthService
@@ -20,7 +22,7 @@ import services.BandwidthService._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
-import scala.util.Failure
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -112,33 +114,36 @@ class FileSystemCtrl(
   def touch(path: Path) =
     UserAction(_.Show).async { implicit req =>
       val flow = new Flow(req.queryString)
-      (for {
-        temp <- _cfs.temp
-        file <- temp.file(flow.tempFileName())
-      } yield file).map { file =>
-        if (flow.currentChunkSize == file.size) Ok
-        else NoContent
-      }.recover {
-        case e: Flow.MissingFlowArgument => NotFound
-        case e: Directory.ChildNotFound  => NoContent
-      }
-    }
+      val fullPath = path + flow.fileName
 
-  def destroy(path: Path) =
-    UserAction(_.Destroy).async { implicit req =>
+      def touchTempFile: Future[Result] = {
+        (for {
+          temp <- _cfs.temp
+          file <- temp.file(flow.tempFileName())
+        } yield file).map { file =>
+          if (flow.currentChunkSize == file.size) Ok
+          else NoContent
+        }.recover {
+          case e: Flow.MissingFlowArgument => NotFound
+          case e: ChildNotFound            => NoContent
+        }
+      }
+
       (for {
-        root <- _cfs.root
-        file <- root.file(path)
-      } yield file).flatMap { f => f.purge()
-      }.map { _ => NoContent
-      }.recover {
-        case e: Directory.ChildNotFound => NotFound
+        home <- _cfs.home(req.user)
+        file <- home.file(fullPath)
+      } yield file).map { file =>
+        Logger.trace(s"file: $fullPath already exists.")
+        Ok
+      }.recoverWith {
+        case e: Directory.ChildNotFound => touchTempFile
       }
     }
 
   def create(path: Path) =
     UserAction(_.Create).async(CFSBodyParser(path)) { implicit req =>
       val flow = new Flow(req.body.asFormUrlEncoded)
+      val fullPath = path + flow.fileName
 
       def tempFiles(temp: Directory) =
         Enumerator[Int](1 to flow.totalChunks: _*) &>
@@ -149,32 +154,54 @@ class FileSystemCtrl(
         (s, f: File) => (s._1 + 1, s._2 + f.size)
       )
 
-      req.body.file("file") match {
-        case Some(file) =>
+      def checkIfCompleted: Future[Result] = (for {
+        temp <- _cfs.temp
+        stat <- tempFiles(temp) |>>> summarizer
+      } yield stat).flatMap { case (cnt, size) =>
+        if (flow.isLastChunk(cnt, size)) {
+          Logger.trace(s"concatenating all temp files of $fullPath.")
           (for {
-            ____ <- file.ref.rename(flow.tempFileName(), force = true)
-            temp <- _cfs.temp
-            stat <- tempFiles(temp) |>>> summarizer
-          } yield stat).flatMap { case (cnt, size) =>
-            if (flow.isLastChunk(cnt, size)) {
-              (for {
-                home <- _cfs.home(req.user)
-                curr <- home.dir(path)
-                file <- _cfs.temp.flatMap { t =>
-                  tempFiles(t) &>
-                    Enumeratee.mapFlatten[File] { f =>
-                      f.read() &> Enumeratee.onIterateeDone(() => f.purge())
-                    } |>>> curr.save(flow.fileName)
-                }
-              } yield file).map {
-                saved => Created(Json.toJson(saved)(File.jsonWrites))
-              }.recover {
-                case e: Directory.ChildExists => Accepted
-              }
+            home <- _cfs.home(req.user)
+            curr <- home.dir(path)
+            file <- _cfs.temp.flatMap { t =>
+              tempFiles(t) &>
+                Enumeratee.mapFlatten[File] { f =>
+                  f.read() &> Enumeratee.onIterateeDone(() => f.purge())
+                } |>>> curr.save(flow.fileName)
             }
-            else Future.successful(Accepted)
+          } yield file).map {
+            Logger.trace(s"file: $fullPath upload completed.")
+            saved => Created(Json.toJson(saved)(File.jsonWrites))
+          }.recoverWith {
+            case e: ChildExists =>
+              Logger.warn(s"file: $fullPath was created during uploading, clean temp files.")
+              _cfs.temp.flatMap { t =>
+                tempFiles(t) |>>> Iteratee.foreach(f => f.purge())
+              }.map(_ => Ok)
+              Future.successful(Ok)
           }
-        case None       => Future.successful(NotFound)
+        }
+        else Future.successful(Created)
+      }
+
+      req.body.file("file") match {
+
+        case Some(file) =>
+          Logger.trace(s"uploading ${flow.tempFileName()}")
+          for {
+            renamed <- file.ref.rename(flow.tempFileName())
+              .andThen { case Success(false) => file.ref.purge() }
+            _result <- {
+              if (renamed) checkIfCompleted
+              //should never occur, only in case that the temp file name was taken.
+              else Future.successful(NotFound)
+            }
+          } yield _result
+
+        case None =>
+          val e = FileSystemCtrl.MissingFile()
+          Logger.warn(e.message)
+          Future.successful(NotFound(JsonMessage(e)))
       }
     }
 
@@ -187,6 +214,18 @@ class FileSystemCtrl(
             for (c <- p.mkdir(cn) if FilePerm(p).w ?) yield c
         }
       }
+
+  def destroy(path: Path) =
+    UserAction(_.Destroy).async { implicit req =>
+      (for {
+        root <- _cfs.root
+        file <- root.file(path)
+      } yield file).flatMap { f => f.purge()
+      }.map { _ => NoContent
+      }.recover {
+        case e: Directory.ChildNotFound => NotFound
+      }
+    }
 
   private def invalidRange(file: File): Result = {
     Result(
@@ -337,4 +376,11 @@ class FileSystemCtrl(
 
 }
 
-object FileSystemCtrl extends Secured(CassandraFileSystem)
+object FileSystemCtrl
+  extends Secured(CassandraFileSystem)
+  with ExceptionDefining {
+
+  case class MissingFile()
+    extends BaseException(error_code("missing.file"))
+
+}
