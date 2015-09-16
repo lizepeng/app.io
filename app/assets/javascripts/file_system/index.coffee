@@ -68,15 +68,17 @@ views.files.index
 
 .controller 'FilesCtrl', [
   '$scope'
+  'FileExtension'
   'INodeList'
   'ModalDialog'
-  ($scope, INodeList, ModalDialog) ->
+  ($scope, FileExtension, INodeList, ModalDialog) ->
     $scope.INodeList        = INodeList
     $scope.jsRoutes         = jsRoutes
     $scope.path             = INodeList.path
     $scope.realPath         = INodeList.realPath
     ModalDialog.templateUrl = 'confirm_delete.html'
     $scope.uploading        = false
+    $scope.faName           = FileExtension.faName
 
     $scope.confirmDelete = (file) ->
       ModalDialog.open().result.then(

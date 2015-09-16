@@ -56,7 +56,7 @@ implicit req: UserRequest[_], messages: Messages)
 
               <!-- File -->
               <td ng-if="!inode.is_directory">
-                <i class="fa fa-2x fa-file-o fa-fw"></i>
+                <i class="fa fa-2x fa-fw" ng-class="faName(inode.name)"></i>
                 <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.show(path.set(inode.name)).url}}">
                   {{ inode.name }}
                 </a>
