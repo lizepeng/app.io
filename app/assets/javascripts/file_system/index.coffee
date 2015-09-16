@@ -50,6 +50,15 @@ views.files.index
             type : 'danger'
             msg  : data.message
 
+    service.clear = ->
+      CFS.delete(service.realPath)
+        .success ->
+          service.inodes = []
+        .error (data) ->
+          Alert.push
+            type : 'danger'
+            msg  : data.message
+
     service.created = (file) ->
       file.path = Path.create(file.path)
       service.inodes.push file
@@ -72,7 +81,14 @@ views.files.index
     $scope.confirmDelete = (file) ->
       ModalDialog.open().result.then(
         -> INodeList.delete file
-        ->)
+        ->
+      )
+
+    $scope.confirmClearDir = ->
+      ModalDialog.open().result.then(
+        -> INodeList.clear()
+        ->
+      )
 
     $scope.success = ($file, resp) ->
       $scope.uploading = false

@@ -14,6 +14,7 @@ import play.api.libs.iteratee.{Enumeratee => _, _}
 import play.api.libs.json._
 
 import scala.concurrent.Future
+import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
@@ -48,7 +49,7 @@ case class Directory(
   def list(pager: Pager)(
     implicit cfs: CassandraFileSystem
   ): Future[Page[INode]] = {
-    cfs._directories.list(this) |>>>
+    cfs._directories.stream(this) |>>>
       PIteratee.slice(pager.start, pager.limit)
   }.map(_.toIterable).map(Page(pager, _))
 
@@ -131,6 +132,38 @@ case class Directory(
     }.recoverWith {
       case e: Directory.ChildNotFound => mkdir(name)
     }
+
+  def delSelf(implicit cfs: CassandraFileSystem) =
+    cfs._directories.find(parent).flatMap(_.del(this))
+
+  def clear()(
+    implicit cfs: CassandraFileSystem
+  ): Future[Unit] = {
+    cfs._directories.stream(this) &>
+      Enumeratee.mapM { inode =>
+        this.del(inode).map(_ => inode)
+      } |>>>
+      Iteratee.foreach {
+        case d: Directory => d.remove(recursive = true)
+        case f: File      => f.purge()
+      }
+  }
+
+  def remove(recursive: Boolean = false)(
+    implicit cfs: CassandraFileSystem
+  ): Future[Boolean] =
+    if (recursive) for {
+      _ <- clear()
+      _ <- delSelf
+    } yield true
+    else isEmpty.andThen {
+      case Success(true) => delSelf
+    }
+
+  def isEmpty(
+    implicit cfs: CassandraFileSystem
+  ): Future[Boolean] = cfs._directories.isEmpty(this)
+
 }
 
 /**
@@ -309,22 +342,36 @@ class Directories(
   }
 
   /**
+   * Stream all content in a directory
    *
-   * @param dir
+   * @param dir target Directory
    * @return
    */
-  def list(dir: Directory): Enumerator[INode] = CQL {
-    select(_.name, _.child_id)
+  def stream(dir: Directory): Enumerator[INode] = Enumerator.flatten {
+    isEmpty(dir).map {
+      case true  => Enumerator[INode]()
+      case false =>
+        CQL {
+          select(_.name, _.child_id)
+            .where(_.inode_id eqs dir.id)
+        }.fetchEnumerator() &>
+          Enumeratee.mapM {
+            case (name, id) => _inodes.find(id).map[Option[INode]] {
+              _.map { r =>
+                if (_inodes.is_directory(r))
+                  fromRow(r).copy(name = name, path = dir.path / name)
+                else
+                  _files.fromRow(r).copy(name = name, path = dir.path + name)
+              }
+            }
+          } &> Enumeratee.flattenOption
+    }
+  }
+
+  def isEmpty(dir: Directory): Future[Boolean] = CQL {
+    select(_.child_id)
       .where(_.inode_id eqs dir.id)
-  }.fetchEnumerator() &>
-    Enumeratee.mapM {
-      case (name, id) => _inodes.find(id).map[Option[INode]] {
-        _.map { r =>
-          if (_inodes.is_directory(r))
-            fromRow(r).copy(name = name, path = dir.path / name)
-          else
-            _files.fromRow(r).copy(name = name, path = dir.path + name)
-        }
-      }
-    } &> Enumeratee.flattenOption
+  }.one().map(_.isEmpty).recover {
+    case e: Exception => true
+  }
 }

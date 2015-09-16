@@ -215,13 +215,22 @@ class FileSystemCtrl(
         }
       }
 
-  def destroy(path: Path) =
+  def destroy(path: Path, clear: Boolean) =
     UserAction(_.Destroy).async { implicit req =>
-      (for {
-        root <- _cfs.root
-        file <- root.file(path)
-      } yield file).flatMap { f => f.purge()
-      }.map { _ => NoContent
+      (path.filename match {
+        case Some(_) => for {
+          root <- _cfs.root
+          file <- root.file(path)
+          ____ <- file.purge()
+        } yield Unit
+        case None    => for {
+          root <- _cfs.root
+          _dir <- root.dir(path)
+          ____ <- if (clear) _dir.clear()
+          else _dir.remove(recursive = true)
+        } yield Unit
+      }).map {
+        _ => NoContent
       }.recover {
         case e: Directory.ChildNotFound => NotFound
       }
