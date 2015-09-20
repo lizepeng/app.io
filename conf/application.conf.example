@@ -87,8 +87,12 @@ contexts {
   }
 }
 
-# cassandra.cql.log=[batch,select,insert,update,delete]
-cassandra.cql.log=[]
+cassandra {
+  contact_points = ["localhost", "127.0.0.1"]
+
+  # cassandra.cql.log=[batch,select,insert,update,delete]
+  cql.log = []
+}
 
 # TODO replace elasticsearch_name with your own cluster name
 elasticsearch.client.uri = "elasticsearch://127.0.0.1:9300"

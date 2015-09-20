@@ -37,7 +37,15 @@ abstract class Components(context: Context)
 
   // Cassandra Connector
   implicit val contactPoint: KeySpaceBuilder =
-    new KeySpaceBuilder(applicationLifecycle, _.addContactPoint("localhost").withPort(DefaultPorts.live))
+    new KeySpaceBuilder(
+      applicationLifecycle, _
+        .addContactPoints(
+          configuration
+            .getStringSeq("cassandra.contact_points")
+            .getOrElse(Seq("localhost")): _*
+        )
+        .withPort(DefaultPorts.live)
+    )
 
   // Basic Play Api
   implicit val basicPlayApi = BasicPlayApi(
