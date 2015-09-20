@@ -3,7 +3,6 @@ package models
 import java.util.UUID
 
 import com.datastax.driver.core.Row
-import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
@@ -258,13 +257,6 @@ class Groups(
       )
   }.future().map(_ => layout)
 
-  def setLayoutIfEmpty(id: UUID, layout: Layout): Future[Boolean] = CQL {
-    insert
-      .value(_.id, id)
-      .value(_.layout, Some(layout.layout))
-      .ifNotExists()
-  }.future().map(_.wasApplied)
-
   def isEmpty: Future[Boolean] = _internalGroups.isEmpty
 
 }
@@ -329,9 +321,9 @@ class InternalGroups(
   with SysConfig
   with Logging {
 
-  @volatile private var _num2Id  : Seq[UUID]      = Seq()
-  @volatile private var _anyoneId: UUID           = UUIDs.timeBased()
-  @volatile private var _id2num  : Map[UUID, Int] = Map()
+  @volatile private var _num2Id  : Seq[UUID]      = _
+  @volatile private var _anyoneId: UUID           = _
+  @volatile private var _id2num  : Map[UUID, Int] = _
 
   create.ifNotExists.future()
     .andThen { case _ => preLoad(this) }
@@ -386,6 +378,12 @@ class InternalGroups(
       .value(_.updated_at, group.updated_at)
       .ifNotExists()
   }.future().map(_.wasApplied())
+
+  def setLayout(id: UUID, layout: Layout): Future[Boolean] = CQL {
+    insert
+      .value(_.id, id)
+      .value(_.layout, Some(layout.layout))
+  }.future().map(_.wasApplied)
 
   def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
     select(_.id, _.name, _.description, _.is_internal, _.updated_at)

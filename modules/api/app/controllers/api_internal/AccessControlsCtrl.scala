@@ -33,8 +33,6 @@ class AccessControlsCtrl(
   with I18nSupport
   with Logging {
 
-  ESIndexCleaner(_accessControls).dropIndexIfEmpty
-
   def index(q: Option[String], p: Pager) =
     UserAction(_.Index).async { implicit req =>
       (es.Search(q, p) in _accessControls future()).map { page =>

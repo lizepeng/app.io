@@ -10,7 +10,6 @@ class AppLoader
     new Components(context) {
       override def start(): Unit = {
         startActors()
-        startSystem()
       }
     }.application
   }

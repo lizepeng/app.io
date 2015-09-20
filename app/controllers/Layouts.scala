@@ -1,7 +1,7 @@
 package controllers
 
 import helpers._
-import models.Groups
+import models.InternalGroups
 import models.sys.SysConfigs
 import play.api.i18n.Messages
 import play.api.libs.json.Json
@@ -29,16 +29,16 @@ object Layouts extends Logging {
       )
     )
 
-  def init(
+  def initIfFirstRun(
     implicit
-    _groups: Groups,
+    _internalGroups: InternalGroups,
     _sysConfig: SysConfigs,
     ec: ExecutionContext
   ): Future[Boolean] = {
-    _groups
-      .setLayoutIfEmpty(_groups._internalGroups.AnyoneId, layout_admin)
-      .andThen {
-      case Success(true) => Logger.debug("Initialized layout of Anyone")
+    _internalGroups
+      .setLayout(_internalGroups.AnyoneId, layout_admin)
+      .andThen { case Success(true) =>
+      Logger.debug("Initialized layout of Anyone")
     }
   }
 }

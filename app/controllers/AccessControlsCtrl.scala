@@ -39,7 +39,7 @@ object AccessControlsCtrl
   with ViewMessages
   with Logging {
 
-  def initIfEmpty(
+  def initIfFirstRun(
     implicit
     secured: RegisteredSecured,
     es: ElasticSearch,

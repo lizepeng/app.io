@@ -19,11 +19,12 @@ import services.web.ip_api.IPService
 import services.{BandwidthService, MailService}
 
 import scala.concurrent.Future
+import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
  */
-abstract class Components(context: Context)
+class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
   with I18nComponents
   with NingWSComponents
@@ -58,17 +59,40 @@ abstract class Components(context: Context)
   implicit val es          = new ElasticSearch(basicPlayApi)
   implicit val ipService   = new IPService(basicPlayApi, wsClient)
 
+  // Register permission checkable controllers
+  implicit val secured = new controllers.RegisteredSecured(
+    controllers.AccessControlsCtrl,
+    controllers.api_internal.AccessControlsCtrl,
+    controllers.UsersCtrl,
+    controllers.api_internal.UsersCtrl,
+    controllers.GroupsCtrl,
+    controllers.api_internal.GroupsCtrl,
+    controllers.FileSystemCtrl,
+    controllers.api_internal.FileSystemCtrl,
+    controllers.EmailTemplatesCtrl,
+    controllers.api_internal.SearchCtrl
+  )
+
   // Models
   implicit val _sysConfig      = new SysConfigs
+  implicit val _accessControls = new AccessControls
   implicit val _internalGroups = new InternalGroups(
     ESIndexCleaner(_).dropIndexIfEmpty,
-    ReIndexInternalGroups(es, _).start()
+    implicit ig => Future.sequence(
+      Seq(
+        ReIndexInternalGroups(es, ig).start(),
+        ESIndexCleaner(_accessControls).dropIndexIfEmpty,
+        controllers.AccessControlsCtrl.initIfFirstRun,
+        controllers.Layouts.initIfFirstRun
+      )
+    ).andThen {
+      case Success(_) => play.api.Logger.info("System has been initialized.")
+    }
   )
 
   implicit val _ipRateLimits           = new IPRateLimits
   implicit val _userLoginIPs           = new UserLoginIPs
   implicit val _users                  = new Users
-  implicit val _accessControls         = new AccessControls
   implicit val _sessionData            = new SessionData
   implicit val _expirableLinks         = new ExpirableLinks
   implicit val _rateLimits             = new RateLimits
@@ -125,20 +149,6 @@ abstract class Components(context: Context)
     apiPrivatePingCtrl
   )
 
-  // Register permission checkable controllers
-  implicit val secured = new controllers.RegisteredSecured(
-    controllers.AccessControlsCtrl,
-    controllers.api_internal.AccessControlsCtrl,
-    controllers.UsersCtrl,
-    controllers.api_internal.UsersCtrl,
-    controllers.GroupsCtrl,
-    controllers.api_internal.GroupsCtrl,
-    controllers.FileSystemCtrl,
-    controllers.api_internal.FileSystemCtrl,
-    controllers.EmailTemplatesCtrl,
-    controllers.api_internal.SearchCtrl
-  )
-
   // Permission Checking
   implicit val permCheckRequired =
     controllers.UserActionRequired(_groups, _accessControls)
@@ -186,7 +196,7 @@ abstract class Components(context: Context)
 
   start()
 
-  def start(): Unit
+  def start(): Unit = {}
 
   def startActors(): Unit = {
     actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
@@ -194,17 +204,6 @@ abstract class Components(context: Context)
     //Start Actor ShardRegion
     MailActor.startRegion(configuration, actorSystem)
     ChatActor.startRegion(configuration, actorSystem)
-  }
-
-  def startSystem(): Unit = {
-    Future.sequence(
-      Seq(
-        controllers.Layouts.init,
-        controllers.AccessControlsCtrl.initIfEmpty
-      )
-    ).onSuccess {
-      case _ => play.api.Logger.info("System has started")
-    }
   }
 
   // temporary workaround until issue #4614 in play framework is fixed. See https://github.com/playframework/playframework/issues/4614
