@@ -12,4 +12,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"      %% "akka-testkit"   % "2.3.13"
 )
 
+sources in (Compile, doc) := Seq.empty
+
 publishArtifact in (Compile, packageDoc) := false

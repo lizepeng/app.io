@@ -16,4 +16,6 @@ resolvers ++= Seq(
   "scalaz-bintray"            at "https://dl.bintray.com/scalaz/releases"
 )
 
+sources in (Compile, doc) := Seq.empty
+
 publishArtifact in (Compile, packageDoc) := false

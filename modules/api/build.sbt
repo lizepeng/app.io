@@ -16,4 +16,6 @@ routesImport ++= Seq(
   "scala.language.reflectiveCalls"
 )
 
+sources in (Compile, doc) := Seq.empty
+
 publishArtifact in (Compile, packageDoc) := false
