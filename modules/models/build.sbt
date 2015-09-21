@@ -15,3 +15,5 @@ resolvers ++= Seq(
   "Websudos bintray releases" at "https://dl.bintray.com/websudos/oss-releases/",
   "scalaz-bintray"            at "https://dl.bintray.com/scalaz/releases"
 )
+
+publishArtifact in (Compile, packageDoc) := false

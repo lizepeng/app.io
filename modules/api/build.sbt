@@ -15,3 +15,5 @@ routesImport ++= Seq(
   "play.api.i18n.Lang",
   "scala.language.reflectiveCalls"
 )
+
+publishArtifact in (Compile, packageDoc) := false

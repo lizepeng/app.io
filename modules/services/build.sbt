@@ -11,3 +11,5 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"      %% "akka-contrib"   % "2.3.13",
   "com.typesafe.akka"      %% "akka-testkit"   % "2.3.13"
 )
+
+publishArtifact in (Compile, packageDoc) := false
