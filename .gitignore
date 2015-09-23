@@ -6,7 +6,6 @@ target
 tmp
 .history
 README.html
-dist
 /.idea
 .idea
 /*.iml
