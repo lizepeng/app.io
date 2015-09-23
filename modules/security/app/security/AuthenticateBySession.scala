@@ -7,7 +7,7 @@ import models._
 import play.api.mvc.RequestHeader
 
 import scala.concurrent.Future
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 /**
  * @author zepeng.li@gmail.com
@@ -30,15 +30,15 @@ case class AuthenticateBySession(
    *         [[User.SaltNotMatch]]  - if salt is wrong
    */
   override def apply(users: Users): (RequestHeader) => Future[User] = {
-    req => (retrieve(req) match {
+    req => retrieve(req) match {
       case None             => Future.failed(User.NoCredentials())
       case Some((id, salt)) => users.find(id).map { user =>
         if (user.salt == salt) user
         else throw User.SaltNotMatch(id)
       }
-    }).andThen {
-      case Failure(e: BaseException) => Logger.info(e.reason)
     }
+    //No need to log anything here,
+    //since unauthenticated user may be allowed to access some pages.
   }
 
   def retrieve(req: RequestHeader): Option[(UUID, String)] = {

@@ -7,7 +7,7 @@ import models._
 import play.api.mvc.RequestHeader
 
 import scala.concurrent.Future
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 /**
  * @author zepeng.li@gmail.com
@@ -28,7 +28,7 @@ case class AuthenticateByAccessToken(
    *         [[User.AccessTokenNotMatch]]  - if salt is wrong
    */
   override def apply(users: Users): (RequestHeader) => Future[User] = {
-    req => (HttpBasicAuth(req).flatMap {
+    req => HttpBasicAuth(req).flatMap {
       case (id, token) => toUUID(id).map((_, token))
     } match {
       case None              => Future.failed(User.NoCredentials())
@@ -39,9 +39,9 @@ case class AuthenticateByAccessToken(
         } yield tOpt
           .collect { case t if t == token && t.nonEmpty => user }
           .getOrElse(throw User.AccessTokenNotMatch(id))
-    }).andThen {
-      case Failure(e: BaseException) => Logger.info(e.reason)
     }
+    //No need to log anything here,
+    //since unauthenticated user may be allowed to access some pages.
   }
 
   private def toUUID(str: String) = Try(UUID.fromString(str)).toOption
