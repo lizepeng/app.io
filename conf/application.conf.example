@@ -61,7 +61,8 @@ play.application.loader = AppLoader
 
 # app.http.filters=[
 #   LoopbackIPFilter,
-#   ClientIPFilter,
+#   InvalidIPFilter,
+#   RateLimitExceededIPFilter,
 #   RequestLogger,
 #   Compressor,
 #   RequestTimeLogger

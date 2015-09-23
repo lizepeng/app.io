@@ -187,11 +187,12 @@ class Components(context: Context)
   // Http Filters
   override lazy val httpFilters: Seq[EssentialFilter] =
     configuration.getStringSeq("app.http.filters").getOrElse(Nil).collect {
-      case "LoopbackIPFilter"  => new LoopbackIPFilter()
-      case "ClientIPFilter"    => new ClientIPFilter()
-      case "Compressor"        => new Compressor()
-      case "RequestLogger"     => new RequestLogger()
-      case "RequestTimeLogger" => new RequestTimeLogger()
+      case "LoopbackIPFilter"          => new LoopbackIPFilter()
+      case "InvalidIPFilter"           => new InvalidIPFilter()
+      case "RateLimitExceededIPFilter" => new RateLimitExceededIPFilter()
+      case "Compressor"                => new Compressor()
+      case "RequestLogger"             => new RequestLogger()
+      case "RequestTimeLogger"         => new RequestTimeLogger()
     }
 
   start()

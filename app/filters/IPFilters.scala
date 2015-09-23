@@ -18,14 +18,34 @@ import scala.util._
  *
  * @author zepeng.li@gmail.com
  */
-abstract class AbstractIPFilter(shouldBlock: InetAddress => Boolean)
+abstract class AbstractIPFilter(
+  shouldBlock: InetAddress => Boolean
+) extends Filter {
+
+  def apply(next: RequestHeader => Future[Result])(
+    req: RequestHeader
+  ): Future[Result] = req.clientIP.filter(
+    ip => !shouldBlock(ip)
+  ) match {
+    case Success(ip) => next(req)
+    case Failure(_)  => Future.successful(Results.NotFound)
+  }
+}
+
+class LoopbackIPFilter
+  extends AbstractIPFilter(ip => ip.isLoopbackAddress)
+
+class InvalidIPFilter
+  extends AbstractIPFilter(ip => ip.isSiteLocalAddress || ip.isMulticastAddress)
+
+class RateLimitExceededIPFilter(
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val _ipRateLimits: IPRateLimits
+)
   extends Filter
   with BasicPlayComponents
   with DefaultPlayExecutor {
-
-  def basicPlayApi: BasicPlayApi
-
-  def _ipRateLimits: IPRateLimits
 
   // default 90000 requests per 15 minutes
   val limit = configuration
@@ -41,7 +61,7 @@ abstract class AbstractIPFilter(shouldBlock: InetAddress => Boolean)
     req: RequestHeader
   ): Future[Result] = {
 
-    req.clientIP.filter(!shouldBlock(_)) match {
+    req.clientIP match {
       case Success(ip) =>
         val now = DateTime.now
         val minutes = now.getMinuteOfHour
@@ -64,15 +84,3 @@ abstract class AbstractIPFilter(shouldBlock: InetAddress => Boolean)
     }
   }
 }
-
-class ClientIPFilter(
-  implicit
-  val basicPlayApi: BasicPlayApi,
-  val _ipRateLimits: IPRateLimits
-) extends AbstractIPFilter(ip => ip.isSiteLocalAddress || ip.isMulticastAddress)
-
-class LoopbackIPFilter(
-  implicit
-  val basicPlayApi: BasicPlayApi,
-  val _ipRateLimits: IPRateLimits
-) extends AbstractIPFilter(ip => ip.isLoopbackAddress)
