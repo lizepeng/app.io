@@ -35,7 +35,7 @@ class PasswordResetCtrl(
   with I18nSupport
   with CanonicalNameBasedMessages
   with SysConfig
-  with AppConfig
+  with AppConfigComponents
   with Logging {
 
   val emailFM = Form(

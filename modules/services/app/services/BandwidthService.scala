@@ -20,25 +20,24 @@ class BandwidthService(
   val basicPlayApi: BasicPlayApi
 )
   extends BasicPlayComponents
-  with ConfiguredExecutor {
+  with ConfiguredExecutor
+  with AppConfigComponents
+  with CanonicalNamed {
+
+  override val basicName = "bandwidth"
 
   val executor: ExecutionContext = lookupExecutionContext("contexts.traffic-shaper")
 
   import BandwidthService._
 
-  private object Config extends CanonicalNamed with AppConfig {
-
-    override val basicName = "bandwidth"
-
-    lazy val max = config.getBytes("max").map(_.toInt).getOrElse(5 MBps)
-    lazy val min = config.getBytes("min").map(_.toInt).getOrElse(200 KBps)
-  }
+  lazy val max = config.getBytes("max").map(_.toInt).getOrElse(5 MBps)
+  lazy val min = config.getBytes("min").map(_.toInt).getOrElse(200 KBps)
 
   object LimitTo {
 
     def apply(rate: Int = 1 MBps): Enumeratee[BLK, BLK] = limitTo(
-      if (rate < Config.min) Config.min
-      else if (rate > Config.max) Config.max
+      if (rate < min) min
+      else if (rate > max) max
       else rate
     )(executor)
 

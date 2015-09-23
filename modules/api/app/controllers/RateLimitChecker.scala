@@ -30,7 +30,7 @@ case class RateLimitChecker(
   with BasicPlayComponents
   with DefaultPlayExecutor
   with I18nSupport
-  with AppConfig {
+  with AppConfigComponents {
 
   override val basicName = "rate_limit"
 

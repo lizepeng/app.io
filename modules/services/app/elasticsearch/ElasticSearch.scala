@@ -22,7 +22,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ElasticSearch(
   val basicPlayApi: BasicPlayApi
 )
-  extends AppConfig
+  extends AppConfigComponents
   with BasicPlayComponents
   with DefaultPlayExecutor
   with Logging {

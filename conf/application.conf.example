@@ -56,7 +56,6 @@ play.i18n.langs = ["en-US", "zh", "ja"]
 # logger.models=DEBUG
 
 app.domain = app.io
-app.hostname = "http://127.0.0.1:9000"
 
 play.application.loader = AppLoader
 
@@ -112,6 +111,9 @@ controllers.api_internal {
   }
 
   file_system {
+    rate_limit.limit = 3600
+    rate_limit.span = 15 minutes
+
     bandwidth.upload = 1.5M
     bandwidth.download = 1M
     bandwidth.stream = 1M

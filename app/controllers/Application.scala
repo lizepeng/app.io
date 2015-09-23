@@ -17,7 +17,7 @@ class Application(
   with I18nSupport
   with CanonicalNamed
   with ViewMessages
-  with AppConfig {
+  with AppConfigComponents {
 
   override val basicName = "app"
 

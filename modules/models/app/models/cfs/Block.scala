@@ -6,7 +6,7 @@ import java.util.UUID
 import com.datastax.driver.core.utils.Bytes
 import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.dsl._
-import helpers.CanonicalNamed
+import helpers._
 import models.cassandra._
 import play.api.libs.iteratee._
 
@@ -53,9 +53,11 @@ object Block extends BlockCanonicalNamed {
 
 class Blocks(
   implicit
+  val basicPlayApi: BasicPlayApi,
   val contactPoint: KeySpaceBuilder
 )
   extends BlockTable
+  with BasicPlayComponents
   with CassandraComponents {
 
   create.ifNotExists.future()

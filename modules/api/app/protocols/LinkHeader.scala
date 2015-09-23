@@ -1,13 +1,12 @@
 package protocols
 
 import helpers._
-import play.api.mvc.Call
+import play.api.mvc.{Call, RequestHeader}
 
 /**
  * @author zepeng.li@gmail.com
  */
-trait LinkHeader extends AppConfig with ExHeaders {
-  self: CanonicalNamed with BasicPlayComponents =>
+trait LinkHeader extends ExHeaders {
 
   /**
    * Create link header for pagination.
@@ -18,16 +17,16 @@ trait LinkHeader extends AppConfig with ExHeaders {
    * @param call the function to supply link string
    * @return
    */
-  def linkHeader(
-    page: PageLike, call: Pager => Call
+  def linkHeader(page: PageLike, call: Pager => Call)(
+    implicit req: RequestHeader
   ): (String, String) = {
     //TODO how about the first or last page situation ?
 
     val next: Seq[String] = if (!page.hasNext) Seq[String]()
-    else Seq( s"""<$hostname${call(page.pager.next)}>; rel="next"""")
+    else Seq( s"""<${req.host}${call(page.pager.next)}>; rel="next"""")
 
     val prev: Seq[String] = if (!page.hasPrev) Seq()
-    else Seq( s"""<$hostname${call(page.pager.prev)}>; rel="prev"""")
+    else Seq( s"""<${req.host}${call(page.pager.prev)}>; rel="prev"""")
 
     LINK -> (next ++ prev).mkString(",")
   }

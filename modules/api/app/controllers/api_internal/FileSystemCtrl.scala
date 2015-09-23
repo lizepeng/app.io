@@ -42,7 +42,7 @@ class FileSystemCtrl(
   with DefaultPlayExecutor
   with ExceptionDefining
   with I18nSupport
-  with AppConfig
+  with AppConfigComponents
   with RateLimitConfig
   with Logging {
 

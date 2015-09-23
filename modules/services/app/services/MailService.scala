@@ -19,7 +19,7 @@ class MailService(
 )
   extends CanonicalNamed
   with BasicPlayComponents
-  with AppConfig
+  with AppConfigComponents
   with I18nSupport {
 
   override val basicName: String = "mailer"
