@@ -74,7 +74,7 @@ case "$1" in
     do_stop
     ;;
   start-force)
-    echo "Forcing to stop app-io"
+    echo "Forcing to start app-io"
     do_stop
     rm -rf "${PIDFILE}"
     do_start
