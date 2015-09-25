@@ -267,9 +267,9 @@ case class InternalGroupsCode(code: Int) extends AnyVal {
 
   def numbers = for (gid <- InternalGroupsCode.ALL if exists(gid)) yield gid
 
-  def +(that: InternalGroupsCode) = InternalGroupsCode(code | that.code)
+  def +(that: InternalGroupsCode) = InternalGroupsCode(code | (1 << 18 - that.code))
 
-  def -(that: InternalGroupsCode) = InternalGroupsCode(code & ~that.code)
+  def -(that: InternalGroupsCode) = InternalGroupsCode(code & ~(1 << 18 - that.code))
 
   private def exists(gid: Int) = (code & 1 << (19 - 1 - gid)) > 0
 
