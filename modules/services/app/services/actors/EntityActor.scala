@@ -32,7 +32,7 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
 
   def isIdle: Boolean = true
 
-  def isReady: Boolean = basicPlayApi != null && receiveTimeout != null
+  def isReady: Boolean
 
   def receiveRecover: Receive = Actor.emptyBehavior
 
@@ -50,6 +50,8 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
           .getMilliseconds("app.akka.cluster.entity_actor.receive_timeout")
           .map(_ millis)
           .map(_.toMinutes).getOrElse(2L) minutes
+
+      tryToBecomeReceive()
 
     case msg => stash()
   }
@@ -82,7 +84,7 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
   }
 
   def tryToBecomeReceive(): Unit =
-    if (isReady) {
+    if (isReady && basicPlayApi != null && receiveTimeout != null) {
       log.debug(s"${self.path} ready to receive messages")
       unstashAll()
       context become receive

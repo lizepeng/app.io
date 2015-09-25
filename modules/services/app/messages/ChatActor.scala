@@ -22,7 +22,7 @@ class ChatActor extends UserMessageActor {
     mediator ! ChatHistory.basicName
   }
 
-  override def isReady = super.isReady && _chatHistories != null
+  def isReady = _chatHistories != null
 
   override def awaitingResources: Receive = ({
     case ch: ChatHistories =>

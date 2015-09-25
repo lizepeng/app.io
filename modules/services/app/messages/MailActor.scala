@@ -24,7 +24,7 @@ class MailActor extends UserMessageActor {
     mediator ! MailSent.basicName
   }
 
-  override def isReady = super.isReady && _mailInbox != null && _mailSent != null
+  def isReady = _mailInbox != null && _mailSent != null
 
   override def awaitingResources: Receive = ({
     case mi: MailInbox =>
