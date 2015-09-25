@@ -55,13 +55,31 @@ case class User(
     )
   }
 
-  def savePassword(newPassword: String)(
-    implicit User: Users
+  def updatePassword(newPassword: String)(
+    implicit _users: Users
   ): Future[User] = {
-    User.savePassword(this, newPassword)
+    _users.updatePassword(this, newPassword)
   }
 
-  def save(implicit User: Users) = User.save(this)
+  def save(implicit _users: Users) = _users.save(this)
+
+  def addGroup(grp: InternalGroupsCode)(
+    implicit _users: Users
+  ): Future[User] = {
+    val igc = internal_groups_code + grp
+    _users
+      .updateGroup(id, igc)
+      .map(_ => copy(internal_groups_code = igc))
+  }
+
+  def delGroup(grp: InternalGroupsCode)(
+    implicit _users: Users
+  ): Future[User] = {
+    val igc = internal_groups_code - grp
+    _users
+      .updateGroup(id, igc)
+      .map(_ => copy(internal_groups_code = igc))
+  }
 
   private def encrypt(salt: String, passwd: String) =
     Crypto.sha2(s"$salt--$passwd")
@@ -274,7 +292,18 @@ class Users(
     } yield user
   }
 
-  def savePassword(user: User, newPassword: String): Future[User] = {
+  def updateGroup(
+    id: UUID,
+    igc: InternalGroupsCode
+  ): Future[ResultSet] = {
+    CQL {
+      update
+        .where(_.id eqs id)
+        .modify(_.internal_groups setTo igc.code)
+    }.future()
+  }
+
+  def updatePassword(user: User, newPassword: String): Future[User] = {
     val u = user.copy(password = newPassword).encryptPassword
     CQL {
       update
@@ -285,7 +314,7 @@ class Users(
     }.future().map(_ => u)
   }
 
-  def saveName(id: UUID, name: String): Future[ResultSet] = CQL {
+  def updateName(id: UUID, name: String): Future[ResultSet] = CQL {
     update
       .where(_.id eqs id)
       .modify(_.name setTo name)

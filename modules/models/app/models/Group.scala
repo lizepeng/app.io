@@ -267,6 +267,10 @@ case class InternalGroupsCode(code: Int) extends AnyVal {
 
   def numbers = for (gid <- InternalGroupsCode.ALL if exists(gid)) yield gid
 
+  def +(that: InternalGroupsCode) = InternalGroupsCode(code | that.code)
+
+  def -(that: InternalGroupsCode) = InternalGroupsCode(code & ~that.code)
+
   private def exists(gid: Int) = (code & 1 << (19 - 1 - gid)) > 0
 
   def pprintLine1 = {
@@ -294,14 +298,15 @@ case class InternalGroupsCode(code: Int) extends AnyVal {
 
 object InternalGroupsCode {
 
-  val ALL        = for (gid <- 0 to 18) yield gid
-  val Half1st    = for (gid <- 0 to 9) yield gid
-  val Half2nd    = for (gid <- 10 to 18) yield gid
-  val Div1       = for (gid <- 0 to 6) yield gid
-  val Div2       = for (gid <- 7 to 12) yield gid
-  val Div3       = for (gid <- 13 to 18) yield gid
+  val ALL     = for (gid <- 0 to 18) yield gid
+  val Half1st = for (gid <- 0 to 9) yield gid
+  val Half2nd = for (gid <- 10 to 18) yield gid
+  val Div1    = for (gid <- 0 to 6) yield gid
+  val Div2    = for (gid <- 7 to 12) yield gid
+  val Div3    = for (gid <- 13 to 18) yield gid
+
   val AnyoneMask = 1 << 18
-  val Anyone     = 0
+  val Anyone     = InternalGroupsCode(0)
 }
 
 class InternalGroups(
@@ -322,8 +327,8 @@ class InternalGroups(
   with Logging {
 
   @volatile private var _num2Id  : Seq[UUID]      = _
-  @volatile private var _anyoneId: UUID           = _
   @volatile private var _id2num  : Map[UUID, Int] = _
+  @volatile private var _anyoneId: UUID           = _
 
   create.ifNotExists.future()
     .andThen { case _ => preLoad(this) }
@@ -331,6 +336,7 @@ class InternalGroups(
     .andThen { case Success(true) => postInit(this) }
 
   private def loadOrInit: Future[Boolean] = {
+    import InternalGroupsCode._
     Future.sequence(
       InternalGroupsCode.ALL.map { n =>
         val key = s"internal_group_${"%02d".format(n)}"
@@ -338,7 +344,10 @@ class InternalGroups(
           createIfNotExist(
             Group(
               id,
-              if (n == InternalGroupsCode.Anyone) "Anyone" else key,
+              n match {
+                case InternalGroupsCode.Anyone.code => "Anyone"
+                case _                              => key
+              },
               Some(key),
               is_internal = true,
               DateTime.now
@@ -348,7 +357,7 @@ class InternalGroups(
       }
     ).map { seq =>
       _num2Id = seq.map(_._1)
-      _anyoneId = _num2Id(InternalGroupsCode.Anyone)
+      _anyoneId = _num2Id(Anyone.code)
       _id2num = _num2Id.zipWithIndex.toMap
       val initialized = (true /: seq)(_ && _._2)
       Logger.info(

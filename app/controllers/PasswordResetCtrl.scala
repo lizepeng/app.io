@@ -118,7 +118,7 @@ class PasswordResetCtrl(
         },
         success => (for {
           link <- _expirableLinks.find(id).andThen { case _ => _expirableLinks.remove(id) }
-          user <- _users.find(link.user_id).flatMap(_.savePassword(success.original))
+          user <- _users.find(link.user_id).flatMap(_.updatePassword(success.original))
           tmpl <- getEmailTemplate(s"$basicName.email2")
         } yield (user, tmpl)).map { case (user, tmpl) =>
           mailService.schedule("support", tmpl, user)

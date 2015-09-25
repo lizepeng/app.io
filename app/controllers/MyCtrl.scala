@@ -84,7 +84,7 @@ class MyCtrl(
               )
             }
           else
-            req.user.savePassword(
+            req.user.updatePassword(
               success.new_password.original
             ).map { user =>
               Redirect(routes.MyCtrl.account()).flashing {
