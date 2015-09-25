@@ -7,10 +7,6 @@ class AppLoader
   extends play.api.ApplicationLoader {
 
   def load(context: Context) = {
-    new Components(context) {
-      override def start(): Unit = {
-        startActors()
-      }
-    }.application
+    new Components(context).application
   }
 }

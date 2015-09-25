@@ -105,6 +105,9 @@ class Components(context: Context)
   implicit val _mailInbox              = new MailInbox
   implicit val _mailSent               = new MailSent
 
+  // Actors
+  startActors()
+
   // Error Handler
   val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
 
@@ -195,9 +198,13 @@ class Components(context: Context)
       case "RequestTimeLogger"         => new RequestTimeLogger()
     }
 
-  start()
-
-  def start(): Unit = {}
+  // temporary workaround until issue #4614 in play framework is fixed. See https://github.com/playframework/playframework/issues/4614
+  override lazy val injector =
+    new SimpleInjector(NewInstanceInjector) +
+      router.asInstanceOf[play.api.routing.Router] +
+      crypto +
+      httpConfiguration +
+      actorSystem
 
   def startActors(): Unit = {
     actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
@@ -206,12 +213,4 @@ class Components(context: Context)
     MailActor.startRegion(configuration, actorSystem)
     ChatActor.startRegion(configuration, actorSystem)
   }
-
-  // temporary workaround until issue #4614 in play framework is fixed. See https://github.com/playframework/playframework/issues/4614
-  override lazy val injector =
-    new SimpleInjector(NewInstanceInjector) +
-      router.asInstanceOf[play.api.routing.Router] +
-      crypto +
-      httpConfiguration +
-      actorSystem
 }
