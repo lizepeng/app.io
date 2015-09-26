@@ -117,8 +117,8 @@ object Group
 
   }
 
-  val idReads          = JsonReads.idReads
-  val nameReads        = JsonReads.nameReads
+  val idReads          = JsonReads.idReads()
+  val nameReads        = JsonReads.nameReads()
   val descriptionReads = (__ \ 'description).readNullable[String]
   val isInternalReads  = (__ \ 'is_internal).read[Boolean]
 
