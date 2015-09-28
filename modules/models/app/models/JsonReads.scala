@@ -11,19 +11,21 @@ import play.api.libs.json._
  */
 object JsonReads {
 
+  val nameConstraint  = minLength[String](2)
+  val emailConstraint = minLength[String](1) <~ maxLength[String](40) <~ email
+
   def idReads(child: Symbol = 'id) =
     (__ \ child).read[UUID]
 
+  def optionalIdReads(child: Symbol = 'id) =
+    (__ \ child).readNullable[UUID]
+
   def nameReads(child: Symbol = 'name) =
-    (__ \ child).read[String](
-      minLength[String](2)
-        <~ maxLength[String](255)
-    )
+    (__ \ child).read[String](nameConstraint)
+
+  def optionalNameReads(child: Symbol = 'name) =
+    (__ \ child).readNullable[String](nameConstraint)
 
   def emailReads(child: Symbol = 'email) =
-    (__ \ child).read[String](
-      minLength[String](1)
-        <~ maxLength[String](40)
-        <~ email
-    )
+    (__ \ child).read[String](emailConstraint)
 }

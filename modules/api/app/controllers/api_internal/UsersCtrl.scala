@@ -2,6 +2,7 @@ package controllers.api_internal
 
 import java.util.UUID
 
+import com.datastax.driver.core.utils.UUIDs
 import controllers.RateLimitConfig
 import elasticsearch._
 import helpers._
@@ -83,7 +84,11 @@ class UsersCtrl(
     UserAction(_.Save).async { implicit req =>
       BindJson().as[UserInfo] {
         success => (for {
-          saved <- User().copy(name = success.name, email = success.email).save
+          saved <- User().copy(
+            id = success.id.getOrElse(UUIDs.timeBased),
+            email = success.email,
+            name = success.name.getOrElse("")
+          ).save
           _resp <- es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>
           Created(_resp._1)
@@ -96,12 +101,14 @@ class UsersCtrl(
       }
     }
 
-  case class UserInfo(name: String, email: String)
+  case class UserInfo(id: Option[UUID], email: String, name: Option[String])
 
   object UserInfo {
 
     implicit val jsonReads: Reads[UserInfo] =
-      (User.nameReads ~ User.emailReads)(UserInfo.apply _)
+      (JsonReads.optionalIdReads() ~
+        User.emailReads ~
+        JsonReads.optionalNameReads())(UserInfo.apply _)
   }
 
 }
