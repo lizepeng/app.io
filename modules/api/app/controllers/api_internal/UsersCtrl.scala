@@ -106,7 +106,7 @@ class UsersCtrl(
   object UserInfo {
 
     implicit val jsonReads: Reads[UserInfo] =
-      (JsonReads.optionalIdReads() ~
+      (JsonReads.optionalIdReads('uid) ~
         User.emailReads ~
         JsonReads.optionalNameReads())(UserInfo.apply _)
   }
