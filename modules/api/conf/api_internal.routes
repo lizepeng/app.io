@@ -18,6 +18,7 @@ POST   /layouts/:gid                     controllers.api_internal.GroupsCtrl.set
 
 GET    /users                            controllers.api_internal.UsersCtrl.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
 POST   /users                            controllers.api_internal.UsersCtrl.create
+GET    /users/:id                        controllers.api_internal.UsersCtrl.show(id:UUID)
 GET    /users/:id/groups                 controllers.api_internal.UsersCtrl.groups(id:UUID,options:Option[String])
 
 GET    /access_controls                  controllers.api_internal.AccessControlsCtrl.index(q:Option[String],p:Pager?=Pager.first)

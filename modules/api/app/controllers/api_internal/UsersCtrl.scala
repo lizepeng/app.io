@@ -38,6 +38,15 @@ class UsersCtrl(
 
   ESIndexCleaner(_users).dropIndexIfEmpty
 
+  def show(id: UUID) =
+    UserAction(_.Show).async { implicit req =>
+      _users.find(id).map { user =>
+        Ok(Json.toJson(user))
+      }.recover {
+        case e: User.NotFound => NotFound
+      }
+    }
+
   def groups(id: UUID, options: Option[String]) =
     UserAction(_.Show).async { implicit req =>
       (for {
