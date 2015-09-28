@@ -32,7 +32,6 @@ object Layouts extends Logging {
   def initIfFirstRun(
     implicit
     _internalGroups: InternalGroups,
-    _sysConfig: SysConfigs,
     ec: ExecutionContext
   ): Future[Boolean] = {
     _internalGroups

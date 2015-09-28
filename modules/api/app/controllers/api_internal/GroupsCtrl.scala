@@ -25,7 +25,7 @@ class GroupsCtrl(
   val basicPlayApi: BasicPlayApi,
   val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
-  val sysConfig: SysConfigs,
+  val _sysConfig: SysConfigs,
   val _groups: Groups
 )
   extends Secured(GroupsCtrl)

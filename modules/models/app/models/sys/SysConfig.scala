@@ -26,9 +26,9 @@ trait SysConfig {
     }
 
     def UUID(key: String)(
-      implicit sysConfig: SysConfigs
+      implicit _sysConfig: SysConfigs
     ) = {
-      sysConfig.getOrElseUpdate(
+      _sysConfig.getOrElseUpdate(
         canonicalName, key, UUIDs.timeBased()
       )
     }
