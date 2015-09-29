@@ -28,11 +28,13 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
   val mediator      = context.actorSelection(ResourcesMediator.actorPath)
 
   var basicPlayApi  : BasicPlayApi = _
-  var receiveTimeout: Timeout      = _
+  var receiveTimeout: Timeout      = 2 minutes
 
   def isIdle: Boolean = true
 
-  def isReady: Boolean
+  def isResourcesReady: Boolean = basicPlayApi != null && receiveTimeout != null
+
+  def isAllResourcesReady: Boolean
 
   def receiveRecover: Receive = Actor.emptyBehavior
 
@@ -40,54 +42,68 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
     super.preStart()
     context become awaitingResources
     mediator ! ResourcesMediator.GetBasicPlayApi
+    self ! EntityActor.SetReceiveTimeout
   }
 
-  def awaitingResources: Receive = {
+  // Not ready to receive message
+  def awaitingResources: Receive = ({
+
     case bpa: BasicPlayApi =>
       basicPlayApi = bpa
       receiveTimeout =
         bpa.configuration
           .getMilliseconds("app.akka.cluster.entity_actor.receive_timeout")
-          .map(_ millis)
-          .map(_.toMinutes).getOrElse(2L) minutes
+          .map(_ / 1000)
+          .getOrElse(120L) seconds
 
-      tryToBecomeReceive()
+      tryToBecomeResourcesReady()
 
-    case msg => stash()
+  }: Receive) orElse handleTimeout orElse stashAll
+
+  final def tryToBecomeResourcesReady(): Unit = {
+    if (isAllResourcesReady) {
+      log.debug(s"${self.path}, all resources are ready")
+      resourcesReady()
+    }
   }
 
-  def receiveCommand: Receive = {
+  def resourcesReady(): Unit = {
+    log.debug(s"${self.path}, ready to receive messages")
+    becomeReceiveReady(receive)
+  }
+
+  def becomeReceiveReady(behavior: Actor.Receive): Unit = {
+    unstashAll()
+    context become behavior
+  }
+
+  // Ready to receive message
+  def receiveCommand: Receive = handleTimeout
+
+  def handleTimeout: Receive = {
 
     case EntityActor.SetReceiveTimeout =>
       if (isIdle) {
-        log.debug(s"${self.path} will passivate after $receiveTimeout.")
+        log.debug(s"${self.path}, set ReceiveTimeout: $receiveTimeout")
         context.setReceiveTimeout(receiveTimeout.duration)
       }
 
     case EntityActor.UnsetReceiveTimeout =>
-      if (isIdle) {
-        log.debug(s"${self.path} will activate.")
+      if (!isIdle) {
+        log.debug(s"${self.path}, set no ReceiveTimeout")
         context.setReceiveTimeout(Duration.Undefined)
       }
-  }
-
-  override def unhandled(msg: Any): Unit = msg match {
 
     case ReceiveTimeout =>
       if (isIdle) {
         context.parent ! Passivate(stopMessage = PoisonPill)
-        log.debug(s"${self.path} passivate now.")
+        log.debug(s"${self.path}, passivate right now")
       }
-
-    case _ =>
-      super.unhandled(msg)
   }
 
-  def tryToBecomeReceive(): Unit =
-    if (isReady && basicPlayApi != null && receiveTimeout != null) {
-      log.debug(s"${self.path} ready to receive messages")
-      unstashAll()
-      context become receive
-      self ! EntityActor.SetReceiveTimeout
-    }
+  def stashAll: Receive = {
+
+    case msg => stash()
+
+  }
 }

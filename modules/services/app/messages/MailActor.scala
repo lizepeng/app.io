@@ -24,23 +24,26 @@ class MailActor extends UserMessageActor {
     mediator ! MailSent.basicName
   }
 
-  def isReady = _mailInbox != null && _mailSent != null
+  def isAllResourcesReady = super.isResourcesReady &&
+    _mailInbox != null && _mailSent != null
 
   override def awaitingResources: Receive = ({
     case mi: MailInbox =>
       _mailInbox = mi
-      tryToBecomeReceive()
+      tryToBecomeResourcesReady()
 
     case ms: MailSent =>
       _mailSent = ms
-      tryToBecomeReceive()
+      tryToBecomeResourcesReady()
 
   }: Receive) orElse super.awaitingResources
 
-  override def receiveCommand: Receive = super.receiveCommand orElse {
+  override def receiveCommand: Receive = ({
+
     case Envelope(uid, mail: Mail) =>
       _mailInbox.save(uid, mail)
       _mailSent.save(mail)
       sockets.route(mail, sender())
-  }
+
+  }: Receive) orElse super.receiveCommand
 }

@@ -21,26 +21,21 @@ abstract class UserMessageActor extends EntityActor {
 
   override def isIdle = sockets.routees.isEmpty
 
-  override def receiveCommand: Receive = super.receiveCommand orElse {
-    case Envelope(_, c: UserMessageActor.Connect) => connect(c.socket)
-  }
+  override def receiveCommand: Receive = ({
 
-  override def unhandled(msg: Any): Unit = msg match {
+    case Envelope(_, c: UserMessageActor.Connect) =>
+      log.debug(s"Socket ${c.socket.path} connected")
+      sockets = sockets.addRoutee(c.socket)
+      context watch c.socket
+      self ! EntityActor.UnsetReceiveTimeout
+      log.debug(s"${self.path}, now has ${sockets.routees.length} sockets connected")
 
     case Terminated(a) =>
-      log.debug(s"Socket ${a.path} disconnected.")
+      log.debug(s"Socket ${a.path} disconnected")
       context unwatch a
       sockets = sockets.removeRoutee(a)
       if (isIdle) self ! EntityActor.SetReceiveTimeout
+      log.debug(s"${self.path}, now has ${sockets.routees.length} sockets connected")
 
-    case _ =>
-      super.unhandled(msg)
-  }
-
-  def connect(a: ActorRef): Unit = {
-    log.debug(s"Socket ${a.path} connected.")
-    sockets = sockets.addRoutee(a)
-    context watch a
-    self ! EntityActor.UnsetReceiveTimeout
-  }
+  }: Receive) orElse super.receiveCommand
 }

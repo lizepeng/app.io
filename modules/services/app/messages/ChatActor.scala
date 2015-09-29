@@ -22,17 +22,22 @@ class ChatActor extends UserMessageActor {
     mediator ! ChatHistory.basicName
   }
 
-  def isReady = _chatHistories != null
+  def isAllResourcesReady = super.isResourcesReady &&
+    _chatHistories != null
 
   override def awaitingResources: Receive = ({
+
     case ch: ChatHistories =>
       _chatHistories = ch
-      tryToBecomeReceive()
+      tryToBecomeResourcesReady()
+
   }: Receive) orElse super.awaitingResources
 
-  override def receiveCommand: Receive = super.receiveCommand orElse {
+  override def receiveCommand: Receive = ({
+
     case Envelope(_, msg: ChatMessage) =>
       _chatHistories.save(msg)
       sockets.route(msg, sender())
-  }
+
+  }: Receive) orElse super.receiveCommand
 }
