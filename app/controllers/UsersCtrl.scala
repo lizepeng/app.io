@@ -3,13 +3,12 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.UsersCtrl.{Password, Rules}
+import controllers.UsersCtrl.PasswordConfirmation
 import elasticsearch.ElasticSearch
 import helpers._
 import models._
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.data.validation._
 import play.api.i18n._
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -41,16 +40,16 @@ class UsersCtrl(
     mapping(
       "email" -> EmailAddress.constrained,
       "password" -> mapping(
-        "original" -> text.verifying(Rules.password),
+        "original" -> Password.constrained,
         "confirmation" -> text
-      )(Password.apply)(Password.unapply)
+      )(PasswordConfirmation.apply)(PasswordConfirmation.unapply)
         .verifying("password.not.confirmed", _.isConfirmed)
     )(SignUpFD.apply)(SignUpFD.unapply)
   )
 
   case class SignUpFD(
     email: EmailAddress,
-    password: Password
+    password: PasswordConfirmation
   )
 
   def show(id: UUID) =
@@ -122,7 +121,7 @@ class UsersCtrl(
   }
 
   def checkPassword = Action { implicit req =>
-    val form = Form(single("value" -> text.verifying(Rules.password)))
+    val form = Form(single("value" -> Password.constrained))
 
     form.bindFromRequest().fold(
       failure => Forbidden(failure.errorsAsJson),
@@ -137,33 +136,8 @@ object UsersCtrl
   with CanonicalNameBasedMessages
   with ViewMessages {
 
-  case class Password(
-    original: String,
-    confirmation: String
-  ) {
+  case class PasswordConfirmation(original: Password, confirmation: String) {
 
-    def isConfirmed = original == confirmation
+    def isConfirmed = original.self == confirmation
   }
-
-  object Rules {
-
-    import play.api.data.validation.{ValidationError => VE}
-
-    private val noDigit = """[^0-9]*""".r
-    private val noUpper = """[^A-Z]*""".r
-    private val noLower = """[^a-z]*""".r
-
-    def password = Constraint[String]("constraint.password.check") {
-      case o if isEmpty(o)     => Invalid(VE("password.too.short", 7))
-      case o if o.length <= 7  => Invalid(VE("password.too.short", 7))
-      case o if o.length >= 39 => Invalid(VE("password.too.long", 39))
-      case noDigit()           => Invalid(VE("password.all_number"))
-      case noLower()           => Invalid(VE("password.all_upper"))
-      case noUpper()           => Invalid(VE("password.all_lower"))
-      case _                   => Valid
-    }
-
-    private def isEmpty(s: String) = s == null || s.trim.isEmpty
-  }
-
 }

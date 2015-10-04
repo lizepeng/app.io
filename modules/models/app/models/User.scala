@@ -26,7 +26,7 @@ case class User(
   email: EmailAddress = EmailAddress.empty,
   internal_groups_code: InternalGroupsCode = InternalGroupsCode(0),
   external_groups: Set[UUID] = Set(),
-  password: String = "",
+  password: Password = Password.empty,
   remember_me: Boolean = false,
   preferences: Preferences = Preferences(),
   updated_at: DateTime = DateTime.now
@@ -37,7 +37,7 @@ case class User(
 
   def groups: Set[UUID] = external_groups union internal_groups
 
-  def hasPassword(submittedPasswd: String) = {
+  def hasPassword(submittedPasswd: Password) = {
     if (encrypted_password == "") false
     else encrypted_password == encrypt(salt, submittedPasswd)
   }
@@ -53,7 +53,7 @@ case class User(
     )
   }
 
-  def updatePassword(newPassword: String)(
+  def updatePassword(newPassword: Password)(
     implicit _users: Users
   ): Future[User] = {
     _users.updatePassword(this, newPassword)
@@ -79,10 +79,10 @@ case class User(
       .map(_ => copy(internal_groups_code = igc))
   }
 
-  private def encrypt(salt: String, passwd: String) =
+  private def encrypt(salt: String, passwd: Password) =
     Crypto.sha2(s"$salt--$passwd")
 
-  private def makeSalt(passwd: String) =
+  private def makeSalt(passwd: Password) =
     Crypto.sha2(s"${DateTime.now}--$passwd")
 }
 
@@ -221,7 +221,7 @@ class Users(
       EmailAddress(email(r)),
       InternalGroupsCode(internal_groups(r)),
       external_groups(r),
-      "",
+      Password.empty,
       remember_me = false,
       preferences = Preferences(),
       updated_at(r)
@@ -297,7 +297,7 @@ class Users(
     }.future()
   }
 
-  def updatePassword(user: User, newPassword: String): Future[User] = {
+  def updatePassword(user: User, newPassword: Password): Future[User] = {
     val u = user.copy(password = newPassword).encryptPassword
     CQL {
       update
@@ -359,7 +359,7 @@ class Users(
     CQL(select(_.access_token).where(_.id eqs id)).one()
   }
 
-  def auth(email: EmailAddress, passwd: String): Future[User] = {
+  def auth(email: EmailAddress, passwd: Password): Future[User] = {
     find(email).map { user =>
       if (user.hasPassword(passwd)) user
       else throw User.WrongPassword(email.self)

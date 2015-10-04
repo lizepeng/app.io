@@ -1,6 +1,6 @@
 package controllers
 
-import controllers.UsersCtrl.{Password, Rules}
+import controllers.UsersCtrl._
 import elasticsearch.ElasticSearch
 import helpers._
 import models._
@@ -34,18 +34,18 @@ class MyCtrl(
 
   val ChangePasswordFM = Form[ChangePasswordFD](
     mapping(
-      "old_password" -> text.verifying(Rules.password),
+      "old_password" -> Password.constrained,
       "new_password" -> mapping(
-        "original" -> text.verifying(Rules.password),
+        "original" -> Password.constrained,
         "confirmation" -> text
-      )(Password.apply)(Password.unapply)
+      )(PasswordConfirmation.apply)(PasswordConfirmation.unapply)
         .verifying("password.not.confirmed", _.isConfirmed)
     )(ChangePasswordFD.apply)(ChangePasswordFD.unapply)
   )
 
   case class ChangePasswordFD(
-    old_password: String,
-    new_password: Password
+    old_password: Password,
+    new_password: PasswordConfirmation
   )
 
   val ProfileFM = Form(

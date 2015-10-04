@@ -33,14 +33,14 @@ class SessionsCtrl(
   val loginFM = Form[LoginFD](
     mapping(
       "email" -> of[EmailAddress],
-      "password" -> text,
+      "password" -> of[Password],
       "remember_me" -> boolean
     )(LoginFD.apply)(LoginFD.unapply)
   )
 
   case class LoginFD(
     email: EmailAddress,
-    password: String,
+    password: Password,
     remember_me: Boolean
   )
 
