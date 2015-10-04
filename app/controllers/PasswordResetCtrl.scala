@@ -38,8 +38,8 @@ class PasswordResetCtrl(
   with AppConfigComponents
   with Logging {
 
-  val emailFM = Form(
-    single("email" -> text.verifying(Rules.email))
+  val emailFM = Form[EmailAddress](
+    single("email" -> EmailAddress.constrained)
   )
 
   val resetFM = Form[Password](
@@ -50,9 +50,12 @@ class PasswordResetCtrl(
       .verifying("password.not.confirmed", _.isConfirmed)
   )
 
-  def nnew(email: String) =
+  def nnew(email: Option[EmailAddress]) =
     MaybeUserAction().apply { implicit req =>
-      Ok(html.password_reset.nnew(emailFM.fill(email)))
+      Ok {
+        val filled = emailFM.fill(email.getOrElse(EmailAddress.empty))
+        html.password_reset.nnew(filled)
+      }
     }
 
   /**
@@ -139,7 +142,7 @@ class PasswordResetCtrl(
         User(
           id = uid,
           name = basicName,
-          email = s"$basicName@$domain"
+          email = EmailAddress(s"$basicName@$domain")
         )
       )
     }
@@ -167,7 +170,7 @@ class PasswordResetCtrl(
       }
     } yield tmpl
 
-  private def onError(bound: Form[String], key: String)(
+  private def onError(bound: Form[EmailAddress], key: String)(
     implicit req: MaybeUserRequest[_]
   ): Result = NotFound {
     html.password_reset.nnew {

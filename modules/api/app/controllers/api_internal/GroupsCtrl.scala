@@ -131,11 +131,13 @@ class GroupsCtrl(
   def addUser(id: UUID) =
     UserAction(_.Save).async { implicit req =>
       BodyIsJsObject { obj =>
-        obj.validate[UUID](User.idReads).map(_users.find)
-          .orElse(
-            obj.validate[String](User.emailReads).map(_users.find)
-          ).map {
-          _.flatMap { user =>
+        def u1 = (obj \ "id").validate[UUID].map(_users.find)
+        def u2 = (obj \ "email").validate[EmailAddress].map(_users.find)
+        (u1 orElse u2).fold(
+          failure => Future.successful {
+            UnprocessableEntity(JsonClientErrors(failure))
+          },
+          success => success.flatMap { user =>
             if (user.groups.contains(id)) Future.successful {
               Ok(Json.toJson(user))
             }
@@ -143,13 +145,7 @@ class GroupsCtrl(
               Created(Json.toJson(user))
             }
           }
-        }.fold(
-            failure => Future.successful {
-              UnprocessableEntity(JsonClientErrors(failure))
-            },
-            success => success
-          )
-          .recover {
+        ).recover {
           case e: User.NotFound => NotFound(JsonMessage(e))
         }
       }

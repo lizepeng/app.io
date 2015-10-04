@@ -62,7 +62,7 @@
               <button type="submit" class="btn btn-default" tabindex="4">
                 <strong>@MSG("password.update")</strong>
               </button>
-              <a href="@routes.PasswordResetCtrl.nnew(req.user.email)">@MSG("password.forgot")</a>
+              <a href="@routes.PasswordResetCtrl.nnew(Some(req.user.email))">@MSG("password.forgot")</a>
             }
           </div>
         </div>

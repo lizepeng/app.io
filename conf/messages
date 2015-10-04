@@ -165,8 +165,9 @@ user.code.forgot                                 =Forgot your username?
 user.pwd.forgot                                  =Forgot your password?
 sign.in                                          =Sign In
 sign.out                                         =Sign Out
-sign.in.head                                     =Sign in to App.io
-sign.up.head                                     =Join App.io
+sign.in.title                                    =Sign in
+sign.in.head                                     =Sign in to
+sign.up.title                                    =Join
 sign.up.failed                                   =There were problems creating your account.
 
 sign.in.msg.error                                =TODO

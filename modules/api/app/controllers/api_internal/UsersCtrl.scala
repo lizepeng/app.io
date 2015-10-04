@@ -8,8 +8,6 @@ import elasticsearch._
 import helpers._
 import models._
 import play.api.i18n._
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import protocols.JsonProtocol._
@@ -38,6 +36,9 @@ class UsersCtrl(
   with Logging {
 
   ESIndexCleaner(_users).dropIndexIfEmpty
+
+  case class UserInfo(uid: Option[UUID], email: EmailAddress, name: Option[Name])
+  object UserInfo {implicit val jsonFormat = Json.format[UserInfo]}
 
   def show(id: UUID) =
     UserAction(_.Show).async { implicit req =>
@@ -85,9 +86,9 @@ class UsersCtrl(
       BindJson().as[UserInfo] {
         success => (for {
           saved <- User().copy(
-            id = success.id.getOrElse(UUIDs.timeBased),
+            id = success.uid.getOrElse(UUIDs.timeBased),
             email = success.email,
-            name = success.name.getOrElse("")
+            name = success.name.map(_.self).getOrElse("")
           ).save
           _resp <- es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>
@@ -100,16 +101,6 @@ class UsersCtrl(
         }
       }
     }
-
-  case class UserInfo(id: Option[UUID], email: String, name: Option[String])
-
-  object UserInfo {
-
-    implicit val jsonReads: Reads[UserInfo] =
-      (JsonReads.optionalIdReads('uid) ~
-        User.emailReads ~
-        JsonReads.optionalNameReads())(UserInfo.apply _)
-  }
 
 }
 

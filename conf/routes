@@ -42,7 +42,7 @@ GET  /groups                                controllers.GroupsCtrl.index(p:Pager
 POST /groups/check_name                     controllers.GroupsCtrl.checkName
 GET  /groups/:id                            controllers.GroupsCtrl.show(id:UUID)
 
-GET  /password_reset                        controllers.PasswordResetCtrl.nnew(email?="")
+GET  /password_reset                        controllers.PasswordResetCtrl.nnew(email:Option[EmailAddress]?=None)
 POST /password_reset                        controllers.PasswordResetCtrl.create
 GET  /password_reset/:id                    controllers.PasswordResetCtrl.show(id)
 POST /password_reset/:id                    controllers.PasswordResetCtrl.save(id)

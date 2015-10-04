@@ -74,7 +74,7 @@ TwirlKeys.templateImports ++= Seq(
 
 routesImport ++= Seq(
   "helpers.ExtBindable._",
-  "helpers.Pager",
+  "helpers._",
   "java.util.UUID",
   "models.cfs._",
   "org.joda.time.DateTime",

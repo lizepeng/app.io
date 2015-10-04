@@ -38,7 +38,7 @@ class UsersCtrl(
 
   val signUpFM = Form[SignUpFD](
     mapping(
-      "email" -> text.verifying(Rules.email),
+      "email" -> EmailAddress.constrained,
       "password" -> mapping(
         "original" -> text.verifying(Rules.password),
         "confirmation" -> text
@@ -48,7 +48,7 @@ class UsersCtrl(
   )
 
   case class SignUpFD(
-    email: String,
+    email: EmailAddress,
     password: Password
   )
 
@@ -106,7 +106,7 @@ class UsersCtrl(
   }
 
   def checkEmail = Action.async { implicit req =>
-    val form = Form(single("value" -> text.verifying(Rules.email)))
+    val form = Form(single("value" -> EmailAddress.constrained))
 
     form.bindFromRequest().fold(
       failure => Future.successful(Forbidden(failure.errorsAsJson)),
@@ -159,15 +159,6 @@ object UsersCtrl
       case noLower()           => Invalid(VE("password.all_upper"))
       case noUpper()           => Invalid(VE("password.all_lower"))
       case _                   => Valid
-    }
-
-    private val emailRegex = """[\w\.-]+@[\w\.-]+\.\w+$""".r
-
-    def email = Constraint[String]("constraint.email.check") {
-      case o if isEmpty(o)    => Invalid(VE("email.empty"))
-      case o if o.length > 39 => Invalid(VE("email.invalid"))
-      case emailRegex()       => Valid
-      case _                  => Invalid(VE("email.invalid"))
     }
 
     private def isEmpty(s: String) = s == null || s.trim.isEmpty

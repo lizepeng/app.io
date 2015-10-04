@@ -15,7 +15,7 @@
 
   @form(action = routes.SessionsCtrl.create(), 'class -> "signin-form") {
 
-    <h3 class="signin-form-heading">@MSG("sign.in.head")</h3>
+    <h3 class="signin-form-heading">@(MSG("sign.in.head") + " " + MSG("app.name"))</h3>
 
     @{_input_email(fm("email"),
       'placeholder -> MSG("email"),

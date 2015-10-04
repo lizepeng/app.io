@@ -25,7 +25,7 @@ case class User(
   name: String = "",
   salt: String = "",
   encrypted_password: String = "",
-  email: String = "",
+  email: EmailAddress = EmailAddress.empty,
   internal_groups_code: InternalGroupsCode = InternalGroupsCode(0),
   external_groups: Set[UUID] = Set(),
   password: String = "",
@@ -184,10 +184,6 @@ object User
 
   }
 
-  val idReads    = JsonReads.idReads()
-  val nameReads  = JsonReads.nameReads()
-  val emailReads = JsonReads.emailReads()
-
   implicit val jsonWrites = new Writes[User] {
     override def writes(o: User): JsValue = Json.obj(
       "id" -> o.id,
@@ -224,7 +220,7 @@ class Users(
       name(r),
       salt(r),
       encrypted_password(r),
-      email(r),
+      EmailAddress(email(r)),
       InternalGroupsCode(internal_groups(r)),
       external_groups(r),
       "",
@@ -252,7 +248,7 @@ class Users(
     case Some(u) => u
   }
 
-  def find(email: String): Future[User] = {
+  def find(email: EmailAddress): Future[User] = {
     _usersByEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
@@ -261,10 +257,10 @@ class Users(
       .where(_.id in ids.toList.distinct)
   }.fetch()
 
-  def checkEmail(email: String): Future[Boolean] = {
+  def checkEmail(email: EmailAddress): Future[Boolean] = {
     _usersByEmail.cql_check(email).one().map {
       case None => true
-      case _    => throw User.EmailTaken(email)
+      case _    => throw User.EmailTaken(email.self)
     }
   }
 
@@ -283,12 +279,12 @@ class Users(
           .value(_.name, u.name)
           .value(_.salt, u.salt)
           .value(_.encrypted_password, u.encrypted_password)
-          .value(_.email, u.email)
+          .value(_.email, u.email.self)
           .value(_.internal_groups, u.internal_groups_code.code | InternalGroupsCode.AnyoneMask)
           .value(_.external_groups, Set[UUID]())
           .value(_.updated_at, u.updated_at)
       }.future().map(_ => u)
-      else throw User.EmailTaken(u.email)
+      else throw User.EmailTaken(u.email.self)
     } yield user
   }
 
@@ -365,10 +361,10 @@ class Users(
     CQL(select(_.access_token).where(_.id eqs id)).one()
   }
 
-  def auth(email: String, passwd: String): Future[User] = {
+  def auth(email: EmailAddress, passwd: String): Future[User] = {
     find(email).map { user =>
       if (user.hasPassword(passwd)) user
-      else throw User.WrongPassword(email)
+      else throw User.WrongPassword(email.self)
     }
   }
 }
@@ -400,32 +396,32 @@ class UsersByEmail(
 
   create.ifNotExists.future()
 
-  def save(email: String, id: UUID): Future[Boolean] = CQL {
+  def save(email: EmailAddress, id: UUID): Future[Boolean] = CQL {
     insert
-      .value(_.email, email)
+      .value(_.email, email.self)
       .value(_.id, id)
       .ifNotExists()
   }.future().map(_.wasApplied())
 
-  def find(email: String): Future[(String, UUID)] = {
-    if (email.isEmpty) Future.failed(User.NotFound(email))
+  def find(email: EmailAddress): Future[(String, UUID)] = {
+    if (email.self.isEmpty) Future.failed(User.NotFound(email.self))
     else CQL {
-      select.where(_.email eqs email)
+      select.where(_.email eqs email.self)
     }.one().map {
-      case None      => throw User.NotFound(email)
+      case None      => throw User.NotFound(email.self)
       case Some(idx) => idx
     }
   }
 
-  def cql_del(email: String) = CQL {
-    delete.where(_.email eqs email)
+  def cql_del(email: EmailAddress) = CQL {
+    delete.where(_.email eqs email.self)
   }
 
-  def cql_check(email: String) = CQL {
-    select(_.id).where(_.email eqs email)
+  def cql_check(email: EmailAddress) = CQL {
+    select(_.id).where(_.email eqs email.self)
   }
 
-  def remove(email: String): Future[ResultSet] = {
+  def remove(email: EmailAddress): Future[ResultSet] = {
     cql_del(email).future()
   }
 }
