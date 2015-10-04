@@ -16,8 +16,8 @@ import scala.concurrent.Future
  */
 case class Person(
   id: UUID,
-  first_name: String = "",
-  last_name: String = "",
+  first_name: HumanName = HumanName.empty,
+  last_name: HumanName = HumanName.empty,
   updated_at: DateTime = DateTime.now
 ) extends HasUUID with TimeBased
 
@@ -46,8 +46,8 @@ sealed class PersonTable
   override def fromRow(r: Row): Person = {
     Person(
       id(r),
-      first_name(r),
-      last_name(r),
+      HumanName(first_name(r)),
+      HumanName(last_name(r)),
       updated_at(r)
     )
   }
@@ -94,8 +94,8 @@ class Persons(
   def save(p: Person): Future[ResultSet] = CQL {
     update
       .where(_.id eqs p.id)
-      .modify(_.first_name setTo p.first_name)
-      .and(_.last_name setTo p.last_name)
+      .modify(_.first_name setTo p.first_name.self)
+      .and(_.last_name setTo p.last_name.self)
       .and(_.updated_at setTo DateTime.now)
   }.future()
 

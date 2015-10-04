@@ -137,7 +137,7 @@ implicit req: UserRequest[_], messages: Messages)
 @jsRoutes = {
   @helper.javascriptRouter("jsRoutes")(
     routes.javascript.GroupsCtrl.show,
-    routes.javascript.GroupsCtrl.checkName
+    api_internal.routes.javascript.GroupsCtrl.checkName
   )
 }
 

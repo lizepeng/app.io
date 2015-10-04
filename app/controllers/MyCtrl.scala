@@ -50,8 +50,8 @@ class MyCtrl(
 
   val ProfileFM = Form(
     tuple(
-      "first_name" -> nonEmptyText(minLength = 1),
-      "last_name" -> nonEmptyText(minLength = 1)
+      "first_name" -> HumanName.constrained,
+      "last_name" -> HumanName.constrained
     )
   )
 

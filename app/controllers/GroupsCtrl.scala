@@ -7,11 +7,8 @@ import models._
 import play.api.data.Forms._
 import play.api.i18n._
 import play.api.mvc.Controller
-import protocols.JsonProtocol._
 import security._
 import views._
-
-import scala.concurrent.Future
 
 /**
  * @author zepeng.li@gmail.com
@@ -43,17 +40,6 @@ class GroupsCtrl(
         case e: BaseException => NotFound
       }
     }
-
-  def checkName =
-    UserAction(_.Show).async(parse.json) { implicit req =>
-      Future.successful {
-        req.body.validate(Group.nameReads).fold(
-          failure => UnprocessableEntity(JsonClientErrors(failure)),
-          success => Ok
-        )
-      }
-    }
-
 }
 
 object GroupsCtrl

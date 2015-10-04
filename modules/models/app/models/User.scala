@@ -2,8 +2,6 @@ package models
 
 import java.util.UUID
 
-import com.datastax.driver.core.utils.UUIDs
-import com.datastax.driver.core.{ResultSet, Row}
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers.ExtCrypto._
@@ -21,8 +19,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class User(
-  id: UUID = UUIDs.timeBased(),
-  name: String = "",
+  id: UUID,
+  name: Name = Name.empty,
   salt: String = "",
   encrypted_password: String = "",
   email: EmailAddress = EmailAddress.empty,
@@ -217,7 +215,7 @@ class Users(
   override def fromRow(r: Row): User = {
     User(
       id(r),
-      name(r),
+      Name(name(r)),
       salt(r),
       encrypted_password(r),
       EmailAddress(email(r)),
@@ -231,7 +229,7 @@ class Users(
   }
 
   lazy val root: Future[User] = System.UUID("root_id").map { uid =>
-    User(id = uid, name = "root")
+    User(id = uid, name = Name("root"))
   }
 
   def exists(id: UUID): Future[Boolean] = CQL {
@@ -276,7 +274,7 @@ class Users(
       user <- if (done) CQL {
         insert
           .value(_.id, u.id)
-          .value(_.name, u.name)
+          .value(_.name, u.name.self)
           .value(_.salt, u.salt)
           .value(_.encrypted_password, u.encrypted_password)
           .value(_.email, u.email.self)

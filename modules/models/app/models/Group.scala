@@ -2,16 +2,14 @@ package models
 
 import java.util.UUID
 
-import com.datastax.driver.core.Row
+import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
 import org.joda.time.DateTime
-import play.api.libs.functional.syntax._
 import play.api.libs.iteratee._
-import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 import scala.collection.TraversableOnce
@@ -22,15 +20,12 @@ import scala.util.Success
  * @author zepeng.li@gmail.com
  */
 case class Group(
-  id: UUID,
-  name: String = "",
+  id: UUID = UUIDs.timeBased,
+  name: Name = Name.empty,
   description: Option[String] = None,
   is_internal: Boolean = false,
-  updated_at: DateTime
-) extends HasUUID with TimeBased {
-
-  def save(implicit groups: Groups) = groups.save(this)
-}
+  updated_at: DateTime = DateTime.now
+) extends HasUUID with TimeBased
 
 trait GroupCanonicalNamed extends CanonicalNamed {
 
@@ -72,7 +67,7 @@ sealed trait GroupTable
   override def fromRow(r: Row): Group = {
     Group(
       id(r),
-      name(r),
+      Name(name(r)),
       description(r),
       is_internal(r).contains(true),
       updated_at(r)
@@ -117,18 +112,7 @@ object Group
 
   }
 
-  val idReads          = JsonReads.idReads()
-  val nameReads        = JsonReads.nameReads()
-  val descriptionReads = (__ \ 'description).readNullable[String]
-  val isInternalReads  = (__ \ 'is_internal).read[Boolean]
-
   implicit val jsonWrites = Json.writes[Group]
-  implicit val jsonReads  = (idReads ~
-    nameReads ~
-    descriptionReads ~
-    isInternalReads ~
-    ExtReads.always(DateTime.now)
-    )(Group.apply _)
 }
 
 class Groups(
@@ -167,7 +151,7 @@ class Groups(
   def save(group: Group): Future[Group] = CQL {
     update
       .where(_.id eqs group.id)
-      .modify(_.name setTo group.name)
+      .modify(_.name setTo group.name.self)
       .and(_.description setTo group.description)
       .and(_.is_internal setTo Some(group.is_internal).filter(_ == true))
       .and(_.updated_at setTo DateTime.now)
@@ -345,8 +329,8 @@ class InternalGroups(
             Group(
               id,
               n match {
-                case InternalGroupsCode.Anyone.code => "Anyone"
-                case _                              => key
+                case InternalGroupsCode.Anyone.code => Name("Anyone")
+                case _                              => Name(key)
               },
               Some(key),
               is_internal = true,
@@ -381,7 +365,7 @@ class InternalGroups(
   private def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
       .value(_.id, group.id)
-      .value(_.name, group.name)
+      .value(_.name, group.name.self)
       .value(_.description, group.description)
       .value(_.is_internal, Some(group.is_internal).filter(_ == true))
       .value(_.updated_at, group.updated_at)
@@ -399,7 +383,7 @@ class InternalGroups(
       .distinct
       .where(_.id in ids.toList.distinct)
   }.fetchEnumerator() &>
-    Enumeratee.map(t => t.copy(_4 = t._4.contains(true))) &>
+    Enumeratee.map(t => t.copy(_2 = Name(t._2), _4 = t._4.contains(true))) &>
     Enumeratee.map(t => Group.apply _ tupled t)
 
   def all: Enumerator[Group] = CQL {

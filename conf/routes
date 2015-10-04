@@ -39,7 +39,6 @@ GET  /users                                 controllers.UsersCtrl.index(p:Pager?
 GET  /users/:id                             controllers.UsersCtrl.show(id:UUID)
 
 GET  /groups                                controllers.GroupsCtrl.index(p:Pager?=Pager.first)
-POST /groups/check_name                     controllers.GroupsCtrl.checkName
 GET  /groups/:id                            controllers.GroupsCtrl.show(id:UUID)
 
 GET  /password_reset                        controllers.PasswordResetCtrl.nnew(email:Option[EmailAddress]?=None)

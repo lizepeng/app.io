@@ -2,7 +2,6 @@ package controllers.api_internal
 
 import java.util.UUID
 
-import com.datastax.driver.core.utils.UUIDs
 import controllers.RateLimitConfig
 import elasticsearch._
 import helpers._
@@ -38,6 +37,11 @@ class GroupsCtrl(
   with I18nSupport
   with Logging {
 
+  ESIndexCleaner(_groups).dropIndexIfEmpty
+
+  case class GroupInfo(name: Name, description: Option[String])
+  object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}
+
   def index(ids: Seq[UUID], q: Option[String], p: Pager) =
     UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
@@ -65,20 +69,16 @@ class GroupsCtrl(
 
   def create =
     UserAction(_.Save).async { implicit req =>
-      BindJson.and(
-        Json.obj(
-          "id" -> UUIDs.timeBased(),
-          "is_internal" -> false
-        )
-      ).as[Group] {
-        success => for {
-          saved <- success.save
+      BindJson().as[GroupInfo] { success =>
+        for {
+          saved <- _groups.save(Group(name = success.name, description = success.description))
           _resp <- es.Index(saved) into _groups
-        } yield
+        } yield {
           Created(_resp._1)
             .withHeaders(
               LOCATION -> routes.GroupsCtrl.show(saved.id).url
             )
+        }
       }
     }
 
@@ -100,12 +100,24 @@ class GroupsCtrl(
       }
     }
 
+  def checkName =
+    UserAction(_.Show).async { implicit req =>
+      BodyIsJsObject { obj =>
+        Future.successful {
+          (obj \ "name").validate[Name].fold(
+            failure => UnprocessableEntity(JsonClientErrors(failure)),
+            success => Ok
+          )
+        }
+      }
+    }
+
   def save(id: UUID) =
     UserAction(_.Save).async { implicit req =>
-      BindJson().as[Group] { grp =>
+      BindJson().as[GroupInfo] { grp =>
         (for {
-          _____ <- _groups.find(id)
-          saved <- grp.save
+          group <- _groups.find(id)
+          saved <- _groups.save(group.copy(name = grp.name, description = grp.description))
           _resp <- es.Update(saved) in _groups
         } yield _resp._1).map {
           Ok(_)

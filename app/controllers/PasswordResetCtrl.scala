@@ -141,7 +141,7 @@ class PasswordResetCtrl(
       case e: User.NotFound => _users.save(
         User(
           id = uid,
-          name = basicName,
+          name = Name(basicName),
           email = EmailAddress(s"$basicName@$domain")
         )
       )

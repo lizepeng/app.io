@@ -85,10 +85,10 @@ class UsersCtrl(
     UserAction(_.Save).async { implicit req =>
       BindJson().as[UserInfo] {
         success => (for {
-          saved <- User().copy(
+          saved <- User(
             id = success.uid.getOrElse(UUIDs.timeBased),
             email = success.email,
-            name = success.name.map(_.self).getOrElse("")
+            name = success.name.getOrElse(Name.empty)
           ).save
           _resp <- es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>

@@ -2,6 +2,7 @@ package controllers
 
 import java.util.UUID
 
+import com.datastax.driver.core.utils.UUIDs
 import controllers.UsersCtrl.{Password, Rules}
 import elasticsearch.ElasticSearch
 import helpers._
@@ -85,6 +86,7 @@ class UsersCtrl(
       success => (for {
         exist <- _users.checkEmail(success.email)
         saved <- User(
+          id = UUIDs.timeBased,
           email = success.email,
           password = success.password.original
         ).save
