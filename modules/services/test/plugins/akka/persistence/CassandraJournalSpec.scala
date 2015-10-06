@@ -16,9 +16,8 @@ import play.api.inject.DefaultApplicationLifecycle
  * @author zepeng.li@gmail.com
  */
 @RunWith(classOf[JUnitRunner])
-class CassandraJournalSpec extends JournalSpec {
-
-  lazy override val config = ConfigFactory.parseString(
+class CassandraJournalSpec extends JournalSpec(
+  config = ConfigFactory.parseString(
     """
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
@@ -30,6 +29,7 @@ class CassandraJournalSpec extends JournalSpec {
      | }
     """.stripMargin
   )
+) {
 
   def context: ApplicationLoader.Context =
     ApplicationLoader.createContext(
@@ -61,6 +61,7 @@ class CassandraJournalSpec extends JournalSpec {
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    super.beforeAll()
     system.actorOf(
       Props(
         new Actor {
@@ -70,7 +71,6 @@ class CassandraJournalSpec extends JournalSpec {
         }
       ), ResourcesMediator.basicName
     )
-    super.beforeAll()
   }
 
   override def afterAll(): Unit = {

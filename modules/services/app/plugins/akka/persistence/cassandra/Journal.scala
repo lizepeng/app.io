@@ -62,36 +62,20 @@ class Journal(
   def save(
     messages: Traversable[(String, Long, ByteBuffer)]
   )(volume_size: Long): Future[ResultSet] = {
-
     for {
-      map <- findVolumeIDs(messages.map { t => (t._1, t._2) })(volume_size)
-      vol <- Future.successful {
+      map <- findVolumeIDs(messages)(volume_size)
+      vol <- Future.successful(
         messages.map {
           case (pid, snr, buff) =>
             ((map(Key(pid, snr / volume_size)), snr), buff)
         }
-      }
+      )
       ret <- journalVolumes.save(vol)
     } yield ret
   }
 
-  def saveConfirm(
-    messages: Traversable[(String, Long, String)]
-  )(volume_size: Long): Future[ResultSet] = {
-    for {
-      map <- findVolumeIDs(messages.map { t => (t._1, t._2) })(volume_size)
-      vol <- Future.successful(
-        messages.map {
-          case (pid, snr, channel) =>
-            ((map(Key(pid, snr / volume_size)), snr), channel)
-        }
-      )
-      ret <- journalVolumes.saveConfirm(vol)
-    } yield ret
-  }
-
   def remove(
-    pid: String, to: Long, permanent: Boolean
+    pid: String, to: Long
   )(batchSize: Int): Future[Unit] = {
     CQL {
       select(_.volume_id)
@@ -102,20 +86,7 @@ class Journal(
       Enumeratee.mapFlatten(vid => journalVolumes.keys(vid, to = to)) &>
       Enumeratee.takeWhile(_._2 <= to) &>
       Enumeratee.grouped(Iteratee.takeUpTo(batchSize)) |>>>
-      Iteratee.foreach(journalVolumes.remove(_, permanent))
-  }
-
-  def removeOne(
-    pid: String, snr: Long, permanent: Boolean
-  )(batchSize: Int): Future[Unit] = {
-    CQL {
-      select(_.volume_id)
-        .where(_.persistence_id eqs pid)
-        .and(_.volume_nr eqs snr / batchSize)
-    }.one.flatMap {
-      case None      => Future.successful(Unit)
-      case Some(vid) => journalVolumes.removeOne(vid, snr, permanent)
-    }
+      Iteratee.foreach(journalVolumes.remove(_))
   }
 
   def readHighestSequenceNr(
@@ -133,20 +104,18 @@ class Journal(
 
   def stream(
     pid: String, from: Long, to: Long, max: Long
-  )(
-    volume_size: Long
-  ): Enumerator[JournalVolumeRecord] = {
+  )(volume_size: Long): Enumerator[ByteBuffer] = {
+    val ceil =
+      if (to > Long.MaxValue - volume_size) Long.MaxValue
+      else (to / volume_size + 1) * volume_size
     CQL {
-      val ceil =
-        if (to > (Long.MaxValue - volume_size)) Long.MaxValue
-        else (to / volume_size + 1) * volume_size
       select(_.volume_id)
         .where(_.persistence_id eqs pid)
         .and(_.volume_nr gte from / volume_size)
         .and(_.volume_nr lte ceil)
     }.fetchEnumerator() &>
       Enumeratee.mapFlatten(vid => journalVolumes.values(vid, from, to)) &>
-      Enumeratee.take[JournalVolumeRecord](max)
+      Enumeratee.take[ByteBuffer](max)
   }
 
   private def findVolumeID(key: Key): Future[(Key, UUID)] = CQL {
@@ -173,11 +142,12 @@ class Journal(
   }
 
   private def findVolumeIDs(
-    messages: Traversable[(String, Long)]
+    messages: Traversable[(String, Long, ByteBuffer)]
   )(volume_size: Long): Future[Map[Key, UUID]] = {
     Future.sequence(
       messages.map {
-        case (pid, snr) => Key(pid, snr / volume_size)
+        case (pid, snr, _) =>
+          Key(pid, snr / volume_size)
       }.toList.distinct.map(findVolumeID)
     ).map(_.toMap)
   }

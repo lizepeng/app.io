@@ -1,7 +1,7 @@
 package services.actors
 
 import akka.actor._
-import akka.contrib.pattern.ShardRegion
+import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import helpers.BasicPlayApi
@@ -24,6 +24,7 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
 
   import ShardRegion.Passivate
 
+//TODO  self.path.toStringWithoutAddress
   val persistenceId = s"${self.path.parent.name}-${self.path.name}"
   val mediator      = context.actorSelection(ResourcesMediator.actorPath)
 

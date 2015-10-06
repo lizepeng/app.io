@@ -13,31 +13,13 @@ import scala.concurrent.Future
 /**
  * @author zepeng.li@gmail.com
  */
-
 object JournalVolumeRecord {
 
   type Key = (UUID, Long)
-
-  object Marker extends Enumeration {
-
-    val Normal  = Value
-    val Deleted = Value
-    val Confirm = Value
-  }
 }
 
-case class JournalVolumeRecord(
-  sequence_nr: Long,
-  marker: JournalVolumeRecord.Marker.Value,
-  channel: Set[String],
-  message: Option[ByteBuffer],
-  purged: Boolean
-)
-
 sealed class JournalVolumeTable
-  extends CassandraTable[JournalVolumeTable, JournalVolumeRecord] {
-
-  import JournalVolumeRecord.Marker
+  extends CassandraTable[JournalVolumeTable, ByteBuffer] {
 
   override val tableName = "akka_persistence_journal_volumes"
 
@@ -50,25 +32,10 @@ sealed class JournalVolumeTable
     with ClusteringOrder[Long]
     with Ascending
 
-  object marker
-    extends EnumColumn[JournalVolumeTable, JournalVolumeRecord, Marker.type](this, Marker)
-
-  object channel
-    extends SetColumn[JournalVolumeTable, JournalVolumeRecord, String](this)
-
-  object purged
-    extends OptionalBooleanColumn(this)
-
   object message
-    extends OptionalBlobColumn(this)
+    extends BlobColumn(this)
 
-  override def fromRow(r: Row): JournalVolumeRecord = JournalVolumeRecord(
-    sequence_nr(r),
-    marker(r),
-    channel(r),
-    message(r),
-    purged(r).getOrElse(false)
-  )
+  override def fromRow(r: Row): ByteBuffer = message(r)
 }
 
 class JournalVolumes(
@@ -76,7 +43,7 @@ class JournalVolumes(
   val contactPoint: KeySpaceBuilder
 )
   extends JournalVolumeTable
-  with ExtCQL[JournalVolumeTable, JournalVolumeRecord]
+  with ExtCQL[JournalVolumeTable, ByteBuffer]
   with BasicPlayComponents
   with CassandraComponents
   with Logging {
@@ -96,8 +63,8 @@ class JournalVolumes(
 
   def values(
     vid: UUID, from: Long = 0L, to: Long = Long.MaxValue
-  ): Enumerator[JournalVolumeRecord] = CQL {
-    select
+  ): Enumerator[ByteBuffer] = CQL {
+    select(_.message)
       .where(_.volume_id eqs vid)
       .and(_.sequence_nr gte from)
       .and(_.sequence_nr lte to)
@@ -110,68 +77,28 @@ class JournalVolumes(
       insert
         .value(_.volume_id, vid)
         .value(_.sequence_nr, snr)
-        .value(_.message, Some(msg))
-        .value(_.marker, Marker.Normal)
+        .value(_.message, msg)
 
     CQL {
       (Batch.logged /: messages) {
         case (bq, ((vid, snr), msg)) =>
-          bq.add {cql_save(vid, snr, msg)}
-      }
-    }.future()
-  }
-
-  def saveConfirm(
-    messages: Traversable[(Key, String)]
-  ): Future[ResultSet] = {
-    def cql_save(vid: UUID, snr: Long, channel: String) =
-      update
-        .where(_.volume_id eqs vid)
-        .and(_.sequence_nr eqs snr)
-        .modify(_.marker setTo Marker.Confirm)
-        .and(_.channel add channel)
-
-    CQL {
-      (Batch.logged /: messages) {
-        case (bq, ((vid, snr), channel)) =>
-          bq.add {cql_save(vid, snr, channel)}
+          bq.add(cql_save(vid, snr, msg))
       }
     }.future()
   }
 
   def remove(
-    keys: Traversable[Key], permanent: Boolean
+    keys: Traversable[Key]
   ): Future[ResultSet] = {
+    def cql_del(vid: UUID, snr: Long) =
+      delete
+        .where(_.volume_id eqs vid)
+        .and(_.sequence_nr eqs snr)
+
     CQL {
       (Batch.logged /: keys) {
-        case (bq, (vid, snr)) => bq.add {
-          if (permanent) cql_del(vid, snr)
-          else cql_mrk(vid, snr)
-        }
+        case (bq, (vid, snr)) => bq.add(cql_del(vid, snr))
       }
     }.future()
   }
-
-  def removeOne(
-    vid: UUID, snr: Long, permanent: Boolean
-  ): Future[Unit] = {
-    if (permanent) cql_del(vid, snr).future().map(_ => Unit)
-    else cql_mrk(vid, snr).future().map(_ => Unit)
-  }
-
-  private def cql_mrk(vid: UUID, snr: Long) =
-    CQL {
-      update
-        .where(_.volume_id eqs vid)
-        .and(_.sequence_nr eqs snr)
-        .modify(_.marker setTo Marker.Deleted)
-    }
-
-  private def cql_del(vid: UUID, snr: Long) =
-    CQL {
-      update
-        .where(_.volume_id eqs vid)
-        .and(_.sequence_nr eqs snr)
-        .modify(_.purged setTo Some(true))
-    }
 }

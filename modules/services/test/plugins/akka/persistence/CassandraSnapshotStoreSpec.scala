@@ -16,9 +16,8 @@ import play.api.inject.DefaultApplicationLifecycle
  * @author zepeng.li@gmail.com
  */
 @RunWith(classOf[JUnitRunner])
-class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
-
-  lazy override val config = ConfigFactory.parseString(
+class CassandraSnapshotStoreSpec extends SnapshotStoreSpec(
+  config = ConfigFactory.parseString(
     """
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
@@ -30,6 +29,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
      | }
     """.stripMargin
   )
+) {
 
   def context: ApplicationLoader.Context =
     ApplicationLoader.createContext(
@@ -61,6 +61,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    super.beforeAll()
     system.actorOf(
       Props(
         new Actor {
@@ -70,7 +71,6 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
         }
       ), ResourcesMediator.basicName
     )
-    super.beforeAll()
   }
 
   override def afterAll(): Unit = {

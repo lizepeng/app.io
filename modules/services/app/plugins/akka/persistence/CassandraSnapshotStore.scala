@@ -15,21 +15,14 @@ import models.cassandra.KeySpaceBuilder
 import play.api.libs.iteratee._
 import plugins.akka.persistence.cassandra._
 
-import scala.collection.mutable
 import scala.concurrent.Future
 import scala.util.Try
 
 /**
  * @author zepeng.li@gmail.com
  */
-object CassandraSnapshotStore {
-  case class DeletedMeta(metadata: SnapshotMetadata)
-  case class DeletedCriteria(criteria: SnapshotSelectionCriteria)
-}
-
 class CassandraSnapshotStore extends SnapshotStore with Stash {
 
-  import CassandraSnapshotStore._
   import context.dispatcher
 
   val maxLoadAttempts = 3
@@ -38,9 +31,6 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
   val serialization   = SerializationExtension(context.system)
 
   var snapshots: Snapshots = _
-
-  var deletingMetadata: mutable.Set[SnapshotMetadata]          = mutable.Set.empty
-  var deletingCriteria: mutable.Set[SnapshotSelectionCriteria] = mutable.Set.empty
 
   context become awaitingResources
   mediator ! ResourcesMediator.ModelRequired
@@ -54,7 +44,7 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
 
     case "ResourcesReady" =>
       unstashAll()
-      context become receiveWithAsyncDeleting
+      context become receive
 
     case msg => stash()
   }
@@ -63,18 +53,8 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
     persistenceId: String,
     criteria: SnapshotSelectionCriteria
   ): Future[Option[SelectedSnapshot]] = {
-    val immutableDeletingMetadata = deletingMetadata.toSet
-    val immutableDeletingCriteria = deletingCriteria.toSet
-    snapshots.stream(persistenceId, criteria, maxLoadAttempts) &>
-      Enumeratee.filterNot { sr =>
-        (false /: immutableDeletingMetadata.map {_ == sr.metadata})(_ || _)
-      } &>
-      Enumeratee.filterNot { sr =>
-        (false /: immutableDeletingCriteria.map { c =>
-          sr.metadata.sequenceNr <= c.maxSequenceNr &&
-            sr.metadata.timestamp <= c.maxTimestamp
-        })(_ || _)
-      } &>
+    snapshots.values(persistenceId, criteria) &>
+      Enumeratee.take(maxLoadAttempts) &>
       Enumeratee.map { sr => (sr.metadata, deserialize(sr.snapshot)) } &>
       Enumeratee.collect { case (md, de) if de.isSuccess => SelectedSnapshot(md, de.get.data) } |>>>
       Iteratee.head[SelectedSnapshot]
@@ -89,34 +69,24 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
     ).map(_ => Unit)
   }
 
-  override def saved(metadata: SnapshotMetadata): Unit = {}
-
-  override def delete(metadata: SnapshotMetadata): Unit = {
-    deletingMetadata += metadata
-    snapshots
-      .purge(metadata.persistenceId, metadata.sequenceNr)
-      .onComplete {
-      case _ => self ! DeletedMeta(metadata)
-    }
-
+  override def deleteAsync(metadata: SnapshotMetadata): Future[Unit] = {
+    snapshots.purge(
+      metadata.persistenceId, metadata.sequenceNr
+    ).map(_ => Unit)
   }
 
-  override def delete(
+  override def deleteAsync(
     persistenceId: String,
     criteria: SnapshotSelectionCriteria
-  ): Unit = {
-    deletingCriteria += criteria
-    (snapshots.streamKeys(persistenceId, criteria) &>
-      Enumeratee.grouped(Iteratee.takeUpTo(batchSize)) |>>>
-      Iteratee.foreach(snapshots.purge(_))
-      ).onComplete {
-      case _ => self ! DeletedCriteria(criteria)
-    }
-  }
-
-  def receiveWithAsyncDeleting: Actor.Receive = receive.orElse {
-    case DeletedMeta(metadata)     => deletingMetadata -= metadata
-    case DeletedCriteria(criteria) => deletingCriteria -= criteria
+  ): Future[Unit] = {
+    //TODO
+    // Unknown error occurred when using "cassandra-unit" combined with batch delete
+    // A compromise is just delete multi snapshot one by one
+    //    snapshots.keys(persistenceId, criteria) &>
+    //      Enumeratee.grouped(Iteratee.takeUpTo(batchSize)) |>>>
+    //      Iteratee.foreach(snapshots.purge(_))
+    snapshots.keys(persistenceId, criteria) |>>>
+      Iteratee.foreach { t => snapshots.purge(t._1, t._2) }
   }
 
   private def serialize(snapshot: Snapshot): ByteBuffer =

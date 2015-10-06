@@ -12,11 +12,12 @@ import helpers._
 import models.actors.ResourcesMediator
 import models.cassandra.KeySpaceBuilder
 import play.api.libs.iteratee._
-import plugins.akka.persistence.cassandra.JournalVolumeRecord.Marker
 import plugins.akka.persistence.cassandra._
 
+import scala.collection.immutable
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -50,24 +51,34 @@ class CassandraJournal extends AsyncWriteJournal with Stash with ActorLogging {
     case msg => stash()
   }
 
-  override def asyncWriteMessages(
-    messages: Seq[PersistentRepr]
-  ): Future[Unit] = {
-    for {
-      _ <- journal.save(
-        messages.map { repr =>
-          (repr.persistenceId, repr.sequenceNr, persistentToByteBuffer(repr))
+  def asyncWriteMessages(
+    messages: immutable.Seq[AtomicWrite]
+  ): Future[immutable.Seq[Try[Unit]]] = {
+    def asyncWrite(messages: Seq[PersistentRepr]): Future[Try[Unit]] = {
+      for {
+        m <- Future {
+          messages.map { repr =>
+            (repr.persistenceId,
+              repr.sequenceNr,
+              persistentToByteBuffer(repr))
+          }
         }
-      )(volumeSize)
-    } yield Unit
+        _ <- journal.save(m)(volumeSize)
+      } yield Success[Unit](Unit)
+    }.recover {
+      case e: Throwable => Failure(e)
+    }
+
+    Future.sequence {
+      messages.map(_.payload).map(asyncWrite)
+    }
   }
 
   override def asyncDeleteMessagesTo(
     persistenceId: String,
-    toSequenceNr: Long,
-    permanent: Boolean
+    toSequenceNr: Long
   ): Future[Unit] = {
-    journal.remove(persistenceId, toSequenceNr, permanent)(batchSize)
+    journal.remove(persistenceId, toSequenceNr)(batchSize)
   }
 
   override def asyncReadHighestSequenceNr(
@@ -89,18 +100,8 @@ class CassandraJournal extends AsyncWriteJournal with Stash with ActorLogging {
       toSequenceNr,
       max
     )(volumeSize) &>
-      Enumeratee.collect[JournalVolumeRecord] {
-        case JournalVolumeRecord(snr, Marker.Normal, _, Some(buff), false)  =>
-          persistentFromByteBuffer(buff)
-        case JournalVolumeRecord(snr, Marker.Deleted, _, Some(buff), false) =>
-          persistentFromByteBuffer(buff).update(deleted = true)
-        case JournalVolumeRecord(snr, Marker.Confirm, channel, _, false)    =>
-          PersistentRepr(
-            payload = Unit,
-            persistenceId = persistenceId,
-            sequenceNr = snr,
-            confirms = channel.toList
-          )
+      Enumeratee.map[ByteBuffer] { case byteBuffer =>
+        persistentFromByteBuffer(byteBuffer)
       } |>>> Iteratee.foreach(replayCallback)
   }
 
@@ -109,30 +110,5 @@ class CassandraJournal extends AsyncWriteJournal with Stash with ActorLogging {
 
   private def persistentFromByteBuffer(b: ByteBuffer): PersistentRepr = {
     serialization.deserialize(Bytes.getArray(b), classOf[PersistentRepr]).get
-  }
-
-  @deprecated("writeConfirmations will be removed, since Channels will be removed.", since = "2.3.4")
-  override def asyncWriteConfirmations(
-    confirmations: Seq[PersistentConfirmation]
-  ): Future[Unit] = {
-    for {
-      _ <- journal.saveConfirm(
-        confirmations.map { repr =>
-          (repr.persistenceId, repr.sequenceNr, repr.channelId)
-        }
-      )(volumeSize)
-    } yield Unit
-  }
-
-  @deprecated("asyncDeleteMessages will be removed.", since = "2.3.4")
-  override def asyncDeleteMessages(
-    messageIds: Seq[PersistentId],
-    permanent: Boolean
-  ): Future[Unit] = {
-    Future.sequence(
-      messageIds.map { pid =>
-        journal.removeOne(pid.persistenceId, pid.sequenceNr, permanent)(batchSize)
-      }
-    ).map(_ => Unit)
   }
 }
