@@ -80,7 +80,7 @@ class Snapshots(
 
   def purge(keys: Traversable[(String, Long)]): Future[ResultSet] = CQL {
     (Batch.logged /: keys) {
-      case (bq, (pid, snr)) => bq.add(cql_del(pid, snr))
+      case (bq, (pid, snr)) => bq.add {cql_del(pid, snr)}
     }
   }.future()
 
@@ -92,11 +92,13 @@ class Snapshots(
 
   def stream(
     persistenceId: String,
-    criteria: SnapshotSelectionCriteria
+    criteria: SnapshotSelectionCriteria,
+    maxLoadAttempts: Int
   ): Enumerator[SnapshotRecord] = CQL {
     select
       .where(_.persistence_id eqs persistenceId)
       .and(_.sequence_nr lte criteria.maxSequenceNr)
+      .limit(maxLoadAttempts)
   }.fetchEnumerator() &>
     Enumeratee.filter(_.metadata.timestamp <= criteria.maxTimestamp)
 

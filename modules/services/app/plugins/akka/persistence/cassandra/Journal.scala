@@ -2,8 +2,9 @@ package plugins.akka.persistence.cassandra
 
 import java.nio.ByteBuffer
 
+import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
-import helpers.ExtEnumeratee._
+import helpers.ExtEnumeratee.Enumeratee
 import helpers._
 import models.cassandra._
 import play.api.libs.iteratee.{Enumeratee => _, _}
@@ -15,34 +16,27 @@ import scala.concurrent.Future
  */
 object JournalRecord {
 
-  type Key = (String, Long, Long)
-  type Value = (Boolean, ByteBuffer)
+  case class Key(persistence_id: String, volume_nr: Long)
 }
 
 sealed class JournalTable
-  extends CassandraTable[JournalTable, JournalRecord.Value] {
+  extends CassandraTable[JournalTable, UUID] {
 
-  override val tableName = "akka_persistence_journal"
+  override val tableName = "akka_persistence_journals"
 
   object persistence_id
     extends StringColumn(this)
     with PartitionKey[String]
 
-  object partition_nr
-    extends LongColumn(this)
-    with PartitionKey[Long]
-
-  object sequence_nr
+  object volume_nr
     extends LongColumn(this)
     with ClusteringOrder[Long]
+    with Ascending
 
-  object deleted
-    extends BooleanColumn(this)
+  object volume_id
+    extends UUIDColumn(this)
 
-  object message
-    extends BlobColumn(this)
-
-  override def fromRow(r: Row): JournalRecord.Value = (deleted(r), message(r))
+  override def fromRow(r: Row): UUID = volume_id(r)
 }
 
 class Journal(
@@ -50,108 +44,141 @@ class Journal(
   val contactPoint: KeySpaceBuilder
 )
   extends JournalTable
-  with ExtCQL[JournalTable, JournalRecord.Value]
+  with ExtCQL[JournalTable, UUID]
   with BasicPlayComponents
   with CassandraComponents
   with Logging {
 
+  val journalVolumes = new JournalVolumes(basicPlayApi, contactPoint)
+
   import JournalRecord._
 
-  def createIfNotExists(): Future[ResultSet] = create.ifNotExists.future()
+  def createIfNotExists(): Future[ResultSet] =
+    for {
+      ret <- create.ifNotExists.future()
+      ___ <- journalVolumes.createIfNotExists()
+    } yield ret
 
   def save(
-    messages: TraversableOnce[(Key, ByteBuffer)]
-  ): Future[ResultSet] = {
-    def cql_save(pid: String, pnr: Long, snr: Long, msg: ByteBuffer) =
-      insert
-        .value(_.persistence_id, pid)
-        .value(_.partition_nr, pnr)
-        .value(_.sequence_nr, snr)
-        .value(_.deleted, false)
-        .value(_.message, msg)
+    messages: Traversable[(String, Long, ByteBuffer)]
+  )(volume_size: Long): Future[ResultSet] = {
 
-    CQL {
-      (Batch.logged /: messages) {
-        case (bq, ((pid, pnr, snr), msg)) =>
-          bq.add(cql_save(pid, pnr, snr, msg))
+    for {
+      map <- findVolumeIDs(messages.map { t => (t._1, t._2) })(volume_size)
+      vol <- Future.successful {
+        messages.map {
+          case (pid, snr, buff) =>
+            ((map(Key(pid, snr / volume_size)), snr), buff)
+        }
       }
-    }.future()
+      ret <- journalVolumes.save(vol)
+    } yield ret
+  }
+
+  def saveConfirm(
+    messages: Traversable[(String, Long, String)]
+  )(volume_size: Long): Future[ResultSet] = {
+    for {
+      map <- findVolumeIDs(messages.map { t => (t._1, t._2) })(volume_size)
+      vol <- Future.successful(
+        messages.map {
+          case (pid, snr, channel) =>
+            ((map(Key(pid, snr / volume_size)), snr), channel)
+        }
+      )
+      ret <- journalVolumes.saveConfirm(vol)
+    } yield ret
   }
 
   def remove(
-    keys: TraversableOnce[Key],
-    permanent: Boolean
-  ): Future[ResultSet] = {
-    def cql_del(pid: String, pnr: Long, snr: Long) =
-      delete
-        .where(_.persistence_id eqs pid)
-        .and(_.partition_nr eqs pnr)
-        .and(_.sequence_nr eqs snr)
-
-    def cql_mark(pid: String, pnr: Long, snr: Long) =
-      update
-        .where(_.persistence_id eqs pid)
-        .and(_.partition_nr eqs pnr)
-        .and(_.sequence_nr eqs snr)
-        .modify(_.deleted setTo true)
-
+    pid: String, to: Long, permanent: Boolean
+  )(batchSize: Int): Future[Unit] = {
     CQL {
-      if (permanent)
-        (Batch.logged /: keys) {
-          case (bq, (pid, pnr, snr)) => bq.add(cql_del(pid, pnr, snr))
-        }
-      else
-        (Batch.logged /: keys) {
-          case (bq, (pid, pnr, snr)) => bq.add(cql_mark(pid, pnr, snr))
-        }
-    }.future()
+      select(_.volume_id)
+        .where(_.persistence_id eqs pid)
+        .and(_.volume_nr gte 0L)
+        .and(_.volume_nr lte to)
+    }.fetchEnumerator() &>
+      Enumeratee.mapFlatten(vid => journalVolumes.keys(vid, to = to)) &>
+      Enumeratee.takeWhile(_._2 <= to) &>
+      Enumeratee.grouped(Iteratee.takeUpTo(batchSize)) |>>>
+      Iteratee.foreach(journalVolumes.remove(_, permanent))
   }
 
-  def streamMessages(
-    persistenceId: String,
-    fromSequenceNr: Long,
-    toSequenceNr: Long,
-    max: Long
-  )(maxPartitionSize: Int): Enumerator[JournalRecord.Value] = {
-    DivideRange(fromSequenceNr, toSequenceNr, maxPartitionSize) &>
-      Enumeratee.mapFlatten { case (from, to) =>
-        select
-          .where(_.persistence_id eqs persistenceId)
-          .and(_.partition_nr eqs to + 1 - maxPartitionSize)
-          .and(_.sequence_nr gte from)
-          .and(_.sequence_nr lte to)
-          .fetchEnumerator()
-      } &>
-      Enumeratee.take[JournalRecord.Value](max)
+  def removeOne(
+    pid: String, snr: Long, permanent: Boolean
+  )(batchSize: Int): Future[Unit] = {
+    CQL {
+      select(_.volume_id)
+        .where(_.persistence_id eqs pid)
+        .and(_.volume_nr eqs snr / batchSize)
+    }.one.flatMap {
+      case None      => Future.successful(Unit)
+      case Some(vid) => journalVolumes.removeOne(vid, snr, permanent)
+    }
   }
 
-  def streamKeys(
-    persistenceId: String,
-    fromSequenceNr: Long,
-    toSequenceNr: Long,
-    max: Long
-  )(maxPartitionSize: Int): Enumerator[Key] = {
-    DivideRange(fromSequenceNr, toSequenceNr, maxPartitionSize) &>
-      Enumeratee.mapFlatten { case (from, to) =>
-        select(_.persistence_id, _.partition_nr, _.sequence_nr)
-          .where(_.persistence_id eqs persistenceId)
-          .and(_.partition_nr eqs to + 1 - maxPartitionSize)
-          .and(_.sequence_nr gte from)
-          .and(_.sequence_nr lte to)
-          .fetchEnumerator()
-      } &>
-      Enumeratee.take[Key](max)
+  def readHighestSequenceNr(
+    pid: String, from: Long
+  )(volume_size: Long): Future[Long] = {
+    CQL {
+      select(_.volume_id)
+        .where(_.persistence_id eqs pid)
+        .and(_.volume_nr gte from / volume_size)
+    }.fetchEnumerator() &>
+      Enumeratee.mapFlatten(vid => journalVolumes.keys(vid, from)) &>
+      Enumeratee.map(_._2) |>>>
+      Iteratee.fold(0L)((a, b) => Math.max(a, b))
   }
 
-  object DivideRange {
-
-    def apply(from: Long, to: Long, span: Long): Enumerator[(Long, Long)] =
-      Enumerator.unfold(from) { prev =>
-        val ceil = prev / span * span + span - 1
-        if (prev > to) None
-        else if (ceil > to) Some(ceil + 1, (prev, to))
-        else Some(ceil + 1, (prev, ceil))
-      }
+  def stream(
+    pid: String, from: Long, to: Long, max: Long
+  )(
+    volume_size: Long
+  ): Enumerator[JournalVolumeRecord] = {
+    CQL {
+      val ceil =
+        if (to > (Long.MaxValue - volume_size)) Long.MaxValue
+        else (to / volume_size + 1) * volume_size
+      select(_.volume_id)
+        .where(_.persistence_id eqs pid)
+        .and(_.volume_nr gte from / volume_size)
+        .and(_.volume_nr lte ceil)
+    }.fetchEnumerator() &>
+      Enumeratee.mapFlatten(vid => journalVolumes.values(vid, from, to)) &>
+      Enumeratee.take[JournalVolumeRecord](max)
   }
 
+  private def findVolumeID(key: Key): Future[(Key, UUID)] = CQL {
+    select(_.volume_id)
+      .where(_.persistence_id eqs key.persistence_id)
+      .and(_.volume_nr eqs key.volume_nr)
+  }.one.flatMap {
+    case None      => saveVolumeID(key)
+    case Some(vid) => Future.successful(key -> vid)
+  }
+
+  private def saveVolumeID(key: Key): Future[(Key, UUID)] = {
+    val uuid = UUIDs.timeBased
+    CQL {
+      insert.
+        value(_.persistence_id, key.persistence_id)
+        .value(_.volume_nr, key.volume_nr)
+        .value(_.volume_id, uuid)
+        .ifNotExists()
+    }.future().map(_.wasApplied).flatMap { done =>
+      if (!done) findVolumeID(key)
+      else Future.successful(key -> uuid)
+    }
+  }
+
+  private def findVolumeIDs(
+    messages: Traversable[(String, Long)]
+  )(volume_size: Long): Future[Map[Key, UUID]] = {
+    Future.sequence(
+      messages.map {
+        case (pid, snr) => Key(pid, snr / volume_size)
+      }.toList.distinct.map(findVolumeID)
+    ).map(_.toMap)
+  }
 }
