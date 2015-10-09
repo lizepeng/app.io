@@ -1,34 +1,27 @@
 package controllers.sockets
 
-import java.util.UUID
-
 import controllers.actors.ChatWebSocket
 import controllers.actors.ChatWebSocket._
-import helpers.{BasicPlayApi, BasicPlayComponents}
-import play.api.Play.current
+import helpers._
+import models.Users
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Controller, _}
+import security._
 
-import scala.concurrent.Future
 import scala.util.Try
 
 class ChatCtrl(
   implicit
-  val basicPlayApi: BasicPlayApi
+  val basicPlayApi: BasicPlayApi,
+  val _users: Users
 )
   extends Controller
   with BasicPlayComponents
   with I18nSupport {
 
   def connect: WebSocket[Try[Send], Received] =
-    WebSocket.tryAcceptWithActor[Try[Send], Received] { implicit req =>
-      Future.successful(
-        req.session.get("usr_id").flatMap { id =>
-          Try(UUID.fromString(id)).toOption
-        } match {
-          case None      => Left(Forbidden)
-          case Some(uid) => Right(ChatWebSocket.props(_, uid))
-        }
-      )
-    }
+    MaybeUser().WebSocket[Try[Send], Received](
+      user => ChatWebSocket.props(_, user.id),
+      Forbidden
+    )
 }

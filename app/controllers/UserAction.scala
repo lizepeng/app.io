@@ -23,7 +23,7 @@ object UserAction {
     basicPlayApi: BasicPlayApi,
     userActionRequired: UserActionRequired
   ): ActionBuilder[UserRequest] = {
-    MaybeUser() andThen
+    MaybeUser().Action() andThen
       LayoutLoader() andThen
       AuthChecker andThen
       PermissionChecker(action, onDenied, resource)
@@ -40,7 +40,7 @@ object MaybeUserAction {
     basicPlayApi: BasicPlayApi,
     _groups: Groups
   ): ActionBuilder[UserOptRequest] = {
-    MaybeUser() andThen LayoutLoader()
+    MaybeUser().Action() andThen LayoutLoader()
   }
 }
 
@@ -57,7 +57,7 @@ object UserActionRequired {
 
 }
 
-trait UserActionComponents  {
+trait UserActionComponents {
 
   def userActionRequired: UserActionRequired
 

@@ -24,7 +24,7 @@ object UserAction {
     userActionRequired: UserActionRequired,
     rateLimitUnit: RateLimitUnit
   ): ActionBuilder[UserRequest] =
-    MaybeUser() andThen
+    MaybeUser().Action() andThen
       AuthChecker andThen
       RateLimitChecker() andThen
       PermissionChecker(action, onDenied, resource)

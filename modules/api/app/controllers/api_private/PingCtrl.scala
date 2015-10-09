@@ -16,7 +16,7 @@ class PingCtrl(
   val _users: Users
 ) extends Controller {
 
-  val action: ActionBuilder[UserRequest] = MaybeUser(AuthenticateByAccessToken) >>
+  val action: ActionBuilder[UserRequest] = MaybeUser(AuthenticateByAccessToken).Action() >>
     new AuthenticationCheck {
       override def onUnauthorized(req: RequestHeader): Result = HttpBasicAuth.onUnauthorized("ping")
     }
