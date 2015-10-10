@@ -14,7 +14,7 @@ trait PermissionCheck
   with DefaultPlayExecutor
   with Logging {
 
-  def action: CheckedActions => CheckedAction
+  def actions: Seq[CheckedActions => CheckedAction]
 
   def resource: CheckedResource
 
@@ -22,16 +22,16 @@ trait PermissionCheck
 
   def _accessControls: AccessControls
 
-  def check[A](u: User): Future[Option[Boolean]] = {
+  def checkOne[A](u: User, action: CheckedAction): Future[Option[Boolean]] = {
     for {
       b1 <- thenCheck(
-        previous = None, action(CheckedActions),
+        previous = None, action,
         ac => _accessControls.check(
           resource.name, ac.name, u.groups
         )
       )
       b2 <- thenCheck(
-        previous = b1, action(CheckedActions),
+        previous = b1, action,
         ac => _accessControls.check(
           resource.name, ac.name, u.id
         )
@@ -39,6 +39,15 @@ trait PermissionCheck
     } yield b2
   }
 
+  def check[A](u: User): Future[Option[Boolean]] = {
+    Future.sequence(
+      actions.map(_ apply CheckedActions).map {checkOne(u, _)}
+    ).map {
+      _.reduce[Option[Boolean]] { (aOpt, bOpt) =>
+        for (a <- aOpt; b <- bOpt) yield a && b
+      }
+    }
+  }
   private def thenCheck[A](
     previous: Option[Boolean],
     action: CheckedAction,

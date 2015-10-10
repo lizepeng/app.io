@@ -10,8 +10,8 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class PermissionChecker(
-  action: CheckedActions => CheckedAction,
-  onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result,
+  actions: Seq[CheckedActions => CheckedAction],
+  onDenied: (CheckedResource, Seq[CheckedAction], RequestHeader) => Result,
   resource: CheckedResource
 )(
   implicit
@@ -27,7 +27,7 @@ case class PermissionChecker(
 
     check(req.user).map {
       case Some(true) => None
-      case _          => Some(onDenied(resource, action(CheckedActions), req))
+      case _          => Some(onDenied(resource, actions.map(_ apply CheckedActions), req))
     }
   }
 }

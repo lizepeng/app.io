@@ -14,9 +14,7 @@ object UserAction {
   import UserActionComponents._
 
   def apply(
-    action: CheckedActions => CheckedAction,
-    onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
-    = (_, _, _) => Results.NotFound
+    action: CheckedActions => CheckedAction
   )(
     implicit
     resource: CheckedResource,
@@ -27,7 +25,7 @@ object UserAction {
     MaybeUser().Action() andThen
       AuthChecker andThen
       RateLimitChecker() andThen
-      PermissionChecker(action, onDenied, resource)
+      PermissionChecker(Seq(action), (_, _, _) => Results.NotFound, resource)
 }
 
 case class UserActionRequired(

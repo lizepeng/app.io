@@ -14,9 +14,7 @@ object UserAction {
   import UsersComponents._
 
   def apply(
-    action: CheckedActions => CheckedAction,
-    onDenied: (CheckedResource, CheckedAction, RequestHeader) => Result
-    = (_, _, _) => Results.NotFound
+    actions: (CheckedActions => CheckedAction)*
   )(
     implicit
     resource: CheckedResource,
@@ -26,7 +24,7 @@ object UserAction {
     MaybeUser().Action() andThen
       LayoutLoader() andThen
       AuthChecker andThen
-      PermissionChecker(action, onDenied, resource)
+      PermissionChecker(actions, (_, _, _) => Results.NotFound, resource)
   }
 
 }

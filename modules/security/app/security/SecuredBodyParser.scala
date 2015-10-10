@@ -10,7 +10,7 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class SecuredBodyParser[A](
-  action: (CheckedActions) => CheckedAction,
+  action: CheckedActions => CheckedAction,
   onUnauthorized: RequestHeader => Result = req => Results.NotFound,
   onPermDenied: RequestHeader => Result = req => Results.NotFound,
   onBaseException: RequestHeader => Result = req => Results.NotFound,
@@ -22,6 +22,8 @@ case class SecuredBodyParser[A](
   val _users: Users,
   val _accessControls: AccessControls
 ) extends PermissionCheckedBodyParser[A] {
+
+  def actions = Seq(action)
 
   override def parser(req: RequestHeader)(
     implicit user: User
