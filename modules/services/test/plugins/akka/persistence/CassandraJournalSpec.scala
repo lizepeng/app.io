@@ -1,9 +1,9 @@
 package plugins.akka.persistence
 
+import akka.actor.{Actor, Props}
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.ConfigFactory
 import helpers.BasicPlayApi
-import models._
 import models.actors.ResourcesMediator
 import models.cassandra.KeySpaceBuilder
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
@@ -61,10 +61,15 @@ class CassandraJournalSpec extends JournalSpec {
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra()
-    implicit val _chatHistories: ChatHistories = null
-    implicit val _mailInbox: MailInbox = null
-    implicit val _mailSent: MailSent = null
-    system.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
+    system.actorOf(
+      Props(
+        new Actor {
+          override def receive: Receive = {
+            case ResourcesMediator.ModelRequired => sender !(basicPlayApi, contactPoint)
+          }
+        }
+      ), ResourcesMediator.basicName
+    )
     super.beforeAll()
   }
 
