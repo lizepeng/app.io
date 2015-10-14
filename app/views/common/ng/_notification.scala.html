@@ -1,0 +1,10 @@
+@()(implicit messages: Messages)
+
+<div class="notify-container ng-cloak" ng-controller="NotificationCtrl">
+  <alert ng-repeat="notification in notifications"
+    class="notify no-select"
+    type="{{notification.type}}"
+    close="dismiss($index)">
+    {{ notification.content || '@MSG("ui.notification.msg.empty")' }}
+  </alert>
+</div>

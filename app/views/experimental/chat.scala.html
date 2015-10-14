@@ -1,5 +1,7 @@
 @()(implicit req: MaybeUserRequest[_], messages: Messages)
 
+@import common._
+
 @layouts.base(MSG("Start Chat")){
 
   <div class="row" ng-controller="ChatCtrl">
@@ -21,7 +23,7 @@
       </div>
     </div>
 
-    <div class="row" ng-repeat="record in history track by $index">
+    <div class="row ng-cloak" ng-repeat="record in history track by $index">
       <div ng-if="record.to != null" class="col-sm-6">
         <pre class="pull-left">{{ record | json }}</pre>
       </div>
@@ -29,31 +31,10 @@
         <pre class="pull-right">{{ record | json }}</pre>
       </div>
     </div>
+
   </div>
+
 }()(
-  controller
+  libs.assets("js", "ui.parts"),
+  libs.assets("js", "experimental/chat")
 )
-
-@controller = {
-  <script>
-
-    var exampleSocket = new WebSocket("@sockets.routes.ChatCtrl.connect.webSocketURL()");
-    angular.module('chat', [])
-    .controller('ChatCtrl', ['$scope', function($scope) {
-      $scope.history = [];
-      $scope.message = { to : "", text : "" };
-
-      exampleSocket.onmessage = function (event) {
-        console.log(event.data);
-        $scope.history.push(JSON.parse(event.data));
-        $scope.$apply();
-      };
-
-      $scope.send = function(msg) {
-        exampleSocket.send(JSON.stringify(msg));
-        $scope.history.push(angular.copy(msg));
-      };
-    }]);
-    angular.module('app').requires.push('chat');
-  </script>
-}

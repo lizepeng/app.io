@@ -4,7 +4,7 @@
   js: Html *)(
   implicit req: MaybeUserRequest[_], messages: Messages)
 
-@import helper._
+@import common._
 
 <!DOCTYPE html>
 <html lang="en" ng-app="app" ng-strict-di>
@@ -28,6 +28,9 @@
     @above_content
     <div class="container">
       @content
+      @req.maybeUser.map { _ =>
+        @ng._notification()
+      }
     </div>
     @{_footer()}
   </body>
@@ -37,11 +40,29 @@
   @libs.webjars("js", "angular")
   @libs.webjars("js", "angular-bootstrap-tpls")
   @libs.webjars("js", "underscore")
-  <script>
+  @configNgApp
+  @req.maybeUser.map { _ =>
+    @libs.assets("js", "ws.helper")
+    @libs.assets("js", "ui.notification")
+    @configUserWebSocket
+  }
+  @js
+</html>
+
+@configNgApp = {
+  <script type='text/javascript'>
     angular.module('app', ['ui.bootstrap'])
       .controller('NavbarCtrl', ['$scope', function($scope){
         $scope.isCollapsed = true;
       }]);
   </script>
-  @js
-</html>
+}
+
+@configUserWebSocket = {
+  <script type='text/javascript'>
+    angular.module('app').requires.push('ui.notification');
+    angular.module('ui.notification').run(['UserWebSocket', function(UserWebSocket) {
+      UserWebSocket.url = "@sockets.routes.UserWebSocketCtrl.connect.webSocketURL()";
+    }]);
+  </script>
+}

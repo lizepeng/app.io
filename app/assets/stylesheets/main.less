@@ -206,12 +206,49 @@ input[type='color'] {
   height: 0px;
 }
 
+.notify-container {
+  right: 15px;
+  top: 60px;
+  position: absolute;
+  z-index: 9999;
+
+  .notify {
+    width: 350px;
+    opacity: 1;
+    display: block;
+  }
+}
+
+.no-select {
+  user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
 /* RESPONSIVE CSS
 -------------------------------------------------- */
 /* Extra small mobile devices */
 @media (max-width: 539px) {
   .site-footer {
     font-size: 10px;
+  }
+
+  .notify-container {
+    left: 0px;
+    top: 0px;
+    width: 100%;
+
+    .notify {
+      width: 100%;
+      margin-bottom: 1px;
+      border-radius: 0px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 }
 /* Small mobile devices */
@@ -255,6 +292,10 @@ input[type='color'] {
 
   form .btn-wrapper {
     padding-top: 25px;
+  }
+
+  .notify-container {
+    top: 80px;
   }
 }
 

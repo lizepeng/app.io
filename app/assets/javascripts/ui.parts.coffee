@@ -1,4 +1,6 @@
-angular.module 'ui.parts', [ 'ui.parts.toggle-switch' ]
+angular.module 'ui.parts', [
+  'ui.parts.toggle-switch'
+]
 
   # Helper to make alert easier to use
   # msg format: {type:'danger', msg:'msg'}

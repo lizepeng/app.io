@@ -3,7 +3,7 @@ import com.websudos.phantom.connectors.ContactPoint.DefaultPorts
 import elasticsearch.{ESIndexCleaner, ElasticSearch}
 import filters._
 import helpers._
-import messages.{ChatActor, MailActor}
+import messages._
 import models._
 import models.actors.ResourcesMediator
 import models.cassandra.KeySpaceBuilder
@@ -135,12 +135,12 @@ class Components(context: Context)
   )
 
   // Sockets Controllers
-  val socketsChatCtrl = new controllers.sockets.ChatCtrl
+  val userWebSocketCtrl = new controllers.sockets.UserWebSocketCtrl
 
   // Sockets Router
   val socketsRouter = new sockets.Routes(
     errorHandler,
-    socketsChatCtrl
+    userWebSocketCtrl
   )
 
   // Private Api Controllers
@@ -158,7 +158,7 @@ class Components(context: Context)
 
   // Root Controllers
   val applicationCtrl    = new controllers.Application()
-  val chatCtrl           = new controllers.ChatCtrl()
+  val experimentalCtrl   = new controllers.ExperimentalCtrl()
   val fileSystemCtrl     = new controllers.FileSystemCtrl()
   val sessionsCtrl       = new controllers.SessionsCtrl()
   val usersCtrl          = new controllers.UsersCtrl()
@@ -175,7 +175,7 @@ class Components(context: Context)
     socketsRouter,
     apiPrivateRouter,
     applicationCtrl,
-    chatCtrl,
+    experimentalCtrl,
     new controllers.Assets(errorHandler),
     fileSystemCtrl,
     sessionsCtrl,
@@ -212,5 +212,6 @@ class Components(context: Context)
     //Start Actor ShardRegion
     MailActor.startRegion(configuration, actorSystem)
     ChatActor.startRegion(configuration, actorSystem)
+    NotificationActor.startRegion(configuration, actorSystem)
   }
 }

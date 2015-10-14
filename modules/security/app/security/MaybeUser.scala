@@ -43,7 +43,7 @@ case class MaybeUser(
   import play.api.Play.current
 
   def WebSocket[In, Out](
-    handler: User => HandlerProps,
+    handler: RequestHeader => User => HandlerProps,
     onError: => Result
   )(
     implicit
@@ -52,7 +52,7 @@ case class MaybeUser(
     outMessageType: ClassTag[Out]
   ) = play.api.mvc.WebSocket.tryAcceptWithActor[In, Out] { implicit req =>
     pam(_users)(req).map {
-      user => Right(handler(user))
+      user => Right(handler(req)(user))
     }.recover {
       case e: BaseException => Left(onError)
     }
