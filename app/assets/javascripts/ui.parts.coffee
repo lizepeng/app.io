@@ -7,9 +7,10 @@ angular.module 'ui.parts', [
   .factory 'Alert', ->
     alerts  : []
     dismiss : (idx) ->
-      this.alerts.splice(idx, 1)
+      @alerts.splice idx, 1
     push    : (msg) ->
-      this.alerts.push(msg)
+      msg.type ?= 'info'
+      @alerts.push msg
 
   .controller 'AlertCtrl', ['$scope', 'Alert', ($scope, Alert) ->
     $scope.Alert = Alert

@@ -85,9 +85,9 @@ class GroupsCtrl(
   def destroy(id: UUID) =
     UserAction(_.Destroy).async { implicit req =>
       (for {
-        ___ <- es.Delete(id) from _groups
         grp <- _groups.find(id)
         ___ <- _groups.remove(id)
+        ___ <- es.Delete(id) from _groups
       } yield grp).map { _ =>
         NoContent
       }.recover {

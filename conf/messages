@@ -348,4 +348,7 @@ msg.master.deleted                               ={0} has been deleted
 
 msg.confirm_delete.title                         =Are you ABSOLUTELY sure?
 
+ui.alert.msg.empty                               =Unknown Error Occurred.
+ui.notification.msg.empty                        =Empty Notification.
+
 # products.list.title                            ={0,choice,0#no|1#one|1<{0,number,integer} products} Found
