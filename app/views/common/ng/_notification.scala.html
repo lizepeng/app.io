@@ -2,7 +2,7 @@
 
 <div class="notify-container ng-cloak" ng-controller="NotificationCtrl">
   <alert ng-repeat="notification in notifications"
-    class="notify no-select"
+    class="notify no-select animated fadeInRightBig"
     type="{{notification.type}}"
     close="dismiss($index)">
     {{ notification.content || '@MSG("ui.notification.msg.empty")' }}
