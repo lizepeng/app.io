@@ -62,8 +62,8 @@
 @configUserWebSocket = {
   <script type='text/javascript'>
     angular.module('app').requires.push('ui.notification');
-    angular.module('ui.notification').run(['UserWebSocket', function(UserWebSocket) {
-      UserWebSocket.url = "@sockets.routes.UserWebSocketCtrl.connect.webSocketURL()";
+    angular.module('ui.notification').run(['WebSocketOptions', function(WebSocketOptions) {
+      WebSocketOptions.url = "@sockets.routes.UserWebSocketCtrl.connect.webSocketURL()";
     }]);
   </script>
 }

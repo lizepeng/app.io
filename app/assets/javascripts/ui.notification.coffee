@@ -13,8 +13,6 @@ angular.module 'ui.notification', [ 'ws.helper' ]
           $scope.notifications.push notify
           $scope.$apply()
 
-      UserWebSocket.connect()
-
       $scope.dismiss = (idx) ->
         $scope.notifications.splice idx, 1
 

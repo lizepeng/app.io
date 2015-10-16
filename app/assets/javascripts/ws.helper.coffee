@@ -1,34 +1,38 @@
 angular.module 'ws.helper', []
 
-  .factory 'UserWebSocket', ->
-    service            = {}
-    service.url        = ''
-    service.handlers   = {}
-    service.socket     = {}
-    service.READYSTATE =
-      CONNECTING : 0
-      OPEN       : 1
-      CLOSING    : 2
-      CLOSED     : 3
+  .factory 'WebSocketOptions', ->
+    options = {}
+    return options
 
-    service.connect = ->
-      @socket = new WebSocket @url
-      @socket.onmessage = (event) =>
-        msg = JSON.parse(event.data)
-        handler = @handlers[msg.protocol]
-        handler.onmessage(msg) if handler?
-        return
-      return
+  .factory 'UserWebSocket', [
+    'WebSocketOptions'
+    (options) ->
+      class UserWebSocket
 
-    service.register = (confs...) ->
-      @handlers[conf.protocol] = conf for conf in confs
-      return
+        constructor: (url) ->
+          @url = url
+          @handlers = {}
+          @connect() if options.autoConnect ? true
 
-    service.send = (msg) ->
-      @socket.send JSON.stringify(msg) if @readyState() is @READYSTATE.OPEN
-      return
+        register: (handlers...) ->
+          @handlers[handler.protocol] = handler for handler in handlers
+          return
 
-    service.readyState = ->
-      @socket?.readyState ? @READYSTATE.CLOSED
+        connect: ->
+          @socket = new WebSocket @url
+          @socket.onmessage = (event) =>
+            msg = JSON.parse(event.data)
+            handler = @handlers[msg.protocol]
+            handler.onmessage(msg) if handler?
+            return
+          return
 
-    return service
+        send: (msg) ->
+          @socket.send JSON.stringify(msg) if @readyState() is WebSocket.OPEN
+          return
+
+        readyState: ->
+          @socket?.readyState ? WebSocket.CLOSED
+
+      return new UserWebSocket options.url
+    ]
