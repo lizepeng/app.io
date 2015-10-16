@@ -5,8 +5,9 @@ angular.module 'ws.helper', []
     return options
 
   .factory 'UserWebSocket', [
+    '$timeout'
     'WebSocketOptions'
-    (options) ->
+    ($timeout, options) ->
       class UserWebSocket
 
         constructor: (url) ->
@@ -18,13 +19,18 @@ angular.module 'ws.helper', []
           @handlers[handler.protocol] = handler for handler in handlers
           return
 
-        connect: ->
+        connect: =>
           @socket = new WebSocket @url
           @socket.onmessage = (event) =>
             msg = JSON.parse(event.data)
             handler = @handlers[msg.protocol]
             handler.onmessage(msg) if handler?
             return
+
+          @socket.onclose = (event) =>
+            $timeout @connect, 10000
+            return
+
           return
 
         send: (msg) ->
