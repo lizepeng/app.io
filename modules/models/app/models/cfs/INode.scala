@@ -5,6 +5,7 @@ import java.util.UUID
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
+import models.cfs.FileSystem._
 import models.{HasUUID, TimeBased}
 import org.joda.time.DateTime
 import play.api.libs.json._
@@ -24,9 +25,9 @@ trait INode extends HasUUID with TimeBased {
 
   def owner_id: UUID
 
-  def permission: Long
+  def permission: Permission
 
-  def ext_permission: Map[UUID, Int]
+  def ext_permission: Map[UUID, Access]
 
   def attributes: Map[String, String]
 

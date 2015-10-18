@@ -4,6 +4,7 @@ import java.util.UUID
 
 import helpers.syntax.PolarQuestion
 import models._
+import models.cfs.FileSystem.Access
 import models.cfs._
 
 /**
@@ -11,108 +12,68 @@ import models.cfs._
  */
 case class FilePermission(
   principal: User,
-  action: Int,
+  action: Access,
   resource: INode
-) extends Permission[User, Int, INode] {
+) extends Permission[User, Access, INode] {
 
   override def canAccess: Boolean = {
-    def check(perm: Long, mask: Long) = (perm & mask) == mask
-
     //check owner permission
     if (principal.id == resource.owner_id) {
-      val mask = action.toLong << 20 * 3
-      if (check(resource.permission, mask)) return true
+      if (resource.permission ?(_.owner, action)) return true
     }
     //check external group permission
-    for (gid <- principal.external_groups) {
-      val perm = resource.ext_permission.getOrElse(gid, 0)
-      if (check(perm, action)) return true
+    for (gid <- principal.external_groups if resource.ext_permission.contains(gid)) {
+      if (resource.ext_permission(gid) ? action) return true
     }
     //check internal group permission
     for (gid <- principal.internal_groups_code.numbers) {
-      val mask = action.toLong << (19 - gid) * 3
-      if (check(resource.permission, mask)) return true
+      if (resource.permission ?(_.group(gid), action)) return true
     }
     //check other permission
-    check(resource.permission, action)
+    resource.permission ?(_.other, action)
   }
 
-  private def pprintLine(length: Int) = (
-    for (i <- 0 to length) yield {"---"}
-    ).mkString("+", "+", "+")
+  private def pprintLine(length: Int) =
+    for (i <- 0 to length) yield {"---"}.mkString("+", "+", "+")
 
-  private def pprintIndices(length: Int) = (
-    for (i <- 0 to length) yield {"%3d".format(i)}
-    ).mkString("|", "|", "|")
-
-  private def pprintPerms(perm: Long) = {
-    "%63s".format(perm.toBinaryString)
-      .grouped(3).map(toRWX).mkString("|", "|", "|")
-  }
-
-  private def toRWX(code: String): String = {
-    if (code.length != 3) return "???"
-
-    def mapAt(i: Int, readable: String) = {
-      val c = code.charAt(i)
-      if (c == ' ' || c == '0') "-"
-      else readable
-    }
-    s"${mapAt(0, "r")}${mapAt(1, "w")}${mapAt(2, "x")}"
-  }
+  private def pprintIndices(length: Int) =
+    for (i <- 0 to length) yield {"%3d".format(i)}.mkString("|", "|", "|")
 
   override def toString =
     s"""
       user_id  : ${principal.id}
-      action   : ${toRWX(action.toBinaryString)}
+      action   : ${action.pprint}
       inode_id : ${resource.id}
       ${pprintLine(20)}
       ${pprintIndices(20)}
-      ${pprintPerms(resource.permission)}
+      ${resource.permission.pprint}
       ${principal.internal_groups_code.pprintLine1}
       ${principal.internal_groups_code.pprintLine2}
       ${pprintLine(20)}
      """
-
 }
 
 object FilePermission {
 
   case class Denied(
     principal: UUID,
-    action: Int,
+    action: Access,
     resource: INode
-  ) extends Permission.Denied[UUID, Int, INode](CassandraFileSystem.canonicalName)
+  ) extends Permission.Denied[UUID, Access, INode](CassandraFileSystem.canonicalName)
 
-  val r   = 4
-  val w   = 2
-  val x   = 1
-  val rw  = r | w
-  val rx  = r | x
-  val wx  = w | x
-  val rwx = r | w | x
+  implicit class INodePermissionChecker(val inode: INode) extends AnyVal {
 
-  def apply(inode: INode)(
-    implicit user: User
-  ) = FilePermsBuilder(inode, user)
+    def r(implicit user: User) = new PolarQuestion {def ? = check(Access.r)}
+    def w(implicit user: User) = new PolarQuestion {def ? = check(Access.w)}
+    def x(implicit user: User) = new PolarQuestion {def ? = check(Access.x)}
+    def rw(implicit user: User) = new PolarQuestion {def ? = check(Access.rw)}
+    def rx(implicit user: User) = new PolarQuestion {def ? = check(Access.rx)}
+    def wx(implicit user: User) = new PolarQuestion {def ? = check(Access.wx)}
+    def rwx(implicit user: User) = new PolarQuestion {def ? = check(Access.rwx)}
 
-  case class FilePermsBuilder(
-    inode: INode, user: User
-  ) {
-
-    val r   = new PolarQuestion {def ? = check(FilePermission.r)}
-    val w   = new PolarQuestion {def ? = check(FilePermission.w)}
-    val x   = new PolarQuestion {def ? = check(FilePermission.x)}
-    val rw  = new PolarQuestion {def ? = check(FilePermission.rw)}
-    val rx  = new PolarQuestion {def ? = check(FilePermission.rx)}
-    val wx  = new PolarQuestion {def ? = check(FilePermission.wx)}
-    val rwx = new PolarQuestion {def ? = check(FilePermission.rwx)}
-
-    private def check(action: Int): Boolean = {
-      val perm: FilePermission = FilePermission(user, action, inode)
-      if (perm.canAccess) true
-      else throw Denied(perm.principal.id, perm.action, perm.resource)
+    private def check(access: Access)(implicit user: User): Boolean = {
+      if (FilePermission(user, access, inode).canAccess) true
+      else throw Denied(user.id, access, inode)
     }
   }
-
 }

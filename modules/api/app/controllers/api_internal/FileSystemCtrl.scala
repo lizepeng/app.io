@@ -16,6 +16,7 @@ import play.api.mvc._
 import play.core.parsers.Multipart._
 import protocols.JsonProtocol.JsonMessage
 import protocols._
+import security.FilePermission._
 import security.{FilePermission => FilePerm, _}
 import services.BandwidthService
 import services.BandwidthService._
@@ -97,7 +98,7 @@ class FileSystemCtrl(
     UserAction(_.Index).async { implicit req =>
       (for {
         root <- _cfs.root
-        curr <- root.dir(path) if FilePerm(curr).rx.?
+        curr <- root.dir(path) if (curr.rx ?)
         page <- curr.list(pager)
       } yield page).map { page =>
         Ok(Json.toJson(page.elements)).withHeaders(
@@ -208,10 +209,10 @@ class FileSystemCtrl(
   def mkdir(path: Path)(implicit user: User): Future[Directory] =
     Enumerator(path.parts: _*) |>>>
       Iteratee.fold1(_cfs.root) { case (p, cn) =>
-        (for (c <- p.dir(cn) if FilePerm(p).rx ?) yield c)
+        (for (c <- p.dir(cn) if p.rx ?) yield c)
           .recoverWith {
           case e: Directory.ChildNotFound =>
-            for (c <- p.mkdir(cn) if FilePerm(p).w ?) yield c
+            for (c <- p.mkdir(cn) if p.w ?) yield c
         }
       }
 
@@ -326,7 +327,7 @@ class FileSystemCtrl(
         (for {
           home <- _cfs.home(user)
           temp <- _cfs.temp(user)
-          dest <- home.dir(path) if FilePerm(dest).w ?
+          dest <- home.dir(path) if dest.w ?
         } yield temp).map { case temp =>
           multipartFormData(saveTo(temp)(user))
         }.recover {

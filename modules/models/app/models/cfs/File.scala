@@ -8,6 +8,7 @@ import helpers._
 import helpers.syntax._
 import models.cassandra._
 import models.cfs.Block.BLK
+import models.cfs.FileSystem._
 import play.api.libs.iteratee._
 import play.api.libs.json._
 
@@ -25,8 +26,8 @@ case class File(
   size: Long = 0,
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
-  permission: Long = 6L << 60,
-  ext_permission: Map[UUID, Int] = Map(),
+  permission: Permission = Role.owner.rw,
+  ext_permission: Map[UUID, Access] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = false
 ) extends INode {
@@ -69,8 +70,8 @@ sealed class FileTable
       size(r),
       indirect_block_size(r),
       block_size(r),
-      permission(r),
-      ext_permission(r),
+      Permission(permission(r)),
+      ext_permission(r).mapValues(Access(_)),
       attributes(r)
     )
   }
@@ -154,8 +155,8 @@ class Files(
       .value(_.indirect_block_size, f.indirect_block_size)
       .value(_.block_size, f.block_size)
       .value(_.owner_id, f.owner_id)
-      .value(_.permission, f.permission)
-      .value(_.ext_permission, f.ext_permission)
+      .value(_.permission, f.permission.self)
+      .value(_.ext_permission, f.ext_permission.mapValues(_.self))
       .value(_.attributes, f.attributes)
   }.future().map(_ => f)
 }

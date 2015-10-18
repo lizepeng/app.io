@@ -10,6 +10,7 @@ import helpers._
 import models.User
 import models.cassandra._
 import models.cfs.Block.BLK
+import models.cfs.FileSystem._
 import play.api.libs.iteratee.{Enumeratee => _, _}
 import play.api.libs.json._
 
@@ -25,8 +26,8 @@ case class Directory(
   owner_id: UUID,
   parent: UUID,
   id: UUID = UUIDs.timeBased(),
-  permission: Long = 7L << 60,
-  ext_permission: Map[UUID, Int] = Map(),
+  permission: Permission = Role.owner.rwx,
+  ext_permission: Map[UUID, Access] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = true
 ) extends INode {
@@ -183,8 +184,8 @@ sealed class DirectoryTable
       owner_id(r),
       parent(r),
       inode_id(r),
-      permission(r),
-      ext_permission(r),
+      Permission(permission(r)),
+      ext_permission(r).mapValues(Access(_)),
       attributes(r)
     )
   }
@@ -333,8 +334,8 @@ class Directories(
       .value(_.inode_id, dir.id)
       .value(_.parent, dir.parent)
       .value(_.owner_id, dir.owner_id)
-      .value(_.permission, dir.permission)
-      .value(_.ext_permission, dir.ext_permission)
+      .value(_.permission, dir.permission.self)
+      .value(_.ext_permission, dir.ext_permission.mapValues(_.self))
       .value(_.is_directory, true)
       .value(_.attributes, dir.attributes)
       .value(_.name, ".") // with itself as a child
