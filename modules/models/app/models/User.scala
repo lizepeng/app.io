@@ -158,30 +158,6 @@ object User
   case class EmailTaken(email: String)
     extends BaseException(error_code("email.taken"))
 
-  object AccessControl {
-
-    import models.{AccessControl => AC}
-
-    case class Undefined(
-      principal: UUID,
-      action: String,
-      resource: String
-    ) extends AC.Undefined[UUID](action, resource, basicName)
-
-    case class Denied(
-      principal: UUID,
-      action: String,
-      resource: String
-    ) extends AC.Denied[UUID](action, resource, basicName)
-
-    case class Granted(
-      principal: UUID,
-      action: String,
-      resource: String
-    ) extends AC.Granted[UUID](action, resource, basicName)
-
-  }
-
   implicit val jsonWrites = new Writes[User] {
     override def writes(o: User): JsValue = Json.obj(
       "id" -> o.id,

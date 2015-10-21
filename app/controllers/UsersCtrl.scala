@@ -60,7 +60,7 @@ class UsersCtrl(
     }
 
   def index(pager: Pager) =
-    UserAction(_.Index).apply { implicit req =>
+    UserAction(_.Index, _.Create).apply { implicit req =>
       Ok(html.users.index(pager))
     }
 

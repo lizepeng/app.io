@@ -2,6 +2,7 @@ package controllers
 
 import play.api.i18n.Messages
 import play.api.libs.json._
+import security.ModulesAccessControl._
 import security._
 
 /**
@@ -26,7 +27,7 @@ class RegisteredSecured(
 
   object Actions {
 
-    def names: Seq[String] = actions.map(_.name)
+    def names: Seq[String] = actions.map(_.self.toString)
 
     def toJson(implicit messages: Messages) = Json.prettyPrint(
       JsObject(
@@ -36,7 +37,7 @@ class RegisteredSecured(
       )
     )
 
-    lazy val actions: Seq[CheckedAction] = CheckedActions.ALL
+    lazy val actions: Seq[Access] = AccessDefinition.ALL
   }
 
 }

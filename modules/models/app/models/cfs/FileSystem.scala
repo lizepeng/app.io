@@ -17,8 +17,7 @@ object FileSystem {
     override def toString = pprint
 
     def pprint = {
-      "%63s".format(self.toBinaryString)
-        .grouped(3).map(toRWX).mkString("|", "|", "|")
+      f"${self.toBinaryString}%63s".grouped(3).map(toRWX).mkString("|", "|", "|")
     }
 
     private def toRWX(code: String): String = {
@@ -67,8 +66,6 @@ object FileSystem {
   case class Access(self: Int = 0) extends AnyVal {
 
     def |(that: Access) = Access(self | that.self)
-
-    def ?(access: Access) = (self & access.self) > 0
 
     override def toString = pprint
 

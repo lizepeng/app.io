@@ -28,14 +28,15 @@ class GroupsCtrl(
   val mapping_name = "name" -> nonEmptyText(2, 255)
 
   def index(pager: Pager) =
-    UserAction(_.Index).apply { implicit req =>
+    UserAction(_.Index, _.Create, _.Save, _.Destroy).apply { implicit req =>
       Ok(html.groups.index(pager))
     }
 
   def show(id: UUID) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.Show, _.AddRelation, _.DelRelation).async { implicit req =>
       _groups.find(id).map { grp =>
-        Ok(html.groups.show(grp))
+        if (grp.is_internal) MethodNotAllowed
+        else Ok(html.groups.show(grp))
       }.recover {
         case e: BaseException => NotFound
       }

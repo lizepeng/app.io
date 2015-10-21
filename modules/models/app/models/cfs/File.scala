@@ -27,7 +27,7 @@ case class File(
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
   permission: Permission = Role.owner.rw,
-  ext_permission: Map[UUID, Access] = Map(),
+  ext_permission: Map[UUID, Permission] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = false
 ) extends INode {
@@ -71,7 +71,7 @@ sealed class FileTable
       indirect_block_size(r),
       block_size(r),
       Permission(permission(r)),
-      ext_permission(r).mapValues(Access(_)),
+      ext_permission(r).mapValues(Permission(_)),
       attributes(r)
     )
   }
@@ -156,7 +156,7 @@ class Files(
       .value(_.block_size, f.block_size)
       .value(_.owner_id, f.owner_id)
       .value(_.permission, f.permission.self)
-      .value(_.ext_permission, f.ext_permission.mapValues(_.self))
+      .value(_.ext_permission, f.ext_permission.mapValues(_.self.toInt))
       .value(_.attributes, f.attributes)
   }.future().map(_ => f)
 }

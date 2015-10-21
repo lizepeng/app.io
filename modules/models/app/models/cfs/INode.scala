@@ -27,7 +27,7 @@ trait INode extends HasUUID with TimeBased {
 
   def permission: Permission
 
-  def ext_permission: Map[UUID, Access]
+  def ext_permission: Map[UUID, Permission]
 
   def attributes: Map[String, String]
 

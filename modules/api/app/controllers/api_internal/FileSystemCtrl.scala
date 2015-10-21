@@ -16,8 +16,9 @@ import play.api.mvc._
 import play.core.parsers.Multipart._
 import protocols.JsonProtocol.JsonMessage
 import protocols._
-import security.FilePermission._
-import security.{FilePermission => FilePerm, _}
+import security.FileSystemAccessControl._
+import security.ModulesAccessControl.AccessDefinition
+import security._
 import services.BandwidthService
 import services.BandwidthService._
 
@@ -104,11 +105,9 @@ class FileSystemCtrl(
         Ok(Json.toJson(page.elements)).withHeaders(
           linkHeader(page, routes.FileSystemCtrl.index(path, _))
         )
-      }.andThen {
-        case Failure(e: FilePerm.Denied) => Logger.trace(e.reason)
       }.recover {
-        case e: FilePerm.Denied => NotFound
-        case e: BaseException   => NotFound
+        case e: FileSystemAccessControl.Denied => NotFound
+        case e: BaseException                  => NotFound
       }
     }
 
@@ -318,7 +317,7 @@ class FileSystemCtrl(
     }
 
     SecuredBodyParser(
-      _.Create,
+      AccessDefinition.Create,
       onUnauthorized,
       onPermDenied,
       onBaseException
@@ -332,9 +331,9 @@ class FileSystemCtrl(
           multipartFormData(saveTo(temp)(user))
         }.recover {
           case _: Directory.NotFound |
-               _: Directory.ChildNotFound =>
+               _: Directory.ChildNotFound        =>
             parse.error(Future.successful(onPathNotFound(req)))
-          case _: FilePerm.Denied         =>
+          case _: FileSystemAccessControl.Denied =>
             parse.error(Future.successful(onFilePermDenied(req)))
         }
     }

@@ -19,52 +19,53 @@ views.access_controls.index.factory 'ACList', [
   (AC, Group, User, LinkHeader, Alert) ->
     service           = {}
     service.links     = LinkHeader.links
-    service.acs       = []
+    service.aces      = []
     service.resources = {}
     service.actions   = {}
 
     service.reload = (params) ->
-      service.acs = AC.query
+      service.aces = AC.query
         page     : params.page
         per_page : params.pageSize,
-        (acs, headers) ->
+        (aces, headers) ->
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers
           Group.query
-            ids: AC.gids(acs).join(','),
+            ids: AC.gids(aces).join(','),
             (grps) -> service.groups = Group.toMap grps
           User.query
-            ids: AC.uids(acs).join(','),
+            ids: AC.uids(aces).join(','),
             (usrs) -> service.users  = User.toMap usrs
 
     service.create = (data, principal) ->
-      new AC(data).$save(
+      AC.create(
+        data
         (value) ->
-          if data.is_group
-            service.groups[principal.id] = principal
-          else
-            service.users[principal.id]  = principal
-          if _.findIndex(service.acs,
+          service.groups[principal.id] = principal if data.is_group
+          service.users[principal.id]  = principal if !data.is_group
+          if _.findIndex(service.aces,
               principal : value.principal
               resource  : value.resource
-              action    : value.action) == -1
-            service.acs.unshift value
-        (res) ->
-          Alert.push
-            type : 'danger'
-            msg  : res.data.message)
-
-    service.delete = (data) ->
-      data.$delete data,
-        ->
-          idx = service.acs.indexOf(data)
-          service.acs.splice idx, 1
+              action    : value.action) is -1
+            service.aces.unshift value
         (res) ->
           Alert.push
             type : 'danger'
             msg  : res.data.message
+      )
 
-    service.save = (data) ->
-      data.$save data,
+    service.delete = (data) ->
+      data.$delete(
+        ->
+          idx = service.aces.indexOf(data)
+          service.aces.splice idx, 1
+        (res) ->
+          Alert.push
+            type : 'danger'
+            msg  : res.data.message
+      )
+
+    service.toggle = (data, bit) ->
+      data.$save bit : bit,
         ->
         (res) ->
           Alert.push
@@ -82,10 +83,16 @@ views.access_controls.index.factory 'ACList', [
     $scope.jsRoutes         = jsRoutes
     ModalDialog.templateUrl = 'confirm_delete.html'
 
-    $scope.confirm = (ac) ->
+    $scope.confirm = (ace) ->
       ModalDialog.open().result.then(
-        -> ACList.delete ac
-        ->)
+        -> ACList.delete ace
+        ->
+      )
+
+    $scope.toggle = (ace, bit) ->
+      ACList.toggle ace, bit
+      return
+
     return
 ]
 
@@ -94,24 +101,23 @@ views.access_controls.index.factory 'ACList', [
   '$http'
   'ACList'
   ($scope, $http, ACList) ->
-    $scope.ACList = ACList
-    $scope.ac     =
-      principal : ''
-      resource  : _.keys(ACList.resources)[0]
-      action    : _.keys(ACList.actions)[0]
-      granted   : true
+    $scope.ACList     = ACList
+    $scope.checkModel = {}
+    $scope.ace        =
+      principal  : ''
+      resource   : _.keys(ACList.resources)[0]
 
     types = [ 'groups', 'users']
 
-    $scope.create = (ac) ->
-      if _.contains(types, ac.principal._type)
+    $scope.create = (ace) ->
+      if _.contains(types, ace.principal._type)
         ACList.create(
-          principal : ac.principal.id
-          resource  : ac.resource
-          action    : ac.action
-          is_group  : ac.principal._type == 'groups'
-          granted   : ac.granted
-          ac.principal._source)
+          principal  : ace.principal.id
+          resource   : ace.resource
+          permission : 0
+          is_group   : ace.principal._type is 'groups'
+          ace.principal._source
+        )
 
     $scope.getItems = (val) ->
       $http.get(
@@ -123,11 +129,9 @@ views.access_controls.index.factory 'ACList', [
         _.chain response.data
           .filter (item) -> _.contains types, item._type
           .each   (item) ->
-            item.id = item._source.id
-            if item._type == 'users'
-              item.label = item._source.email
-            if item._type == 'groups'
-              item.label = item._source.name
+            item.id    = item._source.id
+            item.label = item._source.email if item._type is 'users'
+            item.label = item._source.name if item._type is 'groups'
         response.data
     return
 ]

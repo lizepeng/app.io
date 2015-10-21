@@ -27,7 +27,7 @@ case class Directory(
   parent: UUID,
   id: UUID = UUIDs.timeBased(),
   permission: Permission = Role.owner.rwx,
-  ext_permission: Map[UUID, Access] = Map(),
+  ext_permission: Map[UUID, Permission] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = true
 ) extends INode {
@@ -185,7 +185,7 @@ sealed class DirectoryTable
       parent(r),
       inode_id(r),
       Permission(permission(r)),
-      ext_permission(r).mapValues(Access(_)),
+      ext_permission(r).mapValues(Permission(_)),
       attributes(r)
     )
   }
@@ -335,7 +335,7 @@ class Directories(
       .value(_.parent, dir.parent)
       .value(_.owner_id, dir.owner_id)
       .value(_.permission, dir.permission.self)
-      .value(_.ext_permission, dir.ext_permission.mapValues(_.self))
+      .value(_.ext_permission, dir.ext_permission.mapValues(_.self.toInt))
       .value(_.is_directory, true)
       .value(_.attributes, dir.attributes)
       .value(_.name, ".") // with itself as a child

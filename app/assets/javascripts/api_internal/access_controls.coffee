@@ -4,19 +4,28 @@
 angular.module 'api_internal.access_control', [ 'ngResource' ]
 
   .factory 'AccessControl', [ '$resource', ($resource) ->
-    resource = $resource '/api_internal/access_controls/:principal/:resource/:action'
+    resource = $resource '/api_internal/access_controls/:principal/:resource', {
+        principal : '@principal'
+        resource  : '@resource'
+      }, {
+        create :
+          method  : 'POST'
+          params  :
+            principal : ''
+            resource  : ''
+      }
 
-    resource.gids = (acs) ->
-      _.chain acs
-        .filter (ac) -> ac.is_group
-        .map    (ac) -> ac.principal
+    resource.gids = (aces) ->
+      _.chain aces
+        .filter (ace) -> ace.is_group
+        .map    (ace) -> ace.principal
         .uniq()
         .value()
 
-    resource.uids = (acs) ->
-      _.chain acs
-        .filter (ac) -> !ac.is_group
-        .map    (ac) -> ac.principal
+    resource.uids = (aces) ->
+      _.chain aces
+        .filter (ace) -> !ace.is_group
+        .map    (ace) -> ace.principal
         .uniq()
         .value()
 

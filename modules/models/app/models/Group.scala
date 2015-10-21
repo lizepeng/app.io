@@ -88,30 +88,6 @@ object Group
   case class NotEmpty(id: UUID)
     extends BaseException(error_code("not.empty"))
 
-  object AccessControl {
-
-    import models.{AccessControl => AC}
-
-    case class Undefined(
-      principal: Set[UUID],
-      action: String,
-      resource: String
-    ) extends AC.Undefined[Set[UUID]](action, resource, basicName)
-
-    case class Denied(
-      principal: Set[UUID],
-      action: String,
-      resource: String
-    ) extends AC.Denied[Set[UUID]](action, resource, basicName)
-
-    case class Granted(
-      principal: Set[UUID],
-      action: String,
-      resource: String
-    ) extends AC.Granted[Set[UUID]](action, resource, basicName)
-
-  }
-
   implicit val jsonWrites = Json.writes[Group]
 }
 

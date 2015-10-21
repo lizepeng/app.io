@@ -66,15 +66,17 @@ layout.normal                                    =Normal
 layout.nothing                                   =------
 
 # action
-actions.nnew                                     =New
-actions.create                                   =Create
-actions.edit                                     =Edit
-actions.save                                     =Save
-actions.destroy                                  =Destroy
-actions.index                                    =List All
-actions.show                                     =Show
-actions.history.index                            =List History
-actions.anything                                 =Anything
+actions.1                                        =New
+actions.2                                        =Create
+actions.4                                        =Show
+actions.8                                        =List All
+actions.16                                       =Edit
+actions.32                                       =Save
+actions.64                                       =Destroy
+actions.128                                      =List History
+actions.256                                      =Add Relation
+actions.512                                      =Delete Relation
+actions.-1                                       =Anything
 
 # language
 lang                                             =Language
@@ -252,7 +254,7 @@ log.models.cfs.dir.child.not.found               =No such child {1} in dir {0}
 log.models.cfs.dir.child.exists                  =There already exists child {1} in dir {0}
 log.models.cfs.dir.not.found                     =No such dir   [{0}]
 log.models.cfs.file.not.found                    =No such file  [{0}]
-log.models.cfs.file_system.perm.denied           =Permission Denied [{0}], [{1}], [{2}]
+log.security.file_system.permission.denied       =File Access Denied: \n[\n  {0},\n  {1},\n  {2}\n]
 
 # password_reset
 controllers.password_reset.email.not.found       =Can't find that email, sorry.
@@ -302,12 +304,7 @@ views.access_controls.resource                   =Resource
 views.access_controls.action                     =Action
 views.access_controls.granted                    =Granted
 
-log.models.access_controls.users.perm.undefined  = Undefined: [User,   {0}, {1}, {2}]
-log.models.access_controls.groups.perm.undefined = Undefined: [Groups, {0}, {1}, {2}]
-log.models.access_controls.users.perm.granted    = Granted:   [User,   {0}, {1}, {2}]
-log.models.access_controls.groups.perm.granted   = Granted:   [Groups, {0}, {1}, {2}]
-log.models.access_controls.users.perm.denied     = Denied:    [User,   {0}, {1}, {2}]
-log.models.access_controls.groups.perm.denied    = Denied:    [Groups, {0}, {1}, {2}]
+log.security.modules.permission.denied           =Permission Denied: \n[\n  {0},\n  {1},\n  {2}\n]
 
 # expirable_links
 log.models.expirable_links.not.found             =Expirable Link {0} not found.

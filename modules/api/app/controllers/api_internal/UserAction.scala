@@ -4,6 +4,7 @@ import controllers.{RateLimitChecker, RateLimitUnit}
 import helpers.BasicPlayApi
 import models._
 import play.api.mvc._
+import security.ModulesAccessControl._
 import security._
 
 /**
@@ -13,19 +14,30 @@ object UserAction {
 
   import UserActionComponents._
 
-  def apply(
-    action: CheckedActions => CheckedAction
-  )(
+  def apply(specifiers: (AccessDefinition => Access)*)(
     implicit
-    resource: CheckedResource,
+    resource: CheckedModule,
+    onDenied: (CheckedModule, Access, RequestHeader) => Result,
     basicPlayApi: BasicPlayApi,
     userActionRequired: UserActionRequired,
     rateLimitUnit: RateLimitUnit
-  ): ActionBuilder[UserRequest] =
+  ): ActionBuilder[UserRequest] = apply(
+    AccessDefinition.union(specifiers.map(_(AccessDefinition)): _*)
+  )
+
+  def apply(access: Access)(
+    implicit
+    resource: CheckedModule,
+    onDenied: (CheckedModule, Access, RequestHeader) => Result,
+    basicPlayApi: BasicPlayApi,
+    userActionRequired: UserActionRequired,
+    rateLimitUnit: RateLimitUnit
+  ): ActionBuilder[UserRequest] = {
     MaybeUser().Action() andThen
       AuthChecker andThen
       RateLimitChecker() andThen
-      PermissionChecker(Seq(action), (_, _, _) => Results.NotFound, resource)
+      PermissionChecker(access)
+  }
 }
 
 case class UserActionRequired(
@@ -43,6 +55,10 @@ trait UserActionComponents {
   implicit def _accessControls: AccessControls = userActionRequired._accessControls
 
   implicit def _rateLimits: RateLimits = userActionRequired._rateLimits
+
+  implicit def onDenied: (CheckedModule, Access, RequestHeader) => Result = {
+    (_, _, _) => Results.NotFound
+  }
 }
 
 object UserActionComponents {

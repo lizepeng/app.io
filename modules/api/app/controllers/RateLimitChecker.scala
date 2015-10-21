@@ -8,6 +8,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import protocols.ExHeaders
 import protocols.JsonProtocol._
+import security.ModulesAccessControl._
 import security._
 
 import scala.concurrent.Future
@@ -19,7 +20,7 @@ import scala.language.postfixOps
  */
 case class RateLimitChecker(
   implicit
-  val resource: CheckedResource,
+  val resource: CheckedModule,
   val basicPlayApi: BasicPlayApi,
   val unit: RateLimitUnit,
   val _rateLimits: RateLimits
@@ -38,7 +39,6 @@ case class RateLimitChecker(
     req: UserRequest[A],
     block: (UserRequest[A]) => Future[Result]
   ): Future[Result] = {
-    val res = resource.name
     val user = req.user
 
     val now = DateTime.now
@@ -48,7 +48,7 @@ case class RateLimitChecker(
     val period_start = now.hourOfDay.roundFloorCopy
       .plusMinutes((minutes / unit.span) * unit.span)
 
-    _rateLimits.get(res, period_start)(user)
+    _rateLimits.get(resource.name, period_start)(user)
       .flatMap { counter =>
       if (counter >= unit.limit) Future.successful {
         Results.TooManyRequest {
@@ -61,7 +61,7 @@ case class RateLimitChecker(
       }
       else
         for {
-          ___ <- _rateLimits.inc(res, period_start)(user)
+          ___ <- _rateLimits.inc(resource.name, period_start)(user)
           ret <- block(req)
         } yield {
           ret.withHeaders(
