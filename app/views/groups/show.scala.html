@@ -8,14 +8,15 @@ implicit req: UserRequest[_], messages: Messages)
 
   @ng._alert()
 
-  <div class="row" style="margin-top:10px">
-    <h2 style="margin-left: 20px">
+  <div class="page-header">
+    <h1>
       <i class="fa fa-group fa-lg fa-fw"></i>
-      @group.name
-    </h2>
+      @GroupsCtrl.msg("head")
+      <small>@group.name</small>
+    </h1>
   </div>
 
-  <div class="row" style="margin-top:10px">
+  <div class="row">
     @{_info(group)}
   </div>
 
@@ -47,41 +48,43 @@ implicit req: UserRequest[_], messages: Messages)
 
     @ng._msg_confirm_delete()
 
-    <div class="table-responsive">
-      <table class="table table-hover table-ellipsis">
-        <thead>
-          <tr>
-            <th class="col-xs-4 col-sm-5">
-              @MSG("email")
-            </th>
-            <th class="hidden-xs col-sm-5 ">
-              @MSG("name")
-            </th>
-            <th class="col-xs-2  col-sm-2 text-right">
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="ng-cloak" ng-repeat="usr in GroupUsersList.users">
-            <td>
-              <a ng-href="/users/{{usr.id}}">
-                <i class="fa fa-user"></i>
-                {{ usr.email }}
-              </a>
-            </td>
-            <td class="hidden-xs">
-              {{ usr.name }}
-            </td>
-            <td>
-              <button type="button" class="btn btn-danger btn-xs pull-right"
-                ng-click="confirm(usr)">
-                <i class="fa fa-user-times"></i>
-                @MSG("delete")
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <div class="table-responsive">
+        <table class="table table-hover table-ellipsis">
+          <thead>
+            <tr>
+              <th class="col-xs-4 col-sm-5">
+                @MSG("email")
+              </th>
+              <th class="hidden-xs col-sm-5 ">
+                @MSG("name")
+              </th>
+              <th class="col-xs-2  col-sm-2 text-right">
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="ng-cloak" ng-repeat="usr in GroupUsersList.users">
+              <td>
+                <a ng-href="/users/{{usr.id}}">
+                  <i class="fa fa-user"></i>
+                  {{ usr.email }}
+                </a>
+              </td>
+              <td class="hidden-xs">
+                {{ usr.name }}
+              </td>
+              <td>
+                <button type="button" class="btn btn-danger btn-xs pull-right"
+                  ng-click="confirm(usr)">
+                  <i class="fa fa-user-times"></i>
+                  @MSG("delete")
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 }()(

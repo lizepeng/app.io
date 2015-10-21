@@ -286,6 +286,14 @@ views.email_templates.name.place_holder          =Enter name of your new email t
 views.email_templates.subject.place_holder       =Enter subject of your new email template
 views.email_templates.text.sample                =Text sample.
 
+views.email_templates.new.title                  =Create a new template
+views.email_templates.new.head                   =Create a new template
+
+views.email_templates.edit.title                 =Edit the content of Template
+views.email_templates.edit.tab.name              =Edit The Content
+
+views.email_templates.history.tab.name           =Browse History
+
 log.models.email_templates.not.found             =Email Template {0}, {1} not found.
 log.models.email_templates.updated.by.others     =Email Template has been edited by other users.
 

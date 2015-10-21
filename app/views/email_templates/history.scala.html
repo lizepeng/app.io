@@ -5,75 +5,86 @@ implicit req: UserRequest[_], messages: Messages)
 
 @layouts.base(MSG("history")){
 
-  <div class="row">
-    <!-- Nav tabs -->
-    <ul class="nav nav-tabs">
-      <li role="presentation">
-        <a href="@routes.EmailTemplatesCtrl.edit(tmpl.id, tmpl.lang)" aria-controls="edit">
-          <i class="fa fa-edit fa-lg"></i>
-          @EmailTemplatesCtrl.msg("head")
-        </a>
-      </li>
-      <li role="presentation" class="active">
-        <a href="#" aria-controls="history">
-          <i class="fa fa-history fa-lg"></i>
-          @MSG("history")
-        </a>
-      </li>
-    </ul>
-
-    <!-- Tab panes -->
-    <div class="table-responsive">
-      <table class="table table-hover table-ellipsis">
-        <thead>
-          <tr>
-            <th class="col-xs-4 col-sm-4 col-md-2">
-              @MSG("updated_at")
-            </th>
-            <th class="hidden-xs col-sm-3 col-md-3">
-              @MSG("name")
-            </th>
-            <th class="hidden-xs hidden-sm col-md-4">
-              @MSG("subject")
-            </th>
-            <th class="col-xs-4 col-sm-4 col-md-2">
-              @MSG("updated_by")
-            </th>
-            <th class="col-xs-1 col-sm-1 col-md-1"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @page.map { h =>
-            <tr>
-              <td>
-                @h.updated_at.toString("yyyy-MM-dd hh:mm:ss")
-              </td>
-              <td class="hidden-xs">
-                @h.name
-              </td>
-              <td class="hidden-xs hidden-sm">
-                @h.subject
-              </td>
-              <td>
-                @usrs.get(h.updated_by).map(_.email).getOrElse("")
-              </td>
-              <td>
-                <a href="@routes.EmailTemplatesCtrl.show(tmpl.id, tmpl.lang, Some(h.updated_at))">
-                  <i class="fa fa-arrow-circle-right fa-lg"></i>
-                </a>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      @{_pager(page, p => routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang, p))}
-    </div>
-
+  <div class="page-header">
+    <h1>
+      <i class="fa fa-envelope-o fa-lg fa-fw"></i>
+      @EmailTemplatesCtrl.msg("head")
+      <small>@EmailTemplatesCtrl.msg("history.tab.name")</small>
+    </h1>
   </div>
-}{
-  <style type="text/css" media="screen">
-    .panel {
-      border-top: 0px;
-    }
-  </style>
-}()
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs">
+            <li role="presentation">
+              <a href="@routes.EmailTemplatesCtrl.edit(tmpl.id, tmpl.lang)" aria-controls="edit">
+                <i class="fa fa-edit fa-lg"></i>
+                @EmailTemplatesCtrl.msg("edit.tab.name")
+              </a>
+            </li>
+            <li role="presentation" class="active">
+              <a href="#" aria-controls="history">
+                <i class="fa fa-history fa-lg"></i>
+                @EmailTemplatesCtrl.msg("history.tab.name")
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <!-- Tab panes -->
+          <div class="table-responsive">
+            <table class="table table-hover table-ellipsis">
+              <thead>
+                <tr>
+                  <th class="col-xs-4 col-sm-4 col-md-2">
+                    @MSG("updated_at")
+                  </th>
+                  <th class="hidden-xs col-sm-3 col-md-3">
+                    @MSG("name")
+                  </th>
+                  <th class="hidden-xs hidden-sm col-md-4">
+                    @MSG("subject")
+                  </th>
+                  <th class="col-xs-4 col-sm-4 col-md-2">
+                    @MSG("updated_by")
+                  </th>
+                  <th class="col-xs-1 col-sm-1 col-md-1"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @page.map { h =>
+                  <tr>
+                    <td>
+                      @h.updated_at.toString("yyyy-MM-dd hh:mm:ss")
+                    </td>
+                    <td class="hidden-xs">
+                      @h.name
+                    </td>
+                    <td class="hidden-xs hidden-sm">
+                      @h.subject
+                    </td>
+                    <td>
+                      @usrs.get(h.updated_by).map(_.email).getOrElse("")
+                    </td>
+                    <td>
+                      <a href="@routes.EmailTemplatesCtrl.show(tmpl.id, tmpl.lang, Some(h.updated_at))">
+                        <i class="fa fa-arrow-circle-right fa-lg"></i>
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @{_pager(page, p => routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang, p))}
+
+        </div>
+      </div>
+    </div>
+  </div>
+}()()

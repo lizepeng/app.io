@@ -8,35 +8,33 @@ implicit req: UserRequest[_], messages: Messages)
 
   @ng._alert()
 
-  <div class="row" style="margin-top:10px">
-    <h2 style="margin-left: 20px">
+  <div class="page-header">
+    <h1>
       <i class="fa fa-user fa-lg fa-fw"></i>
       @UsersCtrl.msg("head")
-    </h2>
+    </h1>
   </div>
 
-  <div ng-controller="UsersCtrl">
+  <div class="row" ng-controller="UsersCtrl">
 
-    <div class="row">
-      <div class="col-xs-8 col-xs-offset-4 col-sm-6 col-sm-offset-6">
-        <div class="form-group">
-          <label class="sr-only" for="search-users">
-            @UsersCtrl.msg("search.label")
-          </label>
-          <div class="input-group">
-            <div class="input-group-addon">
-              <i class="fa fa-search"></i>
-            </div>
-            <input type="search" class="form-control" id="search-users"
-              placeholder="@UsersCtrl.msg("search.placeholder")"
-              autocomplete="off"
-              ng-model="keyword">
+    <div class="col-xs-8 col-xs-offset-4 col-sm-6 col-sm-offset-6">
+      <div class="form-group">
+        <label class="sr-only" for="search-users">
+          @UsersCtrl.msg("search.label")
+        </label>
+        <div class="input-group">
+          <div class="input-group-addon">
+            <i class="fa fa-search"></i>
           </div>
+          <input type="search" class="form-control" id="search-users"
+            placeholder="@UsersCtrl.msg("search.placeholder")"
+            autocomplete="off"
+            ng-model="keyword">
         </div>
       </div>
     </div>
 
-    <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <div class="table-responsive">
         <table class="table table-hover table-ellipsis">
           <thead>
@@ -83,37 +81,35 @@ implicit req: UserRequest[_], messages: Messages)
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-xs-12">
-        <form name="form" class="form-inline" novalidate>
+    <div class="col-xs-12">
+      <form name="form" class="form-inline" novalidate>
 
-          @ng._form_control("email",
-            '_type        -> "email",
-            'email        -> None,
-            'tabindex     -> 1,
-            'placeholder  -> UsersCtrl.msg("email.placeholder"),
-            'autocomplete -> "off",
-            Symbol("ng-model") -> "user.email"
-          )
+        @ng._form_control("email",
+          '_type        -> "email",
+          'email        -> None,
+          'tabindex     -> 1,
+          'placeholder  -> UsersCtrl.msg("email.placeholder"),
+          'autocomplete -> "off",
+          Symbol("ng-model") -> "user.email"
+        )
 
-          @ng._form_control("name",
-            'maxLength    -> 64,
-            'minLength    -> 2,
-            'tabindex    -> 2,
-            'placeholder -> UsersCtrl.msg("name.placeholder"),
-            Symbol("ng-model") -> "user.name"
-          )
+        @ng._form_control("name",
+          'maxLength    -> 64,
+          'minLength    -> 2,
+          'tabindex    -> 2,
+          'placeholder -> UsersCtrl.msg("name.placeholder"),
+          Symbol("ng-model") -> "user.name"
+        )
 
-          <button type="submit" class="btn btn-success" ng-click="UserList.create(user)"
-            ng-disabled="form.$invalid || !user.email || user.email === '' || !user.name || user.name === ''">
-            <i class="fa fa-user-plus"></i>
-            @UsersCtrl.msg("new.user")
-          </button>
-        </form>
-      </div>
+        <button type="submit" class="btn btn-success" ng-click="UserList.create(user)"
+          ng-disabled="form.$invalid || !user.email || user.email === '' || !user.name || user.name === ''">
+          <i class="fa fa-user-plus"></i>
+          @UsersCtrl.msg("new.user")
+        </button>
+      </form>
     </div>
 
-    <div class="row" ng-hide="keyword !== ''">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" ng-hide="keyword !== ''">
       @ng._pager("UserList.links")
     </div>
   </div>

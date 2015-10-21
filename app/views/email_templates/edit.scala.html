@@ -4,7 +4,7 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
 @import common._
 @import helper._
 
-@layouts.base(EmailTemplatesCtrl.msg("title")){
+@layouts.base(EmailTemplatesCtrl.msg("edit.title")){
 
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
@@ -12,87 +12,98 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
     }
   }
 
+  <div class="page-header">
+    <h1>
+      <i class="fa fa-envelope-o fa-lg fa-fw"></i>
+      @EmailTemplatesCtrl.msg("head")
+      <small>@EmailTemplatesCtrl.msg("edit.tab.name")</small>
+    </h1>
+  </div>
+
   <div class="row">
-    <!-- Nav tabs -->
-    <ul class="nav nav-tabs">
-      <li role="presentation" class="active">
-        <a href="#" aria-controls="edit">
-          <i class="fa fa-edit fa-lg"></i>
-          @EmailTemplatesCtrl.msg("head")
-        </a>
-      </li>
-      <li role="presentation">
-        <a href="@routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang)" aria-controls="history">
-          <i class="fa fa-history fa-lg"></i>
-          @MSG("history")
-        </a>
-      </li>
-    </ul>
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs">
+            <li role="presentation" class="active">
+              <a href="#" aria-controls="edit">
+                <i class="fa fa-edit fa-lg"></i>
+                @EmailTemplatesCtrl.msg("edit.tab.name")
+              </a>
+            </li>
+            <li role="presentation">
+              <a href="@routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang)" aria-controls="history">
+                <i class="fa fa-history fa-lg"></i>
+                @EmailTemplatesCtrl.msg("history.tab.name")
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <!-- Tab panes -->
+          <div class="panel panel-default">
+            <div class="panel-body">
 
-    <!-- Tab panes -->
-    <div class="panel panel-default">
-      <div class="panel-body">
+              @form(action = routes.EmailTemplatesCtrl.save(tmpl.id, tmpl.lang)) {
 
-        @form(action = routes.EmailTemplatesCtrl.save(tmpl.id, tmpl.lang)) {
+                @{_info(tmpl, updated_by, created_by)}
 
-          @{_info(tmpl, updated_by, created_by)}
+                <div class="row">
+                  <div class="col-xs-12 col-sm-9">
+                    @{_input_text(fm("name"),
+                      '_label      -> MSG("name"),
+                      'placeholder -> EmailTemplatesCtrl.msg("name.place_holder"),
+                      'tabindex    -> 1
+                      )(_fc_form_group)
+                    }
+                  </div>
 
-          <div class="row">
-            <div class="col-xs-12 col-sm-9">
-              @{_input_text(fm("name"),
-                '_label      -> MSG("name"),
-                'placeholder -> EmailTemplatesCtrl.msg("name.place_holder"),
-                'tabindex    -> 1
-                )(_fc_form_group)
-              }
-            </div>
+                  <div class="col-xs-12 col-sm-3">
+                    @{_select(fm("lang"),
+                      langs.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
+                      'tabindex    -> 2,
+                      'disabled    -> true
+                      )(_fc_form_group)
+                    }
+                  </div>
+                </div>
 
-            <div class="col-xs-12 col-sm-3">
-              @{_select(fm("lang"),
-                langs.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
-                'tabindex    -> 2,
-                'disabled    -> true
-                )(_fc_form_group)
+                <div class="row">
+                  <div class="col-xs-12">
+                    @{_input_text(fm("subject"),
+                      '_label      -> MSG("subject"),
+                      'placeholder -> EmailTemplatesCtrl.msg("subject.place_holder"),
+                      'tabindex    -> 3
+                      )(_fc_form_group)
+                    }
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-xs-12">
+                    @{_textarea(fm("text"),
+                      '_label      -> MSG("text"),
+                      'placeholder -> EmailTemplatesCtrl.msg("text.sample"),
+                      'rows        -> 24,
+                      'tabindex    -> 4
+                      )(_fc_form_group)
+                    }
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-success" tabindex="5">
+                  <i class ="fa fa-save fa-lg"></i>
+                  @MSG("save")
+                </button>
               }
             </div>
           </div>
-
-          <div class="row">
-            <div class="col-xs-12">
-              @{_input_text(fm("subject"),
-                '_label      -> MSG("subject"),
-                'placeholder -> EmailTemplatesCtrl.msg("subject.place_holder"),
-                'tabindex    -> 3
-                )(_fc_form_group)
-              }
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-12">
-              @{_textarea(fm("text"),
-                '_label      -> MSG("text"),
-                'placeholder -> EmailTemplatesCtrl.msg("text.sample"),
-                'rows        -> 24,
-                'tabindex    -> 4
-                )(_fc_form_group)
-              }
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-success" tabindex="5">
-            <i class ="fa fa-save fa-lg"></i>
-            @MSG("save")
-          </button>
-        }
+        </div>
       </div>
     </div>
-
   </div>
-}{
-<style type="text/css" media="screen">
-  .panel {
-    border-top: 0px;
-  }
-</style>
-}()
+
+}()()

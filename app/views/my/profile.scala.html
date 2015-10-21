@@ -5,88 +5,82 @@
 
 @layouts.base(MSG("settings.profile.title")){
 
-<div class="row">
-  @common._flashing()
-</div>
-
-<div class="row">
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
       @MSG(gerr.message)
     }
   }
-</div>
 
-<div class="row" style="padding:0px 6px">
-  <div class="col-xs-12 col-sm-3">
-    @{_personal_settings("profile")}
-  </div>
+  <div class="row">
+    <div class="col-xs-12 col-sm-3">
+      @{_personal_settings("profile")}
+    </div>
 
-  <div class="col-xs-12 col-sm-9">
-    <div class="row">
-      <div class="col-xs-12">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <strong>@MSG("settings.profile.head")</strong>
-          </div>
+    <div class="col-xs-12 col-sm-9">
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <strong>@MSG("settings.profile.head")</strong>
+            </div>
 
-          <div class="panel-body">
+            <div class="panel-body">
 
-            @ng._form_group_static("profile.picture",
-              '_type   -> MSG("profile.picture"),
-              '_inline -> false
-            ){
-              <div class="row">
-                <div class="col-xs-4 col-sm-2">
-                  <img data-src="holder.js/70x70/auto" alt="" class="img-rounded">
-                </div>
-                <div class="col-xs-5 col-sm-8">
-                  <div flow-init="{target: '/api_internal/cfs/'}"
-                       flow-files-submitted="$flow.upload()"
-                       flow-file-success="$file.msg = $message">
+              @ng._form_group_static("profile.picture",
+                '_type   -> MSG("profile.picture"),
+                '_inline -> false
+              ){
+                <div class="row">
+                  <div class="col-xs-4 col-sm-2">
+                    <img data-src="holder.js/70x70/auto" alt="" class="img-rounded">
+                  </div>
+                  <div class="col-xs-5 col-sm-8">
+                    <div flow-init="{target: '/api_internal/cfs/'}"
+                         flow-files-submitted="$flow.upload()"
+                         flow-file-success="$file.msg = $message">
 
-                    <span class="btn btn-default" flow-btn>
-                      <strong>@MSG("profile.picture.upload")</strong>
-                    </span>
+                      <span class="btn btn-default" flow-btn>
+                        <strong>@MSG("profile.picture.upload")</strong>
+                      </span>
 
-                    <table>
-                      <tr class="ng-cloak" ng-repeat="file in $flow.files">
-                        <td>{{$index+1}}</td>
-                        <td>{{file.name}}</td>
-                        <td>{{file.msg}}</td>
-                      </tr>
-                    </table>
+                      <table>
+                        <tr class="ng-cloak" ng-repeat="file in $flow.files">
+                          <td>{{$index+1}}</td>
+                          <td>{{file.name}}</td>
+                          <td>{{file.msg}}</td>
+                        </tr>
+                      </table>
+                    </div>
                   </div>
                 </div>
-              </div>
-            }
+              }
 
-            @form(action = routes.MyCtrl.changeProfile) {
-              <div class="row">
-                <div class="col-xs-12 col-sm-5">
-                  @{_input_text(fm("first_name"),
-                    'tabindex    -> 1
-                    )(_fc_form_group)
-                  }
+              @form(action = routes.MyCtrl.changeProfile) {
+                <div class="row">
+                  <div class="col-xs-12 col-sm-5">
+                    @{_input_text(fm("first_name"),
+                      'tabindex    -> 1
+                      )(_fc_form_group)
+                    }
+                  </div>
+                  <div class="col-xs-12 col-sm-5">
+                    @{_input_text(fm("last_name"),
+                      'tabindex    -> 2
+                      )(_fc_form_group)
+                    }
+                  </div>
                 </div>
-                <div class="col-xs-12 col-sm-5">
-                  @{_input_text(fm("last_name"),
-                    'tabindex    -> 2
-                    )(_fc_form_group)
-                  }
-                </div>
-              </div>
 
-              <button type="submit" class="btn btn-success" tabindex="3">
-                <strong>@MSG("settings.profile.update")</strong>
-              </button>
-            }
+                <button type="submit" class="btn btn-success" tabindex="3">
+                  <strong>@MSG("settings.profile.update")</strong>
+                </button>
+              }
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
 }()(
   libs.webjars("js", "holder"),
