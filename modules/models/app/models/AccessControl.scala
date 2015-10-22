@@ -75,14 +75,10 @@ object AccessControlEntry
       override def writes(o: AccessControlEntry): JsValue =
         Json.obj(
           "resource" -> o.resource,
-          "permission" -> o.permission,
+          "permission" ->f"${o.permission.toBinaryString}%64s".replace(' ', '0'),
           "principal_id" -> o.principal_id,
-          "is_group" -> o.is_group,
-          "permissions" -> (0 to 63).map { i =>
-            val code = 1L << i
-            (code.toString, (o.permission & code) > 0)
-          }.toMap[String, Boolean]
-        )
+          "is_group" -> o.is_group
+          )
     }
   )
 
@@ -190,4 +186,5 @@ object AccessControl extends AccessControlCanonicalNamed {
 
     final override def canAccess = false
   }
+
 }

@@ -25,19 +25,17 @@ class RegisteredSecured(
     )
   }
 
-  object Actions {
+  object AccessDef {
 
-    def names: Seq[String] = actions.map(_.self.toString)
+    def names: Seq[String] = access_def.map(_.self.toString)
 
     def toJson(implicit messages: Messages) = Json.prettyPrint(
-      JsObject(
-        names.map { name =>
-          (name, JsString(messages(s"actions.$name")))
-        }
+      JsArray(
+        names.map { name => JsString(messages(s"actions.$name")) }
       )
     )
 
-    lazy val actions: Seq[Access] = AccessDefinition.ALL
+    lazy val access_def: Seq[Access] = AccessDefinition.ALL
   }
 
 }

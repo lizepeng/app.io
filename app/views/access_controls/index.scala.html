@@ -91,11 +91,11 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
             <tr ng-class="ace.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
               <td colspan="2">
                 <div class="row">
-                  <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="(key, name) in ACList.actions">
+                  <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="name in ACList.access_def">
                     <label class="checkbox-inline" >
                       <input type="checkbox"
-                        ng-model="ace.permissions[key]"
-                        ng-change="toggle(ace, key)">
+                        ng-model="ace.permissions[$index]"
+                        ng-change="toggle(ace, $index)">
                       {{ name }}
                     </label>
                   </div>
@@ -146,8 +146,8 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 @controller = {
   <script>
     views.access_controls.index.run(['ACList', function(ACList) {
-      ACList.resources = @Html(secured.Modules.toJson);
-      ACList.actions   = @Html(secured.Actions.toJson);
+      ACList.resources  = @Html(secured.Modules.toJson);
+      ACList.access_def = @Html(secured.AccessDef.toJson);
       ACList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,

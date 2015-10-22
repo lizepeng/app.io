@@ -25,7 +25,7 @@ GET    /users/:id/groups                 controllers.api_internal.UsersCtrl.grou
 GET    /access_controls                  controllers.api_internal.AccessControlsCtrl.index(q:Option[String],p:Pager?=Pager.first,sort:Seq[String]?=Nil)
 POST   /access_controls                  controllers.api_internal.AccessControlsCtrl.create
 GET    /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.show(prin:UUID,res)
-POST   /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.toggle(prin:UUID,res,bit:Long)
+POST   /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.toggle(prin:UUID,res,pos:Int)
 DELETE /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.destroy(prin:UUID,res)
 
 GET    /cfs/stream/$path<.*>             controllers.api_internal.FileSystemCtrl.stream(path:Path)

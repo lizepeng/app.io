@@ -94,11 +94,11 @@ class AccessControlsCtrl(
       }
     }
 
-  def toggle(principal_id: UUID, resource: String, bit: Long) =
+  def toggle(principal_id: UUID, resource: String, pos: Int) =
     UserAction(_.Save).async { implicit req =>
       (for {
         found <- _accessControls.find(principal_id, resource)
-        saved <- found.copy(permission = found.permission ^ bit).save
+        saved <- found.copy(permission = found.permission ^ (1L << pos)).save
         _resp <- es.Update(saved) in _accessControls
       } yield _resp._1).map {
         Ok(_)

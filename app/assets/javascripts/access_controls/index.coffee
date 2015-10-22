@@ -17,18 +17,19 @@ views.access_controls.index.factory 'ACList', [
   'LinkHeader'
   'Alert'
   (AC, Group, User, LinkHeader, Alert) ->
-    service           = {}
-    service.links     = LinkHeader.links
-    service.aces      = []
-    service.resources = {}
-    service.actions   = {}
+    service            = {}
+    service.links      = LinkHeader.links
+    service.aces       = []
+    service.resources  = {}
+    service.access_def = {}
 
     service.reload = (params) ->
       service.aces = AC.query
         page     : params.page
         per_page : params.pageSize,
         sort     : params.sort,
-        (aces, headers) ->
+        (aces, headers) =>
+          buildPerm ace for ace in aces
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers
           Group.query
             ids: AC.gids(aces).join(','),
@@ -64,13 +65,17 @@ views.access_controls.index.factory 'ACList', [
             msg  : res.data.message
       )
 
-    service.toggle = (data, bit) ->
-      data.$save bit : bit,
-        ->
+    service.toggle = (data, pos) ->
+      data.$save pos : pos,
+        (value) -> buildPerm value
         (res) ->
           Alert.push
             type : 'danger'
             msg  : res.data.message
+
+    buildPerm = (ace) ->
+      ace.permissions = (ace.permission.charAt(i) is '1' for i in [63..0])
+
     service
 ]
 
@@ -89,8 +94,8 @@ views.access_controls.index.factory 'ACList', [
         ->
       )
 
-    $scope.toggle = (ace, bit) ->
-      ACList.toggle ace, bit
+    $scope.toggle = (ace, pos) ->
+      ACList.toggle ace, pos
       return
 
     return
