@@ -4,7 +4,6 @@ import java.util.UUID
 
 import helpers._
 import models._
-import play.api.data.Forms._
 import play.api.i18n._
 import play.api.mvc.Controller
 import security._
@@ -25,11 +24,10 @@ class GroupsCtrl(
   with DefaultPlayExecutor
   with I18nSupport {
 
-  val mapping_name = "name" -> nonEmptyText(2, 255)
-
-  def index(pager: Pager) =
+  def index(pager: Pager, sort: Seq[String]) =
     UserAction(_.Index, _.Create, _.Save, _.Destroy).apply { implicit req =>
-      Ok(html.groups.index(pager))
+      val default = Seq(s" ${_groups.name.name}")
+      Ok(html.groups.index(pager, if (sort.nonEmpty) sort else default))
     }
 
   def show(id: UUID) =

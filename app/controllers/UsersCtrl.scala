@@ -59,10 +59,12 @@ class UsersCtrl(
       }
     }
 
-  def index(pager: Pager) =
+  def index(pager: Pager, sort: Seq[String]) = {
+    val default = Seq(s" ${_users.email.name}")
     UserAction(_.Index, _.Create).apply { implicit req =>
-      Ok(html.users.index(pager))
+      Ok(html.users.index(pager, if (sort.nonEmpty) sort else default))
     }
+  }
 
   def nnew = MaybeUserAction().apply { implicit req =>
     req.maybeUser match {
@@ -140,4 +142,5 @@ object UsersCtrl
 
     def isConfirmed = original.self == confirmation
   }
+
 }

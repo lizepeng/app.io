@@ -27,6 +27,7 @@ views.access_controls.index.factory 'ACList', [
       service.aces = AC.query
         page     : params.page
         per_page : params.pageSize,
+        sort     : params.sort,
         (aces, headers) ->
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers
           Group.query
@@ -40,12 +41,11 @@ views.access_controls.index.factory 'ACList', [
       AC.create(
         data
         (value) ->
-          service.groups[principal.id] = principal if data.is_group
+          service.groups[principal.id] = principal if  data.is_group
           service.users[principal.id]  = principal if !data.is_group
           if _.findIndex(service.aces,
-              principal : value.principal
-              resource  : value.resource
-              action    : value.action) is -1
+              principal_id : value.principal_id
+              resource     : value.resource) is -1
             service.aces.unshift value
         (res) ->
           Alert.push
@@ -103,20 +103,20 @@ views.access_controls.index.factory 'ACList', [
   ($scope, $http, ACList) ->
     $scope.ACList     = ACList
     $scope.checkModel = {}
-    $scope.ace        =
+    $scope.newEntry   =
       principal  : ''
       resource   : _.keys(ACList.resources)[0]
 
     types = [ 'groups', 'users']
 
-    $scope.create = (ace) ->
-      if _.contains(types, ace.principal._type)
+    $scope.create = (newEntry) ->
+      if _.contains(types, newEntry.principal._type)
         ACList.create(
-          principal  : ace.principal.id
-          resource   : ace.resource
-          permission : 0
-          is_group   : ace.principal._type is 'groups'
-          ace.principal._source
+          principal_id  : newEntry.principal.id
+          resource      : newEntry.resource
+          permission    : 0
+          is_group      : newEntry.principal._type is 'groups'
+          newEntry.principal._source
         )
 
     $scope.getItems = (val) ->
@@ -124,14 +124,15 @@ views.access_controls.index.factory 'ACList', [
         '/api_internal/search'
         params:
           types : types.join ','
-          q     : "*#{val}*")
-      .then (response) ->
+          q     : "*#{val}*"
+          sort  : " name"
+      ).then (response) ->
         _.chain response.data
           .filter (item) -> _.contains types, item._type
           .each   (item) ->
             item.id    = item._source.id
             item.label = item._source.email if item._type is 'users'
-            item.label = item._source.name if item._type is 'groups'
+            item.label = item._source.name  if item._type is 'groups'
         response.data
     return
 ]

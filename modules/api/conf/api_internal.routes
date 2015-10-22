@@ -2,10 +2,10 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET    /search                           controllers.api_internal.SearchCtrl.index(types:Seq[String],q:Option[String],p:Pager?=Pager.first)
+GET    /search                           controllers.api_internal.SearchCtrl.index(types:Seq[String]?=Nil,q:Option[String],p:Pager?=Pager.first,sort:Seq[String]?=Nil)
 GET    /ip/search/:ip                    controllers.api_internal.IPCtrl.show(ip:String)
 
-GET    /groups                           controllers.api_internal.GroupsCtrl.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
+GET    /groups                           controllers.api_internal.GroupsCtrl.index(ids:Seq[UUID]?=Nil,q:Option[String],p:Pager?=Pager.first,sort:Seq[String]?=Nil)
 POST   /groups                           controllers.api_internal.GroupsCtrl.create
 POST   /groups/check_name                controllers.api_internal.GroupsCtrl.checkName
 GET    /groups/:id                       controllers.api_internal.GroupsCtrl.show(id:UUID)
@@ -14,15 +14,15 @@ DELETE /groups/:id                       controllers.api_internal.GroupsCtrl.des
 GET    /groups/:id/users                 controllers.api_internal.GroupsCtrl.users(id:UUID,p:Pager?=Pager.first)
 POST   /groups/:id/users                 controllers.api_internal.GroupsCtrl.addUser(id:UUID)
 DELETE /groups/:id/users/:uid            controllers.api_internal.GroupsCtrl.delUser(id:UUID, uid:UUID)
-GET    /layouts                          controllers.api_internal.GroupsCtrl.layouts(ids:Seq[UUID])
+GET    /layouts                          controllers.api_internal.GroupsCtrl.layouts(ids:Seq[UUID]?=Nil)
 POST   /layouts/:gid                     controllers.api_internal.GroupsCtrl.setLayout(gid:UUID)
 
-GET    /users                            controllers.api_internal.UsersCtrl.index(ids:Seq[UUID],q:Option[String],p:Pager?=Pager.first)
+GET    /users                            controllers.api_internal.UsersCtrl.index(ids:Seq[UUID]?=Nil,q:Option[String],p:Pager?=Pager.first,sort:Seq[String]?=Nil)
 POST   /users                            controllers.api_internal.UsersCtrl.create
 GET    /users/:id                        controllers.api_internal.UsersCtrl.show(id:UUID)
 GET    /users/:id/groups                 controllers.api_internal.UsersCtrl.groups(id:UUID,options:Option[String])
 
-GET    /access_controls                  controllers.api_internal.AccessControlsCtrl.index(q:Option[String],p:Pager?=Pager.first)
+GET    /access_controls                  controllers.api_internal.AccessControlsCtrl.index(q:Option[String],p:Pager?=Pager.first,sort:Seq[String]?=Nil)
 POST   /access_controls                  controllers.api_internal.AccessControlsCtrl.create
 GET    /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.show(prin:UUID,res)
 POST   /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.toggle(prin:UUID,res,bit:Long)

@@ -37,7 +37,11 @@ class UsersCtrl(
 
   ESIndexCleaner(_users).dropIndexIfEmpty
 
-  case class UserInfo(uid: Option[UUID], email: EmailAddress, name: Option[Name])
+  case class UserInfo(
+    uid: Option[UUID],
+    email: EmailAddress,
+    name: Option[Name]
+  )
   object UserInfo {implicit val jsonFormat = Json.format[UserInfo]}
 
   def show(id: UUID) =
@@ -67,16 +71,16 @@ class UsersCtrl(
       }
     }
 
-  def index(ids: Seq[UUID], q: Option[String], p: Pager) =
+  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[String]) =
     UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _users.find(ids).map { usrs =>
           Ok(Json.toJson(usrs))
         }
       else
-        (es.Search(q, p) in _users future()).map { page =>
+        (es.Search(q, p, sort) in _users future()).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.UsersCtrl.index(Nil, q, _))
+            linkHeader(page, routes.UsersCtrl.index(Nil, q, _, sort))
           )
         }
     }

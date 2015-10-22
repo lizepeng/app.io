@@ -28,7 +28,8 @@ views.groups.index.factory 'GroupList', [
     service.reload = (params) ->
       service.groups = Group.query
         page     : params.page
-        per_page : params.pageSize,
+        per_page : params.pageSize
+        sort     : params.sort,
         (value, headers) ->
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers
           loadLayouts value.map (v) -> v.id

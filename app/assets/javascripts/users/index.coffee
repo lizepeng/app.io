@@ -23,6 +23,7 @@ views.users.index.factory 'UserList', [
       service.users = User.query
         page     : opt.page
         per_page : opt.pageSize
+        sort     : opt.sort
         q        : "*#{q}*",
         (value, headers) ->
           LinkHeader.updateLinks opt.nextPage, opt.prevPage, headers

@@ -18,12 +18,12 @@ import scala.concurrent.Future
 case class AccessControlEntry(
   resource: String,
   permission: Long,
-  principal: UUID,
+  principal_id: UUID,
   is_group: Boolean
 )
   extends HasID[String] {
 
-  override def id = AccessControlEntry.genId(resource, principal)
+  override def id = AccessControlEntry.genId(resource, principal_id)
 
   def save(implicit repo: AccessControls) = repo.save(this)
 }
@@ -76,7 +76,7 @@ object AccessControlEntry
         Json.obj(
           "resource" -> o.resource,
           "permission" -> o.permission,
-          "principal" -> o.principal,
+          "principal_id" -> o.principal_id,
           "is_group" -> o.is_group,
           "permissions" -> (0 to 63).map { i =>
             val code = 1L << i
@@ -107,7 +107,7 @@ class AccessControls(
 
   create.ifNotExists.future()
 
-  def find(ace: AccessControlEntry): Future[AccessControlEntry] = find(ace.principal, ace.resource)
+  def find(ace: AccessControlEntry): Future[AccessControlEntry] = find(ace.principal_id, ace.resource)
 
   def find(
     principal_id: UUID,
@@ -143,7 +143,7 @@ class AccessControls(
 
   def save(ace: AccessControlEntry): Future[AccessControlEntry] =
     CQL {
-      update.where(_.principal_id eqs ace.principal)
+      update.where(_.principal_id eqs ace.principal_id)
         .and(_.resource eqs ace.resource)
         .and(_.is_group eqs ace.is_group)
         .modify(_.permission setTo ace.permission)

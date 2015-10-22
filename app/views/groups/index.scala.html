@@ -1,4 +1,4 @@
-@(pager: Pager)(
+@(pager: Pager, sort: Seq[String])(
 implicit req: UserRequest[_], messages: Messages)
 
 @import common._
@@ -146,8 +146,9 @@ implicit req: UserRequest[_], messages: Messages)
       GroupList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.GroupsCtrl.index(pager.next).toString)',
-        prevPage : '@Html(routes.GroupsCtrl.index(pager.prev).toString)'
+        sort     : '@sort.mkString(",")',
+        nextPage : '@Html(routes.GroupsCtrl.index(pager.next, sort).toString)',
+        prevPage : '@Html(routes.GroupsCtrl.index(pager.prev, sort).toString)'
       });
     }]);
   </script>

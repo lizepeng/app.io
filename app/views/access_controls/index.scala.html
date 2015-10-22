@@ -1,4 +1,4 @@
-@(pager: Pager)(
+@(pager: Pager, sort:Seq[String])(
 implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
 @import common._
@@ -25,7 +25,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
           'placeholder  -> AccessControlsCtrl.msg("principal.placeholder"),
           'typeahead    -> "item as item.label for item in getItems($viewValue)",
           'autocomplete -> "off",
-          Symbol("ng-model") -> "ace.principal"
+          Symbol("ng-model") -> "newEntry.principal"
         )
       </div>
 
@@ -34,13 +34,13 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
           '_label       -> AccessControlsCtrl.msg("resource"),
           '_inline      -> false,
           'tabindex     -> 2,
-          Symbol("ng-model")   -> "ace.resource",
+          Symbol("ng-model")   -> "newEntry.resource",
           Symbol("ng-options") -> "k as v for (k,v) in ACList.resources"
         )
       </div>
 
       <div class="col-xs-12 col-sm-2 btn-wrapper">
-        <button type="submit" class="btn btn-success pull-right" ng-click="create(ace)">
+        <button type="submit" class="btn btn-success pull-right" ng-click="create(newEntry)">
           <i class="fa fa-save fa-lg"></i>
           @MSG("create")
         </button>
@@ -69,19 +69,19 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
           <tbody ng-repeat="ace in ACList.aces"  class="ng-cloak">
             <tr class="bg-info">
               <td ng-if="ace.is_group">
-                <a ng-if="!ACList.groups[ace.principal].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal).url}}">
+                <a ng-if="!ACList.groups[ace.principal_id].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal_id).url}}">
                   <i class="fa fa-group fa-lg fa-fw text-info"></i>
-                  {{ ACList.groups[ace.principal].name }}
+                  {{ ACList.groups[ace.principal_id].name }}
                 </a>
-                <span ng-if="ACList.groups[ace.principal].is_internal">
+                <span ng-if="ACList.groups[ace.principal_id].is_internal">
                   <i class="fa fa-group fa-lg fa-fw"></i>
-                  {{ ACList.groups[ace.principal].name }}
+                  {{ ACList.groups[ace.principal_id].name }}
                 </span>
               </td>
               <td ng-if="!ace.is_group">
-                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ace.principal).url}}">
+                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ace.principal_id).url}}">
                   <i class="fa fa-user fa-lg fa-fw text-info"></i>
-                  {{ ACList.users[ace.principal].email }}
+                  {{ ACList.users[ace.principal_id].email }}
                 </a>
               </td>
               <td>
@@ -151,8 +151,9 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
       ACList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next).toString)',
-        prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev).toString)'
+        sort     : '@sort.mkString(",")',
+        nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next,sort).toString)',
+        prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev,sort).toString)'
       });
     }]);
   </script>

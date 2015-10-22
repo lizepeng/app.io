@@ -37,10 +37,10 @@ POST /settings/account                      controllers.MyCtrl.changePassword
 GET  /settings/profile                      controllers.MyCtrl.profile
 POST /settings/profile                      controllers.MyCtrl.changeProfile
 
-GET  /users                                 controllers.UsersCtrl.index(p:Pager?=Pager.first)
+GET  /users                                 controllers.UsersCtrl.index(p:Pager?=Pager.first,sort:Seq[String]?=Nil)
 GET  /users/:id                             controllers.UsersCtrl.show(id:UUID)
 
-GET  /groups                                controllers.GroupsCtrl.index(p:Pager?=Pager.first)
+GET  /groups                                controllers.GroupsCtrl.index(p:Pager?=Pager.first,sort:Seq[String]?=Nil)
 GET  /groups/:id                            controllers.GroupsCtrl.show(id:UUID)
 
 GET  /password_reset                        controllers.PasswordResetCtrl.nnew(email:Option[EmailAddress]?=None)
@@ -57,4 +57,4 @@ POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(
 GET  /email_templates/history/:id           controllers.EmailTemplatesCtrl.history(id:UUID,lang:Lang,p:Pager?=Pager.first)
 POST /email_templates/destroy/:id           controllers.EmailTemplatesCtrl.destroy(id:UUID,lang:Lang)
 
-GET  /access_controls                       controllers.AccessControlsCtrl.index(p:Pager?=Pager.first)
+GET  /access_controls                       controllers.AccessControlsCtrl.index(p:Pager?=Pager.first,sort:Seq[String]?=Nil)

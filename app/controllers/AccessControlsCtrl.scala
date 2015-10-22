@@ -27,9 +27,13 @@ class AccessControlsCtrl(
   with UserActionComponents
   with I18nSupport {
 
-  def index(pager: Pager) =
+  def index(pager: Pager, sort: Seq[String]) =
     UserAction(_.Index, _.Save, _.Create, _.Destroy).apply { implicit req =>
-      Ok(html.access_controls.index(pager))
+      val default = Seq(
+        s"-${_accessControls.principal_id.name}",
+        s" ${_accessControls.resource.name}"
+      )
+      Ok(html.access_controls.index(pager, if (sort.nonEmpty) sort else default))
     }
 
 }

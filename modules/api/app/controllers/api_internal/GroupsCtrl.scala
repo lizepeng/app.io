@@ -42,16 +42,16 @@ class GroupsCtrl(
   case class GroupInfo(name: Name, description: Option[String])
   object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}
 
-  def index(ids: Seq[UUID], q: Option[String], p: Pager) =
+  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[String]) =
     UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _groups.find(ids).map { grps =>
           Ok(Json.toJson(grps))
         }
       else
-        (es.Search(q, p) in _groups future()).map { page =>
+        (es.Search(q, p, sort) in _groups future()).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.GroupsCtrl.index(Nil, q, _))
+            linkHeader(page, routes.GroupsCtrl.index(Nil, q, _, sort))
           )
         }
     }

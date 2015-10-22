@@ -31,15 +31,20 @@ class SearchCtrl(
   with RateLimitConfig
   with I18nSupport {
 
-  def index(types: Seq[String], q: Option[String], p: Pager) =
+  def index(
+    types: Seq[String],
+    q: Option[String],
+    p: Pager,
+    sort: Seq[String]
+  ) =
     UserAction(_.Index).async { implicit req =>
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
         case (name, _p) if name == _users.basicName  =>
-          Some((es: ElasticSearch) => es.Search(q, _p) in _users)
+          Some((es: ElasticSearch) => es.Search(q, _p, sort) in _users)
         case (name, _p) if name == _groups.basicName =>
-          Some((es: ElasticSearch) => es.Search(q, _p) in _groups)
+          Some((es: ElasticSearch) => es.Search(q, _p, sort) in _groups)
         case _                                       => None
       }
 
@@ -49,7 +54,7 @@ class SearchCtrl(
         es.Multi(defs: _*).future()
           .map(PageMSResp(p, _)).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.SearchCtrl.index(types, q, _))
+            linkHeader(page, routes.SearchCtrl.index(types, q, _, sort))
           )
         }
     }

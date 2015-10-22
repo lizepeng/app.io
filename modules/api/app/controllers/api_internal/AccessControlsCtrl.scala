@@ -33,11 +33,11 @@ class AccessControlsCtrl(
   with I18nSupport
   with Logging {
 
-  def index(q: Option[String], p: Pager) =
+  def index(q: Option[String], p: Pager, sort: Seq[String]) =
     UserAction(_.Index).async { implicit req =>
-      _accessControls.list(p).map { page =>
+      (es.Search(q, p, sort) in _accessControls future()).map { page =>
         Ok(page).withHeaders(
-          linkHeader(page, routes.AccessControlsCtrl.index(q, _))
+          linkHeader(page, routes.AccessControlsCtrl.index(q, _, sort))
         )
       }
     }
@@ -53,7 +53,6 @@ class AccessControlsCtrl(
 
   def create =
     UserAction(_.Create).async { implicit req =>
-      println(req.body)
       BindJson().as[AccessControlEntry] { success =>
         _accessControls.find(success).map { found =>
           Ok(Json.toJson(found))
@@ -61,8 +60,8 @@ class AccessControlsCtrl(
           case e: AccessControlEntry.NotFound =>
             (for {
               exists <-
-              if (!success.is_group) _users.exists(success.principal)
-              else _groups.exists(success.principal)
+              if (!success.is_group) _users.exists(success.principal_id)
+              else _groups.exists(success.principal_id)
 
               saved <- success.copy(permission = 0L).save
               _resp <- es.Index(saved) into _accessControls
@@ -71,7 +70,7 @@ class AccessControlsCtrl(
               Created(_resp._1)
                 .withHeaders(
                   LOCATION -> routes.AccessControlsCtrl.show(
-                    saved.principal, saved.resource
+                    saved.principal_id, saved.resource
                   ).url
                 )
             }.recover {
