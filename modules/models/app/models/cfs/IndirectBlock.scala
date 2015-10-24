@@ -111,4 +111,11 @@ class IndirectBlocks(
         CQL {delete.where(_.inode_id eqs id)}.future()
       } |>>> Iteratee.foreach[UUID](_blocks.purge(_))
   }
+
+  def isEmpty(id: UUID): Future[Boolean] = CQL {
+    select(_.indirect_block_id)
+      .where(_.inode_id eqs id)
+  }.one().map(_.isEmpty).recover {
+    case e: Exception => true
+  }
 }

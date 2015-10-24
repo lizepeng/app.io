@@ -8,20 +8,24 @@ import play.utils.UriEncoding
 /**
  * @author zepeng.li@gmail.com
  */
-case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
+case class Path(segments: Seq[String] = Seq(), filename: Option[String] = None) {
 
-  override def toString = ("" /: parts)(_ + _ + "/") + filename.getOrElse("")
+  override def toString = segments.mkString("", "/", "/") + filename.getOrElse("")
 
-  def /(dir: String) = if (dir == ".") this else copy(parts ++ Seq(dir))
+  def /(dir: String) = if (dir == ".") this else copy(segments ++ Seq(dir))
 
-  def /(sub: Path) = copy(parts ++ sub.parts)
+  def /(sub: Path) = copy(segments ++ sub.segments, sub.filename)
 
-  def /:(dir: String) = if (dir == ".") this else copy(Seq(dir) ++ parts)
+  def /:(dir: String) = if (dir == ".") this else copy(Seq(dir) ++ segments)
 
   def +(filename: String) = copy(filename = Some(filename))
 
+  def headOption: Option[String] = segments.headOption
+
+  def tail = if (segments.isEmpty) this else Path(segments.tail, filename)
+
   def compact = copy(
-    parts = parts.foldRight(List[String]()) {
+    segments = segments.foldRight(List[String]()) {
       case (curr, list) => list match {
         case ".." :: tail => tail
         case _            => curr match {
@@ -33,11 +37,13 @@ case class Path(parts: Seq[String] = Seq(), filename: Option[String] = None) {
   )
 
   def subPaths = {
-    for (i <- 0 to parts.size)
-      yield Path(parts.take(i), None)
+    for (i <- 0 to segments.size)
+      yield Path(segments.take(i), None)
   } ++ {
     if (filename.nonEmpty) Seq(this) else Seq.empty
   }
+
+  def isRoot = segments.isEmpty && filename.isEmpty
 }
 
 object Path extends PathJsonStringifier {
@@ -51,16 +57,16 @@ object Path extends PathJsonStringifier {
       val path2 = """(.+)/$""".r
       val path3 = """(.+)$""".r
       val path = value match {
-        case path1(parts, f) => Path(decodeDirs(parts), Some(decode(f)))
-        case path2(parts)    => Path(decodeDirs(parts), None)
-        case path3(f)        => Path(Seq(), Some(decode(f)))
-        case _               => Path(Seq(), None)
+        case path1(segments, f) => Path(decodeDirs(segments), Some(decode(f)))
+        case path2(segments)    => Path(decodeDirs(segments), None)
+        case path3(f)           => Path(Seq(), Some(decode(f)))
+        case _                  => Path(Seq(), None)
       }
       Right(path)
     }
 
     def unbind(key: String, path: Path): String = {
-      encodeDirs(path.parts) + encode(path.filename.getOrElse(""))
+      encodeDirs(path.segments) + encode(path.filename.getOrElse(""))
     }
 
     /**
@@ -70,7 +76,7 @@ object Path extends PathJsonStringifier {
       """
        |function(k,v) {
        |  var fn, ps;
-       |  ps = _.chain(v.parts).map(function(p) {
+       |  ps = _.chain(v.segments).map(function(p) {
        |    return (encodeURIComponent(p)) + "/";
        |  }).join('').value();
        |  fn = v.filename == null ? '' : encodeURIComponent(v.filename);
@@ -79,12 +85,12 @@ object Path extends PathJsonStringifier {
       """.stripMargin
   }
 
-  def decodeDirs(parts: String): Array[String] = {
-    parts.split("/").filter(_.nonEmpty).map(decode)
+  def decodeDirs(segments: String): Array[String] = {
+    segments.split("/").filter(_.nonEmpty).map(decode)
   }
 
-  def encodeDirs(parts: Seq[String]): String = {
-    ("" /: parts.map(encode))(_ + _ + "/")
+  def encodeDirs(segments: Seq[String]): String = {
+    ("" /: segments.map(encode))(_ + _ + "/")
   }
 
   def decode: (String) => String = {

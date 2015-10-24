@@ -4,8 +4,6 @@ implicit req: UserRequest[_], messages: Messages)
 @import common._
 @import helper._
 
-@home = @{req.user.id.toString}
-
 @layouts.base(FileSystemCtrl.msg("title")) {
 
   @ng._alert()
@@ -57,7 +55,7 @@ implicit req: UserRequest[_], messages: Messages)
                   <td ng-if="inode.is_directory">
                   </td>
                   <td ng-if="inode.is_directory" class="text-right hidden-xs hidden-sm">
-                    {{ inode.created_at | date:"yyyy-MM-dd hh:mma" }}
+                    {{ inode.created_at | date:"@MSG("datetime.format.created_at")" }}
                   </td>
                   <td ng-if="inode.is_directory">
                   </td>

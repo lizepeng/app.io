@@ -8,7 +8,7 @@ import helpers._
 import helpers.syntax._
 import models.cassandra._
 import models.cfs.Block.BLK
-import models.cfs.FileSystem._
+import models.cfs.CassandraFileSystem._
 import play.api.libs.iteratee._
 import play.api.libs.json._
 
@@ -43,11 +43,13 @@ case class File(
   ): Iteratee[BLK, File] =
     cfs._files.streamWriter(this)
 
-  override def purge()(
+  override def delete()(
     implicit cfs: CassandraFileSystem
-  ) = {
-    super.purge().andThen { case _ => cfs._files.purge(id) }
-  }
+  ): Future[Unit] =
+    for {
+      _ <- cfs._files.purge(id)
+      _ <- super.delete()
+    } yield Unit
 }
 
 /**
@@ -72,7 +74,8 @@ sealed class FileTable
       block_size(r),
       Permission(permission(r)),
       ext_permission(r).mapValues(Permission(_)),
-      attributes(r)
+      attributes(r),
+      is_directory(r)
     )
   }
 }
@@ -83,6 +86,9 @@ object File extends CanonicalNamed with ExceptionDefining {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
+
+  case class NotFile(param: Any)
+    extends BaseException(error_code("not.file"))
 
   implicit val jsonWrites = new Writes[File] {
     override def writes(o: File): JsValue = Json.obj(
@@ -111,13 +117,14 @@ class Files(
   with CassandraComponents
   with Logging {
 
-  def find(id: UUID)(
-    implicit onFound: File => File
-  ): Future[File] = CQL {
+  def find(id: UUID)(onFound: File => File): Future[File] = CQL {
     select.where(_.inode_id eqs id)
-  }.one().map {
-    case None    => throw File.NotFound(id)
-    case Some(f) => onFound(f)
+  }.one().recover {
+    case e: Throwable => Logger.trace(e.getMessage); None
+  }.map {
+    case None                      => throw File.NotFound(id)
+    case Some(f) if f.is_directory => throw File.NotFile(id)
+    case Some(f)                   => onFound(f)
   }
 
   def streamWriter(inode: File): Iteratee[BLK, File] = {
@@ -142,10 +149,12 @@ class Files(
 
   }
 
-  def purge(id: UUID): Future[ResultSet] = for {
-    _ <- _indirectBlocks.purge(id)
-    u <- CQL {delete.where(_.inode_id eqs id)}.future()
-  } yield u
+  def purge(id: UUID): Future[Unit] = for {
+    _____ <- _indirectBlocks.purge(id)
+    empty <- _indirectBlocks.isEmpty(id)
+    _____ <- if (empty) CQL {delete.where(_.inode_id eqs id)}.future() else purge(id)
+  } yield Unit
+
 
   private def write(f: File): Future[File] = CQL {
     insert.value(_.inode_id, f.id)

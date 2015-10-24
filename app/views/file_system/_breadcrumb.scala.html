@@ -1,29 +1,30 @@
-@(path:Path)(implicit messages: Messages)
+@(path:Path)(implicit req: UserRequest[_], messages: Messages)
 
 <ol class="breadcrumb">
-  @path.subPaths.map { subPath =>
-    @if(subPath == path) {
+  @path.subPaths.map {
+    case subPath if subPath.isRoot => {
+      }
+    case subPath if subPath == path => {
       <li class="active">
         @pathLabel(subPath)
       </li>
-    } else {
+      }
+    case subPath => {
       <li class="active">
         <a href="@routes.FileSystemCtrl.index(subPath)">
           @pathLabel(subPath)
         </a>
       </li>
-    }
+      }
   }
 </ol>
 
-@pathLabel(path:Path) = {
-  @{
-    if(path.filename.nonEmpty) {
-      path.filename
-    } else if (path.parts.isEmpty){
-      FileSystemCtrl.msg("home")
-    } else {
-      path.parts.last
-    }
-  }
+@pathLabel(sub:Path) = {
+  @{sub match {
+    case Path(_, filename) if filename.nonEmpty => filename
+    case Path(Nil, None) => FileSystemCtrl.msg("root")
+    case Path(segments, _) =>
+      if (segments.last != req.user.id.toString) segments.last
+      else FileSystemCtrl.msg("home")
+  }}
 }

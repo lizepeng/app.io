@@ -23,18 +23,15 @@ views.files.index
     service.reload = (params) ->
       service.params = params
 
-      # since we're going to show files under user'home folder,
-      # and the name of user's home folder is the same as user's id
-      service.path = Path.create(params.path)
-      service.realPath = Path.create(service.path.prepend(params.userId))
+      service.path = new Path(params.path)
 
-      CFS.find(service.realPath)
+      CFS.find(service.path)
         .success (data, status, headers) ->
           service.inodes =
             _.chain data
               .filter (inode) -> inode.name != '.'
               .map (inode) ->
-                inode.path = Path.create(inode.path)
+                inode.path = new Path(inode.path)
                 inode
               .sortBy (inode) -> !inode.is_directory
               .value()
@@ -51,7 +48,7 @@ views.files.index
             msg  : data.message
 
     service.clear = ->
-      CFS.delete(service.realPath)
+      CFS.delete(service.path)
         .success ->
           service.inodes = []
         .error (data) ->
@@ -60,7 +57,7 @@ views.files.index
             msg  : data.message
 
     service.created = (file) ->
-      file.path = Path.create(file.path)
+      file.path = new Path(file.path)
       service.inodes.push file
 
     service
@@ -75,10 +72,9 @@ views.files.index
     $scope.INodeList        = INodeList
     $scope.jsRoutes         = jsRoutes
     $scope.path             = INodeList.path
-    $scope.realPath         = INodeList.realPath
-    ModalDialog.templateUrl = 'confirm_delete.html'
     $scope.uploading        = false
     $scope.faName           = FileExtension.faName
+    ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.confirmDelete = (file) ->
       ModalDialog.open().result.then(

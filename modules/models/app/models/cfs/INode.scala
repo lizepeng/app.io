@@ -5,7 +5,7 @@ import java.util.UUID
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
-import models.cfs.FileSystem._
+import models.cfs.CassandraFileSystem._
 import models.{HasUUID, TimeBased}
 import org.joda.time.DateTime
 import play.api.libs.json._
@@ -37,17 +37,18 @@ trait INode extends HasUUID with TimeBased {
     implicit cfs: CassandraFileSystem
   ): Future[Boolean] = {
     for {
-      _dir <- cfs._directories.find(parent)
-      done <- cfs._directories.renameChild(_dir, this, newName)
+      pdir <- cfs._directories.find(parent)(onFound = p => p)
+      done <- cfs._directories.renameChild(pdir, this, newName)
     } yield done
   }
 
-  def purge()(
+  def delete()(
     implicit cfs: CassandraFileSystem
-  ): Future[Directory] =
-    cfs._directories.find(parent).flatMap {
-      parent => parent.del(this)
-    }
+  ): Future[Unit] =
+    for {
+      pdir <- cfs._directories.find(parent)(onFound = p => p)
+      done <- cfs._directories.delChild(pdir, this)
+    } yield Unit
 
 }
 

@@ -9,7 +9,7 @@
 @main_menu = {
   @req.maybeUser.map { u =>
     <li class="dropdown" dropdown>
-      <a href="@routes.FileSystemCtrl.index(Path())">
+      <a href="@routes.FileSystemCtrl.index(Path.root)">
         <i class="fa fa-fw fa-hdd-o"></i>
         @MSG(FileSystemCtrl.message("name"))
       </a>

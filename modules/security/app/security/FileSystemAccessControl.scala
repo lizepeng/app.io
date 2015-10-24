@@ -4,7 +4,7 @@ import java.util.UUID
 
 import helpers._
 import models._
-import models.cfs.FileSystem.Access
+import models.cfs.CassandraFileSystem._
 import models.cfs._
 
 /**

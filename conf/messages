@@ -89,6 +89,7 @@ lang.ja                                          =Japanese
 date.format.long                                 =yyyy-MM-dd
 month.format.long                                =yyyy-MM
 datetime.format                                  =yyyy-MM-dd hh:mm:ss
+datetime.format.created_at                       =yyyy-MM-dd hh:mma
 
 
 # form validation
@@ -244,6 +245,7 @@ views.file_system.title                          =File System
 views.file_system.head                           =File System
 
 views.file_system.home                           =Home
+views.file_system.root                           =
 views.file_system.name                           =Name
 views.file_system.size                           =Size
 views.file_system.created_at                     =Date Created
@@ -254,7 +256,9 @@ log.models.cfs.dir.child.not.found               =No such child {1} in dir {0}
 log.models.cfs.dir.child.exists                  =There already exists child {1} in dir {0}
 log.models.cfs.dir.not.found                     =No such dir   [{0}]
 log.models.cfs.file.not.found                    =No such file  [{0}]
-log.security.file_system.permission.denied       =File Access Denied: \n[\n  {0},\n  {1},\n  {2}\n]
+log.models.cfs.dir.not.dir                       =INode [{0}] is not dir
+log.models.cfs.file.not.file                     =INode [{0}] is not file
+log.security.file_system.permission.denied       =File Access Denied: \n[\n  user  : {0},\n  access: {1},\n  {2}\n]
 
 # password_reset
 controllers.password_reset.email.not.found       =Can't find that email, sorry.
@@ -312,7 +316,7 @@ views.access_controls.resource                   =Resource
 views.access_controls.action                     =Action
 views.access_controls.granted                    =Granted
 
-log.security.modules.permission.denied           =Permission Denied: \n[\n  {0},\n  {1},\n  {2}\n]
+log.security.modules.permission.denied           =Permission Denied: \n[\n  principal: {0},\n  access   : {1},\n  resource : {2}\n]
 
 # expirable_links
 log.models.expirable_links.not.found             =Expirable Link {0} not found.
