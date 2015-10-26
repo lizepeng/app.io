@@ -1,6 +1,6 @@
 package controllers.api_internal
 
-import controllers.{RateLimitChecker, RateLimitUnit}
+import controllers.{RateLimitChecker, RateLimitConfig}
 import helpers.BasicPlayApi
 import models._
 import play.api.mvc._
@@ -20,9 +20,9 @@ object UserAction {
     onDenied: (CheckedModule, Access, RequestHeader) => Result,
     basicPlayApi: BasicPlayApi,
     userActionRequired: UserActionRequired,
-    rateLimitUnit: RateLimitUnit
+    rateLimitConfig: RateLimitConfig
   ): ActionBuilder[UserRequest] = apply(
-    AccessDefinition.union(specifiers.map(_(AccessDefinition)): _*)
+    AccessDefinition.union(specifiers.map(_ (AccessDefinition)): _*)
   )
 
   def apply(access: Access)(
@@ -31,7 +31,7 @@ object UserAction {
     onDenied: (CheckedModule, Access, RequestHeader) => Result,
     basicPlayApi: BasicPlayApi,
     userActionRequired: UserActionRequired,
-    rateLimitUnit: RateLimitUnit
+    rateLimitConfig: RateLimitConfig
   ): ActionBuilder[UserRequest] = {
     MaybeUser().Action() andThen
       AuthChecker andThen

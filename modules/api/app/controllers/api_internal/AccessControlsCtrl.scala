@@ -2,7 +2,7 @@ package controllers.api_internal
 
 import java.util.UUID
 
-import controllers.RateLimitConfig
+import controllers.RateLimitConfigComponents
 import elasticsearch._
 import helpers._
 import models._
@@ -29,7 +29,7 @@ class AccessControlsCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
-  with RateLimitConfig
+  with RateLimitConfigComponents
   with I18nSupport
   with Logging {
 

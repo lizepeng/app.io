@@ -1,6 +1,6 @@
 package controllers.api_internal
 
-import controllers.RateLimitConfig
+import controllers.RateLimitConfigComponents
 import helpers.ExtEnumeratee._
 import helpers._
 import models._
@@ -45,7 +45,7 @@ class FileSystemCtrl(
   with ExceptionDefining
   with I18nSupport
   with AppConfigComponents
-  with RateLimitConfig
+  with RateLimitConfigComponents
   with Logging {
 
   lazy val bandwidth_upload  : Int =

@@ -1,6 +1,6 @@
 package controllers.api_internal
 
-import controllers.RateLimitConfig
+import controllers.RateLimitConfigComponents
 import elasticsearch._
 import helpers._
 import models._
@@ -28,7 +28,7 @@ class SearchCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
-  with RateLimitConfig
+  with RateLimitConfigComponents
   with I18nSupport {
 
   def index(
