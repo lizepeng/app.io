@@ -19,19 +19,19 @@ import scala.util._
 /**
  * Server-Side Implementation of flow.js protocol
  *
- * @param form queryString or data part in multipart/form
  * @param filename if filename specified, it takes priority over the flowFilename one
  * @param overwrite whether overwrite the old one if inode with the same name already exists
- * @param req UserRequest
+ * @param form queryString or data part in multipart/form
+ * @param req Request
  * @param basicPlayApi common play api
  * @param _cfs cassandra file system api
  *
  * @author zepeng.li@gmail.com
  */
 case class Flow(
-  form: Map[String, Seq[String]],
-  filename: Option[String] = None,
-  overwrite: Boolean = false
+  filename: String = "",
+  overwrite: Boolean = false,
+  form: Map[String, Seq[String]] = Map()
 )(
   implicit
   val req: UserRequest[_],
@@ -43,6 +43,18 @@ case class Flow(
   with I18nSupport
   with Logging {
 
+  def bindFromQueryString(
+    implicit req: UserRequest[_]
+  ): Flow = {
+    this.copy(form = req.queryString)
+  }
+
+  def bindFromRequestBody(
+    implicit req: UserRequest[MultipartFormData[File]]
+  ): Flow = {
+    this.copy(form = req.body.asFormUrlEncoded)
+  }
+
   def identifier = flowParam("flowIdentifier", _.toString)
 
   /**
@@ -51,10 +63,8 @@ case class Flow(
    * @return the eventually filename that will be used.
    */
   def fileName = {
-    filename match {
-      case Some(name) => Future.successful(name)
-      case None       => flowParam("flowFilename", _.toString)
-    }
+    if (filename.nonEmpty) Future.successful(filename)
+    else flowParam("flowFilename", _.toString)
   }
 
   def relativePath = flowParam("flowRelativePath", _.toString)
@@ -122,23 +132,26 @@ case class Flow(
     )
 
   /**
-   * Uploading a file (or a chunk of the whole file),
+   * Uploading a chunk of the whole file,
    * this method will be invoked after body parser saving the request body as a temp file.
    *
-   * @param file the temp file that body parser parsed and created
+   * @param chunk the temp file that body parser parsed and created
    * @param path target path to upload the file
+   * @param onUploaded callback method on success
    * @return
    */
-  def upload(file: File, path: Path): Future[Result] = {
+  def upload(chunk: File, path: Path)(
+    onUploaded: (Directory, File) => Unit = (d, f) => Unit
+  ): Future[Result] = {
     for {
       tmpName <- tempFileName.andThen {
         case Success(fn) => Logger.trace(s"uploading $fn")
       }
-      renamed <- file.rename(tmpName).andThen {
-        case Success(false) => file.delete()
+      renamed <- chunk.rename(tmpName).andThen {
+        case Success(false) => chunk.delete()
       }
       _result <- {
-        if (renamed) checkIfCompleted(path)
+        if (renamed) checkIfCompleted(path)(onUploaded)
         //should never occur, only in case that the temp file name was taken.
         else Future.successful(Results.NotFound)
       }
@@ -150,13 +163,16 @@ case class Flow(
    * If so flow.js will start concatenating process
    *
    * @param path target path to upload the file
+   * @param onUploaded callback method on success
    * @return
    */
-  def checkIfCompleted(path: Path): Future[Result] = for {
+  def checkIfCompleted(path: Path)(
+    onUploaded: (Directory, File) => Unit
+  ): Future[Result] = for {
     name <- fileName
     stat <- tempFiles |>>> summarizer
     last <- isLastChunk(stat)
-    _ret <- if (last) concatTempFiles(path, name) else Future.successful(Results.Created)
+    _ret <- if (last) concatTempFiles(path, name)(onUploaded) else Future.successful(Results.Created)
   } yield _ret
 
 
@@ -177,9 +193,12 @@ case class Flow(
    *
    * @param path target path to upload the file
    * @param filename uploading file name
+   * @param onUploaded callback method on success
    * @return
    */
-  def concatTempFiles(path: Path, filename: String): Future[Result] = {
+  def concatTempFiles(path: Path, filename: String)(
+    onUploaded: (Directory, File) => Unit
+  ): Future[Result] = {
 
     def concat: Future[Result] = {
       Logger.trace(s"concatenating all temp files of ${path + filename}.")
@@ -188,8 +207,9 @@ case class Flow(
         file <- tempFiles &>
           Enumeratee.mapFlatten[File] { f =>
            f.read() &> Enumeratee.onIterateeDone[BLK](() => f.delete())
-        } |>>> curr.save(filename)
-      } yield file).map { saved =>
+        } |>>> curr.save(filename, overwrite, _.w.?)
+      } yield (curr, file)).map { case (curr, saved) =>
+        onUploaded(curr, saved)
         Logger.trace(s"file: ${path + filename} upload completed.")
         Results.Created(Json.toJson(saved)(File.jsonWrites))
       }
@@ -197,19 +217,9 @@ case class Flow(
 
     concat.recoverWith {
       case e: ChildExists =>
-        if (overwrite) {
-          Logger.debug(s"file: ${path + filename} exists, overwrite it.")
-          for {
-            exist <- _cfs.file(path + filename) if exist.w.?
-            _____ <- exist.delete()
-            retry <- concat
-          } yield retry
-        }
-        else {
-          Logger.debug(s"file: ${path + filename} was created during uploading, clean temp files.")
-          (tempFiles |>>> Iteratee.foreach[File](f => f.delete())).map(_ => Results.Ok)
-          Future.successful(Results.Ok)
-        }
+        Logger.debug(s"file: ${path + filename} was created during uploading, clean temp files.")
+        (tempFiles |>>> Iteratee.foreach[File](f => f.delete())).map(_ => Results.Ok)
+        Future.successful(Results.Ok)
     }
   }
 
@@ -268,17 +278,4 @@ object Flow extends ExceptionDefining with CanonicalNamed {
   case class MissingFlowArgument(key: String)
     extends BaseException(error_code("missing.flow.argument"))
 
-  def bindFromRequest(filename: String = "", overwrite: Boolean = false)(
-    implicit
-    req: UserRequest[MultipartFormData[File]],
-    basicPlayApi: BasicPlayApi,
-    _cfs: CassandraFileSystem
-  ): Flow = Flow(req.body.asFormUrlEncoded, if (filename.nonEmpty) Some(filename) else None, overwrite)
-
-  def bindFromQueryString(filename: String = "", overwrite: Boolean = false)(
-    implicit
-    req: UserRequest[_],
-    basicPlayApi: BasicPlayApi,
-    _cfs: CassandraFileSystem
-  ): Flow = Flow(req.queryString, if (filename.nonEmpty) Some(filename) else None, overwrite)
 }

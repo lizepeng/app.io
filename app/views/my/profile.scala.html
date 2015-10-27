@@ -24,7 +24,7 @@
               <strong>@MSG("settings.profile.head")</strong>
             </div>
 
-            <div class="panel-body">
+            <div class="panel-body" ng-controller="ProfileCtrl">
 
               @ng._form_group_static("profile.picture",
                 '_type   -> MSG("profile.picture"),
@@ -32,24 +32,17 @@
               ){
                 <div class="row">
                   <div class="col-xs-4 col-sm-2">
-                    <img data-src="holder.js/70x70/auto" alt="" class="img-rounded">
+                    <img ng-src="{{ imgURL }}" alt="" class="img-rounded" style="width:70px;height:70px">
                   </div>
+
                   <div class="col-xs-5 col-sm-8">
-                    <div flow-init="{target: '/api_internal/cfs/'}"
+                    <div flow-init="{target: '@routes.MyCtrl.uploadProfileImage', testChunks: false}"
                          flow-files-submitted="$flow.upload()"
-                         flow-file-success="$file.msg = $message">
+                         flow-file-success="onUploaded($message)">
 
                       <span class="btn btn-default" flow-btn>
                         <strong>@MSG("profile.picture.upload")</strong>
                       </span>
-
-                      <table>
-                        <tr class="ng-cloak" ng-repeat="file in $flow.files">
-                          <td>{{$index+1}}</td>
-                          <td>{{file.name}}</td>
-                          <td>{{file.msg}}</td>
-                        </tr>
-                      </table>
                     </div>
                   </div>
                 </div>
@@ -85,11 +78,12 @@
 }()(
   libs.webjars("js", "holder"),
   libs.webjars("js", "ng-flow"),
-  ctrl
+  libs.assets("js", "my/profile"),
+  jsRoutes
 )
 
-@ctrl = {
-  <script>
-    angular.module('app').requires.push('flow')
-  </script>
+@jsRoutes = {
+  @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.MyCtrl.profileImage
+  )
 }

@@ -37,19 +37,17 @@ class FileSystemCtrl(
   with AppConfigComponents
   with RateLimitConfigComponents
   with BandwidthConfigComponents
-  with CFSHttpRangeRequestComponents
+  with CFSStreamComponents
   with Logging {
 
   def download(path: Path, inline: Boolean) =
     UserAction(_.Show).async { implicit req =>
-      HttpCached(path) orElse { file =>
-        HttpRangeRequest(file).whole(name = Some(Path.encode(file.name)), inline = inline)
-      }
+      CFSHttpCaching(path) apply (HttpDownloadResult.send(_, inline = inline))
     }
 
   def stream(path: Path) =
     UserAction(_.Show).async { implicit req =>
-      HttpCached(path) orElse (HttpRangeRequest(_).stream)
+      CFSHttpCaching(path) apply (HttpStreamResult.stream(_))
     }
 
   def index(path: Path, pager: Pager) =
@@ -69,13 +67,13 @@ class FileSystemCtrl(
 
   def test(path: Path) =
     UserAction(_.Show).async { implicit req =>
-      Flow.bindFromQueryString().test(path)
+      Flow().bindFromQueryString.test(path)
     }
 
   def create(path: Path) =
     UserAction(_.Create).async(CFSBodyParser(_ => path)) { implicit req =>
       (req.body.file("file").map(_.ref) match {
-        case Some(file) => Flow.bindFromRequest().upload(file, path)
+        case Some(file) => Flow().bindFromRequestBody.upload(file, path)()
         case None       => throw CFSBodyParser.MissingFile()
       }).andThen {
         case Failure(e: CFSBodyParser.MissingFile)      => Logger.warn(e.message)

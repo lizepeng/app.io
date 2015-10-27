@@ -4,18 +4,21 @@ import play.api.http._
 import play.api.libs.MimeTypes
 import play.api.libs.iteratee.Enumerator
 import play.api.mvc._
-import play.utils.UriEncoding
 
 /**
  * See RFC 7233
  *
  * @author zepeng.li@gmail.com
  */
-case class HttpRangeRequest(resource: HttpRangeRequestable)(
-  implicit req: RequestHeader
-) extends HeaderNames with Status {
+trait HttpStreamable extends HttpDownloadable {
+  def range(first: Long, length: Long): Enumerator[Array[Byte]]
+}
 
-  def stream: Result = {
+object HttpStreamResult extends HttpDownloadResult {
+
+  def stream(resource: HttpStreamable)(
+    implicit req: RequestHeader
+  ): Result = {
     val byte_range_spec = """bytes=(\d+)-(\d*)""".r
 
     req.headers.get(RANGE).flatMap[(Long, Option[Long])] {
@@ -29,36 +32,20 @@ case class HttpRangeRequest(resource: HttpRangeRequestable)(
     }.filter {
       case (first, lastOpt) => lastOpt.isEmpty || lastOpt.get >= first
     }.map {
-      case (first, lastOpt) if first < resource.size  => validRange(first, lastOpt)
-      case (first, lastOpt) if first >= resource.size => invalidRange
+      case (first, lastOpt) if first < resource.size  =>
+        validRange(resource, first, lastOpt)
+      case (first, lastOpt) if first >= resource.size =>
+        invalidRange(resource)
     }.getOrElse {
-      whole().withHeaders(ACCEPT_RANGES -> "bytes")
+      send(resource, inline = true).withHeaders(ACCEPT_RANGES -> "bytes")
     }
   }
 
-  def whole(name: Option[String] = None, inline: Boolean = false): Result = {
-    val result = Result(
-      ResponseHeader(
-        OK,
-        Map(
-          CONTENT_TYPE -> contentTypeOf(resource),
-          CONTENT_LENGTH -> s"${resource.size}"
-        )
-      ),
-      resource.whole
-    )
-    if (inline) result
-    else {
-      val filename = name.getOrElse(UriEncoding.encodePathSegment(resource.name, "utf-8"))
-      result.withHeaders(
-        CONTENT_DISPOSITION ->
-          s"""attachment; filename="$filename" """
-      )
-    }
-  }
-
-
-  private def validRange(first: Long, lastOpt: Option[Long]): Result = {
+  private def validRange(
+    resource: HttpStreamable,
+    first: Long,
+    lastOpt: Option[Long]
+  ): Result = {
     val end = lastOpt.filter(_ < resource.size).getOrElse(resource.size - 1)
     Result(
       ResponseHeader(
@@ -74,7 +61,7 @@ case class HttpRangeRequest(resource: HttpRangeRequestable)(
     )
   }
 
-  private def invalidRange: Result = {
+  private def invalidRange(resource: HttpStreamable): Result = {
     Result(
       ResponseHeader(
         REQUESTED_RANGE_NOT_SATISFIABLE,
@@ -87,14 +74,7 @@ case class HttpRangeRequest(resource: HttpRangeRequestable)(
     )
   }
 
-  private def contentTypeOf(inode: HttpRangeRequestable): String = {
+  private def contentTypeOf(inode: HttpStreamable): String = {
     MimeTypes.forFileName(inode.name).getOrElse(ContentTypes.BINARY)
   }
-}
-
-trait HttpRangeRequestable extends Any {
-  def size: Long
-  def name: String
-  def range(first: Long, length: Long): Enumerator[Array[Byte]]
-  def whole: Enumerator[Array[Byte]]
 }

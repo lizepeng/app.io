@@ -40,6 +40,7 @@ class GroupsCtrl(
   ESIndexCleaner(_groups).dropIndexIfEmpty
 
   case class GroupInfo(name: Name, description: Option[String])
+
   object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[String]) =
@@ -58,7 +59,7 @@ class GroupsCtrl(
 
   def show(id: UUID) =
     UserAction(_.Show).async { implicit req =>
-      _groups.find(id).map {
+      _groups.find(id).flatMap {
         HttpCaching { grp =>
           Ok(Json.toJson(grp))
         }
