@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import helpers._
 import models.cfs.Block._
 import org.joda.time.DateTime
+import play.api.Configuration
 import play.api.libs.iteratee.Enumeratee.CheckDone
 import play.api.libs.iteratee._
 
@@ -122,4 +123,26 @@ object BandwidthService {
     def MBps: Int = (d * 1024 * 1024).toInt
   }
 
+}
+
+case class BandwidthConfig(upload: Int, download: Int, stream: Int)
+
+trait BandwidthConfigComponents {
+  self: CanonicalNamed =>
+
+  import BandwidthService._
+
+  def configuration: Configuration
+
+  implicit lazy val bandwidthConfig = BandwidthConfig(
+    configuration
+      .getBytes(s"$canonicalName.bandwidth.upload").map(_.toInt)
+      .getOrElse(1.5 MBps),
+    configuration
+      .getBytes(s"$canonicalName.bandwidth.download").map(_.toInt)
+      .getOrElse(2 MBps),
+    configuration
+      .getBytes(s"$canonicalName.bandwidth.stream").map(_.toInt)
+      .getOrElse(1 MBps)
+  )
 }

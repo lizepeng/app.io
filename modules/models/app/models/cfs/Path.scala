@@ -1,6 +1,7 @@
 package models.cfs
 
 import helpers.JsonStringifier
+import models.User
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 import play.utils.UriEncoding
@@ -49,6 +50,8 @@ case class Path(segments: Seq[String] = Seq(), filename: Option[String] = None) 
 object Path extends PathJsonStringifier {
 
   def root = Path()
+
+  def home(implicit user: User) = Path(Seq(user.id.toString))
 
   implicit def bindablePath: PathBindable[Path] = new PathBindable[Path] {
 
