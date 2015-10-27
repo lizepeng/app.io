@@ -137,12 +137,15 @@ trait BandwidthConfigComponents {
   implicit lazy val bandwidthConfig = BandwidthConfig(
     configuration
       .getBytes(s"$canonicalName.bandwidth.upload").map(_.toInt)
+      .orElse(configuration.getBytes("services.bandwidth.upload").map(_.toInt))
       .getOrElse(1.5 MBps),
     configuration
       .getBytes(s"$canonicalName.bandwidth.download").map(_.toInt)
+      .orElse(configuration.getBytes("services.bandwidth.download").map(_.toInt))
       .getOrElse(2 MBps),
     configuration
       .getBytes(s"$canonicalName.bandwidth.stream").map(_.toInt)
+      .orElse(configuration.getBytes("services.bandwidth.stream").map(_.toInt))
       .getOrElse(1 MBps)
   )
 }

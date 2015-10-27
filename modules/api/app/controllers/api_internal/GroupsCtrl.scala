@@ -59,7 +59,7 @@ class GroupsCtrl(
   def show(id: UUID) =
     UserAction(_.Show).async { implicit req =>
       _groups.find(id).map {
-        NotModifiedOrElse { grp =>
+        HttpCaching { grp =>
           Ok(Json.toJson(grp))
         }
       }.recover {
