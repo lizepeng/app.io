@@ -90,15 +90,13 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
             </tr>
             <tr ng-class="ace.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
               <td colspan="2">
-                <div class="row">
-                  <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="name in ACList.access_def">
-                    <label class="checkbox-inline" >
-                      <input type="checkbox"
-                        ng-model="ace.permissions[$index]"
-                        ng-change="toggle(ace, $index)">
-                      {{ name }}
-                    </label>
-                  </div>
+                <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="name in ACList.access_def">
+                  <label class="checkbox-inline" >
+                    <input type="checkbox"
+                      ng-model="ace.permissions[$index]"
+                      ng-change="toggle(ace, $index)">
+                    {{ name }}
+                  </label>
                 </div>
               </td>
             </tr>
