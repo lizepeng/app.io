@@ -11,6 +11,7 @@ import protocols.HttpDownloadable
 import security.FileSystemAccessControl._
 
 import scala.concurrent._
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -25,8 +26,12 @@ trait CFSImageComponents extends CFSDownloadComponents {
   ) {
 
     def content: Future[Array[Byte]] =
-      (file.read() |>>> Iteratee.consume[BLK]()).map {
-        origin => manipulator(Image(origin)).bytes(writer)
+      (file.read() |>>> Iteratee.consume[BLK]()).map { origin =>
+        //Since the bytes may not be a image
+        Try(manipulator(Image(origin))) match {
+          case Success(img: Image)   => img.bytes(writer)
+          case Failure(e: Throwable) => Array[Byte]()
+        }
       }
 
     def enumerator: Enumerator[Array[Byte]] =

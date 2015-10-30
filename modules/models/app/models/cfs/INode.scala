@@ -47,7 +47,7 @@ trait INode extends HasUUID with TimeBased {
   ): Future[Unit] =
     for {
       pdir <- cfs._directories.find(parent)(onFound = p => p)
-      done <- cfs._directories.delChild(pdir, this)
+      done <- cfs._directories.delChild(pdir, this.name)
     } yield Unit
 
 }

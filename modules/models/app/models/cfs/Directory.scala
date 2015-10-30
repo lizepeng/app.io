@@ -117,7 +117,10 @@ case class Directory(
     cfs._directories.findChild(id, name).flatMap {
       case (n, i) => cfs._files.find(i)(
         onFound = _.copy(name = n, path = path + name)
-      )
+      ).recoverWith {
+        //remove broken link
+        case e: File.NotFound => delChild(name).map(_ => throw e)
+      }
     }
 
   def mkdir(name: String)(
@@ -140,10 +143,10 @@ case class Directory(
   ): Future[Directory] =
     cfs._directories.updateChild(this, child)
 
-  def delChild(child: INode)(
+  def delChild(childName: String)(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] =
-    cfs._directories.delChild(this, child)
+    cfs._directories.delChild(this, childName)
 
   def dir(name: String)(
     implicit cfs: CassandraFileSystem
@@ -314,11 +317,11 @@ class Directories(
   }.future().map(_ => dir)
 
   def delChild(
-    dir: Directory, inode: INode
+    dir: Directory, childName: String
   ): Future[Unit] = CQL {
     delete
       .where(_.inode_id eqs dir.id)
-      .and(_.name eqs inode.name)
+      .and(_.name eqs childName)
   }.future().map(_ => Unit)
 
   /**
