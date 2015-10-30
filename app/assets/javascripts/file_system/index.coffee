@@ -90,8 +90,7 @@ views.files.index
 
     $scope.success = ($file, resp) ->
       $scope.uploading = false
-      if resp isnt ''
-        INodeList.created(JSON.parse(resp))
+      INodeList.created(JSON.parse(resp)) if resp isnt ''
 
     $scope.startUpload = ->
       $scope.uploading = true

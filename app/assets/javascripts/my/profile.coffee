@@ -11,10 +11,15 @@ views.my.profile = angular.module 'my.profile', [
     $scope.jsRoutes  = jsRoutes
     $scope.imgURL    = "#{jsRoutes.controllers.MyCtrl.profileImage().url}?s=64"
     $scope.uploading = false
+    $scope.errorMessage = ''
 
     $scope.onUploaded = (resp) ->
       $scope.uploading = false
-      updateImgURL() if resp isnt ''
+      updateImgURL() if resp?
+
+    $scope.onFailed = (resp) ->
+      $scope.uploading = false
+      $scope.errorMessage = JSON.parse(resp).message if resp?
 
     updateImgURL = ->
       now = new Date()
@@ -22,6 +27,7 @@ views.my.profile = angular.module 'my.profile', [
 
     $scope.startUpload = ->
       $scope.uploading = true
+      $scope.errorMessage = ''
 
     return
 ]

@@ -102,6 +102,17 @@ object File extends CanonicalNamed with ExceptionDefining {
       "is_file" -> !o.is_directory
     )
   }
+
+  def pprint(size: Long): String = {
+    size match {
+      case s if s > (1L << 40) => f"${s / 1e12}%7.3f TB"
+      case s if s > (1L << 30) => f"${s / 1e09}%6.2f GB"
+      case s if s > (1L << 20) => f"${s / 1e06}%5.1f MB"
+      case s if s > (1L << 10) => f"${s / 1000}%3d KB"
+      case s if s > 0          => f"$s%3d bytes"
+      case _                   => "Zero bytes"
+    }
+  }
 }
 
 class Files(

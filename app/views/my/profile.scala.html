@@ -30,16 +30,17 @@
                 '_type   -> MSG("profile.picture"),
                 '_inline -> false
               ){
-                <div class="row">
+                <div class="row ng-cloak">
                   <div class="col-xs-4 col-sm-2 profile-img-sm">
                     <img ng-src="{{ imgURL }}" alt="" class="img-rounded">
                   </div>
 
-                  <div class="col-xs-5 col-sm-8">
+                  <div class="col-xs-8 col-sm-8" ng-class=" errorMessage ? ' has-error' : '' ">
                     <div flow-init="{target: '@routes.MyCtrl.uploadProfileImage', testChunks: false, simultaneousUploads: 1}"
                          flow-files-submitted="$flow.upload()"
                          flow-upload-started="startUpload()"
-                         flow-file-success="onUploaded($message)">
+                         flow-file-success="onUploaded($message)"
+                         flow-file-error="onFailed($message)">
 
                       <span ng-show="!uploading" class="btn btn-default"
                         flow-btn
@@ -52,7 +53,7 @@
                         <strong>@MSG("profile.picture.upload")</strong>
                       </span>
                     </div>
-                    <p class="help-block">@MSG("profile.picture.accept.formats")</p>
+                    <p class="help-block" ng-class="errorMessage ? 'text-danger' : ''">{{ errorMessage || '@MSG("profile.picture.accept.formats")' }}</p>
                   </div>
                 </div>
               }

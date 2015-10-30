@@ -148,7 +148,7 @@ class MyCtrl(
 
   val profileImageMaxLength: Int = configuration
     .getBytes(s"$canonicalName.profile.image.max.length").map(_.toInt)
-    .getOrElse(2 * 1024 * 1024)
+    .getOrElse(2 * 1000 * 1000)
 
 
   def profileImage(size: Int) =

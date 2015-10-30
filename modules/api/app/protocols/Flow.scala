@@ -159,7 +159,7 @@ case class Flow(
       }
       _ <- totalSize.map { ts =>
         if (ts <= maxLength) ts
-        else throw Flow.TooLarge(maxLength)
+        else throw Flow.TooLarge(File.pprint(maxLength))
       }
       tmpName <- tempFileName.andThen {
         case Success(fn) => Logger.trace(s"uploading $fn")
@@ -239,7 +239,8 @@ case class Flow(
             Results.Created(Json.toJson(file)(File.jsonWrites))
           }
         } else Future.successful {
-          val err: Flow.TooLarge = Flow.TooLarge(maxLength)
+
+          val err: Flow.TooLarge = Flow.TooLarge(File.pprint(maxLength))
           Logger.debug(err.reason)
           file.delete()
           Logger.debug(s"deleting file: ${path + filename}.")
@@ -312,7 +313,7 @@ object Flow extends ExceptionDefining with CanonicalNamed {
   case class MissingFlowArgument(key: String)
     extends BaseException(error_code("missing.flow.argument"))
 
-  case class TooLarge(maxLength: Long)
+  case class TooLarge(maxLength: String)
     extends BaseException(error_code("file.too.large"))
 
   case class NotSupported(filename: String, accept: Seq[String])
