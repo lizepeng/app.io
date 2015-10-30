@@ -8,6 +8,7 @@ import models.cfs._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
+import play.api.libs.MimeTypes
 import play.api.mvc._
 import protocols.JsonProtocol.JsonMessage
 import protocols._
@@ -145,12 +146,17 @@ class MyCtrl(
 
   val profileImageFileName = "profile.png"
 
+  val profileImageMaxLength: Int = configuration
+    .getBytes(s"$canonicalName.profile.image.max.length").map(_.toInt)
+    .getOrElse(2 * 1024 * 1024)
+
+
   def profileImage(size: Int) =
     (MaybeUserAction() andThen AuthChecker).async { implicit req =>
       val thumbnailName = Thumbnail.choose(profileImageFileName, size)
       CFSHttpCaching(Path.home + thumbnailName) async { file =>
         CImage(file)().downloadable.map {
-          send(_, _ => profileImageFileName)
+          send(_, _ => profileImageFileName, inline = true)
         }
       }
     }
@@ -166,7 +172,10 @@ class MyCtrl(
     ) { implicit req =>
       (req.body.file("file").map(_.ref) match {
         case Some(chunk) => Flow(
-          filename = profileImageFileName, overwrite = true
+          filename = profileImageFileName,
+          overwrite = true,
+          maxLength = profileImageMaxLength,
+          accept = MyCtrl.acceptProfileImageFormats
         ).bindFromRequestBody.upload(chunk, Path.home) { (curr, file) =>
           Thumbnail.generate(curr, file)
         }
@@ -179,4 +188,10 @@ class MyCtrl(
         case e: BaseException => NotFound(JsonMessage(e))
       }
     }
+}
+
+object MyCtrl {
+
+  def acceptProfileImageFormats =
+    Seq("*.png", "*.jpg", "*.gif").flatMap(MimeTypes.forFileName)
 }

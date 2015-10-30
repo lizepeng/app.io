@@ -6,9 +6,11 @@ import models.cfs.Block._
 import models.cfs.Directory._
 import models.cfs._
 import play.api.i18n.I18nSupport
+import play.api.libs.MimeTypes
 import play.api.libs.iteratee._
 import play.api.libs.json.Json
 import play.api.mvc._
+import protocols.JsonProtocol.JsonMessage
 import security.FileSystemAccessControl._
 import security._
 
@@ -21,6 +23,8 @@ import scala.util._
  *
  * @param filename if filename specified, it takes priority over the flowFilename one
  * @param overwrite whether overwrite the old one if inode with the same name already exists
+ * @param maxLength maximum size of uploading file
+ * @param accept the types of files are allowed to be uploaded
  * @param form queryString or data part in multipart/form
  * @param req Request
  * @param basicPlayApi common play api
@@ -31,6 +35,8 @@ import scala.util._
 case class Flow(
   filename: String = "",
   overwrite: Boolean = false,
+  maxLength: Long = 1024 * 1024 * 1024,
+  accept: Seq[String] = Seq(),
   form: Map[String, Seq[String]] = Map()
 )(
   implicit
@@ -63,9 +69,11 @@ case class Flow(
    * @return the eventually filename that will be used.
    */
   def fileName = {
-    if (filename.nonEmpty) Future.successful(filename)
-    else flowParam("flowFilename", _.toString)
+    if (filename.isEmpty) originalFileName
+    else Future.successful(filename)
   }
+
+  def originalFileName = flowParam("flowFilename", _.toString)
 
   def relativePath = flowParam("flowRelativePath", _.toString)
 
@@ -141,9 +149,18 @@ case class Flow(
    * @return
    */
   def upload(chunk: File, path: Path)(
-    onUploaded: (Directory, File) => Unit = (d, f) => Unit
+    onUploaded: (Directory, File) => Future[_] = (d, f) => Future.successful(Unit)
   ): Future[Result] = {
-    for {
+    (for {
+      _ <- originalFileName.map { fn =>
+        val mimeType = MimeTypes.forFileName(fn).getOrElse("")
+        if (accept.isEmpty || accept.contains(mimeType)) fn
+        else throw Flow.NotSupported(fn, accept)
+      }
+      _ <- totalSize.map { ts =>
+        if (ts <= maxLength) ts
+        else throw Flow.TooLarge(maxLength)
+      }
       tmpName <- tempFileName.andThen {
         case Success(fn) => Logger.trace(s"uploading $fn")
       }
@@ -155,7 +172,14 @@ case class Flow(
         //should never occur, only in case that the temp file name was taken.
         else Future.successful(Results.NotFound)
       }
-    } yield _result
+    } yield _result).andThen {
+      case Failure(e: BaseException) =>
+        Logger.debug(e.reason)
+        chunk.delete()
+    }.recover {
+      case e: Flow.NotSupported => Results.UnsupportedMediaType(JsonMessage(e))
+      case e: Flow.TooLarge     => Results.EntityTooLarge(JsonMessage(e))
+    }
   }
 
   /**
@@ -167,7 +191,7 @@ case class Flow(
    * @return
    */
   def checkIfCompleted(path: Path)(
-    onUploaded: (Directory, File) => Unit
+    onUploaded: (Directory, File) => Future[_]
   ): Future[Result] = for {
     name <- fileName
     stat <- tempFiles |>>> summarizer
@@ -197,22 +221,32 @@ case class Flow(
    * @return
    */
   def concatTempFiles(path: Path, filename: String)(
-    onUploaded: (Directory, File) => Unit
+    onUploaded: (Directory, File) => Future[_]
   ): Future[Result] = {
 
     def concat: Future[Result] = {
       Logger.trace(s"concatenating all temp files of ${path + filename}.")
-      (for {
+      for {
         curr <- _cfs.dir(path)
         file <- tempFiles &>
           Enumeratee.mapFlatten[File] { f =>
            f.read() &> Enumeratee.onIterateeDone[BLK](() => f.delete())
         } |>>> curr.save(filename, overwrite, _.w.?)
-      } yield (curr, file)).map { case (curr, saved) =>
-        onUploaded(curr, saved)
-        Logger.trace(s"file: ${path + filename} upload completed.")
-        Results.Created(Json.toJson(saved)(File.jsonWrites))
-      }
+        _ret <-
+        if (file.size <= maxLength) {
+          onUploaded(curr, file).map { _ =>
+            Logger.trace(s"file: ${path + filename} upload completed.")
+            Results.Created(Json.toJson(file)(File.jsonWrites))
+          }
+        } else Future.successful {
+          val err: Flow.TooLarge = Flow.TooLarge(maxLength)
+          Logger.debug(err.reason)
+          file.delete()
+          Logger.debug(s"deleting file: ${path + filename}.")
+          Results.EntityTooLarge(JsonMessage(err))
+        }
+
+      } yield _ret
     }
 
     concat.recoverWith {
@@ -277,5 +311,11 @@ object Flow extends ExceptionDefining with CanonicalNamed {
 
   case class MissingFlowArgument(key: String)
     extends BaseException(error_code("missing.flow.argument"))
+
+  case class TooLarge(maxLength: Long)
+    extends BaseException(error_code("file.too.large"))
+
+  case class NotSupported(filename: String, accept: Seq[String])
+    extends BaseException(error_code("file.type.not.supported"))
 
 }

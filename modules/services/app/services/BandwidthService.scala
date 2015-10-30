@@ -37,8 +37,8 @@ class BandwidthService(
   object LimitTo {
 
     def apply(rate: Int = 1 MBps): Enumeratee[BLK, BLK] = limitTo(
-      if (rate < min) min
-      else if (rate > max) max
+      if (rate > max) max
+      else if (rate < Math.min(min, max)) min
       else rate
     )(executor)
 

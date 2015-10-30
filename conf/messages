@@ -58,6 +58,7 @@ settings                                         =Settings
 dashboard                                        =Dashboard
 profile.picture                                  =Profile Picture
 profile.picture.upload                           =Upload new Picture
+profile.picture.accept.formats                   =JPG, GIF or PNG image
 
 # layout
 layout                                           =Layout
@@ -359,5 +360,10 @@ msg.confirm_delete.title                         =Are you ABSOLUTELY sure?
 
 ui.alert.msg.empty                               =Unknown Error Occurred.
 ui.notification.msg.empty                        =Empty Notification.
+
+msg.protocols.flow.js.file.too.large             =Maximum allowed size is {0}.
+log.protocols.flow.js.file.too.large             =Max allowed size of {0} exceeded, deleting uploaded file.
+msg.protocols.flow.js.file.type.not.supported    =File type of {0} is not supported.
+log.protocols.flow.js.file.type.not.supported    =File type of {0} is not allowed, expecting file type: {1}.
 
 # products.list.title                            ={0,choice,0#no|1#one|1<{0,number,integer} products} Found

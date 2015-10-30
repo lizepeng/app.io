@@ -60,13 +60,16 @@ trait CFSImageComponents extends CFSDownloadComponents {
   object Thumbnail {
     def generate(curr: Directory, file: File)(
       implicit user: User
-    ): Unit = for (i <- Array(20, 32, 64, 128, 256, 512)) {
-      Thumbnail(file, i, i).saveInto(curr)
+    ): Future[Seq[File]] = {
+      Future.sequence(
+        for (i <- Array(32, 64, 128, 256, 512)) yield {
+          Thumbnail(file, i, i).saveInto(curr)
+        }
+      )
     }
 
     def choose(filename: String, size: Int) = size match {
       case s if s < 0    => filename
-      case s if s <= 20  => generateName(filename, 20, 20)
       case s if s <= 32  => generateName(filename, 32, 32)
       case s if s <= 64  => generateName(filename, 64, 64)
       case s if s <= 128 => generateName(filename, 128, 128)

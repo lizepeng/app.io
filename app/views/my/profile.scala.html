@@ -31,19 +31,28 @@
                 '_inline -> false
               ){
                 <div class="row">
-                  <div class="col-xs-4 col-sm-2">
-                    <img ng-src="{{ imgURL }}" alt="" class="img-rounded" style="width:70px;height:70px">
+                  <div class="col-xs-4 col-sm-2 profile-img-sm">
+                    <img ng-src="{{ imgURL }}" alt="" class="img-rounded">
                   </div>
 
                   <div class="col-xs-5 col-sm-8">
-                    <div flow-init="{target: '@routes.MyCtrl.uploadProfileImage', testChunks: false}"
+                    <div flow-init="{target: '@routes.MyCtrl.uploadProfileImage', testChunks: false, simultaneousUploads: 1}"
                          flow-files-submitted="$flow.upload()"
+                         flow-upload-started="startUpload()"
                          flow-file-success="onUploaded($message)">
 
-                      <span class="btn btn-default" flow-btn>
+                      <span ng-show="!uploading" class="btn btn-default"
+                        flow-btn
+                        flow-single-file
+                        flow-attrs="{ accept: '@MyCtrl.acceptProfileImageFormats.mkString(", ")' }">
+                        <strong>@MSG("profile.picture.upload")</strong>
+                      </span>
+                      <span ng-show="uploading" class="btn btn-default" disabled>
+                        <i class="fa fa-refresh fa-spin"></i>
                         <strong>@MSG("profile.picture.upload")</strong>
                       </span>
                     </div>
+                    <p class="help-block">@MSG("profile.picture.accept.formats")</p>
                   </div>
                 </div>
               }
