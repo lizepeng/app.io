@@ -43,7 +43,7 @@ class GroupsCtrl(
 
   object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}
 
-  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[String]) =
+  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _groups.find(ids).map { grps =>

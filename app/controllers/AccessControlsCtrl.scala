@@ -1,6 +1,6 @@
 package controllers
 
-import elasticsearch.ElasticSearch
+import elasticsearch._
 import helpers._
 import models._
 import play.api.i18n._
@@ -27,11 +27,11 @@ class AccessControlsCtrl(
   with UserActionComponents
   with I18nSupport {
 
-  def index(pager: Pager, sort: Seq[String]) =
+  def index(pager: Pager, sort: Seq[SortField]) =
     UserAction(_.Index, _.Save, _.Create, _.Destroy).apply { implicit req =>
-      val default = Seq(
-        s"-${_accessControls.principal_id.name}",
-        s" ${_accessControls.resource.name}"
+      val default = _accessControls.sorting(
+        _.principal_id.desc,
+        _.resource.asc
       )
       Ok(html.access_controls.index(pager, if (sort.nonEmpty) sort else default))
     }

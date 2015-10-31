@@ -33,7 +33,7 @@ class AccessControlsCtrl(
   with I18nSupport
   with Logging {
 
-  def index(q: Option[String], p: Pager, sort: Seq[String]) =
+  def index(q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.Index).async { implicit req =>
       (es.Search(q, p, sort) in _accessControls future()).map { page =>
         Ok(page).withHeaders(

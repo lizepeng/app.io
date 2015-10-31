@@ -9,6 +9,7 @@ routesGenerator := InjectedRoutesGenerator
 libraryDependencies += "com.sksamuel.scrimage" %% "scrimage-core" % "2.1.0"
 
 routesImport ++= Seq(
+  "elasticsearch.SortField",
   "helpers.ExtBindable._",
   "helpers.Pager",
   "java.util.UUID",

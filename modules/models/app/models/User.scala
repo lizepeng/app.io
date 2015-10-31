@@ -330,6 +330,8 @@ class Users(
       .modify(_.updated_at setTo DateTime.now)
   }
 
+  override def sortable: Set[SortableField] = Set(name, email)
+
   ////////////////////////////////////////////////////////////////
   def findAccessToken(id: UUID): Future[Option[String]] = {
     CQL(select(_.access_token).where(_.id eqs id)).one()
@@ -406,6 +408,7 @@ trait UsersComponents {
 
   implicit def _users: Users = _groups._users
 }
+
 object UsersComponents {
 
   implicit def _users(implicit _groups: Groups): Users = _groups._users

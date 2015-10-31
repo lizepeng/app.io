@@ -2,6 +2,7 @@ package controllers
 
 import java.util.UUID
 
+import elasticsearch._
 import helpers._
 import models._
 import play.api.i18n._
@@ -24,9 +25,9 @@ class GroupsCtrl(
   with DefaultPlayExecutor
   with I18nSupport {
 
-  def index(pager: Pager, sort: Seq[String]) =
+  def index(pager: Pager, sort: Seq[SortField]) =
     UserAction(_.Index, _.Create, _.Save, _.Destroy).apply { implicit req =>
-      val default = Seq(s" ${_groups.name.name}")
+      val default = _groups.sorting(_.name.asc)
       Ok(html.groups.index(pager, if (sort.nonEmpty) sort else default))
     }
 

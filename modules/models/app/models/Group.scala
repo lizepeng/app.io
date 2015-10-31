@@ -219,6 +219,7 @@ class Groups(
 
   def isEmpty: Future[Boolean] = _internalGroups.isEmpty
 
+  override def sortable: Set[SortableField] = Set(name)
 }
 
 case class InternalGroupsCode(code: Int) extends AnyVal {

@@ -163,6 +163,8 @@ class AccessControls(
     CQL(select).fetchEnumerator
 
   def isEmpty: Future[Boolean] = CQL(select).one.map(_.isEmpty)
+
+  override def sortable: Set[SortableField] = Set(principal_id, resource)
 }
 
 trait AccessControl[P, A, R] {

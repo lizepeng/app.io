@@ -35,7 +35,7 @@ class SearchCtrl(
     types: Seq[String],
     q: Option[String],
     p: Pager,
-    sort: Seq[String]
+    sort: Seq[SortField]
   ) =
     UserAction(_.Index).async { implicit req =>
       val indexTypes = types.distinct

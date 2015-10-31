@@ -42,6 +42,7 @@ class UsersCtrl(
     email: EmailAddress,
     name: Option[Name]
   )
+
   object UserInfo {implicit val jsonFormat = Json.format[UserInfo]}
 
   def show(id: UUID) =
@@ -71,7 +72,7 @@ class UsersCtrl(
       }
     }
 
-  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[String]) =
+  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _users.find(ids).map { usrs =>

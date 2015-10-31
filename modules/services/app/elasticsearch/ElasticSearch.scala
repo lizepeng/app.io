@@ -12,7 +12,6 @@ import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.action.update.UpdateResponse
 import org.elasticsearch.common.settings.ImmutableSettings
-import org.elasticsearch.search.sort.SortOrder
 import play.api.libs.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -66,11 +65,8 @@ class ElasticSearch(
 
   def BulkIndex[T <: HasID[_]](rs: Seq[T]) = new BulkIndexAction(rs)
 
-  def Search(
-    q: Option[String],
-    p: Pager,
-    sort: Seq[String]
-  ) = new SearchAction(q, p, sort)
+  def Search(q: Option[String], p: Pager, sort: Seq[SortField]) =
+    new SearchAction(q, p, sort)
 
   def Multi(defs: (ElasticSearch => ReadySearchDefinition)*) =
     new ReadyMultiSearchDefinition(Client)(
@@ -90,18 +86,17 @@ object ESyntax {
     }
   }
 
-  class SearchAction(q: Option[String], p: Pager, sort: Seq[String])(
+  class SearchAction(q: Option[String], p: Pager, sort: Seq[SortField])(
     implicit client: ElasticClient, indexName: String
   ) {
 
-    val pattern = """([- ])([\w]+)""".r
-
-    val sortDefs: Seq[FieldSortDefinition] = sort.collect {
-      case pattern("-", word) => new FieldSortDefinition(word).order(SortOrder.DESC)
-      case pattern(" ", word) => new FieldSortDefinition(word).order(SortOrder.ASC)
-    }
-
     def in(t: Indexable[_]): ReadySearchDefinition = {
+      val sortable = t.sortable.map(_.name)
+
+      val sortDefs = sort.collect {
+        case f if sortable.contains(f.name) => f.sortDef
+      }
+
       new ReadySearchDefinition(client, p)(
         Def(search in indexName / t.basicName)
           .?(cond = true)(_ start p.start limit p.limit)
