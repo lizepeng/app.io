@@ -48,9 +48,10 @@ class UserLoginIPs(
   with ExtCQL[UserLoginIPTable, (DateTime, InetAddress)]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def log(
     user_id: UUID,

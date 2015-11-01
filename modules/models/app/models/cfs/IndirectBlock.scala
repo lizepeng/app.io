@@ -64,9 +64,10 @@ class IndirectBlocks(
   with ExtCQL[IndirectBlockTable, IndirectBlock]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def read(id: UUID): Enumerator[BLK] = {
     select(_.indirect_block_id)

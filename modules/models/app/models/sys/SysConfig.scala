@@ -84,9 +84,10 @@ class SysConfigs(
   with ExtCQL[SysConfigTable, SysConfigEntry]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def find(module: String, key: String): Future[SysConfigEntry] = CQL {
     select.where(_.module eqs module).and(_.key eqs key)

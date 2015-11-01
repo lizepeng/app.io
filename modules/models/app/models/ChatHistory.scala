@@ -66,9 +66,10 @@ class ChatHistories(
   with ExtCQL[ChatHistoryTable, ChatMessage]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def save(msg: ChatMessage): Future[ResultSet] = {
     val (p1, p2) = genKey(msg)

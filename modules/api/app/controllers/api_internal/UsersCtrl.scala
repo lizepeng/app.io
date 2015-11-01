@@ -33,12 +33,12 @@ class UsersCtrl(
   with UserActionComponents
   with DefaultPlayExecutor
   with RateLimitConfigComponents
+  with BootingProcess
   with I18nSupport
   with Logging {
 
-  ESIndexCleaner(_users).dropIndexIfEmpty
-
-  es.PutMapping(UserMapping)
+  onStart(ESIndexCleaner(_users).dropIndexIfEmpty)
+  onStart(es.PutMapping(UserMapping))
 
   case class UserInfo(
     uid: Option[UUID],

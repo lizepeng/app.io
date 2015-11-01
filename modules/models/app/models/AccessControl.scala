@@ -99,9 +99,10 @@ class AccessControls(
   with ExtCQL[AccessControlTable, AccessControlEntry]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def find(ace: AccessControlEntry): Future[AccessControlEntry] = find(ace.principal_id, ace.resource)
 

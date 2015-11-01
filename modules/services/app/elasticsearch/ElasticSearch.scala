@@ -27,6 +27,7 @@ class ElasticSearch(
   extends AppConfigComponents
   with BasicPlayComponents
   with DefaultPlayExecutor
+  with BootingProcess
   with Logging {
 
   applicationLifecycle.addStopHook { () =>
@@ -58,11 +59,16 @@ class ElasticSearch(
   implicit val indexName = domain
 
   // create index with customized analyzers
-  Client.execute {
-    create index indexName analysis(
-      ElasticSearch.analyzers.defaultDef,
-      ElasticSearch.analyzers.emailDef)
-  }
+  onStart(
+    Client.execute {
+      create index indexName analysis(
+        ElasticSearch.analyzers.defaultDef,
+        ElasticSearch.analyzers.emailDef)
+    }.recover {
+      // if index already exists
+      case e: Throwable => Logger.debug(e.getMessage)
+    }
+  )
 
   def PutMapping[T <: Indexable[_]](
     mapping: T => Iterable[TypedFieldDefinition]

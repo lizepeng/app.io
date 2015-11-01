@@ -285,16 +285,19 @@ class InternalGroups(
   with BasicPlayComponents
   with CassandraComponents
   with SysConfig
+  with BootingProcess
   with Logging {
 
   @volatile private var _num2Id  : Seq[UUID]      = _
   @volatile private var _id2num  : Map[UUID, Int] = _
   @volatile private var _anyoneId: UUID           = _
 
-  create.ifNotExists.future()
-    .andThen { case _ => preLoad(this) }
-    .flatMap { case _ => loadOrInit }
-    .andThen { case Success(true) => postInit(this) }
+  onStart(
+    create.ifNotExists.future()
+      .andThen { case _ => preLoad(this) }
+      .flatMap { case _ => loadOrInit }
+      .andThen { case Success(true) => postInit(this) }
+  )
 
   private def loadOrInit: Future[Boolean] = {
     import InternalGroupsCode._

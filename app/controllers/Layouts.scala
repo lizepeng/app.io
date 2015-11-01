@@ -2,12 +2,11 @@ package controllers
 
 import helpers._
 import models.InternalGroups
-import models.sys.SysConfigs
 import play.api.i18n.Messages
 import play.api.libs.json.Json
 import views.html
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent._
 import scala.util.Success
 
 /**
@@ -37,7 +36,7 @@ object Layouts extends Logging {
     _internalGroups
       .setLayout(_internalGroups.AnyoneId, layout_admin)
       .andThen { case Success(true) =>
-      Logger.debug("Initialized layout of Anyone")
-    }
+        Logger.debug("Initialized layout of Anyone")
+      }
   }
 }

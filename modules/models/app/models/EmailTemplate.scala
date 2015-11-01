@@ -132,9 +132,10 @@ class EmailTemplates(
   with ExtCQL[EmailTemplateTable, ET]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def build(
     id: UUID,

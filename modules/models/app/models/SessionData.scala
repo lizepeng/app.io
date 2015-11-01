@@ -52,9 +52,10 @@ class SessionData(
   with ExtCQL[SessionDataTable, UUID]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def get[T: TypeTag](
     key: String

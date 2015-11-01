@@ -59,9 +59,10 @@ class ExpirableLinks(
   with ExtCQL[ExpirableLinkTable, ExpirableLink]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def find(id: String): Future[ExpirableLink] =
     CQL {

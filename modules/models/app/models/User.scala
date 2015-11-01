@@ -180,11 +180,12 @@ class Users(
   with BasicPlayComponents
   with CassandraComponents
   with SysConfig
+  with BootingProcess
   with Logging {
 
   val _usersByEmail = new UsersByEmail
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   override def fromRow(r: Row): User = {
     User(
@@ -366,9 +367,10 @@ class UsersByEmail(
   with ExtCQL[UsersByEmailIndex, (String, UUID)]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def save(email: EmailAddress, id: UUID): Future[Boolean] = CQL {
     insert

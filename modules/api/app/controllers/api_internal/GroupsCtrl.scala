@@ -34,10 +34,11 @@ class GroupsCtrl(
   with UserActionComponents
   with DefaultPlayExecutor
   with RateLimitConfigComponents
+  with BootingProcess
   with I18nSupport
   with Logging {
 
-  ESIndexCleaner(_groups).dropIndexIfEmpty
+  onStart(ESIndexCleaner(_groups).dropIndexIfEmpty)
 
   case class GroupInfo(name: Name, description: Option[String])
 
