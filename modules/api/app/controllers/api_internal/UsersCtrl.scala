@@ -5,6 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import controllers.RateLimitConfigComponents
 import elasticsearch._
+import elasticsearch.mappings.UserMapping
 import helpers._
 import models._
 import play.api.i18n._
@@ -36,6 +37,8 @@ class UsersCtrl(
   with Logging {
 
   ESIndexCleaner(_users).dropIndexIfEmpty
+
+  es.PutMapping(UserMapping)
 
   case class UserInfo(
     uid: Option[UUID],

@@ -2,6 +2,7 @@ package elasticsearch
 
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s._
+import com.sksamuel.elastic4s.mappings._
 import helpers._
 import models._
 import models.cassandra.Indexable
@@ -12,9 +13,10 @@ import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.action.update.UpdateResponse
 import org.elasticsearch.common.settings.ImmutableSettings
+import org.elasticsearch.common.xcontent.XContentBuilder
 import play.api.libs.json.JsValue
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent._
 
 /**
  * @author zepeng.li@gmail.com
@@ -55,6 +57,19 @@ class ElasticSearch(
 
   implicit val indexName = domain
 
+  // create index with customized analyzers
+  Client.execute {
+    create index indexName analysis(
+      ElasticSearch.analyzers.defaultDef,
+      ElasticSearch.analyzers.emailDef)
+  }
+
+  def PutMapping[T <: Indexable[_]](
+    mapping: T => Iterable[TypedFieldDefinition]
+  )(implicit t: T) = Client.execute {
+    put mapping indexName / t.basicName as mapping(t)
+  }
+
   def Index[T <: HasID[_]](r: T) = new IndexAction(r)
 
   def Delete[ID](r: ID) = new DeleteAction(r)
@@ -72,6 +87,21 @@ class ElasticSearch(
     new ReadyMultiSearchDefinition(Client)(
       defs.map(_ (this).definition)
     )
+
+}
+
+object ElasticSearch {
+
+  object analyzers {
+    val emailDef = CustomAnalyzerDefinition("email", UaxUrlEmailTokenizer)
+    val email    = CustomAnalyzer("email")
+
+    val defaultDef = new AnalyzerDefinition("default") {
+      def build(source: XContentBuilder): Unit = {
+        source.field("type", "smartcn")
+      }
+    }
+  }
 
 }
 

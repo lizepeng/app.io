@@ -162,9 +162,7 @@ object User
     override def writes(o: User): JsValue = Json.obj(
       "id" -> o.id,
       "name" -> o.name,
-      "email" -> o.email,
-      "int_groups" -> o.internal_groups_code.code,
-      "ext_groups" -> o.external_groups
+      "email" -> o.email
     )
   }
 }
