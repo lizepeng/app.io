@@ -146,7 +146,7 @@ implicit req: UserRequest[_], messages: Messages)
       GroupList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        sort     : '@sort.mkString(",")',
+        sort     : @Html(SortField.toJson(sort)),
         nextPage : '@Html(routes.GroupsCtrl.index(pager.next, sort).toString)',
         prevPage : '@Html(routes.GroupsCtrl.index(pager.prev, sort).toString)'
       });

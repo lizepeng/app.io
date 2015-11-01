@@ -2,6 +2,7 @@ package elasticsearch
 
 import com.sksamuel.elastic4s.FieldSortDefinition
 import org.elasticsearch.search.sort.SortOrder
+import play.api.libs.json.Json
 import play.api.mvc.QueryStringBindable
 
 /**
@@ -15,14 +16,21 @@ trait SortField extends Any {
   def sortDef: FieldSortDefinition
 
   def toQueryString: String
+
+  def toJavaScript: String
 }
 
 object SortField {
 
+  def toJson(sort: Traversable[SortField]) =
+    Json.prettyPrint(
+      Json.toJson(sort.map(_.toJavaScript))
+    )
+
   implicit def queryStringBinder: QueryStringBindable[SortField] =
     new QueryStringBindable[SortField] {
 
-      val pattern1 = """([\w]+)""".r
+      val pattern1 = """ ([\w]+)""".r
       val pattern2 = """-([\w]+)""".r
 
       override def bind(
@@ -43,18 +51,20 @@ object SortField {
 
 class AscendingSortField(val name: String) extends AnyVal with SortField {
 
-  def sortDef: FieldSortDefinition = new FieldSortDefinition(name).order(SortOrder.ASC)
+  def sortDef: FieldSortDefinition =
+    new FieldSortDefinition(name).order(SortOrder.ASC).missing("_first")
 
-  def toQueryString = name
+  def toQueryString = s"+$name"
 
-  override def toString = toQueryString
+  def toJavaScript = s" $name"
 }
 
 class DescendingSortField(val name: String) extends AnyVal with SortField {
 
-  def sortDef: FieldSortDefinition = new FieldSortDefinition(name).order(SortOrder.DESC)
+  def sortDef: FieldSortDefinition =
+    new FieldSortDefinition(name).order(SortOrder.DESC).missing("_last")
 
   def toQueryString = s"-$name"
 
-  override def toString = toQueryString
+  def toJavaScript = s"-$name"
 }

@@ -149,7 +149,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
       ACList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        sort     : '@sort.mkString(",")',
+        sort     : @Html(SortField.toJson(sort)),
         nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next,sort).toString)',
         prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev,sort).toString)'
       });

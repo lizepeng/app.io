@@ -1,7 +1,6 @@
 import java.io.IOException
 
 import com.sksamuel.elastic4s.source._
-import com.websudos.phantom.dsl.Column
 import helpers.Pager
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.bytes.BytesReference
@@ -107,8 +106,16 @@ package object elasticsearch {
     }
   }
 
+  import com.websudos.phantom.dsl._
 
   implicit class ColumnToSortField(val column: Column[_, _, _]) extends AnyVal {
+
+    def asc = new AscendingSortField(column.name)
+
+    def desc = new DescendingSortField(column.name)
+  }
+
+  implicit class optionalColumnToSortField(val column: OptionalColumn[_, _, _]) extends AnyVal {
 
     def asc = new AscendingSortField(column.name)
 

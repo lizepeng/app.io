@@ -27,7 +27,7 @@ views.access_controls.index.factory 'ACList', [
       service.aces = AC.query
         page     : params.page
         per_page : params.pageSize,
-        sort     : params.sort,
+        sort     : params.sort.join(','),
         (aces, headers) =>
           buildPerm ace for ace in aces
           LinkHeader.updateLinks params.nextPage, params.prevPage, headers

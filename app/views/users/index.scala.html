@@ -135,7 +135,7 @@ implicit req: UserRequest[_], messages: Messages)
       UserList.options = {
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        sort     : '@sort.mkString(",")',
+        sort     : @Html(SortField.toJson(sort)),
         nextPage : '@Html(routes.UsersCtrl.index(pager.next).toString)',
         prevPage : '@Html(routes.UsersCtrl.index(pager.prev).toString)'
       };

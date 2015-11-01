@@ -25,6 +25,9 @@ trait SortableFields[R] {
 
   implicit def columnToSortableField(column: Column[_, R, _]): SortableField =
     new SortableField(column.name)
+
+  implicit def optionalColumnToSortableField(column: OptionalColumn[_, R, _]): SortableField =
+    new SortableField(column.name)
 }
 
 class SortableField(val name: String) extends AnyVal
