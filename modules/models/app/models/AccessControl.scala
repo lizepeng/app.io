@@ -155,11 +155,6 @@ class AccessControls(
         .and(_.resource eqs resource)
     }.future()
 
-  def list(pager: Pager): Future[Page[AccessControlEntry]] = {
-    CQL(select).fetchEnumerator |>>>
-      PIteratee.slice[AccessControlEntry](pager.start, pager.limit)
-  }.map(_.toIterable).map(Page(pager, _))
-
   def all: Enumerator[AccessControlEntry] =
     CQL(select).fetchEnumerator
 

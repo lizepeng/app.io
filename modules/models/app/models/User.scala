@@ -300,11 +300,6 @@ class Users(
     }
   }
 
-  def list(pager: Pager): Future[Page[User]] = {
-    CQL(select).fetchEnumerator |>>>
-      PIteratee.slice[User](pager.start, pager.limit)
-  }.map(_.toIterable).map(Page(pager, _))
-
   def all: Enumerator[User] = {
     CQL(select).fetchEnumerator
   }

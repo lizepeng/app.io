@@ -14,7 +14,7 @@ routesImport ++= Seq(
   "helpers.Pager",
   "java.util.UUID",
   "models.cfs._",
-  "org.joda.time.DateTime",
+  "org.joda.time._",
   "play.api.i18n.Lang",
   "scala.language.reflectiveCalls"
 )

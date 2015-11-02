@@ -74,10 +74,9 @@ case class Directory(
 
   def list(pager: Pager)(
     implicit cfs: CassandraFileSystem
-  ): Future[Page[INode]] = {
-    cfs._directories.stream(this) |>>>
-      PIteratee.slice(pager.start, pager.limit)
-  }.map(_.toIterable).map(Page(pager, _))
+  ): Future[Page[INode]] = Page(pager) {
+    cfs._directories.stream(this)
+  }
 
   private def find(segments: Seq[String])(
     implicit cfs: CassandraFileSystem

@@ -147,16 +147,11 @@ class Groups(
         case _    => throw Group.NotEmpty(id)
       }
 
-  def children(id: UUID, pager: Pager): Future[Page[UUID]] = {
+  def children(id: UUID, pager: Pager): Future[Page[UUID]] = Page(pager) {
     CQL {
-      select(_.child_id)
-        .where(_.id eqs id)
-    }.fetchEnumerator() |>>>
-      PIteratee.slice[UUID](pager.start, pager.limit)
-  }.map(_.toIterable)
-    //because child_id could be null
-    .recover { case e: Exception => Nil }
-    .map(Page(pager, _))
+      select(_.child_id).where(_.id eqs id)
+    }.fetchEnumerator()
+  }
 
   def addChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     Batch.logged

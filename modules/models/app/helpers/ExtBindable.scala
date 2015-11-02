@@ -1,6 +1,6 @@
 package helpers
 
-import org.joda.time.DateTime
+import org.joda.time._
 import play.api.i18n.Lang
 import play.api.mvc.QueryStringBindable
 import play.api.mvc.QueryStringBindable.Parsing
@@ -22,6 +22,13 @@ object ExtBindable {
     key: String,
     e: Exception
     ) => "Cannot parse parameter %s as DateTime: %s".format(key, e.getMessage)
+  )
+
+  implicit object bindableQueryYearMonth extends Parsing[YearMonth](
+    s => YearMonth.parse(s), _.toString, (
+    key: String,
+    e: Exception
+    ) => "Cannot parse parameter %s as YearMonth: %s".format(key, e.getMessage)
   )
 
   /**

@@ -1,10 +1,13 @@
 package helpers
 
+import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import play.api.http._
+import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Codec, QueryStringBindable}
 
 import scala.collection.Iterable
+import scala.concurrent._
 import scala.language.implicitConversions
 
 /**
@@ -41,6 +44,15 @@ object Page {
       p => codec.encode(Json.prettyPrint(Json.toJson(p: Iterable[E]))),
       Some(ContentTypes.JSON)
     )
+  }
+
+  def apply[R](p: Pager)(enumerator: Enumerator[R])(
+    implicit ec: ExecutionContext
+  ): Future[Page[R]] = {
+    (enumerator |>>> PIteratee.slice[R](p.start,p.limit))
+      .map(_.toIterable)
+      .recover { case e: Throwable => Nil }
+      .map(Page(p, _))
   }
 }
 
