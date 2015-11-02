@@ -96,7 +96,9 @@ class ElasticSearch(
 
 }
 
-object ElasticSearch {
+object ElasticSearch extends CanonicalNamed {
+
+  override val basicName: String = "elastic_search"
 
   object analyzers {
     val emailDef = CustomAnalyzerDefinition("email", UaxUrlEmailTokenizer)
