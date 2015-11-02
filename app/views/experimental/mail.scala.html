@@ -1,0 +1,45 @@
+@()(implicit req: MaybeUserRequest[_], messages: Messages)
+
+@layouts.base(MSG("Send mail")){
+
+<div class="row" ng-controller="MailSendCtrl">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+    <form ng-submit="send(message)">
+      <legend>Send Mail</legend>
+
+      <div class="form-group">
+        <input type="text" class="form-control"
+          placeholder="To"
+          ng-model="message.to">
+      </div>
+
+      <div class="form-group">
+        <input type="text" class="form-control"
+          placeholder="Subject"
+          ng-model="message.subject">
+      </div>
+
+      <div class="form-group">
+        <textarea class="form-control" rows="6" ng-model="message.text">
+        </textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">@MSG("Send")</button>
+    </form>
+  </div>
+</div>
+
+}()(js)
+
+@js = {
+  <script type="text/javascript">
+    angular.module('mail', [])
+      .controller('MailSendCtrl', [ '$scope', '$http', function($scope, $http){
+        $scope.send = function(msg) {
+          $http.post('/experimental/mail/send', { mail : msg })
+        }
+      }]);
+
+    angular.module('app').requires.push('mail');
+  </script>
+}
