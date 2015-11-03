@@ -12,10 +12,6 @@ implicit req: UserRequest[_], messages: Messages)
     <h1>
       <i class="fa fa-envelope-o fa-lg fa-fw"></i>
       @EmailTemplatesCtrl.msg("head")
-      <a href="@routes.EmailTemplatesCtrl.nnew()" class="btn btn-success pull-right">
-        <i class="fa fa-plus"></i>
-        @MSG("new")
-      </a>
     </h1>
   </div>
 
@@ -78,6 +74,20 @@ implicit req: UserRequest[_], messages: Messages)
       </tbody>
     </table>
   </div>
-  @{_pager(page, p => routes.EmailTemplatesCtrl.index(p))}
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <a href="@routes.EmailTemplatesCtrl.nnew()" class="btn btn-success pull-right">
+        <i class="fa fa-plus"></i>
+        @EmailTemplatesCtrl.msg("new.head")
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      @{_pager(page, p => routes.EmailTemplatesCtrl.index(p))}
+    </div>
+  </div>
 
 }()()

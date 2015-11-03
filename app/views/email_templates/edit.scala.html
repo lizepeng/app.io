@@ -6,6 +6,8 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
 
 @layouts.base(EmailTemplatesCtrl.msg("edit.title")){
 
+  @common._flashing()
+
   @fm.globalErrors.map { gerr =>
     @common._alert("danger"){
       @MSG(gerr.message)
@@ -87,14 +89,14 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
                     @{_textarea(fm("text"),
                       '_label      -> MSG("text"),
                       'placeholder -> EmailTemplatesCtrl.msg("text.sample"),
-                      'rows        -> 24,
+                      'rows        -> 12,
                       'tabindex    -> 4
                       )(_fc_form_group)
                     }
                   </div>
                 </div>
 
-                <button type="submit" class="btn btn-success" tabindex="5">
+                <button type="submit" class="btn btn-success pull-right" tabindex="5">
                   <i class ="fa fa-save fa-lg"></i>
                   @MSG("save")
                 </button>

@@ -1,8 +1,5 @@
 package controllers
 
-import java.util.UUID
-
-import com.datastax.driver.core.utils.UUIDs
 import helpers._
 import models._
 import org.joda.time.DateTime
@@ -62,7 +59,7 @@ class EmailTemplatesCtrl(
       }
     }
 
-  def show(id: UUID, lang: Lang, updated_at: Option[DateTime] = None) =
+  def show(id: String, lang: Lang, updated_at: Option[DateTime] = None) =
     UserAction(_.Show).async { implicit req =>
       for {
         tmpl <- _emailTemplates.find(id, lang, updated_at)
@@ -90,26 +87,32 @@ class EmailTemplatesCtrl(
           }
         },
         success => {
-          _emailTemplates.build(
-            id = UUIDs.timeBased(),
+          EmailTemplate.nnew(
+            id = success.name,
             lang = Lang(success.lang),
             name = success.name,
             subject = success.subject,
             text = success.text,
-            created_by = req.user.id,
-            updated_by = req.user.id
+            created_at = DateTime.now,
+            created_by = req.user.id
           ).save.map { saved =>
             Redirect {
               routes.EmailTemplatesCtrl.index()
             }.flashing {
               AlertLevel.Success -> message("created", saved.name)
             }
+          }.recover {
+            case e: EmailTemplate.UpdatedByOther => Redirect {
+              routes.EmailTemplatesCtrl.show(success.name, Lang(success.lang))
+            }.flashing {
+              AlertLevel.Danger -> message("exists", success.name)
+            }
           }
         }
       )
     }
 
-  def edit(id: UUID, lang: Lang) =
+  def edit(id: String, lang: Lang) =
     UserAction(_.Edit).async { implicit req =>
       val result =
         for {
@@ -129,7 +132,7 @@ class EmailTemplatesCtrl(
       }
     }
 
-  def save(id: UUID, lang: Lang) =
+  def save(id: String, lang: Lang) =
     UserAction(_.Save).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
@@ -157,6 +160,8 @@ class EmailTemplatesCtrl(
                 ____ <- _sessionData.remove(key_editing(id))
               } yield Redirect {
                 routes.EmailTemplatesCtrl.edit(id, lang)
+              }.flashing {
+                AlertLevel.Success -> message("saved", id)
               }
             case None    => Future.successful(BadRequest)
           }.recover {
@@ -168,7 +173,7 @@ class EmailTemplatesCtrl(
       )
     }
 
-  def history(id: UUID, lang: Lang, pager: Pager) =
+  def history(id: String, lang: Lang, pager: Pager) =
     UserAction(_.HistoryIndex).async { implicit req =>
       for {
         tmpl <- _emailTemplates.find(id, lang)
@@ -182,7 +187,7 @@ class EmailTemplatesCtrl(
       }
     }
 
-  def destroy(id: UUID, lang: Lang) =
+  def destroy(id: String, lang: Lang) =
     UserAction(_.Destroy).async { implicit req => {
       for {
         tmpl <- _emailTemplates.find(id, lang)
@@ -198,7 +203,7 @@ class EmailTemplatesCtrl(
 
     }
 
-  private def key_editing(id: UUID) = s"$canonicalName - $id - version"
+  private def key_editing(id: String) = s"$canonicalName - $id - version"
 }
 
 object EmailTemplatesCtrl

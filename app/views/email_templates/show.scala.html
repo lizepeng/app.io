@@ -5,10 +5,13 @@ implicit req: UserRequest[_], messages: Messages)
 
 @layouts.base(tmpl.name){
 
+  @common._flashing()
+
   <div class="page-header">
     <h1>
       <i class="fa fa-envelope-o fa-lg fa-fw"></i>
       @EmailTemplatesCtrl.msg("head")
+      <small>@tmpl.name</small>
     </h1>
   </div>
 

@@ -17,8 +17,7 @@ trait SysConfig {
   object System {
 
     def config[T](key: String, default: T)(
-      implicit serializer: Stringifier[T],
-      sysConfig: SysConfigs
+      implicit serializer: Stringifier[T], sysConfig: SysConfigs
     ) = {
       sysConfig.getOrElseUpdate(
         canonicalName, key, default

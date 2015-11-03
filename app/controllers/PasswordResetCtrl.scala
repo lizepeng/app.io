@@ -135,7 +135,7 @@ class PasswordResetCtrl(
       )
     }
 
-  private lazy val mailer = for {
+  private lazy val emailUser = for {
     uid <- System.UUID("user.id")
     usr <- _users.find(uid).recoverWith {
       case e: User.NotFound => _users.save(
@@ -152,23 +152,10 @@ class PasswordResetCtrl(
     implicit messages: Messages
   ): Future[EmailTemplate] =
     for {
-      uuid <- System.UUID(key)
-      user <- mailer
-      tmpl <- _emailTemplates.find(uuid, messages.lang)
-        .recoverWith {
-          case e: EmailTemplate.NotFound =>
-            _emailTemplates.save(
-              _emailTemplates.build(
-                uuid, Lang.defaultLang,
-                key,
-                subject = "",
-                text = "",
-                user.id,
-                user.id
-              )
-            )
-        }
+      user <- emailUser
+      tmpl <- _emailTemplates.getOrElseUpdate(key, messages.lang)(user)
     } yield tmpl
+
 
   private def onError(bound: Form[EmailAddress], key: String)(
     implicit req: MaybeUserRequest[_]
