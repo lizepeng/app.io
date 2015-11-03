@@ -23,11 +23,13 @@ trait SortableFields[R] {
 
   def sortable: Set[SortableField] = Set()
 
-  implicit def columnToSortableField(column: Column[_, R, _]): SortableField =
-    new SortableField(column.name)
+  implicit def columnToSortableField(
+    column: Column[_, R, _]
+  ): SortableField = SortableField(column.name)
 
-  implicit def optionalColumnToSortableField(column: OptionalColumn[_, R, _]): SortableField =
-    new SortableField(column.name)
+  implicit def optionalColumnToSortableField(
+    column: OptionalColumn[_, R, _]
+  ): SortableField = SortableField(column.name)
 }
 
-class SortableField(val name: String) extends AnyVal
+case class SortableField(name: String) extends AnyVal
