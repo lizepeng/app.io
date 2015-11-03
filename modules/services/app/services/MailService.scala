@@ -30,27 +30,32 @@ class MailService(
     .getStringSeq("admin.email-addresses")
     .getOrElse(Seq.empty)
 
-  def schedule(
+  def sendTo(user: User)(
     mailer: String,
     tmpl: EmailTemplate,
-    user: User,
-    args: (String, Any)*
+    args: Map[String, Any] = Map()
+  ): Cancellable = send(
+    mailer, tmpl, args ++ Seq(
+      "to.name" -> user.name,
+      "to.email" -> user.email
+    )
+  )
+
+  def send(
+    mailer: String,
+    tmpl: EmailTemplate,
+    args: Map[String, Any] = Map()
   ): Cancellable = plugin.instance(mailer).schedule {
-    val args2: Seq[(String, Any)] =
-      args ++ Seq(
-        "user.name" -> user.name,
-        "user.email" -> user.email
-      )
 
     if (tmpl.subject.isEmpty || tmpl.text.isEmpty) {
       genAlertMail(s"Email Template ${tmpl.id} is empty!!!")
     }
     else {
       Email(
-        subject = substitute(tmpl.subject, args2: _*),
+        subject = substitute(tmpl.subject, args),
         from = "",
-        to = Seq(s"${user.name} <${user.email}>"),
-        bodyText = Some(substitute(tmpl.text, args2: _*))
+        to = Seq(s"${args("to.name")} <${args("to.email")}>"),
+        bodyText = Some(substitute(tmpl.text, args))
       )
     }
   }
@@ -59,23 +64,18 @@ class MailService(
     subject = "Warning",
     from = "",
     to = Seq(s"Administrators ${admins.map("<" + _ + ">").mkString(",")}"),
-    bodyText = Some(
-      s"""
-        |$text
-      """.stripMargin
-    )
+    bodyText = Some(text)
   )
 
   val anyPattern = """[\$|#]\{([\.\w]+)\}""".r
   val msgPattern = """\$\{([\.\w]+)\}""".r
   val argPattern = """#\{([\.\w]+)\}""".r
 
-  def substitute(text: String, args: (String, Any)*) = {
-    val map = args.toMap
+  def substitute(text: String, args: Map[String, Any]) = {
     anyPattern replaceAllIn(text, _ match {
-      case msgPattern(n)                    => messagesApi(n)
-      case argPattern(n) if map.contains(n) => map.get(n).get.toString
-      case _                                => "#{???}"
+      case msgPattern(n)                     => messagesApi(n)
+      case argPattern(n) if args.contains(n) => args.get(n).get.toString
+      case _                                 => "#{???}"
     })
   }
 }

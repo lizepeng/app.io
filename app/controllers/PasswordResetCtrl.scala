@@ -76,8 +76,8 @@ class PasswordResetCtrl(
           user <- _users.find(success)
           link <- _expirableLinks.save(user.id.toString)
           tmpl <- getEmailTemplate(s"$basicName.email1")
-        } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
-          mailService.schedule("noreply", tmpl, u, "link" -> id)
+        } yield (user, link.id, tmpl)).map { case (user, id, tmpl) =>
+          mailService.sendTo(user)("noreply", tmpl, Map("link" -> id))
           Ok(html.password_reset.sent())
         }.recover {
           case e: User.NotFound          =>
@@ -124,7 +124,7 @@ class PasswordResetCtrl(
           ____ <- user.updatePassword(success.original)
           tmpl <- getEmailTemplate(s"$basicName.email2")
         } yield (user, tmpl)).map { case (user, tmpl) =>
-          mailService.schedule("support", tmpl, user)
+          mailService.sendTo(user)("support", tmpl)
           Redirect(routes.SessionsCtrl.nnew()).flashing(
             AlertLevel.Info -> message("password.changed")
           )
