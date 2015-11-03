@@ -3,17 +3,17 @@ package models
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
-import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers.ExtCrypto._
 import helpers._
 import models.cassandra._
-import models.sys.{SysConfig, SysConfigs}
+import models.sys._
 import org.joda.time.DateTime
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
+import scala.util.Random
 
 /**
  * @author zepeng.li@gmail.com
@@ -80,10 +80,10 @@ case class User(
   }
 
   private def encrypt(salt: String, passwd: Password) =
-    Crypto.sha2(s"$salt--$passwd")
+    Crypto.sha2(s"$salt--${passwd.self}")
 
   private def makeSalt(passwd: Password) =
-    Crypto.sha2(s"${DateTime.now}--$passwd")
+    Crypto.sha2(s"${DateTime.now}--${passwd.self}--${Random.nextString(32)}")
 }
 
 trait UserCanonicalNamed extends CanonicalNamed {

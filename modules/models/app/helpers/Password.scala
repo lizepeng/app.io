@@ -9,7 +9,7 @@ import play.api.data.{Forms, Mapping}
  */
 case class Password(self: String) extends AnyVal {
 
-  override def toString = "***"
+  override def toString = "*******"
 }
 
 object Password {
