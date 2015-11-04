@@ -34,20 +34,22 @@ class EmailTemplatesCtrl(
     mapping(
       "lang" -> nonEmptyText.verifying(Lang.get(_).isDefined),
       "name" -> nonEmptyText(6, 255),
-      "subject" -> nonEmptyText(6, 255),
-      "text" -> text
+      "subject" -> nonEmptyText(6, 512),
+      "to" -> nonEmptyText(6, 512),
+      "text" -> nonEmptyText(6, 8192)
     )(TemplateFD.apply)(TemplateFD.unapply)
   )
 
   case class TemplateFD(
     lang: String,
     name: String,
+    to: String,
     subject: String,
     text: String
   )
 
   implicit def tmpl2FormData(tmpl: EmailTemplate): TemplateFD = {
-    TemplateFD(tmpl.lang.code, tmpl.name, tmpl.subject, tmpl.text)
+    TemplateFD(tmpl.lang.code, tmpl.name, tmpl.to, tmpl.subject, tmpl.text)
   }
 
   def index(pager: Pager) =
@@ -91,6 +93,7 @@ class EmailTemplatesCtrl(
             id = success.name,
             lang = Lang(success.lang),
             name = success.name,
+            to = success.to,
             subject = success.subject,
             text = success.text,
             created_at = DateTime.now,
@@ -151,6 +154,7 @@ class EmailTemplatesCtrl(
                 tmpl <- _emailTemplates.find(id, lang, d)
                 done <- tmpl.copy(
                   name = success.name,
+                  to = success.to,
                   subject = success.subject,
                   text = success.text,
                   updated_by = req.user.id

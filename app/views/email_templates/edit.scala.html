@@ -57,8 +57,7 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
                   <div class="col-xs-12 col-sm-9">
                     @{_input_text(fm("name"),
                       '_label      -> MSG("name"),
-                      'placeholder -> EmailTemplatesCtrl.msg("name.place_holder"),
-                      'tabindex    -> 1
+                      'placeholder -> EmailTemplatesCtrl.msg("name.place_holder")
                       )(_fc_form_group)
                     }
                   </div>
@@ -66,7 +65,6 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
                   <div class="col-xs-12 col-sm-3">
                     @{_select(fm("lang"),
                       langs.availables.map(l => (l.code, MSG(s"lang.${l.code}"))),
-                      'tabindex    -> 2,
                       'disabled    -> true
                       )(_fc_form_group)
                     }
@@ -76,9 +74,18 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
                 <div class="row">
                   <div class="col-xs-12">
                     @{_input_text(fm("subject"),
-                      '_label      -> MSG("subject"),
-                      'placeholder -> EmailTemplatesCtrl.msg("subject.place_holder"),
-                      'tabindex    -> 3
+                      '_label      -> MSG("email.subject"),
+                      'placeholder -> EmailTemplatesCtrl.msg("email.subject.place_holder")
+                      )(_fc_form_group)
+                    }
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-xs-12">
+                    @{_input_text(fm("to"),
+                      '_label      -> MSG("email.to"),
+                      'placeholder -> EmailTemplatesCtrl.msg("email.to.place_holder")
                       )(_fc_form_group)
                     }
                   </div>
@@ -87,16 +94,15 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
                 <div class="row">
                   <div class="col-xs-12">
                     @{_textarea(fm("text"),
-                      '_label      -> MSG("text"),
-                      'placeholder -> EmailTemplatesCtrl.msg("text.sample"),
-                      'rows        -> 12,
-                      'tabindex    -> 4
+                      '_label      -> MSG("email.text"),
+                      'placeholder -> EmailTemplatesCtrl.msg("email.text.sample"),
+                      'rows        -> 12
                       )(_fc_form_group)
                     }
                   </div>
                 </div>
 
-                <button type="submit" class="btn btn-success pull-right" tabindex="5">
+                <button type="submit" class="btn btn-success pull-right">
                   <i class ="fa fa-save fa-lg"></i>
                   @MSG("save")
                 </button>

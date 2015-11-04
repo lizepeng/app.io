@@ -3,6 +3,9 @@
 # subject
 [${app.name}] Please reset your password
 
+# to
+#{to.name}
+
 #
 We heard that you lost your ${app.name} password. Sorry about that!
 
@@ -21,6 +24,9 @@ Your friends at ${app.name}
 
 # subject
 [${app.name}] Your password has changed
+
+# to
+#{to.name}
 
 #
 Hello #{to.name},

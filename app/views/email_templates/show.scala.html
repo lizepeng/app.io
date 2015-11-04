@@ -32,15 +32,23 @@ implicit req: UserRequest[_], messages: Messages)
 
   <div class="row">
     <div class="col-xs-12">
-      @common._form_group_static("subject") {
-        @tmpl.subject
+      @common._form_group_static("email.subject") {
+        <pre>@tmpl.subject</pre>
       }
     </div>
   </div>
 
   <div class="row">
     <div class="col-xs-12">
-      @common._form_group_static("text") {
+      @common._form_group_static("email.to") {
+        <pre>@tmpl.to</pre>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12">
+      @common._form_group_static("email.text") {
         <pre>@tmpl.text</pre>
       }
     </div>

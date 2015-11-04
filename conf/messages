@@ -9,7 +9,6 @@ com.profile                                      =Corporate Profile
 id                                               =Id
 user                                             =User
 password                                         =Password
-email                                            =Email address
 submit                                           =Submit
 action                                           =Action
 new                                              =New
@@ -23,14 +22,12 @@ next                                             =Next
 detail                                           =Detail
 edit                                             =Edit
 date                                             =Date
-text                                             =Text
 setting                                          =Setting
 preference                                       =Preference
 name                                             =Name
 history                                          =History
 help                                             =Help
 schedule                                         =Schedule
-subject                                          =Subject
 principal                                        =Principal
 resource                                         =Resource
 type                                             =Type
@@ -59,6 +56,12 @@ dashboard                                        =Dashboard
 profile.picture                                  =Profile Picture
 profile.picture.upload                           =Upload new Picture
 profile.picture.accept.formats                   =JPG, GIF or PNG image
+
+# email
+email                                            =Email address
+email.to                                         =To
+email.subject                                    =Subject
+email.text                                       =Text
 
 # layout
 layout                                           =Layout
@@ -91,7 +94,6 @@ date.format.long                                 =yyyy-MM-dd
 month.format.long                                =yyyy-MM
 datetime.format                                  =yyyy-MM-dd hh:mm:ss
 datetime.format.created_at                       =yyyy-MM-dd hh:mma
-
 
 # form validation
 email.empty                                      =Email can''t be blank
@@ -290,8 +292,9 @@ controllers.email_templates.saved                =Email Template {0} has been sa
 views.email_templates.title                      =Email Templates
 views.email_templates.head                       =Email Templates
 views.email_templates.name.place_holder          =Enter name of your new email template
-views.email_templates.subject.place_holder       =Enter subject of your new email template
-views.email_templates.text.sample                =Text sample.
+views.email_templates.email.to.place_holder      =Enter receiver of your new email template
+views.email_templates.email.subject.place_holder =Enter subject of your new email template
+views.email_templates.email.text.sample          =Text sample.
 
 views.email_templates.new.title                  =Create a new template
 views.email_templates.new.head                   =Create a new template

@@ -18,6 +18,7 @@ case class EmailTemplate(
   id: String,
   lang: Lang,
   name: String,
+  to: String,
   subject: String,
   text: String,
   created_at: DateTime,
@@ -26,14 +27,18 @@ case class EmailTemplate(
   updated_by: UUID
 ) extends HasID[String] with TimeBased {
 
-  def save(implicit _emailTemplates: EmailTemplates) =
-    _emailTemplates.save(this)
+  def invalid = to.isEmpty || subject.isEmpty || text.isEmpty
+
+  def save(
+    implicit _emailTemplates: EmailTemplates
+  ) = _emailTemplates.save(this)
 }
 
 case class EmailTemplateHistory(
   id: String,
   lang: Lang,
   name: String,
+  to: String,
   subject: String,
   text: String,
   updated_at: DateTime,
@@ -86,10 +91,13 @@ trait EmailTemplateHistoryColumns[T <: CassandraTable[T, R], R] {
   object name
     extends StringColumn(this)
 
-  object subject
+  object email_to
     extends StringColumn(this)
 
-  object text
+  object email_subject
+    extends StringColumn(this)
+
+  object email_text
     extends StringColumn(this)
 
   object updated_by
@@ -108,8 +116,9 @@ sealed class EmailTemplateTable
     id(r),
     Lang(lang(r)),
     name(r),
-    subject(r),
-    text(r),
+    email_to(r),
+    email_subject(r),
+    email_text(r),
     created_at(r),
     created_by(r),
     updated_at(r),
@@ -131,6 +140,7 @@ object EmailTemplate
     id: String,
     lang: Lang,
     name: String,
+    to: String,
     subject: String,
     text: String,
     created_at: DateTime,
@@ -140,6 +150,7 @@ object EmailTemplate
       id = id,
       lang = lang,
       name = name,
+      to = to,
       subject = subject,
       text = text,
       created_at = created_at,
@@ -213,6 +224,7 @@ class EmailTemplates(
           id = id,
           lang = lang,
           name = id,
+          to = "",
           subject = "",
           text = "",
           created_at = DateTime.now,
@@ -239,8 +251,9 @@ class EmailTemplates(
           .and(_.lang eqs tmpl.lang.code)
           .and(_.updated_at eqs curr)
           .modify(_.name setTo tmpl.name)
-          .and(_.subject setTo tmpl.subject)
-          .and(_.text setTo tmpl.text)
+          .and(_.email_to setTo tmpl.to)
+          .and(_.email_subject setTo tmpl.subject)
+          .and(_.email_text setTo tmpl.text)
           .and(_.last_updated_at setTo curr)
           .and(_.updated_by setTo tmpl.updated_by)
           .onlyIf(_.last_updated_at is tmpl.updated_at)
@@ -273,8 +286,9 @@ sealed class EmailTemplateHistoryTable
     id(r),
     Lang(lang(r)),
     name(r),
-    subject(r),
-    text(r),
+    email_to(r),
+    email_subject(r),
+    email_text(r),
     updated_at(r),
     updated_by(r)
   )

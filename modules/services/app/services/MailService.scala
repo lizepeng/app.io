@@ -45,14 +45,13 @@ class MailService(
     args: Map[String, Any] = Map()
   ): Cancellable = plugin.instance(mailer).schedule {
 
-    if (tmpl.subject.isEmpty || tmpl.text.isEmpty) {
+    if (tmpl.invalid) {
       genAlertMail(s"Email Template ${tmpl.id} is empty!!!")
-    }
-    else {
+    } else {
       Email(
         subject = substitute(tmpl.subject, args),
         from = "",
-        to = Seq(s"${args("to.name")} <${args("to.email")}>"),
+        to = Seq(s"${substitute(tmpl.to, args)} <${args("to.email")}>"),
         bodyText = Some(substitute(tmpl.text, args))
       )
     }
