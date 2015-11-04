@@ -17,12 +17,10 @@ import scala.concurrent.duration._
 class MailService(
   val basicPlayApi: BasicPlayApi
 )
-  extends CanonicalNamed
+  extends MailServiceCanonicalNamed
   with BasicPlayComponents
   with AppConfigComponents
   with I18nSupport {
-
-  override val basicName: String = "mailer"
 
   val plugin = new MAMailerPlugin(configuration, actorSystem)
 
@@ -78,6 +76,12 @@ class MailService(
       case _                                 => "#{???}"
     })
   }
+}
+
+object MailService extends MailServiceCanonicalNamed
+
+trait MailServiceCanonicalNamed extends CanonicalNamed {
+  override val basicName: String = "mailer"
 }
 
 class MAMailerPlugin(
