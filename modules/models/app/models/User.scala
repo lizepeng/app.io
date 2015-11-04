@@ -99,7 +99,7 @@ sealed abstract class UserTable
   with UserCanonicalNamed {
 
   object id
-    extends UUIDColumn(this)
+    extends TimeUUIDColumn(this)
     with PartitionKey[UUID]
 
   object name

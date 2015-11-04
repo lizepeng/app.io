@@ -31,7 +31,7 @@ sealed class PersonTable
   with PersonCanonicalNamed {
 
   object id
-    extends UUIDColumn(this)
+    extends TimeUUIDColumn(this)
     with PartitionKey[UUID]
 
   object first_name

@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
-import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
@@ -37,7 +36,7 @@ sealed trait GroupTable
   with GroupCanonicalNamed {
 
   object id
-    extends UUIDColumn(this)
+    extends TimeUUIDColumn(this)
     with PartitionKey[UUID]
 
   object child_id
