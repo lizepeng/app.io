@@ -27,11 +27,11 @@ class CassandraFileSystem(
   with SysConfig
   with Logging {
 
-  implicit val _blocks         = new Blocks
-  implicit val _indirectBlocks = new IndirectBlocks
-  implicit val _files          = new Files
-  implicit val _inodes         = new INodes
-  implicit val _directories    = new Directories
+  implicit val _blocks        : Blocks         = new Blocks
+  implicit val _indirectBlocks: IndirectBlocks = new IndirectBlocks
+  implicit val _files         : Files          = new Files
+  implicit val _inodes        : INodes         = new INodes
+  implicit val _directories   : Directories    = new Directories
 
   def home(implicit user: User): Future[Directory] = {
     val uid = user.id

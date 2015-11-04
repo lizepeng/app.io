@@ -216,20 +216,23 @@ class EmailTemplates(
   }
 
   def getOrElseUpdate(id: String, lang: Lang)(
-    implicit user: User
+    systemAccount: => Future[User]
   ): Future[EmailTemplate] = {
     find(id, lang).recoverWith {
       case e: EmailTemplate.NotFound =>
-        EmailTemplate.nnew(
-          id = id,
-          lang = lang,
-          name = id,
-          to = "",
-          subject = "",
-          text = "",
-          created_at = DateTime.now,
-          created_by = user.id
-        ).save(this)
+        for {
+          user <- systemAccount
+          tmpl <- EmailTemplate.nnew(
+            id = id,
+            lang = lang,
+            name = id,
+            to = "",
+            subject = "",
+            text = "",
+            created_at = DateTime.now,
+            created_by = user.id
+          ).save(this)
+        } yield tmpl
     }
   }
 

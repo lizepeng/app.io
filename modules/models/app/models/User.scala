@@ -179,7 +179,7 @@ class Users(
   with ExtCQL[UserTable, User]
   with BasicPlayComponents
   with CassandraComponents
-  with SysConfig
+  with SystemAccounts
   with BootingProcess
   with Logging {
 
@@ -203,9 +203,7 @@ class Users(
     )
   }
 
-  lazy val root: Future[User] = System.UUID("root_id").map { uid =>
-    User(id = uid, name = Name("root"))
-  }
+  def root = _systemAccount(User)(context, this)
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)

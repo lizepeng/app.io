@@ -37,8 +37,8 @@ class PasswordResetCtrl(
   with DefaultPlayExecutor
   with I18nSupport
   with CanonicalNameBasedMessages
-  with SysConfig
-  with AppConfigComponents
+  with AppDomainComponents
+  with SystemAccounts
   with Logging {
 
   val emailFM = Form[EmailAddress](
@@ -135,27 +135,10 @@ class PasswordResetCtrl(
       )
     }
 
-  private lazy val emailUser = for {
-    uid <- System.UUID("user.id")
-    usr <- _users.find(uid).recoverWith {
-      case e: User.NotFound => _users.save(
-        User(
-          id = uid,
-          name = Name(basicName),
-          email = EmailAddress(s"$basicName@$domain")
-        )
-      )
-    }
-  } yield usr
-
   private def getEmailTemplate(key: String)(
     implicit messages: Messages
-  ): Future[EmailTemplate] =
-    for {
-      user <- emailUser
-      tmpl <- _emailTemplates.getOrElseUpdate(key, messages.lang)(user)
-    } yield tmpl
-
+  ): Future[EmailTemplate] = _emailTemplates
+    .getOrElseUpdate(key, messages.lang)(_systemAccount(PasswordResetCtrl))
 
   private def onError(bound: Form[EmailAddress], key: String)(
     implicit req: MaybeUserRequest[_]
