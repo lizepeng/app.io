@@ -148,7 +148,7 @@ class EmailTemplatesCtrl(
           _sessionData.get[DateTime](key_editing(id)).flatMap {
             case Some(d) =>
               for {
-                tmpl <- _emailTemplates.find(id, lang, Some(d))
+                tmpl <- _emailTemplates.find(id, lang, d)
                 done <- tmpl.copy(
                   name = success.name,
                   subject = success.subject,

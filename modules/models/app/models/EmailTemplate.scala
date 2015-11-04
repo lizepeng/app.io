@@ -168,33 +168,41 @@ class EmailTemplates(
     id: String,
     lang: Lang,
     updated_at: Option[DateTime] = None
-  ): Future[ET] =
-    find(id, lang.code, updated_at)
+  ): Future[ET] = updated_at match {
+    case Some(d) => find(id, lang, d)
+    case None    => find(id, lang)
+  }
 
-  def find(
-    id: String,
-    lang: String,
-    updated_at: Option[DateTime]
-  ): Future[ET] =
+  def find(id: String, lang: Lang, updated_at: DateTime): Future[ET] = {
     CQL {
-      updated_at
-        .map(
-          d => select
-            .where(_.id eqs id)
-            .and(_.lang eqs lang).and(_.updated_at eqs d)
-        )
-        .getOrElse(
-          select
-            .where(_.id eqs id)
-            .and(_.lang eqs lang)
-        )
-    }.one().map {
-      case None       => throw EmailTemplate.NotFound(id, lang)
-      case Some(tmpl) => tmpl
-    }.recoverWith {
-      case e: EmailTemplate.NotFound if lang != Lang.defaultLang.code =>
-        this.find(id, Lang.defaultLang, updated_at)
+      select
+        .where(_.id eqs id)
+        .and(_.lang eqs lang.code)
+        .and(_.updated_at eqs updated_at)
+    }.one().flatMap {
+      case Some(tmpl)                       =>
+        Future.successful(tmpl)
+      case None if lang != Lang.defaultLang =>
+        find(id, Lang.defaultLang, updated_at)
+      case _                                =>
+        throw EmailTemplate.NotFound(id, lang.code)
     }
+  }
+
+  def find(id: String, lang: Lang): Future[ET] = {
+    CQL {
+      select
+        .where(_.id eqs id)
+        .and(_.lang eqs lang.code)
+    }.one().flatMap {
+      case Some(tmpl)                       =>
+        Future.successful(tmpl)
+      case None if lang != Lang.defaultLang =>
+        find(id, Lang.defaultLang)
+      case _                                =>
+        throw EmailTemplate.NotFound(id, lang.code)
+    }
+  }
 
   def getOrElseUpdate(id: String, lang: Lang)(
     implicit user: User
@@ -245,7 +253,7 @@ class EmailTemplates(
 
   def list(pager: Pager): Future[List[ET]] = {
     CQL {select(_.id, _.lang).distinct}.fetchEnumerator &>
-      Enumeratee.mapM { case (id, lang) => find(id, lang, None) } |>>>
+      Enumeratee.mapM { case (id, lang) => find(id, Lang(lang)) } |>>>
       PIteratee.slice[ET](pager.start, pager.limit)
   }.map(_.toList)
 
