@@ -1,5 +1,7 @@
 package messages
 
+import java.util._
+
 import akka.actor._
 import models._
 import services.actors._
@@ -40,7 +42,7 @@ class MailActor extends UserMessageActor {
 
   override def receiveCommand: Receive = ({
 
-    case Envelope(uid, mail: Mail) =>
+    case Envelope(uid: UUID, mail: Mail) =>
       _mailInbox.save(uid, mail)
       _mailSent.save(mail)
       sockets.route(mail, sender())
