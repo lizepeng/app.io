@@ -21,17 +21,17 @@ object ResourcesMediator extends CanonicalNamedActor {
     _mailSent: MailSent
   ): Props = Props(new ResourcesMediator)
 
-  case object ModelRequired
   case object GetBasicPlayApi
+  case object GetKeySpaceBuilder
 }
 
 class ResourcesMediator(
   implicit
   basicPlayApi: BasicPlayApi,
   contactPoint: KeySpaceBuilder,
-  val _chatHistories: ChatHistories,
-  val _mailInbox: MailInbox,
-  val _mailSent: MailSent
+  _chatHistories: ChatHistories,
+  _mailInbox: MailInbox,
+  _mailSent: MailSent
 )
   extends Actor
   with ActorLogging {
@@ -40,11 +40,16 @@ class ResourcesMediator(
     log.info("Started")
   }
 
+  import ResourcesMediator._
+
   def receive = {
-    case ResourcesMediator.ModelRequired   => sender !(basicPlayApi, contactPoint)
-    case ResourcesMediator.GetBasicPlayApi => sender ! basicPlayApi
-    case ChatHistory.basicName             => sender ! _chatHistories
-    case MailInbox.basicName               => sender ! _mailInbox
-    case MailSent.basicName                => sender ! _mailSent
+
+    case keys: List[Any] => sender ! keys.collect {
+      case GetBasicPlayApi    => basicPlayApi
+      case GetKeySpaceBuilder => contactPoint
+      case ChatHistory        => _chatHistories
+      case MailInbox          => _mailInbox
+      case MailSent           => _mailSent
+    }
   }
 }

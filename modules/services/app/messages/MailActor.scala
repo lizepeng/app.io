@@ -1,6 +1,6 @@
 package messages
 
-import java.util._
+import java.util.UUID
 
 import akka.actor._
 import models._
@@ -22,19 +22,16 @@ class MailActor extends UserMessageActor {
 
   override def preStart() = {
     super.preStart()
-    mediator ! MailInbox.basicName
-    mediator ! MailSent.basicName
+    mediator ! List(MailInbox, MailSent)
   }
 
   def isAllResourcesReady = super.isResourcesReady &&
-    _mailInbox != null && _mailSent != null
+    _mailInbox != null &&
+    _mailSent != null
 
   override def awaitingResources: Receive = ({
-    case mi: MailInbox =>
+    case List(mi: MailInbox, ms: MailSent) =>
       _mailInbox = mi
-      tryToBecomeResourcesReady()
-
-    case ms: MailSent =>
       _mailSent = ms
       tryToBecomeResourcesReady()
 

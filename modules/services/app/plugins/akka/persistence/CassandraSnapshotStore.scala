@@ -30,6 +30,7 @@ object CassandraSnapshotStore {
 class CassandraSnapshotStore extends SnapshotStore with Stash {
 
   import CassandraSnapshotStore._
+  import ResourcesMediator._
   import context.dispatcher
 
   val maxLoadAttempts = 3
@@ -43,10 +44,10 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
   var deletingCriteria: mutable.Set[SnapshotSelectionCriteria] = mutable.Set.empty
 
   context become awaitingResources
-  mediator ! ResourcesMediator.ModelRequired
+  mediator ! List(GetBasicPlayApi, GetKeySpaceBuilder)
 
   def awaitingResources: Actor.Receive = {
-    case (bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
+    case List(bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
       snapshots = new Snapshots(bpa, cp)
       (for {
         _ <- snapshots.createIfNotExists()
@@ -67,13 +68,13 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
     val immutableDeletingCriteria = deletingCriteria.toSet
     snapshots.stream(persistenceId, criteria, maxLoadAttempts) &>
       Enumeratee.filterNot { sr =>
-        (false /: immutableDeletingMetadata.map {_ == sr.metadata})(_ || _)
+        (false /: immutableDeletingMetadata.map {_ == sr.metadata}) (_ || _)
       } &>
       Enumeratee.filterNot { sr =>
         (false /: immutableDeletingCriteria.map { c =>
           sr.metadata.sequenceNr <= c.maxSequenceNr &&
             sr.metadata.timestamp <= c.maxTimestamp
-        })(_ || _)
+        }) (_ || _)
       } &>
       Enumeratee.map { sr => (sr.metadata, deserialize(sr.snapshot)) } &>
       Enumeratee.collect { case (md, de) if de.isSuccess => SelectedSnapshot(md, de.get.data) } |>>>
@@ -96,8 +97,8 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
     snapshots
       .purge(metadata.persistenceId, metadata.sequenceNr)
       .onComplete {
-      case _ => self ! DeletedMeta(metadata)
-    }
+        case _ => self ! DeletedMeta(metadata)
+      }
 
   }
 

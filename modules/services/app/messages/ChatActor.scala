@@ -19,7 +19,7 @@ class ChatActor extends UserMessageActor {
 
   override def preStart() = {
     super.preStart()
-    mediator ! ChatHistory.basicName
+    mediator ! List(ChatHistory)
   }
 
   def isAllResourcesReady = super.isResourcesReady &&
@@ -27,7 +27,7 @@ class ChatActor extends UserMessageActor {
 
   override def awaitingResources: Receive = ({
 
-    case ch: ChatHistories =>
+    case List(ch: ChatHistories) =>
       _chatHistories = ch
       tryToBecomeResourcesReady()
 
