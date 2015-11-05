@@ -9,11 +9,11 @@ import akka.persistence.journal.AsyncWriteJournal
 import akka.serialization.SerializationExtension
 import com.datastax.driver.core.utils.Bytes
 import helpers._
-import models.actors.ResourcesMediator
 import models.cassandra.KeySpaceBuilder
 import play.api.libs.iteratee._
 import plugins.akka.persistence.cassandra.JournalVolumeRecord.Marker
 import plugins.akka.persistence.cassandra._
+import services.actors.ResourcesMediator
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Future

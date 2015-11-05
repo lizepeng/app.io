@@ -4,13 +4,13 @@ import akka.actor.{Actor, Props}
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.ConfigFactory
 import helpers.BasicPlayApi
-import models.actors.ResourcesMediator
 import models.cassandra.KeySpaceBuilder
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.junit.runner._
 import org.specs2.runner._
 import play.api._
 import play.api.inject.DefaultApplicationLifecycle
+import services.actors.ResourcesMediator
 
 /**
  * @author zepeng.li@gmail.com

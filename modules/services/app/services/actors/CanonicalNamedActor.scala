@@ -1,4 +1,4 @@
-package models.actors
+package services.actors
 
 import helpers.CanonicalNamed
 

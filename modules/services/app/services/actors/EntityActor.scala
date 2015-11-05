@@ -5,7 +5,6 @@ import akka.contrib.pattern.ShardRegion
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import helpers.BasicPlayApi
-import models.actors.ResourcesMediator
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
