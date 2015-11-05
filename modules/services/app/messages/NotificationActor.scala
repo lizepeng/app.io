@@ -28,3 +28,11 @@ class NotificationActor extends UserMessageActor {
   }: Receive) orElse super.receiveCommand
 
 }
+
+trait NotificationRegionComponents {
+  self: AkkaTimeOutConfig =>
+
+  def actorSystem: ActorSystem
+
+  def _notificationRegion = NotificationActor.getRegion(actorSystem)
+}
