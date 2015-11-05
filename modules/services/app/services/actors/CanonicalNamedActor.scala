@@ -1,6 +1,6 @@
 package services.actors
 
-import helpers.CanonicalNamed
+import helpers._
 
 /**
  * @author zepeng.li@gmail.com
@@ -8,4 +8,10 @@ import helpers.CanonicalNamed
 trait CanonicalNamedActor extends CanonicalNamed {
 
   def actorPath = s"/user/$basicName"
+}
+
+trait CanonicalNameAsShardName {
+  self: CanonicalNamed =>
+
+  def shardName: String = basicName
 }
