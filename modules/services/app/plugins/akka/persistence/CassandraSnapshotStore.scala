@@ -10,10 +10,10 @@ import akka.persistence.snapshot.SnapshotStore
 import akka.serialization.SerializationExtension
 import com.datastax.driver.core.utils.Bytes
 import helpers.BasicPlayApi
-import models.actors.ResourcesMediator
 import models.cassandra.KeySpaceBuilder
 import play.api.libs.iteratee._
 import plugins.akka.persistence.cassandra._
+import services.actors.ResourcesMediator
 
 import scala.concurrent.Future
 import scala.util.Try
