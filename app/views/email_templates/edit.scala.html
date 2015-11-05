@@ -102,10 +102,16 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
                   </div>
                 </div>
 
-                <button type="submit" class="btn btn-success pull-right">
-                  <i class ="fa fa-save fa-lg"></i>
-                  @MSG("save")
-                </button>
+                <div class="pull-right">
+                  <button type="submit" class="btn btn-primary">
+                    <i class ="fa fa-save fa-lg"></i>
+                    @MSG("save")
+                  </button>
+
+                  <a class="btn btn-link" href="@routes.EmailTemplatesCtrl.show(tmpl.id, tmpl.lang)">
+                    @MSG("cancel")
+                  </a>
+                </div>
               }
             </div>
           </div>

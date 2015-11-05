@@ -70,9 +70,15 @@ implicit req: UserRequest[_], messages: Messages, langs: Langs)
       </div>
     </div>
 
-    <button type="submit" class="btn btn-success pull-right">
-      <i class="fa fa-save fa-lg"></i>
-      @MSG("create")
-    </button>
+    <div class="pull-right">
+      <button type="submit" class="btn btn-success">
+        <i class="fa fa-save fa-lg"></i>
+        @MSG("create")
+      </button>
+
+      <a class="btn btn-link" href="@routes.EmailTemplatesCtrl.index()">
+        @MSG("cancel")
+      </a>
+    </div>
   }
 }()()

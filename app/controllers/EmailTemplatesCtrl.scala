@@ -43,13 +43,19 @@ class EmailTemplatesCtrl(
   case class TemplateFD(
     lang: String,
     name: String,
-    to: String,
     subject: String,
+    to: String,
     text: String
   )
 
   implicit def tmpl2FormData(tmpl: EmailTemplate): TemplateFD = {
-    TemplateFD(tmpl.lang.code, tmpl.name, tmpl.to, tmpl.subject, tmpl.text)
+    TemplateFD(
+      lang = tmpl.lang.code,
+      name = tmpl.name,
+      subject = tmpl.subject,
+      to = tmpl.to,
+      text = tmpl.text
+    )
   }
 
   def index(pager: Pager) =
@@ -93,8 +99,8 @@ class EmailTemplatesCtrl(
             id = success.name,
             lang = Lang(success.lang),
             name = success.name,
-            to = success.to,
             subject = success.subject,
+            to = success.to,
             text = success.text,
             created_at = DateTime.now,
             created_by = req.user.id
@@ -154,8 +160,8 @@ class EmailTemplatesCtrl(
                 tmpl <- _emailTemplates.find(id, lang, d)
                 done <- tmpl.copy(
                   name = success.name,
-                  to = success.to,
                   subject = success.subject,
+                  to = success.to,
                   text = success.text,
                   updated_by = req.user.id
                 ).save
@@ -163,7 +169,7 @@ class EmailTemplatesCtrl(
                 usr2 <- _users.find(done.created_by)
                 ____ <- _sessionData.remove(key_editing(id))
               } yield Redirect {
-                routes.EmailTemplatesCtrl.edit(id, lang)
+                routes.EmailTemplatesCtrl.show(id, lang)
               }.flashing {
                 AlertLevel.Success -> message("saved", id)
               }

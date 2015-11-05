@@ -54,4 +54,13 @@ implicit req: UserRequest[_], messages: Messages)
     </div>
   </div>
 
+  <div class="row">
+    <div class="col-xs-12">
+      <a href="@routes.EmailTemplatesCtrl.edit(tmpl.id, tmpl.lang)" class="btn btn-primary pull-right">
+        <i class="fa fa-edit"></i>
+        @MSG("edit")
+      </a>
+    </div>
+  </div>
+
 }()()
