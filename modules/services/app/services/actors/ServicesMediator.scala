@@ -17,9 +17,6 @@ object ServicesMediator extends CanonicalNamedActor {
     elasticSearch: ElasticSearch,
     mailService: MailService
   ): Props = Props(new ServicesMediator)
-
-  case object ModelRequired
-  case object GetBasicPlayApi
 }
 
 class ServicesMediator(
@@ -35,7 +32,10 @@ class ServicesMediator(
   }
 
   def receive = {
-    case ElasticSearch.basicName => sender ! elasticSearch
-    case MailService.basicName   => sender ! mailService
+
+    case keys: List[Any] => sender ! keys.collect {
+      case ElasticSearch => elasticSearch
+      case MailService   => mailService
+    }
   }
 }
