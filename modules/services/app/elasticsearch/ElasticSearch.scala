@@ -2,6 +2,7 @@ package elasticsearch
 
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s._
+import com.sksamuel.elastic4s.mappings._
 import helpers._
 import models._
 import models.cassandra.Indexable
@@ -12,9 +13,10 @@ import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.action.update.UpdateResponse
 import org.elasticsearch.common.settings.ImmutableSettings
+import org.elasticsearch.common.xcontent.XContentBuilder
 import play.api.libs.json.JsValue
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent._
 
 /**
  * @author zepeng.li@gmail.com
@@ -25,6 +27,7 @@ class ElasticSearch(
   extends AppConfigComponents
   with BasicPlayComponents
   with DefaultPlayExecutor
+  with BootingProcess
   with Logging {
 
   applicationLifecycle.addStopHook { () =>
@@ -49,11 +52,29 @@ class ElasticSearch(
       ElasticClient.remote(settings, uri)
     })
     .getOrElse {
-    Logger.warn("client.uri / cluster.name is not configured yet")
-    ElasticClient.local
-  }
+      Logger.warn("client.uri / cluster.name is not configured yet")
+      ElasticClient.local
+    }
 
   implicit val indexName = domain
+
+  // create index with customized analyzers
+  onStart(
+    Client.execute {
+      create index indexName analysis(
+        ElasticSearch.analyzers.defaultDef,
+        ElasticSearch.analyzers.emailDef)
+    }.recover {
+      // if index already exists
+      case e: Throwable => Logger.debug(e.getMessage)
+    }
+  )
+
+  def PutMapping[T <: Indexable[_]](
+    mapping: T => Iterable[TypedFieldDefinition]
+  )(implicit t: T) = Client.execute {
+    put mapping indexName / t.basicName as mapping(t)
+  }
 
   def Index[T <: HasID[_]](r: T) = new IndexAction(r)
 
@@ -65,12 +86,30 @@ class ElasticSearch(
 
   def BulkIndex[T <: HasID[_]](rs: Seq[T]) = new BulkIndexAction(rs)
 
-  def Search(q: Option[String], p: Pager) = new SearchAction(q, p)
+  def Search(q: Option[String], p: Pager, sort: Seq[SortField]) =
+    new SearchAction(q, p, sort)
 
   def Multi(defs: (ElasticSearch => ReadySearchDefinition)*) =
     new ReadyMultiSearchDefinition(Client)(
-      defs.map(_(this).definition)
+      defs.map(_ (this).definition)
     )
+
+}
+
+object ElasticSearch extends CanonicalNamed {
+
+  override val basicName: String = "elastic_search"
+
+  object analyzers {
+    val emailDef = CustomAnalyzerDefinition("email", UaxUrlEmailTokenizer)
+    val email    = CustomAnalyzer("email")
+
+    val defaultDef = new AnalyzerDefinition("default") {
+      def build(source: XContentBuilder): Unit = {
+        source.field("type", "smartcn")
+      }
+    }
+  }
 
 }
 
@@ -85,15 +124,22 @@ object ESyntax {
     }
   }
 
-  class SearchAction(q: Option[String], p: Pager)(
+  class SearchAction(q: Option[String], p: Pager, sort: Seq[SortField])(
     implicit client: ElasticClient, indexName: String
   ) {
 
     def in(t: Indexable[_]): ReadySearchDefinition = {
+      val sortable = t.sortable.map(_.name)
+
+      val sortDefs = sort.collect {
+        case f if sortable.contains(f.name) => f.sortDef
+      }
+
       new ReadySearchDefinition(client, p)(
         Def(search in indexName / t.basicName)
           .?(cond = true)(_ start p.start limit p.limit)
           .?(q.isDefined && q.get.nonEmpty)(_ query q.get)
+          .?(sortDefs.nonEmpty)(_ sort (sortDefs: _*))
           .result
       )
     }

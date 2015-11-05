@@ -1,4 +1,4 @@
-@(pager: Pager)(
+@(pager: Pager, sort: Seq[SortField])(
 implicit req: UserRequest[_], messages: Messages)
 
 @import common._
@@ -8,18 +8,18 @@ implicit req: UserRequest[_], messages: Messages)
 
   @ng._alert()
 
-  <div class="row" style="margin-top:10px">
-    <h2 style="margin-left: 20px">
+  <div class="page-header">
+    <h1>
       <i class="fa fa-group fa-lg fa-fw"></i>
       @GroupsCtrl.msg("head")
-    </h2>
+    </h1>
   </div>
 
-  <div ng-controller="GroupsCtrl">
+  <div class="row" ng-controller="GroupsCtrl">
 
     @ng._msg_confirm_delete()
 
-    <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <div class="table-responsive">
         <table class="table table-hover table-ellipsis">
           <thead>
@@ -90,34 +90,32 @@ implicit req: UserRequest[_], messages: Messages)
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-xs-12">
-        <form name="form" class="form-inline" novalidate>
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <form name="form" class="form-inline" novalidate>
 
-          @ng._form_control("name",
-            'maxLength    -> 64,
-            'minLength    -> 2,
-            'tabindex     -> 1,
-            'placeholder  -> GroupsCtrl.msg("name.placeholder"),
-            'autocomplete -> "off",
-            Symbol("ng-model") -> "group.name"
-          )
+        @ng._form_control("name",
+          'maxLength    -> 64,
+          'minLength    -> 2,
+          'tabindex     -> 1,
+          'placeholder  -> GroupsCtrl.msg("name.placeholder"),
+          'autocomplete -> "off",
+          Symbol("ng-model") -> "group.name"
+        )
 
-          @ng._form_control("description",
-            'tabindex    -> 2,
-            'placeholder -> GroupsCtrl.msg("description.placeholder"),
-            Symbol("ng-model") -> "group.description"
-          )
+        @ng._form_control("description",
+          'tabindex    -> 2,
+          'placeholder -> GroupsCtrl.msg("description.placeholder"),
+          Symbol("ng-model") -> "group.description"
+        )
 
-          <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid || !group.name || group.name === ''">
-            <i class="fa fa-plus"></i>
-            @GroupsCtrl.msg("new.group")
-          </button>
-        </form>
-      </div>
+        <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid || !group.name || group.name === ''">
+          <i class="fa fa-plus"></i>
+          @GroupsCtrl.msg("new.group")
+        </button>
+      </form>
     </div>
 
-    <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       @ng._pager("GroupList.links")
     </div>
   </div>
@@ -148,8 +146,9 @@ implicit req: UserRequest[_], messages: Messages)
       GroupList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.GroupsCtrl.index(pager.next).toString)',
-        prevPage : '@Html(routes.GroupsCtrl.index(pager.prev).toString)'
+        sort     : @Html(SortField.toJson(sort)),
+        nextPage : '@Html(routes.GroupsCtrl.index(pager.next, sort).toString)',
+        prevPage : '@Html(routes.GroupsCtrl.index(pager.prev, sort).toString)'
       });
     }]);
   </script>

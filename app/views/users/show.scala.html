@@ -8,11 +8,15 @@ implicit req: UserRequest[_], messages: Messages)
 
   @common._flashing()
 
-  <div class="row" style="margin-top:10px">
-    <h2 style="margin-left: 20px">
+  <div class="page-header">
+    <h1>
       <i class="fa fa-user fa-lg fa-fw"></i>
-      @user.name
-    </h2>
+      @if(user.name.self.nonEmpty) {
+        @user.name
+      } else {
+        @user.email
+      }
+    </h1>
   </div>
 
   <div class="row" ng-controller="InfoCtrl" data-id="@user.id">

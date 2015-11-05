@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
-import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
@@ -37,7 +36,7 @@ sealed trait GroupTable
   with GroupCanonicalNamed {
 
   object id
-    extends UUIDColumn(this)
+    extends TimeUUIDColumn(this)
     with PartitionKey[UUID]
 
   object child_id
@@ -87,30 +86,6 @@ object Group
 
   case class NotEmpty(id: UUID)
     extends BaseException(error_code("not.empty"))
-
-  object AccessControl {
-
-    import models.{AccessControl => AC}
-
-    case class Undefined(
-      principal: Set[UUID],
-      action: String,
-      resource: String
-    ) extends AC.Undefined[Set[UUID]](action, resource, basicName)
-
-    case class Denied(
-      principal: Set[UUID],
-      action: String,
-      resource: String
-    ) extends AC.Denied[Set[UUID]](action, resource, basicName)
-
-    case class Granted(
-      principal: Set[UUID],
-      action: String,
-      resource: String
-    ) extends AC.Granted[Set[UUID]](action, resource, basicName)
-
-  }
 
   implicit val jsonWrites = Json.writes[Group]
 }
@@ -171,16 +146,11 @@ class Groups(
         case _    => throw Group.NotEmpty(id)
       }
 
-  def children(id: UUID, pager: Pager): Future[Page[UUID]] = {
+  def children(id: UUID, pager: Pager): Future[Page[UUID]] = Page(pager) {
     CQL {
-      select(_.child_id)
-        .where(_.id eqs id)
-    }.fetchEnumerator() |>>>
-      PIteratee.slice[UUID](pager.start, pager.limit)
-  }.map(_.toIterable)
-    //because child_id could be null
-    .recover { case e: Exception => Nil }
-    .map(Page(pager, _))
+      select(_.child_id).where(_.id eqs id)
+    }.fetchEnumerator()
+  }
 
   def addChild(id: UUID, child_id: UUID): Future[ResultSet] = CQL {
     Batch.logged
@@ -243,6 +213,7 @@ class Groups(
 
   def isEmpty: Future[Boolean] = _internalGroups.isEmpty
 
+  override def sortable: Set[SortableField] = Set(name)
 }
 
 case class InternalGroupsCode(code: Int) extends AnyVal {
@@ -308,16 +279,19 @@ class InternalGroups(
   with BasicPlayComponents
   with CassandraComponents
   with SysConfig
+  with BootingProcess
   with Logging {
 
   @volatile private var _num2Id  : Seq[UUID]      = _
   @volatile private var _id2num  : Map[UUID, Int] = _
   @volatile private var _anyoneId: UUID           = _
 
-  create.ifNotExists.future()
-    .andThen { case _ => preLoad(this) }
-    .flatMap { case _ => loadOrInit }
-    .andThen { case Success(true) => postInit(this) }
+  onStart(
+    create.ifNotExists.future()
+      .andThen { case _ => preLoad(this) }
+      .flatMap { case _ => loadOrInit }
+      .andThen { case Success(true) => postInit(this) }
+  )
 
   private def loadOrInit: Future[Boolean] = {
     import InternalGroupsCode._

@@ -2,7 +2,7 @@ package controllers.api_internal
 
 import java.util.UUID
 
-import controllers.RateLimitConfig
+import controllers.RateLimitConfigComponents
 import elasticsearch._
 import helpers._
 import models._
@@ -29,23 +29,23 @@ class AccessControlsCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
-  with RateLimitConfig
+  with RateLimitConfigComponents
   with I18nSupport
   with Logging {
 
-  def index(q: Option[String], p: Pager) =
+  def index(q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.Index).async { implicit req =>
-      (es.Search(q, p) in _accessControls future()).map { page =>
+      (es.Search(q, p, sort) in _accessControls future()).map { page =>
         Ok(page).withHeaders(
-          linkHeader(page, routes.AccessControlsCtrl.index(q, _))
+          linkHeader(page, routes.AccessControlsCtrl.index(q, _, sort))
         )
       }
     }
 
-  def show(id: UUID, res: String, act: String) =
+  def show(principal_id: UUID, resource: String) =
     UserAction(_.Show).async { implicit req =>
-      _accessControls.find(id, res, act).map { ac =>
-        Ok(Json.toJson(ac))
+      _accessControls.find(principal_id, resource).map { ace =>
+        Ok(Json.toJson(ace))
       }.recover {
         case e: BaseException => NotFound
       }
@@ -53,24 +53,24 @@ class AccessControlsCtrl(
 
   def create =
     UserAction(_.Create).async { implicit req =>
-      BindJson().as[AccessControl] { success =>
+      BindJson().as[AccessControlEntry] { success =>
         _accessControls.find(success).map { found =>
           Ok(Json.toJson(found))
         }.recoverWith {
-          case e: AccessControl.NotFound =>
+          case e: AccessControlEntry.NotFound =>
             (for {
               exists <-
-              if (!success.is_group) _users.exists(success.principal)
-              else _groups.exists(success.principal)
+              if (!success.is_group) _users.exists(success.principal_id)
+              else _groups.exists(success.principal_id)
 
-              saved <- success.save
+              saved <- success.copy(permission = 0L).save
               _resp <- es.Index(saved) into _accessControls
             } yield (saved, _resp)).map { case (saved, _resp) =>
 
               Created(_resp._1)
                 .withHeaders(
                   LOCATION -> routes.AccessControlsCtrl.show(
-                    saved.principal, saved.resource, saved.action
+                    saved.principal_id, saved.resource
                   ).url
                 )
             }.recover {
@@ -81,32 +81,29 @@ class AccessControlsCtrl(
       }
     }
 
-  def destroy(id: UUID, res: String, act: String) =
+  def destroy(principal_id: UUID, resource: String) =
     UserAction(_.Destroy).async { implicit req =>
       (for {
-        __ <- es.Delete(AccessControl.genId(res, act, id)) from _accessControls
-        ac <- _accessControls.find(id, res, act)
-        __ <- _accessControls.remove(id, res, act)
-      } yield res).map { _ =>
+        ___ <- es.Delete(AccessControlEntry.genId(resource, principal_id)) from _accessControls
+        ace <- _accessControls.find(principal_id, resource)
+        ___ <- _accessControls.remove(principal_id, resource)
+      } yield ace).map { _ =>
         NoContent
       }.recover {
-        case e: AccessControl.NotFound => NotFound
+        case e: AccessControlEntry.NotFound => NotFound
       }
     }
 
-  def save(id: UUID, res: String, act: String) =
+  def toggle(principal_id: UUID, resource: String, pos: Int) =
     UserAction(_.Save).async { implicit req =>
-      BindJson().as[AccessControl] { ac =>
-        (for {
-          _____ <- _accessControls.find(id, res, act)
-          saved <- ac.save
-          _resp <- es.Update(saved) in _accessControls
-        } yield _resp._1).map {
-          Ok(_)
-        }.recover {
-          case e: BaseException => NotFound
-        }
-
+      (for {
+        found <- _accessControls.find(principal_id, resource)
+        saved <- found.copy(permission = found.permission ^ (1L << pos)).save
+        _resp <- es.Update(saved) in _accessControls
+      } yield _resp._1).map {
+        Ok(_)
+      }.recover {
+        case e: BaseException => NotFound
       }
     }
 }

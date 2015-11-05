@@ -6,7 +6,7 @@ import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
 import org.joda.time.DateTime
-import play.api.i18n.Lang
+import play.api.i18n._
 import play.api.libs.iteratee.Enumeratee
 
 import scala.concurrent.Future
@@ -15,28 +15,35 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 case class EmailTemplate(
-  id: UUID,
+  id: String,
   lang: Lang,
   name: String,
   subject: String,
+  to: String,
   text: String,
+  created_at: DateTime,
+  created_by: UUID,
   updated_at: DateTime,
-  updated_by: UUID,
-  created_by: UUID
-) extends HasUUID with TimeBased {
+  updated_by: UUID
+) extends HasID[String] with TimeBased {
 
-  def save(implicit emailTemplateRepo: EmailTemplates) = emailTemplateRepo.save(this)
+  def invalid = subject.isEmpty || to.isEmpty || text.isEmpty
+
+  def save(
+    implicit _emailTemplates: EmailTemplates
+  ) = _emailTemplates.save(this)
 }
 
 case class EmailTemplateHistory(
-  id: UUID,
+  id: String,
   lang: Lang,
   name: String,
   subject: String,
+  to: String,
   text: String,
   updated_at: DateTime,
   updated_by: UUID
-) extends HasUUID
+) extends HasID[String]
 
 trait EmailTemplateCanonicalNamed extends CanonicalNamed {
 
@@ -49,8 +56,8 @@ trait EmailTemplateKey[T <: CassandraTable[T, R], R] {
   self: CassandraTable[T, R] =>
 
   object id
-    extends TimeUUIDColumn(this)
-    with PartitionKey[UUID]
+    extends StringColumn(this)
+    with PartitionKey[String]
 
   object lang
     extends StringColumn(this)
@@ -65,10 +72,13 @@ trait EmailTemplateColumns[T <: CassandraTable[T, R], R] {
     extends DateTimeColumn(this)
     with StaticColumn[DateTime]
 
+  object created_at
+    extends DateTimeColumn(this)
+    with StaticColumn[DateTime]
+
   object created_by
     extends UUIDColumn(this)
     with StaticColumn[UUID]
-
 }
 
 trait EmailTemplateHistoryColumns[T <: CassandraTable[T, R], R] {
@@ -81,10 +91,13 @@ trait EmailTemplateHistoryColumns[T <: CassandraTable[T, R], R] {
   object name
     extends StringColumn(this)
 
-  object subject
+  object email_subject
     extends StringColumn(this)
 
-  object text
+  object email_to
+    extends StringColumn(this)
+
+  object email_text
     extends StringColumn(this)
 
   object updated_by
@@ -103,11 +116,13 @@ sealed class EmailTemplateTable
     id(r),
     Lang(lang(r)),
     name(r),
-    subject(r),
-    text(r),
+    email_subject(r),
+    email_to(r),
+    email_text(r),
+    created_at(r),
+    created_by(r),
     updated_at(r),
-    updated_by(r),
-    created_by(r)
+    updated_by(r)
   )
 }
 
@@ -115,12 +130,35 @@ object EmailTemplate
   extends EmailTemplateCanonicalNamed
   with ExceptionDefining {
 
-  case class NotFound(id: UUID, lang: String)
+  case class NotFound(id: String, lang: String)
     extends BaseException(error_code("not.found"))
 
   case class UpdatedByOther()
     extends BaseException(error_code("updated.by.others"))
 
+  def nnew(
+    id: String,
+    lang: Lang,
+    name: String,
+    subject: String,
+    to: String,
+    text: String,
+    created_at: DateTime,
+    created_by: UUID
+  ): EmailTemplate = {
+    EmailTemplate(
+      id = id,
+      lang = lang,
+      name = name,
+      subject = subject,
+      to = to,
+      text = text,
+      created_at = created_at,
+      created_by = created_by,
+      updated_at = created_at,
+      updated_by = created_by
+    )
+  }
 }
 
 class EmailTemplates(
@@ -132,61 +170,71 @@ class EmailTemplates(
   with ExtCQL[EmailTemplateTable, ET]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
-  def build(
-    id: UUID,
+  def find(
+    id: String,
     lang: Lang,
-    name: String,
-    subject: String,
-    text: String,
-    updated_by: UUID,
-    created_by: UUID
-  ): EmailTemplate = {
-    EmailTemplate(
-      id = id,
-      lang = lang,
-      name = name,
-      subject = subject,
-      text = text,
-      updated_at = TimeBased.extractDatetime(id),
-      updated_by = updated_by,
-      created_by = created_by
-    )
+    updated_at: Option[DateTime] = None
+  ): Future[ET] = updated_at match {
+    case Some(d) => find(id, lang, d)
+    case None    => find(id, lang)
   }
 
-  def find(
-    id: UUID, lang: Lang,
-    updated_at: Option[DateTime] = None
-  ): Future[ET] =
-    find(id, lang.code, updated_at)
-
-  def find(
-    id: UUID, lang: String,
-    updated_at: Option[DateTime]
-  ): Future[ET] =
+  def find(id: String, lang: Lang, updated_at: DateTime): Future[ET] = {
     CQL {
-
-      updated_at
-        .map(
-          d => select
-            .where(_.id eqs id)
-            .and(_.lang eqs lang).and(_.updated_at eqs d)
-        )
-        .getOrElse(
-          select
-            .where(_.id eqs id)
-            .and(_.lang eqs lang)
-        )
-    }.one().map {
-      case None       => throw EmailTemplate.NotFound(id, lang)
-      case Some(tmpl) => tmpl
-    }.recoverWith {
-      case e: EmailTemplate.NotFound if lang != Lang.defaultLang.code =>
-        this.find(id, Lang.defaultLang, updated_at)
+      select
+        .where(_.id eqs id)
+        .and(_.lang eqs lang.code)
+        .and(_.updated_at eqs updated_at)
+    }.one().flatMap {
+      case Some(tmpl)                       =>
+        Future.successful(tmpl)
+      case None if lang != Lang.defaultLang =>
+        find(id, Lang.defaultLang, updated_at)
+      case _                                =>
+        throw EmailTemplate.NotFound(id, lang.code)
     }
+  }
+
+  def find(id: String, lang: Lang): Future[ET] = {
+    CQL {
+      select
+        .where(_.id eqs id)
+        .and(_.lang eqs lang.code)
+    }.one().flatMap {
+      case Some(tmpl)                       =>
+        Future.successful(tmpl)
+      case None if lang != Lang.defaultLang =>
+        find(id, Lang.defaultLang)
+      case _                                =>
+        throw EmailTemplate.NotFound(id, lang.code)
+    }
+  }
+
+  def getOrElseUpdate(id: String, lang: Lang)(
+    systemAccount: => Future[User]
+  ): Future[EmailTemplate] = {
+    find(id, lang).recoverWith {
+      case e: EmailTemplate.NotFound =>
+        for {
+          user <- systemAccount
+          tmpl <- EmailTemplate.nnew(
+            id = id,
+            lang = lang,
+            name = id,
+            subject = "",
+            to = "",
+            text = "",
+            created_at = DateTime.now,
+            created_by = user.id
+          ).save(this)
+        } yield tmpl
+    }
+  }
 
   def save(tmpl: ET): Future[ET] = for {
     init <- CQL {
@@ -194,6 +242,7 @@ class EmailTemplates(
         .value(_.id, tmpl.id)
         .value(_.lang, tmpl.lang.code)
         .value(_.last_updated_at, tmpl.created_at)
+        .value(_.created_at, tmpl.created_at)
         .value(_.created_by, tmpl.created_by)
         .ifNotExists()
     }.future().map(_.wasApplied())
@@ -205,8 +254,9 @@ class EmailTemplates(
           .and(_.lang eqs tmpl.lang.code)
           .and(_.updated_at eqs curr)
           .modify(_.name setTo tmpl.name)
-          .and(_.subject setTo tmpl.subject)
-          .and(_.text setTo tmpl.text)
+          .and(_.email_subject setTo tmpl.subject)
+          .and(_.email_to setTo tmpl.to)
+          .and(_.email_text setTo tmpl.text)
           .and(_.last_updated_at setTo curr)
           .and(_.updated_by setTo tmpl.updated_by)
           .onlyIf(_.last_updated_at is tmpl.updated_at)
@@ -219,11 +269,11 @@ class EmailTemplates(
 
   def list(pager: Pager): Future[List[ET]] = {
     CQL {select(_.id, _.lang).distinct}.fetchEnumerator &>
-      Enumeratee.mapM { case (id, lang) => find(id, lang, None) } |>>>
+      Enumeratee.mapM { case (id, lang) => find(id, Lang(lang)) } |>>>
       PIteratee.slice[ET](pager.start, pager.limit)
   }.map(_.toList)
 
-  def destroy(id: UUID, lang: Lang): Future[ResultSet] = CQL {
+  def destroy(id: String, lang: Lang): Future[ResultSet] = CQL {
     delete.where(_.id eqs id).and(_.lang eqs lang.code)
   }.future()
 
@@ -239,8 +289,9 @@ sealed class EmailTemplateHistoryTable
     id(r),
     Lang(lang(r)),
     name(r),
-    subject(r),
-    text(r),
+    email_subject(r),
+    email_to(r),
+    email_text(r),
     updated_at(r),
     updated_by(r)
   )
@@ -260,7 +311,7 @@ class EmailTemplateHistories(
   with CassandraComponents
   with Logging {
 
-  def list(id: UUID, lang: Lang, pager: Pager): Future[List[ETH]] = {
+  def list(id: String, lang: Lang, pager: Pager): Future[List[ETH]] = {
     CQL {
       select
         .where(_.id eqs id)

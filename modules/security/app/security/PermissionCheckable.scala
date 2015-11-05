@@ -1,6 +1,7 @@
 package security
 
 import helpers.CanonicalNamed
+import security.ModulesAccessControl._
 
 /**
  * @author zepeng.li@gmail.com
@@ -9,5 +10,5 @@ import helpers.CanonicalNamed
 trait PermissionCheckable {
   self: CanonicalNamed =>
 
-  implicit lazy val CheckedModuleName = CheckedResource(canonicalName)
+  implicit lazy val CheckedModuleName = CheckedModule(canonicalName)
 }

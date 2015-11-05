@@ -15,6 +15,7 @@ import play.api.inject.{NewInstanceInjector, SimpleInjector}
 import play.api.libs.ws.ning.NingWSComponents
 import play.api.mvc._
 import router.Routes
+import services.actors.ServicesMediator
 import services.web.ip_api.IPService
 import services.{BandwidthService, MailService}
 
@@ -208,6 +209,7 @@ class Components(context: Context)
 
   def startActors(): Unit = {
     actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
+    actorSystem.actorOf(ServicesMediator.props, ServicesMediator.basicName)
 
     //Start Actor ShardRegion
     MailActor.startRegion(configuration, actorSystem)

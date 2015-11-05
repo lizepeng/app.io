@@ -3,8 +3,9 @@ package controllers.api_internal
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.RateLimitConfig
+import controllers.RateLimitConfigComponents
 import elasticsearch._
+import elasticsearch.mappings.UserMapping
 import helpers._
 import models._
 import play.api.i18n._
@@ -31,13 +32,20 @@ class UsersCtrl(
   with InternalGroupsComponents
   with UserActionComponents
   with DefaultPlayExecutor
-  with RateLimitConfig
+  with RateLimitConfigComponents
+  with BootingProcess
   with I18nSupport
   with Logging {
 
-  ESIndexCleaner(_users).dropIndexIfEmpty
+  onStart(ESIndexCleaner(_users).dropIndexIfEmpty)
+  onStart(es.PutMapping(UserMapping))
 
-  case class UserInfo(uid: Option[UUID], email: EmailAddress, name: Option[Name])
+  case class UserInfo(
+    uid: Option[UUID],
+    email: EmailAddress,
+    name: Option[Name]
+  )
+
   object UserInfo {implicit val jsonFormat = Json.format[UserInfo]}
 
   def show(id: UUID) =
@@ -67,16 +75,16 @@ class UsersCtrl(
       }
     }
 
-  def index(ids: Seq[UUID], q: Option[String], p: Pager) =
+  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _users.find(ids).map { usrs =>
           Ok(Json.toJson(usrs))
         }
       else
-        (es.Search(q, p) in _users future()).map { page =>
+        (es.Search(q, p, sort) in _users future()).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.UsersCtrl.index(Nil, q, _))
+            linkHeader(page, routes.UsersCtrl.index(Nil, q, _, sort))
           )
         }
     }

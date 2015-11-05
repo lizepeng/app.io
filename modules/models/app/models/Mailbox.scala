@@ -73,9 +73,10 @@ class MailInbox(
   with ExtCQL[MailInboxTable, Mail]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def save(user_id: UUID, mail: Mail): Future[ResultSet] = {
     val now = DateTime.now
@@ -144,9 +145,10 @@ class MailSent(
   with ExtCQL[MailSentTable, Mail]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def save(mail: Mail): Future[ResultSet] = {
     val now = DateTime.now

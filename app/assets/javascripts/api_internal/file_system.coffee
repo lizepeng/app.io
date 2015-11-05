@@ -19,37 +19,22 @@ angular.module 'api_internal.cfs', []
   # Helper to operate Path in javascript
   #
   .factory 'Path', ->
-    service = {}
-    service.create = (param) ->
-      parts       : param.parts
-      filename    : param.filename
-      set         : (filename) ->
-        @copy (that) ->
-          that.filename = filename
-      prepend     : (part) ->
-        @copy (that) ->
-          that.parts.unshift part
-      append      : (part) ->
-        @copy (that) ->
-          that.parts.push part
-      copy        : (fun) ->
-        that = angular.copy @
-        if fun?
-          fun(that)
+    Path = (path) ->
+      segments : path.segments.slice()
+      filename : path.filename
+      set      : (filename) -> @copy (that) -> that.filename = filename
+      prepend  : (segment)  -> @copy (that) -> that.segments.unshift segment
+      append   : (segment)  -> @copy (that) -> that.segments.push segment
+      encode   : ->
+        segments = ("#{encodeURIComponent(s)}/" for s in @segments).join ''
+        filename = if @filename? then encodeURIComponent(@filename) else ''
+        "#{segments}#{filename}"
+      copy     : (fn) ->
+        that = new Path(this)
+        fn(that)
         that
-      # Content should be same as Path.javascriptUbind
-      encode      : ->
-        parts =
-          _.chain @parts
-            .map (part)-> "#{encodeURIComponent(part)}/"
-            .join ''
-            .value()
-        filename =
-          if !@filename? then ''
-          else encodeURIComponent(@filename)
-        "#{parts}#{filename}"
 
-    return service
+    return Path
 
   .factory 'FileExtension', ->
     service = {}

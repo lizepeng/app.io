@@ -5,6 +5,7 @@ import java.util.UUID
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
+import models.cfs.CassandraFileSystem._
 import models.{HasUUID, TimeBased}
 import org.joda.time.DateTime
 import play.api.libs.json._
@@ -24,9 +25,9 @@ trait INode extends HasUUID with TimeBased {
 
   def owner_id: UUID
 
-  def permission: Long
+  def permission: Permission
 
-  def ext_permission: Map[UUID, Int]
+  def ext_permission: Map[UUID, Permission]
 
   def attributes: Map[String, String]
 
@@ -36,17 +37,18 @@ trait INode extends HasUUID with TimeBased {
     implicit cfs: CassandraFileSystem
   ): Future[Boolean] = {
     for {
-      _dir <- cfs._directories.find(parent)
-      done <- cfs._directories.renameChild(_dir, this, newName)
+      pdir <- cfs._directories.find(parent)(onFound = p => p)
+      done <- cfs._directories.renameChild(pdir, this, newName)
     } yield done
   }
 
-  def purge()(
+  def delete()(
     implicit cfs: CassandraFileSystem
-  ): Future[Directory] =
-    cfs._directories.find(parent).flatMap {
-      parent => parent.del(this)
-    }
+  ): Future[Unit] =
+    for {
+      pdir <- cfs._directories.find(parent)(onFound = p => p)
+      done <- cfs._directories.delChild(pdir, this.name)
+    } yield Unit
 
 }
 
@@ -155,9 +157,10 @@ class INodes(
   with ExtCQL[INodeTable, Row]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def find(id: UUID): Future[Option[Row]] = {
     CQL {select.where(_.inode_id eqs id)}.one()

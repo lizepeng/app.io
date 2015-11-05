@@ -13,8 +13,10 @@ GET  /wiki                                  controllers.Application.wiki
 GET  /about                                 controllers.Application.about
 
 GET  /experimental/chat                     controllers.ExperimentalCtrl.chat
-GET  /experimental/notifications/nnew       controllers.ExperimentalCtrl.nnew
-POST /experimental/notifications/send       controllers.ExperimentalCtrl.send
+GET  /experimental/notifications/nnew       controllers.ExperimentalCtrl.showNotification
+POST /experimental/notifications/send       controllers.ExperimentalCtrl.sendNotification
+GET  /experimental/mail/nnew                controllers.ExperimentalCtrl.showMail
+POST /experimental/mail/send                controllers.ExperimentalCtrl.sendMail
 
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file                          controllers.Assets.at(path="/public", file)
@@ -36,11 +38,14 @@ GET  /settings/account                      controllers.MyCtrl.account
 POST /settings/account                      controllers.MyCtrl.changePassword
 GET  /settings/profile                      controllers.MyCtrl.profile
 POST /settings/profile                      controllers.MyCtrl.changeProfile
+GET  /my/profile_image                      controllers.MyCtrl.profileImage(s:Int?=40)
+GET  /my/profile_image/upload               controllers.MyCtrl.testProfileImage
+POST /my/profile_image/upload               controllers.MyCtrl.uploadProfileImage
 
-GET  /users                                 controllers.UsersCtrl.index(p:Pager?=Pager.first)
+GET  /users                                 controllers.UsersCtrl.index(p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)
 GET  /users/:id                             controllers.UsersCtrl.show(id:UUID)
 
-GET  /groups                                controllers.GroupsCtrl.index(p:Pager?=Pager.first)
+GET  /groups                                controllers.GroupsCtrl.index(p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)
 GET  /groups/:id                            controllers.GroupsCtrl.show(id:UUID)
 
 GET  /password_reset                        controllers.PasswordResetCtrl.nnew(email:Option[EmailAddress]?=None)
@@ -51,10 +56,10 @@ POST /password_reset/:id                    controllers.PasswordResetCtrl.save(i
 GET  /email_templates                       controllers.EmailTemplatesCtrl.index(p:Pager?=Pager.first)
 GET  /email_templates/new                   controllers.EmailTemplatesCtrl.nnew
 POST /email_templates/new                   controllers.EmailTemplatesCtrl.create
-GET  /email_templates/edit/:id              controllers.EmailTemplatesCtrl.edit(id:UUID,lang:Lang)
-GET  /email_templates/show/:id              controllers.EmailTemplatesCtrl.show(id:UUID,lang:Lang,updated_at:Option[DateTime]?=None)
-POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(id:UUID,lang:Lang)
-GET  /email_templates/history/:id           controllers.EmailTemplatesCtrl.history(id:UUID,lang:Lang,p:Pager?=Pager.first)
-POST /email_templates/destroy/:id           controllers.EmailTemplatesCtrl.destroy(id:UUID,lang:Lang)
+GET  /email_templates/edit/:id              controllers.EmailTemplatesCtrl.edit(id:String,lang:Lang)
+GET  /email_templates/show/:id              controllers.EmailTemplatesCtrl.show(id:String,lang:Lang,updated_at:Option[DateTime]?=None)
+POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(id:String,lang:Lang)
+GET  /email_templates/history/:id           controllers.EmailTemplatesCtrl.history(id:String,lang:Lang,p:Pager?=Pager.first)
+POST /email_templates/destroy/:id           controllers.EmailTemplatesCtrl.destroy(id:String,lang:Lang)
 
-GET  /access_controls                       controllers.AccessControlsCtrl.index(p:Pager?=Pager.first)
+GET  /access_controls                       controllers.AccessControlsCtrl.index(p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)

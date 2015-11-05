@@ -1,10 +1,11 @@
 package controllers
 
-import elasticsearch.ElasticSearch
+import elasticsearch._
 import helpers._
 import models._
 import play.api.i18n._
 import play.api.mvc.Controller
+import security.ModulesAccessControl._
 import security._
 import views._
 
@@ -26,9 +27,13 @@ class AccessControlsCtrl(
   with UserActionComponents
   with I18nSupport {
 
-  def index(pager: Pager) =
-    UserAction(_.Index).apply { implicit req =>
-      Ok(html.access_controls.index(pager))
+  def index(pager: Pager, sort: Seq[SortField]) =
+    UserAction(_.Index, _.Save, _.Create, _.Destroy).apply { implicit req =>
+      val default = _accessControls.sorting(
+        _.principal_id.desc,
+        _.resource.asc
+      )
+      Ok(html.access_controls.index(pager, if (sort.nonEmpty) sort else default))
     }
 
 }
@@ -52,12 +57,11 @@ object AccessControlsCtrl
       result <-
       if (_empty) Future.sequence(
         secured.Modules.names.map { resource =>
-          AccessControl(
+          AccessControlEntry(
             resource,
-            CheckedActions.Anything.name,
+            AccessDefinition.Anything.self,
             _internalGroups.AnyoneId,
-            is_group = true,
-            granted = true
+            is_group = true
           ).save.flatMap { saved =>
             es.Index(saved) into _accessControls
           }

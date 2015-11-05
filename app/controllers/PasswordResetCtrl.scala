@@ -1,9 +1,11 @@
 package controllers
 
+import java.util.UUID
+
 import controllers.UsersCtrl._
 import helpers._
 import models._
-import models.sys.{SysConfig, SysConfigs}
+import models.sys._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
@@ -13,6 +15,7 @@ import services._
 import views._
 
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
  * @author zepeng.li@gmail.com
@@ -34,8 +37,8 @@ class PasswordResetCtrl(
   with DefaultPlayExecutor
   with I18nSupport
   with CanonicalNameBasedMessages
-  with SysConfig
-  with AppConfigComponents
+  with AppDomainComponents
+  with SystemAccounts
   with Logging {
 
   val emailFM = Form[EmailAddress](
@@ -71,10 +74,10 @@ class PasswordResetCtrl(
         },
         success => (for {
           user <- _users.find(success)
-          link <- _expirableLinks.nnew(canonicalName)(user)
+          link <- _expirableLinks.save(user.id.toString)
           tmpl <- getEmailTemplate(s"$basicName.email1")
-        } yield (user, link.id, tmpl)).map { case (u, id, tmpl) =>
-          mailService.schedule("noreply", tmpl, u, "link" -> id)
+        } yield (user, link.id, tmpl)).map { case (user, id, tmpl) =>
+          mailService.sendTo(user)("noreply", tmpl, Map("link" -> id))
           Ok(html.password_reset.sent())
         }.recover {
           case e: User.NotFound          =>
@@ -90,17 +93,11 @@ class PasswordResetCtrl(
   /**
    * Show a form that user can enter new password, only if
    * the user got a valid password reset link in his mail inbox.
-   *
-   * @param id
-   * @return
    */
   def show(id: String) =
     MaybeUserAction().async { implicit req =>
       _expirableLinks.find(id).map { ln =>
-        if (ln.module != canonicalName)
-          onError(emailFM, "invalid.reset.link")
-        else
-          Ok(html.password_reset.show(id)(resetFM))
+        Ok(html.password_reset.show(id)(resetFM))
       }.recover {
         case e: ExpirableLink.NotFound =>
           onError(emailFM, "invalid.reset.link")
@@ -120,55 +117,28 @@ class PasswordResetCtrl(
           }
         },
         success => (for {
-          link <- _expirableLinks.find(id).andThen { case _ => _expirableLinks.remove(id) }
-          user <- _users.find(link.user_id).flatMap(_.updatePassword(success.original))
+          link <- _expirableLinks.find(id)
+          ____ <- _expirableLinks.remove(id)
+          _uid <- Future.fromTry(Try(UUID.fromString(link.target_id)))
+          user <- _users.find(_uid)
+          ____ <- user.updatePassword(success.original)
           tmpl <- getEmailTemplate(s"$basicName.email2")
         } yield (user, tmpl)).map { case (user, tmpl) =>
-          mailService.schedule("support", tmpl, user)
+          mailService.sendTo(user)("support", tmpl)
           Redirect(routes.SessionsCtrl.nnew()).flashing(
             AlertLevel.Info -> message("password.changed")
           )
         }.recover {
-          case e: ExpirableLink.NotFound =>
-            onError(emailFM, "invalid.reset.link")
+          case e: ExpirableLink.NotFound => onError(emailFM, "invalid.reset.link")
+          case e: Throwable              => onError(emailFM, "invalid.reset.link")
         }
       )
     }
 
-  private lazy val mailer = for {
-    uid <- System.UUID("user.id")
-    usr <- _users.find(uid).recoverWith {
-      case e: User.NotFound => _users.save(
-        User(
-          id = uid,
-          name = Name(basicName),
-          email = EmailAddress(s"$basicName@$domain")
-        )
-      )
-    }
-  } yield usr
-
   private def getEmailTemplate(key: String)(
     implicit messages: Messages
-  ): Future[EmailTemplate] =
-    for {
-      uuid <- System.UUID(key)
-      user <- mailer
-      tmpl <- _emailTemplates.find(uuid, messages.lang)
-        .recoverWith {
-        case e: EmailTemplate.NotFound =>
-          _emailTemplates.save(
-            _emailTemplates.build(
-              uuid, Lang.defaultLang,
-              key,
-              subject = "",
-              text = "",
-              user.id,
-              user.id
-            )
-          )
-      }
-    } yield tmpl
+  ): Future[EmailTemplate] = _emailTemplates
+    .getOrElseUpdate(key, messages.lang)(_systemAccount(PasswordResetCtrl))
 
   private def onError(bound: Form[EmailAddress], key: String)(
     implicit req: MaybeUserRequest[_]

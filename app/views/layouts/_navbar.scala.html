@@ -41,13 +41,13 @@
       <ul class="nav navbar-nav user-nav navbar-right">
         <li>
           <a href="@routes.MyCtrl.dashboard" title="">
-            <span class="hidden-xs">
-              @u.email
-            </span>
-            <span class="visible-xs">
+            <div class="hidden-xs profile-img-xs">
+              <img ng-src="@routes.MyCtrl.profileImage(s = 24)" alt="@u.email" err-src="http://google.com/favicon.ico">
+            </div>
+            <div class="visible-xs">
               <i class="fa fa-user fa-lg"></i>
               @MSG("dashboard")
-            </span>
+            </div>
           </a>
         </li>
         <li class="hidden-xs"><a href="#">

@@ -66,7 +66,7 @@ class CassandraJournalSpec extends JournalSpec(
       Props(
         new Actor {
           override def receive: Receive = {
-            case ResourcesMediator.ModelRequired => sender !(basicPlayApi, contactPoint)
+            case _ => sender ! List(basicPlayApi, contactPoint)
           }
         }
       ), ResourcesMediator.basicName

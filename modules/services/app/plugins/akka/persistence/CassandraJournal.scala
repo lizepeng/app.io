@@ -24,6 +24,7 @@ import scala.util._
  */
 class CassandraJournal extends AsyncWriteJournal with Stash with ActorLogging {
 
+  import ResourcesMediator._
   import context.dispatcher
 
   val volumeSize    = 500000
@@ -34,10 +35,10 @@ class CassandraJournal extends AsyncWriteJournal with Stash with ActorLogging {
   var journal: Journal = _
 
   context become awaitingResources
-  mediator ! ResourcesMediator.ModelRequired
+  mediator ! List(GetBasicPlayApi, GetKeySpaceBuilder)
 
   def awaitingResources: Actor.Receive = {
-    case (bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
+    case List(bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
       journal = new Journal(bpa, cp)
       (for {
         _ <- journal.createIfNotExists()

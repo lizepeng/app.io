@@ -9,7 +9,7 @@ import org.elasticsearch.common.io.Streams
 import org.elasticsearch.common.xcontent._
 import play.api.http._
 import play.api.libs.json._
-import play.api.mvc.Codec
+import play.api.mvc._
 
 import scala.collection.immutable.IndexedSeq
 import scala.language.implicitConversions
@@ -104,6 +104,26 @@ package object elasticsearch {
           yield if (i == n) p2 else p1.copy()
       }
     }
+  }
+
+  import com.websudos.phantom.dsl._
+
+  implicit class ColumnToSortField(val column: Column[_, _, _]) extends AnyVal {
+
+    def asc = new AscendingSortField(column.name)
+
+    def desc = new DescendingSortField(column.name)
+  }
+
+  implicit class optionalColumnToSortField(val column: OptionalColumn[_, _, _]) extends AnyVal {
+
+    def asc = new AscendingSortField(column.name)
+
+    def desc = new DescendingSortField(column.name)
+  }
+
+  implicit class CassandraTableToSortFields[T](val table: T) extends AnyVal {
+    def sorting(fs: (T => SortField)*): Seq[SortField] = fs.map(f => f(table))
   }
 
 }

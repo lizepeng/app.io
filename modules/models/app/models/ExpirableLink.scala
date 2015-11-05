@@ -1,22 +1,21 @@
 package models
 
+import java.util.UUID
+
 import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
 import helpers.ExtCrypto._
 import helpers._
 import models.cassandra._
-import org.joda.time.DateTime
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
  */
-case class ExpirableLink(
-  id: String,
-  user_id: UUID,
-  module: String
-)
+case class ExpirableLink(id: String, target_id: String)
 
 trait ExpirableLinkCanonicalNamed extends CanonicalNamed {
 
@@ -31,14 +30,11 @@ sealed class ExpirableLinkTable
     extends StringColumn(this)
     with PartitionKey[String]
 
-  object user_id
-    extends UUIDColumn(this)
-
-  object module
+  object target_id
     extends StringColumn(this)
 
   override def fromRow(r: Row): ExpirableLink =
-    ExpirableLink(id(r), user_id(r), module(r))
+    ExpirableLink(id(r), target_id(r))
 }
 
 object ExpirableLink
@@ -59,9 +55,10 @@ class ExpirableLinks(
   with ExtCQL[ExpirableLinkTable, ExpirableLink]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def find(id: String): Future[ExpirableLink] =
     CQL {
@@ -71,22 +68,22 @@ class ExpirableLinks(
       case Some(link) => link
     }
 
-  def nnew(module: String)(
-    implicit user: User
+  def save(
+    target_id: String,
+    ttl: FiniteDuration = 24 hours
   ): Future[ExpirableLink] = {
-    val id = Crypto.sha2(s"${user.id.toString}--${DateTime.now}", 512)
+    val id = Crypto.sha2(s"$target_id--${UUID.randomUUID()}", 512)
     CQL {
       insert.value(_.id, id)
-        .value(_.user_id, user.id)
-        .value(_.module, module)
-        .ttl(24 * 60 * 60)
+        .value(_.target_id, target_id)
+        .ttl(ttl.toSeconds)
     }.future().map {
-      _ => ExpirableLink(id, user.id, module)
+      _ => ExpirableLink(id, target_id)
     }
   }
 
-  def remove(id: String): Future[ResultSet] = CQL {
-    delete.where(_.id eqs id)
-  }.future()
-
+  def remove(id: String): Future[ResultSet] =
+    CQL {
+      delete.where(_.id eqs id)
+    }.future()
 }

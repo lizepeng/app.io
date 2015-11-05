@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import controllers.UsersCtrl.PasswordConfirmation
-import elasticsearch.ElasticSearch
+import elasticsearch._
 import helpers._
 import models._
 import play.api.data.Form
@@ -59,10 +59,12 @@ class UsersCtrl(
       }
     }
 
-  def index(pager: Pager) =
-    UserAction(_.Index).apply { implicit req =>
-      Ok(html.users.index(pager))
+  def index(pager: Pager, sort: Seq[SortField]) = {
+    val default = _users.sorting(_.email.asc)
+    UserAction(_.Index, _.Create).apply { implicit req =>
+      Ok(html.users.index(pager, if (sort.nonEmpty) sort else default))
     }
+  }
 
   def nnew = MaybeUserAction().apply { implicit req =>
     req.maybeUser match {
@@ -140,4 +142,5 @@ object UsersCtrl
 
     def isConfirmed = original.self == confirmation
   }
+
 }

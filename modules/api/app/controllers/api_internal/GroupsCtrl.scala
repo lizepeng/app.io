@@ -2,7 +2,7 @@ package controllers.api_internal
 
 import java.util.UUID
 
-import controllers.RateLimitConfig
+import controllers.RateLimitConfigComponents
 import elasticsearch._
 import helpers._
 import models._
@@ -33,33 +33,35 @@ class GroupsCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
-  with RateLimitConfig
+  with RateLimitConfigComponents
+  with BootingProcess
   with I18nSupport
   with Logging {
 
-  ESIndexCleaner(_groups).dropIndexIfEmpty
+  onStart(ESIndexCleaner(_groups).dropIndexIfEmpty)
 
   case class GroupInfo(name: Name, description: Option[String])
+
   object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}
 
-  def index(ids: Seq[UUID], q: Option[String], p: Pager) =
+  def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.Index).async { implicit req =>
       if (ids.nonEmpty)
         _groups.find(ids).map { grps =>
           Ok(Json.toJson(grps))
         }
       else
-        (es.Search(q, p) in _groups future()).map { page =>
+        (es.Search(q, p, sort) in _groups future()).map { page =>
           Ok(page).withHeaders(
-            linkHeader(page, routes.GroupsCtrl.index(Nil, q, _))
+            linkHeader(page, routes.GroupsCtrl.index(Nil, q, _, sort))
           )
         }
     }
 
   def show(id: UUID) =
     UserAction(_.Show).async { implicit req =>
-      _groups.find(id).map {
-        NotModifiedOrElse { grp =>
+      _groups.find(id).flatMap {
+        HttpCaching { grp =>
           Ok(Json.toJson(grp))
         }
       }.recover {

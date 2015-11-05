@@ -24,19 +24,19 @@ class FileSystemCtrl(
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =
-    UserAction(_.Index).apply { implicit req =>
-      Ok(html.file_system.index(path, pager))
+    UserAction(_.Index, _.Create, _.Destroy).apply { implicit req =>
+      Ok(html.file_system.index(if (path.isRoot) path / req.user.id.toString else path, pager))
     }
 
   def show(path: Path) =
     UserAction(_.Show).async { implicit req =>
       (for {
-        home <- _cfs.home(req.user)
-        file <- home.file(path)
+        file <- _cfs.file(path)
       } yield file).map { file =>
-        Ok(html.file_system.show(path, file))
+        Ok(html.file_system.show(file))
       }.recover {
-        case e: BaseException => NotFound(e.reason)
+        case e: FileSystemAccessControl.Denied => Forbidden
+        case e: BaseException                  => NotFound
       }
     }
 }

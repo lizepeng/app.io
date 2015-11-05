@@ -31,7 +31,7 @@ sealed class PersonTable
   with PersonCanonicalNamed {
 
   object id
-    extends UUIDColumn(this)
+    extends TimeUUIDColumn(this)
     with PartitionKey[UUID]
 
   object first_name
@@ -73,9 +73,10 @@ class Persons(
   with ExtCQL[PersonTable, Person]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)

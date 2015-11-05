@@ -8,6 +8,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import protocols.ExHeaders
 import protocols.JsonProtocol._
+import security.ModulesAccessControl._
 import security._
 
 import scala.concurrent.Future
@@ -19,9 +20,9 @@ import scala.language.postfixOps
  */
 case class RateLimitChecker(
   implicit
-  val resource: CheckedResource,
+  val resource: CheckedModule,
   val basicPlayApi: BasicPlayApi,
-  val unit: RateLimitUnit,
+  val rateLimitConfig: RateLimitConfig,
   val _rateLimits: RateLimits
 )
   extends ActionFunction[UserRequest, UserRequest]
@@ -38,39 +39,38 @@ case class RateLimitChecker(
     req: UserRequest[A],
     block: (UserRequest[A]) => Future[Result]
   ): Future[Result] = {
-    val res = resource.name
     val user = req.user
 
     val now = DateTime.now
     val minutes = now.getMinuteOfHour
     val seconds = now.getSecondOfMinute
-    val remaining = (unit.span - minutes % unit.span) * 60 - seconds
+    val remaining = (rateLimitConfig.span - minutes % rateLimitConfig.span) * 60 - seconds
     val period_start = now.hourOfDay.roundFloorCopy
-      .plusMinutes((minutes / unit.span) * unit.span)
+      .plusMinutes((minutes / rateLimitConfig.span) * rateLimitConfig.span)
 
-    _rateLimits.get(res, period_start)(user)
+    _rateLimits.get(resource.name, period_start)(user)
       .flatMap { counter =>
-      if (counter >= unit.limit) Future.successful {
-        Results.TooManyRequest {
-          JsonMessage(s"api.$basicName.exceeded")(request2Messages(req))
-        }.withHeaders(
-            X_RATE_LIMIT_LIMIT -> unit.limit.toString,
+        if (counter >= rateLimitConfig.limit) Future.successful {
+          Results.TooManyRequest {
+            JsonMessage(s"api.$basicName.exceeded")(request2Messages(req))
+          }.withHeaders(
+            X_RATE_LIMIT_LIMIT -> rateLimitConfig.limit.toString,
             X_RATE_LIMIT_REMAINING -> "0",
             X_RATE_LIMIT_RESET -> remaining.toString
           )
-      }
-      else
-        for {
-          ___ <- _rateLimits.inc(res, period_start)(user)
-          ret <- block(req)
-        } yield {
-          ret.withHeaders(
-            X_RATE_LIMIT_LIMIT -> unit.limit.toString,
-            X_RATE_LIMIT_REMAINING -> (unit.limit - counter - 1).toString,
-            X_RATE_LIMIT_RESET -> remaining.toString
-          )
         }
-    }
+        else
+          for {
+            ___ <- _rateLimits.inc(resource.name, period_start)(user)
+            ret <- block(req)
+          } yield {
+            ret.withHeaders(
+              X_RATE_LIMIT_LIMIT -> rateLimitConfig.limit.toString,
+              X_RATE_LIMIT_REMAINING -> (rateLimitConfig.limit - counter - 1).toString,
+              X_RATE_LIMIT_RESET -> remaining.toString
+            )
+          }
+      }
   }
 }
 
@@ -79,14 +79,14 @@ case class RateLimitChecker(
   * @param limit max value of permitted request in a span
   * @param span every n minutes from o'clock
   */
-case class RateLimitUnit(limit: Int, span: Int)
+case class RateLimitConfig(limit: Int, span: Int)
 
-trait RateLimitConfig {
+trait RateLimitConfigComponents {
   self: CanonicalNamed =>
 
   def configuration: Configuration
 
-  implicit lazy val rateLimitUnit = RateLimitUnit(
+  implicit lazy val rateLimitConfig = RateLimitConfig(
     configuration
       .getInt(s"$canonicalName.rate_limit.limit")
       .orElse(configuration.getInt(s"$packageName.rate_limit.limit"))

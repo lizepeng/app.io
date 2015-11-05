@@ -58,9 +58,10 @@ class Blocks(
 )
   extends BlockTable
   with BasicPlayComponents
-  with CassandraComponents {
+  with CassandraComponents
+  with BootingProcess {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   import Block._
 
@@ -78,9 +79,9 @@ class Blocks(
         .and(_.offset eqs offset - offset % blk_sz)
         .one().map(_.map(Bytes.getArray))
         .map {
-        case None      => Enumerator.empty[BLK]
-        case Some(blk) => Enumerator(blk.drop((offset % blk_sz).toInt))
-      }.map {
+          case None      => Enumerator.empty[BLK]
+          case Some(blk) => Enumerator(blk.drop((offset % blk_sz).toInt))
+        }.map {
         _ >>> select(_.data)
           .where(_.indirect_block_id eqs ind_blk_id)
           .and(_.offset gt offset - offset % blk_sz)

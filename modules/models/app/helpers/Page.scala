@@ -1,24 +1,39 @@
 package helpers
 
+import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import play.api.http._
+import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Codec, QueryStringBindable}
 
 import scala.collection.Iterable
+import scala.concurrent._
 import scala.language.implicitConversions
 
 /**
  * @author zepeng.li@gmail.com
  */
+/**
+ * A class presents a subset of elements in a data set.
+ * In order to know whether next page exists, elements may be filled with 1 more elements.
+ * One should use {{{Page.PageToIterable}}} to iterate elements in one page,
+ * because which will exclude the redundant on from the iterating process.
+ *
+ * @param pager the parameter indicates that current location in the whole data set
+ * @param elements retrieved subset of the whole data set
+ * @tparam E type of the element
+ */
 case class Page[E](pager: Pager, elements: Iterable[E]) extends PageLike {
 
   def hasNext = elements.size > pager.pageSize
-
 }
 
 object Page {
 
-  implicit def PageToIterator[E](p: Page[E]): Iterable[E] =
+  /**
+   * Helper for excluding the redundant element from iterating process.
+   */
+  implicit def PageToIterable[E](p: Page[E]): Iterable[E] =
     p.elements.take(p.pager.pageSize)
 
   implicit def writableOf_Page[E](
@@ -26,9 +41,18 @@ object Page {
   ): Writeable[Page[E]] = {
     import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(
-      p => codec.encode(Json.prettyPrint(Json.toJson(p.elements))),
+      p => codec.encode(Json.prettyPrint(Json.toJson(p: Iterable[E]))),
       Some(ContentTypes.JSON)
     )
+  }
+
+  def apply[R](p: Pager)(enumerator: Enumerator[R])(
+    implicit ec: ExecutionContext
+  ): Future[Page[R]] = {
+    (enumerator |>>> PIteratee.slice[R](p.start,p.limit))
+      .map(_.toIterable)
+      .recover { case e: Throwable => Nil }
+      .map(Page(p, _))
   }
 }
 

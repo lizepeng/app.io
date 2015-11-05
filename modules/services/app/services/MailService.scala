@@ -17,12 +17,10 @@ import scala.concurrent.duration._
 class MailService(
   val basicPlayApi: BasicPlayApi
 )
-  extends CanonicalNamed
+  extends MailServiceCanonicalNamed
   with BasicPlayComponents
   with AppConfigComponents
   with I18nSupport {
-
-  override val basicName: String = "mailer"
 
   val plugin = new MAMailerPlugin(configuration, actorSystem)
 
@@ -30,27 +28,31 @@ class MailService(
     .getStringSeq("admin.email-addresses")
     .getOrElse(Seq.empty)
 
-  def schedule(
+  def sendTo(user: User)(
     mailer: String,
     tmpl: EmailTemplate,
-    user: User,
-    args: (String, Any)*
-  ): Cancellable = plugin.instance(mailer).schedule {
-    val args2: Seq[(String, Any)] =
-      args ++ Seq(
-        "user.name" -> user.name,
-        "user.email" -> user.email
-      )
+    args: Map[String, Any] = Map()
+  ): Cancellable = send(
+    mailer, tmpl, args ++ Seq(
+      "to.name" -> user.name,
+      "to.email" -> user.email
+    )
+  )
 
-    if (tmpl.subject.isEmpty || tmpl.text.isEmpty) {
+  def send(
+    mailer: String,
+    tmpl: EmailTemplate,
+    args: Map[String, Any] = Map()
+  ): Cancellable = plugin.instance(mailer).schedule {
+
+    if (tmpl.invalid) {
       genAlertMail(s"Email Template ${tmpl.id} is empty!!!")
-    }
-    else {
+    } else {
       Email(
-        subject = substitute(tmpl.subject, args2: _*),
+        subject = substitute(tmpl.subject, args),
         from = "",
-        to = Seq(s"${user.name} <${user.email}>"),
-        bodyText = Some(substitute(tmpl.text, args2: _*))
+        to = Seq(s"${substitute(tmpl.to, args)} <${args("to.email")}>"),
+        bodyText = Some(substitute(tmpl.text, args))
       )
     }
   }
@@ -59,25 +61,26 @@ class MailService(
     subject = "Warning",
     from = "",
     to = Seq(s"Administrators ${admins.map("<" + _ + ">").mkString(",")}"),
-    bodyText = Some(
-      s"""
-        |$text
-      """.stripMargin
-    )
+    bodyText = Some(text)
   )
 
   val anyPattern = """[\$|#]\{([\.\w]+)\}""".r
   val msgPattern = """\$\{([\.\w]+)\}""".r
   val argPattern = """#\{([\.\w]+)\}""".r
 
-  def substitute(text: String, args: (String, Any)*) = {
-    val map = args.toMap
+  def substitute(text: String, args: Map[String, Any]) = {
     anyPattern replaceAllIn(text, _ match {
-      case msgPattern(n)                    => messagesApi(n)
-      case argPattern(n) if map.contains(n) => map.get(n).get.toString
-      case _                                => "#{???}"
+      case msgPattern(n)                     => messagesApi(n)
+      case argPattern(n) if args.contains(n) => args.get(n).get.toString
+      case _                                 => "#{???}"
     })
   }
+}
+
+object MailService extends MailServiceCanonicalNamed
+
+trait MailServiceCanonicalNamed extends CanonicalNamed {
+  override val basicName: String = "mailer"
 }
 
 class MAMailerPlugin(

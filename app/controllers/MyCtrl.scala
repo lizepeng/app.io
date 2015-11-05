@@ -4,14 +4,20 @@ import controllers.UsersCtrl._
 import elasticsearch.ElasticSearch
 import helpers._
 import models._
+import models.cfs._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
-import play.api.mvc.Controller
-import security._
+import play.api.libs.MimeTypes
+import play.api.mvc._
+import protocols.JsonProtocol.JsonMessage
+import protocols._
+import security.{Session, _}
+import services._
 import views._
 
 import scala.concurrent.Future
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -21,6 +27,9 @@ class MyCtrl(
   val basicPlayApi: BasicPlayApi,
   val _groups: Groups,
   val _persons: Persons,
+  val _cfs: CassandraFileSystem,
+  val _accessControls: AccessControls,
+  val bandwidth: BandwidthService,
   val es: ElasticSearch
 )
   extends Secured(User)
@@ -30,7 +39,10 @@ class MyCtrl(
   with DefaultPlayExecutor
   with I18nSupport
   with Session
-  with CanonicalNameBasedMessages {
+  with CanonicalNameBasedMessages
+  with BandwidthConfigComponents
+  with CFSImageComponents
+  with Logging {
 
   val ChangePasswordFM = Form[ChangePasswordFD](
     mapping(
@@ -131,4 +143,55 @@ class MyCtrl(
       p.first_name,
       p.last_name
     )
+
+  val profileImageFileName = "profile.png"
+
+  val profileImageMaxLength: Int = configuration
+    .getBytes(s"$canonicalName.profile.image.max.length").map(_.toInt)
+    .getOrElse(2 * 1000 * 1000)
+
+
+  def profileImage(size: Int) =
+    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
+      val thumbnailName = Thumbnail.choose(profileImageFileName, size)
+      CFSHttpCaching(Path.home + thumbnailName) async { file =>
+        CImage(file)().downloadable.map {
+          send(_, _ => profileImageFileName, inline = true)
+        }
+      }
+    }
+
+  def testProfileImage =
+    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
+      Flow(filename = profileImageFileName).bindFromQueryString.test(Path.home)
+    }
+
+  def uploadProfileImage =
+    (MaybeUserAction() andThen AuthChecker).async(
+      CFSBodyParser(Path.home(_))
+    ) { implicit req =>
+      (req.body.file("file").map(_.ref) match {
+        case Some(chunk) => Flow(
+          filename = profileImageFileName,
+          overwrite = true,
+          maxLength = profileImageMaxLength,
+          accept = MyCtrl.acceptProfileImageFormats
+        ).bindFromRequestBody.upload(chunk, Path.home) { (curr, file) =>
+          Thumbnail.generate(curr, file)
+        }
+        case None        => throw CFSBodyParser.MissingFile()
+      }).andThen {
+        case Failure(e: CFSBodyParser.MissingFile)      => Logger.warn(e.message)
+        case Failure(e: FileSystemAccessControl.Denied) => Logger.debug(e.message)
+        case Failure(e: BaseException)                  => Logger.error(e.message)
+      }.recover {
+        case e: BaseException => NotFound(JsonMessage(e))
+      }
+    }
+}
+
+object MyCtrl {
+
+  def acceptProfileImageFormats =
+    Seq("*.png", "*.jpg", "*.gif").flatMap(MimeTypes.forFileName)
 }

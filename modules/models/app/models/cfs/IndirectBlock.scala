@@ -64,9 +64,10 @@ class IndirectBlocks(
   with ExtCQL[IndirectBlockTable, IndirectBlock]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def read(id: UUID): Enumerator[BLK] = {
     select(_.indirect_block_id)
@@ -110,5 +111,12 @@ class IndirectBlocks(
       Enumeratee.onIterateeDone { () =>
         CQL {delete.where(_.inode_id eqs id)}.future()
       } |>>> Iteratee.foreach[UUID](_blocks.purge(_))
+  }
+
+  def isEmpty(id: UUID): Future[Boolean] = CQL {
+    select(_.indirect_block_id)
+      .where(_.inode_id eqs id)
+  }.one().map(_.isEmpty).recover {
+    case e: Exception => true
   }
 }

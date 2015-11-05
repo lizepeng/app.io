@@ -45,6 +45,7 @@
   @req.maybeUser.map { _ =>
     @libs.assets("js", "ws.helper")
     @libs.assets("js", "ui.notification")
+    @libs.assets("js", "ui.common")
     @configUserWebSocket
   }
   @js
@@ -65,5 +66,6 @@
     angular.module('ui.notification').run(['WebSocketOptions', function(WebSocketOptions) {
       WebSocketOptions.url = "@sockets.routes.UserWebSocketCtrl.connect.webSocketURL()";
     }]);
+    angular.module('app').requires.push('ui.common');
   </script>
 }

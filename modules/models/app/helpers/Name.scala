@@ -57,4 +57,9 @@ object Name {
   }
 }
 
-trait NameLike extends Any {def self: String}
+trait NameLike extends Any {
+
+  def self: String
+
+  override def toString = self
+}

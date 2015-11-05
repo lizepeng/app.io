@@ -1,4 +1,4 @@
-@(pager: Pager)(
+@(pager: Pager, sort:Seq[SortField])(
 implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
 @import common._
@@ -8,18 +8,16 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
   @ng._alert()
 
-  @common._flashing()
-
-  <div class="row" style="margin-top:10px">
-    <h2 style="margin-left: 20px">
+  <div class="page-header">
+    <h1>
       <i class="fa fa-shield fa-lg fa-fw text-success"></i>
       @AccessControlsCtrl.msg("head")
-    </h2>
+    </h1>
   </div>
 
   <div class="row">
     <form name="form" ng-controller="NewEntryCtrl">
-      <div class="col-xs-12 col-sm-6 col-md-4">
+      <div class="col-xs-12 col-sm-5">
         @ng._form_control("principal",
           '_label       -> AccessControlsCtrl.msg("principal"),
           '_inline      -> false,
@@ -27,108 +25,86 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
           'placeholder  -> AccessControlsCtrl.msg("principal.placeholder"),
           'typeahead    -> "item as item.label for item in getItems($viewValue)",
           'autocomplete -> "off",
-          Symbol("ng-model") -> "ac.principal"
+          Symbol("ng-model") -> "newEntry.principal"
         )
       </div>
 
-      <div class="col-xs-12 col-sm-6 col-md-2">
+      <div class="col-xs-12 col-sm-5">
         @ng._select("resource",
           '_label       -> AccessControlsCtrl.msg("resource"),
           '_inline      -> false,
           'tabindex     -> 2,
-          Symbol("ng-model")   -> "ac.resource",
+          Symbol("ng-model")   -> "newEntry.resource",
           Symbol("ng-options") -> "k as v for (k,v) in ACList.resources"
         )
       </div>
 
-      <div class="col-xs-12 col-sm-6 col-md-2">
-        @ng._select("action",
-          '_label       -> AccessControlsCtrl.msg("action"),
-          '_inline      -> false,
-          'tabindex     -> 3,
-          Symbol("ng-model")   -> "ac.action",
-          Symbol("ng-options") -> "k as v for (k,v) in ACList.actions"
-        )
-      </div>
-
-      <div class="col-xs-12 col-sm-5 col-md-3">
-        @ng._form_group_static("granted",
-          '_label       -> AccessControlsCtrl.msg("granted"),
-          '_inline      -> false
-        ){
-          <div class="btn-group">
-            <label class="btn btn-default" ng-model="ac.granted" btn-radio="true">
-              <i class="fa fa-check-circle fa-lg text-success"></i>
-              @MSG("allow")
-            </label>
-            <label class="btn btn-default" ng-model="ac.granted" btn-radio="false">
-              <i class="fa fa-ban fa-lg text-danger"></i>
-              @MSG("deny")
-            </label>
-          </div>
-        }
-      </div>
-
-      <div class="col-xs-12 col-sm-1 col-md-1 btn-wrapper">
-        <button type="submit" class="btn btn-success pull-right" ng-click="create(ac)">
+      <div class="col-xs-12 col-sm-2 btn-wrapper">
+        <button type="submit" class="btn btn-success pull-right" ng-click="create(newEntry)">
           <i class="fa fa-save fa-lg"></i>
           @MSG("create")
         </button>
       </div>
 
     </form>
-
   </div>
 
-  <div ng-controller="ACCtrl">
+  <div class="row" ng-controller="ACCtrl">
 
     @ng._msg_confirm_delete()
 
-    <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <div class="table-responsive">
         <table class="table table-hover">
           <thead>
             <tr>
-              <th class="col-xs-4  col-sm-4 ">
+              <th class="col-xs-6 col-sm-4">
                 @AccessControlsCtrl.msg("principal")
               </th>
-              <th class="col-xs-2  col-sm-4 ">
+              <th class="col-xs-6 col-sm-6">
                 @AccessControlsCtrl.msg("resource")
-              </th>
-              <th class="col-xs-1  col-sm-2 ">
-                @AccessControlsCtrl.msg("action")
-              </th>
-              <th class="col-xs-2  col-sm-2 text-right">
               </th>
             </tr>
           </thead>
-          <tbody>
-            <tr class="ng-cloak" ng-repeat="ac in ACList.acs" ng-class="ac.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
-              <td ng-if="ac.is_group">
-                <a ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ac.principal).url}}">
+          <tbody ng-repeat="ace in ACList.aces"  class="ng-cloak">
+            <tr class="bg-info">
+              <td ng-if="ace.is_group">
+                <a ng-if="!ACList.groups[ace.principal_id].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal_id).url}}">
                   <i class="fa fa-group fa-lg fa-fw text-info"></i>
-                  {{ ACList.groups[ac.principal].name }}
+                  {{ ACList.groups[ace.principal_id].name }}
                 </a>
+                <span ng-if="ACList.groups[ace.principal_id].is_internal">
+                  <i class="fa fa-group fa-lg fa-fw"></i>
+                  {{ ACList.groups[ace.principal_id].name }}
+                </span>
               </td>
-              <td ng-if="!ac.is_group">
-                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ac.principal).url}}">
+              <td ng-if="!ace.is_group">
+                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ace.principal_id).url}}">
                   <i class="fa fa-user fa-lg fa-fw text-info"></i>
-                  {{ ACList.users[ac.principal].email }}
+                  {{ ACList.users[ace.principal_id].email }}
                 </a>
               </td>
               <td>
-                {{ ACList.resources[ac.resource] || ac.resource }}
+                {{ ACList.resources[ace.resource] || ace.resource }}
               </td>
-              <td>
-                {{ ACList.actions[ac.action] }}
+            </tr>
+            <tr ng-class="ace.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
+              <td colspan="2">
+                <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="name in ACList.access_def">
+                  <label class="checkbox-inline" >
+                    <input type="checkbox"
+                      ng-model="ace.permissions[$index]"
+                      ng-change="toggle(ace, $index)">
+                    {{ name }}
+                  </label>
+                </div>
               </td>
-              <td>
+            </tr>
+            <tr>
+              <td colspan="2">
                 <div class="btn-toolbar pull-right">
-                  <div class="btn-group">
-                    <toggle-switch status="ac.granted" ng-click="ACList.save(ac)"/>
-                  </div>
-                  <div class="btn-group hidden-xs" style="padding-top:3px">
-                    <button type="button" class="btn btn-danger btn-xs" ng-click="confirm(ac)">
+                  <div class="btn-group" style="padding-top:3px">
+                    <button type="button" class="btn btn-danger btn-xs" ng-click="confirm(ace)">
                       <i class="fa fa-trash-o"></i>
                       @MSG("delete")
                     </button>
@@ -140,10 +116,12 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
         </table>
       </div>
     </div>
-    <div class="row">
+
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       @ng._pager("ACList.links")
     </div>
   </div>
+
 }()(
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api.helper"),
@@ -166,13 +144,14 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 @controller = {
   <script>
     views.access_controls.index.run(['ACList', function(ACList) {
-      ACList.resources = @Html(secured.Modules.toJson);
-      ACList.actions   = @Html(secured.Actions.toJson);
+      ACList.resources  = @Html(secured.Modules.toJson);
+      ACList.access_def = @Html(secured.AccessDef.toJson);
       ACList.reload({
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
-        nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next).toString)',
-        prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev).toString)'
+        sort     : @Html(SortField.toJson(sort)),
+        nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next,sort).toString)',
+        prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev,sort).toString)'
       });
     }]);
   </script>

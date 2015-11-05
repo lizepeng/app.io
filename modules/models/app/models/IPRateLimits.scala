@@ -48,9 +48,10 @@ class IPRateLimits(
   with ExtCQL[IPRateLimitTable, InetAddress]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def get(
     ip: InetAddress,

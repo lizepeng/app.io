@@ -10,10 +10,10 @@ angular.module 'api.helper', []
     service = {}
 
     service.firstMsg = (data, status) ->
-      if (status == 422)
-        #TODO boundary check
-        data.errors[0].errors[0].message
-      else "Unknown Error"
+      unknown = "Unknown Error Occurred."
+      switch status
+        when 422 then data.errors?[0].errors?[0].message || unknown
+        else unknown
 
     return service
 
@@ -22,38 +22,21 @@ angular.module 'api.helper', []
   #
   .factory 'LinkHeader', ->
     service = {}
-
-    service.links =
-      prev: ''
-      next: ''
-      has : (rel) ->
-        return rel of this && this[rel] != ''
+    service.links = {}
 
     service.updateLinks = (next, prev, headers) ->
-      links = service.parse headers
-      if links.has 'next'
-        service.links.next = next
-      if links.has 'prev'
-        service.links.prev = prev
+      apiLinks = service.parse headers
+      @links.next = next if apiLinks.next?
+      @links.prev = prev if apiLinks.prev?
 
     service.parse = (headers) ->
-      links = {}
-      links.has = (rel) ->
-        rel of this
+      header   = headers 'Link'
+      next     = /<([^<>]+)>; rel="(next)"/g.exec header
+      prev     = /<([^<>]+)>; rel="(prev)"/g.exec header
+      apiLinks = {}
 
-      header = headers('Link')
-      if header.length == 0
-        return links
-      # Split parts by comma
-      parts = header.split(',')
-      # Parse each part into a named link
-      angular.forEach parts, (p) ->
-        section = p.split(';')
-        if section.length != 2
-          throw new Error('section could not be split on \';\'')
-        url = section[0].replace(/<(.*)>/, '$1').trim()
-        name = section[1].replace(/rel="(.*)"/, '$1').trim()
-        links[name] = url
-      links
+      apiLinks[next[2]] = next[1] if next?
+      apiLinks[prev[2]] = prev[1] if prev?
+      apiLinks
 
     return service

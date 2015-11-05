@@ -3,6 +3,9 @@
 # subject
 [${app.name}] Please reset your password
 
+# to
+#{to.name}
+
 #
 We heard that you lost your ${app.name} password. Sorry about that!
 
@@ -22,12 +25,15 @@ Your friends at ${app.name}
 # subject
 [${app.name}] Your password has changed
 
+# to
+#{to.name}
+
 #
-Hello #{user.name},
+Hello #{to.name},
 
 We wanted to let you know that your ${app.name} password was changed.
 
-If you did not perform this action, you can recover access by entering #{user.email} into the form at ${app.url}/password_reset.
+If you did not perform this action, you can recover access by entering #{to.email} into the form at ${app.url}/password_reset.
 
 To see this and other security events for your account, visit ${app.url}/settings/security.
 

@@ -8,6 +8,7 @@ import helpers._
 import helpers.syntax._
 import models.cassandra._
 import models.cfs.Block.BLK
+import models.cfs.CassandraFileSystem._
 import play.api.libs.iteratee._
 import play.api.libs.json._
 
@@ -25,8 +26,8 @@ case class File(
   size: Long = 0,
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
   block_size: Int = 1024 * 8,
-  permission: Long = 6L << 60,
-  ext_permission: Map[UUID, Int] = Map(),
+  permission: Permission = Role.owner.rw,
+  ext_permission: Map[UUID, Permission] = Map(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = false
 ) extends INode {
@@ -42,11 +43,13 @@ case class File(
   ): Iteratee[BLK, File] =
     cfs._files.streamWriter(this)
 
-  override def purge()(
+  override def delete()(
     implicit cfs: CassandraFileSystem
-  ) = {
-    super.purge().andThen { case _ => cfs._files.purge(id) }
-  }
+  ): Future[Unit] =
+    for {
+      _ <- cfs._files.purge(id)
+      _ <- super.delete()
+    } yield Unit
 }
 
 /**
@@ -69,9 +72,10 @@ sealed class FileTable
       size(r),
       indirect_block_size(r),
       block_size(r),
-      permission(r),
-      ext_permission(r),
-      attributes(r)
+      Permission(permission(r)),
+      ext_permission(r).mapValues(Permission(_)),
+      attributes(r),
+      is_directory(r)
     )
   }
 }
@@ -82,6 +86,9 @@ object File extends CanonicalNamed with ExceptionDefining {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
+
+  case class NotFile(param: Any)
+    extends BaseException(error_code("not.file"))
 
   implicit val jsonWrites = new Writes[File] {
     override def writes(o: File): JsValue = Json.obj(
@@ -94,6 +101,17 @@ object File extends CanonicalNamed with ExceptionDefining {
       "is_directory" -> o.is_directory,
       "is_file" -> !o.is_directory
     )
+  }
+
+  def pprint(size: Long): String = {
+    size match {
+      case s if s > (1L << 40) => f"${s / 1e12}%7.3f TB"
+      case s if s > (1L << 30) => f"${s / 1e09}%6.2f GB"
+      case s if s > (1L << 20) => f"${s / 1e06}%5.1f MB"
+      case s if s > (1L << 10) => f"${s / 1000}%3d KB"
+      case s if s > 0          => f"$s%3d bytes"
+      case _                   => "Zero bytes"
+    }
   }
 }
 
@@ -110,13 +128,14 @@ class Files(
   with CassandraComponents
   with Logging {
 
-  def find(id: UUID)(
-    implicit onFound: File => File
-  ): Future[File] = CQL {
+  def find(id: UUID)(onFound: File => File): Future[File] = CQL {
     select.where(_.inode_id eqs id)
-  }.one().map {
-    case None    => throw File.NotFound(id)
-    case Some(f) => onFound(f)
+  }.one().recover {
+    case e: Throwable => Logger.trace(e.getMessage); None
+  }.map {
+    case None                      => throw File.NotFound(id)
+    case Some(f) if f.is_directory => throw File.NotFile(id)
+    case Some(f)                   => onFound(f)
   }
 
   def streamWriter(inode: File): Iteratee[BLK, File] = {
@@ -141,10 +160,12 @@ class Files(
 
   }
 
-  def purge(id: UUID): Future[ResultSet] = for {
-    _ <- _indirectBlocks.purge(id)
-    u <- CQL {delete.where(_.inode_id eqs id)}.future()
-  } yield u
+  def purge(id: UUID): Future[Unit] = for {
+    _____ <- _indirectBlocks.purge(id)
+    empty <- _indirectBlocks.isEmpty(id)
+    _____ <- if (empty) CQL {delete.where(_.inode_id eqs id)}.future() else purge(id)
+  } yield Unit
+
 
   private def write(f: File): Future[File] = CQL {
     insert.value(_.inode_id, f.id)
@@ -154,8 +175,8 @@ class Files(
       .value(_.indirect_block_size, f.indirect_block_size)
       .value(_.block_size, f.block_size)
       .value(_.owner_id, f.owner_id)
-      .value(_.permission, f.permission)
-      .value(_.ext_permission, f.ext_permission)
+      .value(_.permission, f.permission.self)
+      .value(_.ext_permission, f.ext_permission.mapValues(_.self.toInt))
       .value(_.attributes, f.attributes)
   }.future().map(_ => f)
 }

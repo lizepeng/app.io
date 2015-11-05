@@ -65,6 +65,7 @@ libraryDependencies += specs2 % Test
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 
 TwirlKeys.templateImports ++= Seq(
+  "elasticsearch.SortField",
   "helpers._",
   "java.util.UUID",
   "models.cfs._",
@@ -74,6 +75,7 @@ TwirlKeys.templateImports ++= Seq(
 )
 
 routesImport ++= Seq(
+  "elasticsearch.SortField",
   "helpers.ExtBindable._",
   "helpers._",
   "java.util.UUID",

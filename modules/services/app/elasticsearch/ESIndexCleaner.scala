@@ -26,7 +26,9 @@ case class ESIndexCleaner(
             Future.successful(false)
         } yield result).andThen {
           case Success(true) =>
-            Logger.info(s"Cleaned elastic search index ${table.basicName}.")
+            Logger.debug(s"Cleaned elastic search index ${table.basicName}.")
+        }.recover {
+          case e: Throwable => Logger.debug(e.getMessage); false
         }
       }
     ).map(rets => (true /: rets)(_ && _))

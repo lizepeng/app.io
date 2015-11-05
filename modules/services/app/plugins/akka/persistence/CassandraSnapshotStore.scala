@@ -23,6 +23,7 @@ import scala.util.Try
  */
 class CassandraSnapshotStore extends SnapshotStore with Stash {
 
+  import ResourcesMediator._
   import context.dispatcher
 
   val maxLoadAttempts = 3
@@ -33,10 +34,10 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
   var snapshots: Snapshots = _
 
   context become awaitingResources
-  mediator ! ResourcesMediator.ModelRequired
+  mediator ! List(GetBasicPlayApi, GetKeySpaceBuilder)
 
   def awaitingResources: Actor.Receive = {
-    case (bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
+    case List(bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
       snapshots = new Snapshots(bpa, cp)
       (for {
         _ <- snapshots.createIfNotExists()

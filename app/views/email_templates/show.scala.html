@@ -5,6 +5,16 @@ implicit req: UserRequest[_], messages: Messages)
 
 @layouts.base(tmpl.name){
 
+  @common._flashing()
+
+  <div class="page-header">
+    <h1>
+      <i class="fa fa-envelope-o fa-lg fa-fw"></i>
+      @EmailTemplatesCtrl.msg("head")
+      <small>@tmpl.name</small>
+    </h1>
+  </div>
+
   @{_info(tmpl, updated_by, created_by)}
 
   <div class="row">
@@ -22,17 +32,34 @@ implicit req: UserRequest[_], messages: Messages)
 
   <div class="row">
     <div class="col-xs-12">
-      @common._form_group_static("subject") {
-        @tmpl.subject
+      @common._form_group_static("email.subject") {
+        <pre>@tmpl.subject</pre>
       }
     </div>
   </div>
 
   <div class="row">
     <div class="col-xs-12">
-      @common._form_group_static("text") {
+      @common._form_group_static("email.to") {
+        <pre>@tmpl.to</pre>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12">
+      @common._form_group_static("email.text") {
         <pre>@tmpl.text</pre>
       }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12">
+      <a href="@routes.EmailTemplatesCtrl.edit(tmpl.id, tmpl.lang)" class="btn btn-primary pull-right">
+        <i class="fa fa-edit"></i>
+        @MSG("edit")
+      </a>
     </div>
   </div>
 

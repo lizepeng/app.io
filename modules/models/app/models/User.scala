@@ -3,17 +3,17 @@ package models
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
-import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers.ExtCrypto._
 import helpers._
 import models.cassandra._
-import models.sys.{SysConfig, SysConfigs}
+import models.sys._
 import org.joda.time.DateTime
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
+import scala.util.Random
 
 /**
  * @author zepeng.li@gmail.com
@@ -80,10 +80,10 @@ case class User(
   }
 
   private def encrypt(salt: String, passwd: Password) =
-    Crypto.sha2(s"$salt--$passwd")
+    Crypto.sha2(s"$salt--${passwd.self}")
 
   private def makeSalt(passwd: Password) =
-    Crypto.sha2(s"${DateTime.now}--$passwd")
+    Crypto.sha2(s"${DateTime.now}--${passwd.self}--${Random.nextString(32)}")
 }
 
 trait UserCanonicalNamed extends CanonicalNamed {
@@ -99,7 +99,7 @@ sealed abstract class UserTable
   with UserCanonicalNamed {
 
   object id
-    extends UUIDColumn(this)
+    extends TimeUUIDColumn(this)
     with PartitionKey[UUID]
 
   object name
@@ -158,37 +158,11 @@ object User
   case class EmailTaken(email: String)
     extends BaseException(error_code("email.taken"))
 
-  object AccessControl {
-
-    import models.{AccessControl => AC}
-
-    case class Undefined(
-      principal: UUID,
-      action: String,
-      resource: String
-    ) extends AC.Undefined[UUID](action, resource, basicName)
-
-    case class Denied(
-      principal: UUID,
-      action: String,
-      resource: String
-    ) extends AC.Denied[UUID](action, resource, basicName)
-
-    case class Granted(
-      principal: UUID,
-      action: String,
-      resource: String
-    ) extends AC.Granted[UUID](action, resource, basicName)
-
-  }
-
   implicit val jsonWrites = new Writes[User] {
     override def writes(o: User): JsValue = Json.obj(
       "id" -> o.id,
       "name" -> o.name,
-      "email" -> o.email,
-      "int_groups" -> o.internal_groups_code.code,
-      "ext_groups" -> o.external_groups
+      "email" -> o.email
     )
   }
 }
@@ -205,12 +179,13 @@ class Users(
   with ExtCQL[UserTable, User]
   with BasicPlayComponents
   with CassandraComponents
-  with SysConfig
+  with SystemAccounts
+  with BootingProcess
   with Logging {
 
   val _usersByEmail = new UsersByEmail
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   override def fromRow(r: Row): User = {
     User(
@@ -228,9 +203,7 @@ class Users(
     )
   }
 
-  lazy val root: Future[User] = System.UUID("root_id").map { uid =>
-    User(id = uid, name = Name("root"))
-  }
+  def root = _systemAccount(User)(context, this)
 
   def exists(id: UUID): Future[Boolean] = CQL {
     select(_.id).where(_.id eqs id)
@@ -325,11 +298,6 @@ class Users(
     }
   }
 
-  def list(pager: Pager): Future[Page[User]] = {
-    CQL(select).fetchEnumerator |>>>
-      PIteratee.slice[User](pager.start, pager.limit)
-  }.map(_.toIterable).map(Page(pager, _))
-
   def all: Enumerator[User] = {
     CQL(select).fetchEnumerator
   }
@@ -353,6 +321,8 @@ class Users(
       .where(_.id eqs id)
       .modify(_.updated_at setTo DateTime.now)
   }
+
+  override def sortable: Set[SortableField] = Set(name, email)
 
   ////////////////////////////////////////////////////////////////
   def findAccessToken(id: UUID): Future[Option[String]] = {
@@ -390,9 +360,10 @@ class UsersByEmail(
   with ExtCQL[UsersByEmailIndex, (String, UUID)]
   with BasicPlayComponents
   with CassandraComponents
+  with BootingProcess
   with Logging {
 
-  create.ifNotExists.future()
+  onStart(create.ifNotExists.future())
 
   def save(email: EmailAddress, id: UUID): Future[Boolean] = CQL {
     insert
@@ -430,6 +401,7 @@ trait UsersComponents {
 
   implicit def _users: Users = _groups._users
 }
+
 object UsersComponents {
 
   implicit def _users(implicit _groups: Groups): Users = _groups._users
