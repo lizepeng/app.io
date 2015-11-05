@@ -76,15 +76,15 @@ class ElasticSearch(
     put mapping indexName / t.basicName as mapping(t)
   }
 
-  def Index[T <: HasID[_]](r: T) = new IndexAction(r)
+  def Index[T <: HasID[_]](r: T) = new IndexAction[T](r)
 
-  def Delete[ID](r: ID) = new DeleteAction(r)
+  def Delete[ID](r: ID) = new DeleteAction[ID](r)
 
   def Delete = new DeleteMappingAction
 
-  def Update[T <: HasID[_]](r: T) = new UpdateAction(r)
+  def Update[T <: HasID[_]](r: T) = new UpdateAction[T](r)
 
-  def BulkIndex[T <: HasID[_]](rs: Seq[T]) = new BulkIndexAction(rs)
+  def BulkIndex[T <: HasID[_]](rs: Seq[T]) = new BulkIndexAction[T](rs)
 
   def Search(q: Option[String], p: Pager, sort: Seq[SortField]) =
     new SearchAction(q, p, sort)
