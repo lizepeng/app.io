@@ -70,9 +70,11 @@ class ExpirableLinks(
 
   def save(
     target_id: String,
+    length: Int = 256,
     ttl: FiniteDuration = 24 hours
   ): Future[ExpirableLink] = {
-    val id = Crypto.sha2(s"$target_id--${UUID.randomUUID()}", 512)
+    val ln = if (length < 8) 8 else length
+    val id = Crypto.sha2(s"$target_id--${UUID.randomUUID()}", ln)
     CQL {
       insert.value(_.id, id)
         .value(_.target_id, target_id)
