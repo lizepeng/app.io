@@ -11,6 +11,7 @@ import models.cassandra._
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Random
 
 /**
  * @author zepeng.li@gmail.com
@@ -70,11 +71,17 @@ class ExpirableLinks(
 
   def save(
     target_id: String,
+    secure: Boolean = true,
     length: Int = 256,
     ttl: FiniteDuration = 24 hours
   ): Future[ExpirableLink] = {
-    val ln = if (length < 8) 8 else length
-    val id = Crypto.sha2(s"$target_id--${UUID.randomUUID()}", ln)
+    val id =
+      if (!secure) {
+        Random.alphanumeric.take(length).mkString
+      } else {
+        val ln = if (length == 512) 512 else 256
+        Crypto.sha2(s"$target_id--${UUID.randomUUID()}", ln)
+      }
     CQL {
       insert.value(_.id, id)
         .value(_.target_id, target_id)
