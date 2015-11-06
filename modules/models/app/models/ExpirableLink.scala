@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
-import helpers.ExtCrypto._
+import helpers.ExtCodecs._
 import helpers._
 import models.cassandra._
 
@@ -80,7 +80,7 @@ class ExpirableLinks(
         Random.alphanumeric.take(length).mkString
       } else {
         val ln = if (length == 512) 512 else 256
-        Crypto.sha2(s"$target_id--${UUID.randomUUID()}", ln)
+        Codecs.sha2(s"$target_id--${UUID.randomUUID()}", ln)
       }
     CQL {
       insert.value(_.id, id)

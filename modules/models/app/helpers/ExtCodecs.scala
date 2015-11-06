@@ -7,9 +7,9 @@ import scala.language.{implicitConversions, postfixOps}
 /**
  * @author zepeng.li@gmail.com
  */
-object ExtCrypto {
+object ExtCodecs {
 
-  object Crypto {
+  object Codecs {
 
     def sha2(text: String, length: Int = 256): String = {
       val digest = MessageDigest.getInstance(s"SHA-$length")
@@ -20,5 +20,5 @@ object ExtCrypto {
     }
   }
 
-  implicit def wrappedCrypto(c: Crypto.type): play.api.libs.Crypto.type = play.api.libs.Crypto
+  implicit def wrappedCrypto(c: Codecs.type): play.api.libs.Codecs.type = play.api.libs.Codecs
 }

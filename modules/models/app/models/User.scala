@@ -3,7 +3,7 @@ package models
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
-import helpers.ExtCrypto._
+import helpers.ExtCodecs._
 import helpers._
 import models.cassandra._
 import models.sys._
@@ -80,10 +80,10 @@ case class User(
   }
 
   private def encrypt(salt: String, passwd: Password) =
-    Crypto.sha2(s"$salt--${passwd.self}")
+    Codecs.sha2(s"$salt--${passwd.self}")
 
   private def makeSalt(passwd: Password) =
-    Crypto.sha2(s"${DateTime.now}--${passwd.self}--${Random.nextString(32)}")
+    Codecs.sha2(s"${DateTime.now}--${passwd.self}--${Random.nextString(32)}")
 }
 
 trait UserCanonicalNamed extends CanonicalNamed {
