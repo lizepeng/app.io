@@ -14,26 +14,38 @@ trait AppConfigComponents extends AppDomainComponents {
     configuration.getConfig(canonicalName).getOrElse(Configuration.empty)
 }
 
-trait AppDomainComponents {
-
-  import AppDomainComponents._
+trait AppDomainComponents extends EssentialConfig {
 
   def configuration: Configuration
 
   def domain = getEssentialString("app.domain")
+}
+
+trait EssentialConfig {
+
+  def configuration: Configuration
 
   /**
+   * Get String from configuration, which must be set
    *
    * @param key the configuration key
    * @return
-   * @throws Required if corresponding value not exists
    */
-  private def getEssentialString(key: String) =
-    configuration.getString(key).getOrElse(throw new Required(key))
-}
+  def getEssentialString(key: String): String = {
+    configuration.getString(key).getOrElse(
+      throw configuration.reportError(key, s"Configuration Missing $key")
+    )
+  }
 
-object AppDomainComponents {
-
-  class Required(key: String)
-    extends RuntimeException(s"<$key> is required")
+  /**
+   * Get Int from configuration, which must be set
+   *
+   * @param key the configuration key
+   * @return
+   */
+  def getEssentialInt(key: String): Int = {
+    configuration.getInt(key).getOrElse(
+      throw configuration.reportError(key, s"Configuration Missing $key")
+    )
+  }
 }
