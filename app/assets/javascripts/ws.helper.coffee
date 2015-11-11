@@ -13,7 +13,7 @@ angular.module 'ws.helper', []
         constructor: (url) ->
           @url = url
           @handlers = {}
-          @connect() if options.autoConnect ? true
+          $timeout @connect, 2000 if options.autoConnect ? true
 
         register: (handlers...) ->
           @handlers[handler.protocol] = handler for handler in handlers
