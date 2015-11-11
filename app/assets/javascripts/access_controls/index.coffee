@@ -49,9 +49,7 @@ views.access_controls.index.factory 'ACList', [
               resource     : value.resource) is -1
             service.aces.unshift value
         (res) ->
-          Alert.push
-            type : 'danger'
-            msg  : res.data.message
+          Alert.danger res.data.message
       )
 
     service.delete = (data) ->
@@ -60,18 +58,16 @@ views.access_controls.index.factory 'ACList', [
           idx = service.aces.indexOf(data)
           service.aces.splice idx, 1
         (res) ->
-          Alert.push
-            type : 'danger'
-            msg  : res.data.message
+          Alert.danger res.data.message
       )
 
     service.toggle = (data, pos) ->
-      data.$save pos : pos,
+      data.$save(
+        pos : pos
         (value) -> buildPerm value
         (res) ->
-          Alert.push
-            type : 'danger'
-            msg  : res.data.message
+          Alert.danger res.data.message
+      )
 
     buildPerm = (ace) ->
       ace.permissions = (ace.permission.charAt(i) is '1' for i in [63..0])

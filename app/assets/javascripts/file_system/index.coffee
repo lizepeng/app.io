@@ -43,18 +43,14 @@ views.files.index
           idx = service.inodes.indexOf(file)
           service.inodes.splice idx, 1
         .error (data) ->
-          Alert.push
-            type : 'danger'
-            msg  : data.message
+          Alert.danger data.message
 
     service.clear = ->
       CFS.delete(service.path)
         .success ->
           service.inodes = []
         .error (data) ->
-          Alert.push
-            type : 'danger'
-            msg  : data.message
+          Alert.danger data.message
 
     service.created = (file) ->
       file.path = new Path(file.path)

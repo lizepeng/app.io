@@ -33,9 +33,8 @@ views.users.index.factory 'UserList', [
         (value) ->
           service.users.unshift value
         (res) ->
-          Alert.push
-            type : 'danger'
-            msg  : res.data.message)
+          Alert.danger res.data.message
+      )
 
     service
 ]

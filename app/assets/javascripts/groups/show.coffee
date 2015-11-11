@@ -26,9 +26,7 @@ views.groups.show.factory 'GroupUsersList', [
           if _.findIndex(service.users, id:value.id) == -1
             service.users.unshift value
         (resp) ->
-          Alert.push
-            type : 'danger'
-            msg  : resp.data.message
+          Alert.danger resp.data.message
 
     service.remove = (data) ->
       Group.delUser service.group, uid: data.id,

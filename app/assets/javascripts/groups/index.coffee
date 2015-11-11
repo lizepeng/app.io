@@ -45,9 +45,8 @@ views.groups.index.factory 'GroupList', [
           idx = service.groups.indexOf(data)
           service.groups.splice idx, 1
         (res) ->
-          Alert.push
-            type: 'danger'
-            msg: res.data.message)
+          Alert.danger res.data.message
+      )
 
     service.setLayout = (gid, layout) -> Group.setLayout(gid, layout)
 
@@ -77,7 +76,8 @@ views.groups.index.factory 'GroupList', [
     $scope.confirm = (grp) ->
       ModalDialog.open().result.then(
         -> GroupList.delete grp
-        ->)
+        ->
+      )
 
     $scope.setLayout = (gid, layout) -> GroupList.setLayout(gid, layout)
 

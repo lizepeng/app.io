@@ -6,11 +6,18 @@ angular.module 'ui.parts', [
   # msg format: {type:'danger', msg:'msg'}
   .factory 'Alert', ->
     alerts  : []
-    dismiss : (idx) ->
-      @alerts.splice idx, 1
-    push    : (msg) ->
-      msg.type ?= 'info'
-      @alerts.push msg
+    dismiss : (idx) -> @alerts.splice idx, 1
+    push    : (alert) ->
+      alert.type ?= 'info'
+      @alerts.push alert
+    show    : (type, msg) ->
+      @push
+        type : type
+        msg  : msg
+    success : (msg) -> @show 'success', msg
+    info    : (msg) -> @show 'info'   , msg
+    warning : (msg) -> @show 'warning', msg
+    danger  : (msg) -> @show 'danger' , msg
 
   .controller 'AlertCtrl', ['$scope', 'Alert', ($scope, Alert) ->
     $scope.Alert = Alert
