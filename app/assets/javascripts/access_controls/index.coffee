@@ -115,7 +115,6 @@ views.access_controls.index.factory 'ACList', [
         ACList.create(
           principal_id  : newEntry.principal.id
           resource      : newEntry.resource
-          permission    : 0
           is_group      : newEntry.principal._type is 'groups'
           newEntry.principal._source
         )

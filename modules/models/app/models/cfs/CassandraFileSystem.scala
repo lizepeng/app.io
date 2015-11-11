@@ -3,11 +3,12 @@ package models.cfs
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
+import helpers.ExtString._
 import helpers._
 import models.cassandra._
 import models.sys.{SysConfig, SysConfigs}
 import models.{User, Users}
-import play.api.libs.json.{Format, JsNumber, Reads, Writes}
+import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -141,8 +142,8 @@ object CassandraFileSystem
   object Permission {
 
     implicit val jsonFormat = Format(
-      Reads.LongReads.map(Permission.apply),
-      Writes[Permission](o => JsNumber(o.self))
+      Reads.StringReads.map(s => s.tryToLong.getOrElse(0L)).map(Permission.apply),
+      Writes[Permission](o => BinaryString.from(o.self).toJson)
     )
   }
 
