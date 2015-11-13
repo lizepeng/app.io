@@ -28,14 +28,14 @@ abstract class UserMessageActor extends EntityActor {
       sockets = sockets.addRoutee(c.socket)
       context watch c.socket
       self ! EntityActor.UnsetReceiveTimeout
-      log.debug(s"${self.path}, now has ${sockets.routees.length} sockets connected")
+      log.debug(s"${self.path.name}, Now has ${sockets.routees.length} sockets connected.")
 
     case Terminated(a) =>
-      log.debug(s"Socket ${a.path} disconnected")
+      log.debug(s"Socket ${a.path} Disconnected.")
       context unwatch a
       sockets = sockets.removeRoutee(a)
       if (isIdle) self ! EntityActor.SetReceiveTimeout
-      log.debug(s"${self.path}, now has ${sockets.routees.length} sockets connected")
+      log.debug(s"${self.path.name}, Now has ${sockets.routees.length} sockets connected.")
 
   }: Receive) orElse super.receiveCommand
 }
