@@ -1,56 +1,53 @@
 this.views ?= {}
 this.views.users ?= {}
 
-views.users.index = angular.module 'users.list', [
+views.users.index = angular.module 'users.index', [
   'ui.bootstrap'
   'api_internal.user'
   'api.helper'
   'ui.parts'
 ]
 
-views.users.index.factory 'UserList', [
+views.users.index.factory 'UserListSvc', [
   'User'
   'LinkHeader'
-  'Alert'
-  (User, LinkHeader, Alert) ->
-    service               = {}
-    service.links         = LinkHeader.links
-    service.users         = []
-    service.options       = {}
+  (User, LinkHeader) ->
+    service         = {}
+    service.links   = LinkHeader.links
+    service.values  = []
+    service.options = {}
 
     service.reload = (q) ->
-      opt = service.options
-      service.users = User.query
-        page     : opt.page
-        per_page : opt.pageSize
-        sort     : opt.sort.join(',')
+      @values = User.query
+        page     : @options.page
+        per_page : @options.pageSize
+        sort     : @options.sort.join(',')
         q        : "*#{q}*",
-        (value, headers) ->
-          LinkHeader.updateLinks opt.nextPage, opt.prevPage, headers
+        (value, headers) =>
+          LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
 
-    service.create = (data) ->
-      new User(data).$save(
-        (value) ->
-          service.users.unshift value
-        (res) ->
-          Alert.danger res.data.message
-      )
-
-    service
+    return service
 ]
 
 .controller 'UsersCtrl', [
   '$scope'
-  'UserList'
-  ($scope, UserList) ->
-    $scope.UserList = UserList
-    $scope.jsRoutes = jsRoutes
-    $scope.keyword  = ''
+  'User'
+  'UserListSvc'
+  'Alert'
+  ($scope, User, UserListSvc, Alert) ->
+    $scope.UserListSvc = UserListSvc
+    $scope.jsRoutes    = jsRoutes
+    $scope.keyword     = ''
 
-    $scope.$watch 'keyword', (nv) ->
-      UserList.reload nv
+    $scope.create = (data) ->
+      new User(data).$save(
+        (value) -> UserListSvc.values.unshift value
+        (res) -> Alert.danger res.data.message
+      )
+
+    $scope.$watch 'keyword', (nv) -> UserListSvc.reload nv
 
     return
 ]
 
-angular.module('app').requires.push 'users.list'
+angular.module('app').requires.push 'users.index'

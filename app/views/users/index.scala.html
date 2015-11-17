@@ -53,7 +53,7 @@ implicit req: UserRequest[_], messages: Messages)
             </tr>
           </thead>
           <tbody>
-            <tr class="ng-cloak" ng-repeat="usr in UserList.users">
+            <tr class="ng-cloak" ng-repeat="usr in UserListSvc.values">
               <td class="hidden-xs">
                 <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(usr.id).url}}">
                   <code>{{ usr.id }}</code>
@@ -101,16 +101,16 @@ implicit req: UserRequest[_], messages: Messages)
           Symbol("ng-model") -> "user.name"
         )
 
-        <button type="submit" class="btn btn-success" ng-click="UserList.create(user)"
-          ng-disabled="form.$invalid || !user.email || user.email === '' || !user.name || user.name === ''">
+        <button type="submit" class="btn btn-success" ng-click="create(user)"
+          ng-disabled="form.$invalid || !user.email || !user.name">
           <i class="fa fa-user-plus"></i>
           @UsersCtrl.msg("new.user")
         </button>
       </form>
     </div>
 
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" ng-hide="keyword !== ''">
-      @ng._pager("UserList.links")
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" ng-hide="keyword">
+      @ng._pager("UserListSvc.links")
     </div>
   </div>
 }()(
@@ -131,8 +131,8 @@ implicit req: UserRequest[_], messages: Messages)
 
 @controller = {
   <script>
-    views.users.index.run(['UserList', function(UserList) {
-      UserList.options = {
+    views.users.index.run(['UserListSvc', function(UserListSvc) {
+      UserListSvc.options = {
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
         sort     : @Html(SortField.toJson(sort)),

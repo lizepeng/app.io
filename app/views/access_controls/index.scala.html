@@ -35,7 +35,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
           '_inline      -> false,
           'tabindex     -> 2,
           Symbol("ng-model")   -> "newEntry.resource",
-          Symbol("ng-options") -> "k as v for (k,v) in ACList.resources"
+          Symbol("ng-options") -> "k as v for (k,v) in ACListSvc.resources"
         )
       </div>
 
@@ -49,7 +49,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
     </form>
   </div>
 
-  <div class="row" ng-controller="ACCtrl">
+  <div class="row" ng-controller="ACListCtrl">
 
     @ng._msg_confirm_delete()
 
@@ -66,31 +66,31 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
               </th>
             </tr>
           </thead>
-          <tbody ng-repeat="ace in ACList.aces"  class="ng-cloak">
+          <tbody ng-repeat="ace in ACListSvc.aces"  class="ng-cloak">
             <tr class="bg-info">
               <td ng-if="ace.is_group">
-                <a ng-if="!ACList.groups[ace.principal_id].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal_id).url}}">
+                <a ng-if="!ACListSvc.groups[ace.principal_id].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal_id).url}}">
                   <i class="fa fa-group fa-lg fa-fw text-info"></i>
-                  {{ ACList.groups[ace.principal_id].name }}
+                  {{ ACListSvc.groups[ace.principal_id].name }}
                 </a>
-                <span ng-if="ACList.groups[ace.principal_id].is_internal">
+                <span ng-if="ACListSvc.groups[ace.principal_id].is_internal">
                   <i class="fa fa-group fa-lg fa-fw"></i>
-                  {{ ACList.groups[ace.principal_id].name }}
+                  {{ ACListSvc.groups[ace.principal_id].name }}
                 </span>
               </td>
               <td ng-if="!ace.is_group">
                 <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ace.principal_id).url}}">
                   <i class="fa fa-user fa-lg fa-fw text-info"></i>
-                  {{ ACList.users[ace.principal_id].email }}
+                  {{ ACListSvc.users[ace.principal_id].email }}
                 </a>
               </td>
               <td>
-                {{ ACList.resources[ace.resource] || ace.resource }}
+                {{ ACListSvc.resources[ace.resource] || ace.resource }}
               </td>
             </tr>
             <tr ng-class="ace.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
               <td colspan="2">
-                <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="name in ACList.access_def">
+                <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="name in ACListSvc.access_def">
                   <label class="checkbox-inline" >
                     <input type="checkbox"
                       ng-model="ace.permissions[$index]"
@@ -118,7 +118,7 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
     </div>
 
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      @ng._pager("ACList.links")
+      @ng._pager("ACListSvc.links")
     </div>
   </div>
 
@@ -143,16 +143,16 @@ implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
 
 @controller = {
   <script>
-    views.access_controls.index.run(['ACList', function(ACList) {
-      ACList.resources  = @Html(secured.Modules.toJson);
-      ACList.access_def = @Html(secured.AccessDef.toJson);
-      ACList.reload({
+    views.access_controls.index.run(['ACListSvc', function(ACListSvc) {
+      ACListSvc.resources  = @Html(secured.Modules.toJson);
+      ACListSvc.access_def = @Html(secured.AccessDef.toJson);
+      ACListSvc.options = {
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
         sort     : @Html(SortField.toJson(sort)),
         nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next,sort).toString)',
         prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev,sort).toString)'
-      });
+      };
     }]);
   </script>
 }

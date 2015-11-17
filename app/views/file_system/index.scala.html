@@ -44,11 +44,11 @@ implicit req: UserRequest[_], messages: Messages)
                 </tr>
               </thead>
               <tbody>
-                <tr class="ng-cloak" ng-repeat="inode in INodeList.inodes | orderBy:['is_file','name']">
+                <tr class="ng-cloak" ng-repeat="inode in INodeListSvc.inodes | orderBy:['is_file','name']">
                   <!-- Directory -->
                   <td ng-if="inode.is_directory">
                     <i class="fa fa-2x fa-folder fa-fw text-info"></i>
-                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.index(path.append(inode.name)).url}}">
+                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.index(INodeListSvc.path.append(inode.name)).url}}">
                       {{ inode.name }}
                     </a>
                   </td>
@@ -63,7 +63,7 @@ implicit req: UserRequest[_], messages: Messages)
                   <!-- File -->
                   <td ng-if="!inode.is_directory">
                     <i class="fa fa-2x fa-fw" ng-class="faName(inode.name)"></i>
-                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.show(path.set(inode.name)).url}}">
+                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.show(INodeListSvc.path.set(inode.name)).url}}">
                       {{ inode.name }}
                     </a>
                   </td>
@@ -142,15 +142,15 @@ implicit req: UserRequest[_], messages: Messages)
 
 @controller = {
   <script>
-    views.files.index.run(['INodeList', function(INodeList) {
-      INodeList.reload({
+    views.files.index.run(['INodeListSvc', function(INodeListSvc) {
+      INodeListSvc.options = {
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
         nextPage : '@Html(routes.FileSystemCtrl.index(path,pager.next).toString)',
         prevPage : '@Html(routes.FileSystemCtrl.index(path,pager.prev).toString)',
         userId   : '@req.user.id',
         path     : @Html(Path.toJson(path))
-      });
+      };
     }]);
   </script>
 }

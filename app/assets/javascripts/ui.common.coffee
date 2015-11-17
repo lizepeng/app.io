@@ -1,6 +1,11 @@
+#
+# Common UI Helpers.
+#
 angular.module 'ui.common', []
 
-# if ng-src in image resolves to a 404, then fallback to err-src
+#
+# If ng-src in image resolves to a 404, then fallback to err-src.
+#
 .directive 'errSrc',  [
   ->
     link: (scope, element, attrs) ->

@@ -3,17 +3,20 @@
 # -------------------------------------------------------- #
 angular.module 'api_internal.access_control', [ 'ngResource' ]
 
-  .factory 'AccessControl', [ '$resource', ($resource) ->
+.factory 'AccessControl', [
+  '$resource'
+  ($resource) ->
     resource = $resource '/api_internal/access_controls/:principal_id/:resource', {
-        principal_id : '@principal_id'
-        resource     : '@resource'
-      }, {
-        create :
-          method  : 'POST'
-          params  :
-            principal_id : ''
-            resource     : ''
-      }
+      principal_id : '@principal_id'
+      resource     : '@resource'
+    }, {
+
+      create :
+        method  : 'POST'
+        params  :
+          principal_id : ''
+          resource     : ''
+    }
 
     resource.gids = (aces) ->
       _.chain aces
@@ -30,4 +33,4 @@ angular.module 'api_internal.access_control', [ 'ngResource' ]
         .value()
 
     return resource
-  ]
+]

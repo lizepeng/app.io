@@ -1,7 +1,7 @@
 this.views ?= {}
 this.views.access_controls ?= {}
 
-views.access_controls.index = angular.module 'access_controls.list', [
+views.access_controls.index = angular.module 'access_controls.index', [
   'ui.bootstrap'
   'ui.parts'
   'api_internal.access_control'
@@ -10,89 +10,72 @@ views.access_controls.index = angular.module 'access_controls.list', [
   'api.helper'
 ]
 
-views.access_controls.index.factory 'ACList', [
+views.access_controls.index.factory 'ACListSvc', [
   'AccessControl'
   'Group'
   'User'
   'LinkHeader'
-  'Alert'
-  (AC, Group, User, LinkHeader, Alert) ->
+  (AccessControl, Group, User, LinkHeader) ->
     service            = {}
     service.links      = LinkHeader.links
     service.aces       = []
     service.resources  = {}
     service.access_def = {}
+    service.options    = {}
 
-    service.reload = (params) ->
-      service.aces = AC.query
-        page     : params.page
-        per_page : params.pageSize,
-        sort     : params.sort.join(','),
+    service.load = ->
+      @aces = AccessControl.query
+        page     : @options.page
+        per_page : @options.pageSize
+        sort     : @options.sort.join(','),
         (aces, headers) =>
-          buildPerm ace for ace in aces
-          LinkHeader.updateLinks params.nextPage, params.prevPage, headers
+          @buildPerm ace for ace in aces
+          LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
           Group.query
-            ids: AC.gids(aces).join(','),
-            (grps) -> service.groups = Group.toMap grps
+            ids: AccessControl.gids(aces).join(','),
+            (grps) => @groups = Group.toMap grps
           User.query
-            ids: AC.uids(aces).join(','),
-            (usrs) -> service.users  = User.toMap usrs
+            ids: AccessControl.uids(aces).join(','),
+            (usrs) => @users  = User.toMap usrs
 
-    service.create = (data, principal) ->
-      AC.create(
-        data
-        (value) ->
-          service.groups[principal.id] = principal if  data.is_group
-          service.users[principal.id]  = principal if !data.is_group
-          if _.findIndex(service.aces,
-              principal_id : value.principal_id
-              resource     : value.resource) is -1
-            service.aces.unshift value
-        (res) ->
-          Alert.danger res.data.message
-      )
-
-    service.delete = (data) ->
-      data.$delete(
-        ->
-          idx = service.aces.indexOf(data)
-          service.aces.splice idx, 1
-        (res) ->
-          Alert.danger res.data.message
-      )
-
-    service.toggle = (data, pos) ->
-      data.$save(
-        pos : pos
-        (value) -> buildPerm value
-        (res) ->
-          Alert.danger res.data.message
-      )
-
-    buildPerm = (ace) ->
+    service.buildPerm = (ace) ->
       ace.permissions = (ace.permission.charAt(i) is '1' for i in [63..0])
 
     service
 ]
 
-.controller 'ACCtrl', [
+.controller 'ACListCtrl', [
   '$scope'
-  'ACList'
+  'ACListSvc'
   'ModalDialog'
-  ($scope, ACList, ModalDialog) ->
-    $scope.ACList           = ACList
+  'Alert'
+  ($scope, ACListSvc, ModalDialog, Alert) ->
+    $scope.ACListSvc           = ACListSvc
     $scope.jsRoutes         = jsRoutes
     ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.confirm = (ace) ->
       ModalDialog.open().result.then(
-        -> ACList.delete ace
+        -> $scope.delete ace
         ->
       )
 
     $scope.toggle = (ace, pos) ->
-      ACList.toggle ace, pos
+      ace.$save(
+        pos : pos
+        (value) -> ACListSvc.buildPerm value
+        (res) ->
+          Alert.danger res.data.message
+      )
       return
+
+    $scope.delete = (ace) ->
+      ace.$delete(
+        ->
+          ACListSvc.aces.splice ACListSvc.aces.indexOf(ace), 1
+        (res) ->
+          Alert.danger res.data.message
+      )
 
     return
 ]
@@ -100,23 +83,35 @@ views.access_controls.index.factory 'ACList', [
 .controller 'NewEntryCtrl', [
   '$scope'
   '$http'
-  'ACList'
-  ($scope, $http, ACList) ->
-    $scope.ACList     = ACList
+  'ACListSvc'
+  'AccessControl'
+  ($scope, $http, ACListSvc, AC) ->
+    $scope.ACListSvc     = ACListSvc
     $scope.checkModel = {}
     $scope.newEntry   =
       principal  : ''
-      resource   : _.keys(ACList.resources)[0]
+      resource   : _.keys(ACListSvc.resources)[0]
 
-    types = [ 'groups', 'users']
+    types = ['groups', 'users']
 
     $scope.create = (newEntry) ->
+      is_group     = newEntry.principal._type is 'groups'
+      principal_id = newEntry.principal.id
+      principal    = newEntry.principal._source
       if _.contains(types, newEntry.principal._type)
-        ACList.create(
-          principal_id  : newEntry.principal.id
-          resource      : newEntry.resource
-          is_group      : newEntry.principal._type is 'groups'
-          newEntry.principal._source
+        AC.create(
+          principal_id : principal_id
+          resource     : newEntry.resource
+          is_group     : is_group
+          (value) ->
+            ACListSvc.groups[principal_id] = principal if  is_group
+            ACListSvc.users[principal_id]  = principal if !is_group
+            if _.findIndex(ACListSvc.aces,
+                principal_id : value.principal_id
+                resource     : value.resource) is -1
+              ACListSvc.aces.unshift value
+          (res) ->
+            Alert.danger res.data.message
         )
 
     $scope.getItems = (val) ->
@@ -134,6 +129,8 @@ views.access_controls.index.factory 'ACList', [
             item.label = item._source.email if item._type is 'users'
             item.label = item._source.name  if item._type is 'groups'
         response.data
+
+    ACListSvc.load()
     return
 ]
-angular.module('app').requires.push 'access_controls.list'
+angular.module('app').requires.push 'access_controls.index'

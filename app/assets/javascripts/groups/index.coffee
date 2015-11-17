@@ -1,54 +1,37 @@
 this.views ?= {}
 this.views.groups ?= {}
 
-views.groups.index = angular.module 'groups.list', [
+views.groups.index = angular.module 'groups.index', [
   'xeditable'
   'api_internal.group'
   'api.helper'
   'ui.parts'
 ]
 
-views.groups.index.factory 'GroupList', [
+views.groups.index.factory 'GroupListSvc', [
   'Group'
   'LinkHeader'
-  'Alert'
-  (Group, LinkHeader, Alert) ->
-    service        = {}
-    service.links  = LinkHeader.links
-    service.groups = []
+  (Group, LinkHeader) ->
+    service         = {}
+    service.links   = LinkHeader.links
+    service.values  = []
+    service.options = {}
 
     loadLayouts = (ids) ->
-      Group
-        .layouts ids
+      Group.layouts ids
         .then (resp) ->
-          _.each(service.groups, (grp) ->
+          _.each(service.values, (grp) ->
             grp.layout = resp.data[grp.id] || ''
           )
 
-    service.reload = (params) ->
-      service.groups = Group.query
-        page     : params.page
-        per_page : params.pageSize
-        sort     : params.sort.join(','),
-        (value, headers) ->
-          LinkHeader.updateLinks params.nextPage, params.prevPage, headers
+    service.load = ->
+      @values = Group.query
+        page     : @options.page
+        per_page : @options.pageSize
+        sort     : @options.sort.join(','),
+        (value, headers) =>
+          LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
           loadLayouts value.map (v) -> v.id
-
-    service.create = (data) ->
-      new Group(data).$save (value) ->
-        value.layout ?= ''
-        service.groups.push value
-
-    service.delete = (data) ->
-      data.$delete(
-        ->
-          idx = service.groups.indexOf(data)
-          service.groups.splice idx, 1
-        (res) ->
-          Alert.danger res.data.message
-      )
-
-    service.setLayout = (gid, layout) -> Group.setLayout(gid, layout)
 
     service
 ]
@@ -58,11 +41,13 @@ views.groups.index.factory 'GroupList', [
   '$http'
   '$q'
   'ClientError'
-  'GroupList'
+  'Group'
+  'GroupListSvc'
   'ModalDialog'
-  ($scope, $http, $q, ClientError, GroupList, ModalDialog) ->
-    $scope.GroupList        = GroupList
-    $scope.Layouts          = GroupList.Layouts
+  'Alert'
+  ($scope, $http, $q, ClientError, Group, GroupListSvc, ModalDialog, Alert) ->
+    $scope.GroupListSvc     = GroupListSvc
+    $scope.Layouts          = GroupListSvc.Layouts
     $scope.jsRoutes         = jsRoutes
     ModalDialog.templateUrl = 'confirm_delete.html'
 
@@ -73,17 +58,32 @@ views.groups.index.factory 'GroupList', [
         .error (data, status) -> d.resolve ClientError.firstMsg(data, status)
       d.promise
 
+    $scope.create = (data) ->
+      new Group(data).$save (value) ->
+        value.layout ?= ''
+        GroupListSvc.values.push value
+
     $scope.confirm = (grp) ->
       ModalDialog.open().result.then(
-        -> GroupList.delete grp
+        -> $scope.delete grp
         ->
       )
 
-    $scope.setLayout = (gid, layout) -> GroupList.setLayout(gid, layout)
+    $scope.delete = (data) ->
+      data.$delete(
+        ->
+          idx = GroupListSvc.values.indexOf(data)
+          GroupListSvc.values.splice idx, 1
+        (res) ->
+          Alert.danger res.data.message
+      )
 
+    $scope.setLayout = (gid, layout) -> Group.setLayout gid, layout
+
+    GroupListSvc.load()
     return
 ]
 
 .run ['editableOptions', (editableOptions) -> editableOptions.theme = 'bs3']
 
-angular.module('app').requires.push 'groups.list'
+angular.module('app').requires.push 'groups.index'

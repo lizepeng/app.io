@@ -2,13 +2,13 @@
 do ->
   # Decimal round
 
-  ###*
+  ###
   # Decimal adjustment of a number.
   #
-  # @param {String}  type  The type of adjustment.
-  # @param {Number}  value The number.
-  # @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
-  # @returns {Number} The adjusted value.
+  # @param [String]  type  The type of adjustment.
+  # @param [Number]  value The number.
+  # @param [Integer] exp   The exponent (the 10 logarithm of the adjustment base).
+  # @returns [Number] The adjusted value.
   ###
   decimalAdjust = (type, value, exp) ->
     # If the exp is undefined or zero...
