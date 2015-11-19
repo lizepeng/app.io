@@ -4,6 +4,7 @@ import controllers.UsersCtrl._
 import elasticsearch.ElasticSearch
 import helpers._
 import models._
+import models.cfs.CassandraFileSystem.Role
 import models.cfs._
 import play.api.data.Form
 import play.api.data.Forms._
@@ -173,6 +174,7 @@ class MyCtrl(
       (req.body.file("file").map(_.ref) match {
         case Some(chunk) => Flow(
           filename = profileImageFileName,
+          permission = Role.owner.rw | Role.other.r,
           overwrite = true,
           maxLength = profileImageMaxLength,
           accept = MyCtrl.acceptProfileImageFormats

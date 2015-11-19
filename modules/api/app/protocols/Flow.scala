@@ -3,11 +3,12 @@ package protocols
 import helpers.ExtEnumeratee.Enumeratee
 import helpers._
 import models.cfs.Block._
+import models.cfs.CassandraFileSystem._
 import models.cfs.Directory._
 import models.cfs._
 import play.api.i18n.I18nSupport
 import play.api.libs.MimeTypes
-import play.api.libs.iteratee._
+import play.api.libs.iteratee.{Enumeratee => _, _}
 import play.api.libs.json.Json
 import play.api.mvc._
 import protocols.JsonProtocol.JsonMessage
@@ -22,6 +23,7 @@ import scala.util._
  * Server-Side Implementation of flow.js protocol
  *
  * @param filename if filename specified, it takes priority over the flowFilename one
+ * @param permission file permission
  * @param overwrite whether overwrite the old one if inode with the same name already exists
  * @param maxLength maximum size of uploading file
  * @param accept the types of files are allowed to be uploaded
@@ -34,6 +36,7 @@ import scala.util._
  */
 case class Flow(
   filename: String = "",
+  permission: Permission = Role.owner.rw,
   overwrite: Boolean = false,
   maxLength: Long = 1024 * 1024 * 1024,
   accept: Seq[String] = Seq(),
@@ -230,8 +233,8 @@ case class Flow(
         curr <- _cfs.dir(path)
         file <- tempFiles &>
           Enumeratee.mapFlatten[File] { f =>
-           f.read() &> Enumeratee.onIterateeDone[BLK](() => f.delete())
-        } |>>> curr.save(filename, overwrite, _.w.?)
+            f.read() &> Enumeratee.onIterateeDone[BLK](() => f.delete())
+          } |>>> curr.save(filename, permission, overwrite, _.w.?)
         _ret <-
         if (file.size <= maxLength) {
           onUploaded(curr, file).map { _ =>
@@ -271,9 +274,9 @@ case class Flow(
       name <- fileName
       file <- _cfs.file(path + name) if file.r ?
     } yield {
-        Logger.trace(s"file: ${path + name} already exists.")
-        Results.Ok
-      }).recoverWith {
+      Logger.trace(s"file: ${path + name} already exists.")
+      Results.Ok
+    }).recoverWith {
       case e: Directory.ChildNotFound => testTempFile
     }.andThen {
       case Failure(e: BaseException) => Logger.debug(e.reason)
@@ -295,9 +298,9 @@ case class Flow(
       name <- tempFileName
       file <- temp.file(name)
     } yield {
-        if (size == file.size) Results.Ok
-        else Results.NoContent
-      }).andThen {
+      if (size == file.size) Results.Ok
+      else Results.NoContent
+    }).andThen {
       case Failure(e: BaseException) => Logger.debug(e.reason)
     }.recover {
       case e: Flow.MissingFlowArgument => Results.NotFound

@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
-import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers.ExtEnumeratee._
 import helpers._
 import models.User
@@ -38,6 +37,7 @@ case class Directory(
    * Note! DO NOT forget to set a permChecker
    *
    * @param fileName if empty then use file id as its filename
+   * @param permission file permission
    * @param overwrite whether to overwrite existing file
    * @param permChecker check if user have permission to overwrite existing file
    * @param user user who is saving the file
@@ -46,12 +46,19 @@ case class Directory(
    */
   def save(
     fileName: String = "",
+    permission: Permission = Role.owner.rw,
     overwrite: Boolean = false,
     permChecker: File => Boolean = _ => false
   )(
     implicit user: User, cfs: CassandraFileSystem
   ): Iteratee[BLK, File] = {
-    val f = File(fileName, path + fileName, user.id, id)
+    val f = File(
+      name = fileName,
+      path = path + fileName,
+      owner_id = user.id,
+      parent = id,
+      permission = permission
+    )
     val ff =
       if (fileName.nonEmpty) f
       else f.copy(name = f.id.toString, path = path + f.id.toString)
