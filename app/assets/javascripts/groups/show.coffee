@@ -3,6 +3,7 @@ this.views.groups ?= {}
 
 views.groups.show = angular.module('group.show', [
   'api_internal.group'
+  'api_internal.user'
   'api.helper'
   'ui.parts'
 ])
@@ -51,17 +52,13 @@ views.groups.show.factory 'UsersListSvc', [
 
 .controller 'NewEntryCtrl', [
   '$scope'
-  '$http'
   'Group'
+  'User'
   'UsersListSvc'
-  ($scope, $http, Group, UsersListSvc) ->
+  ($scope, Group, User, UsersListSvc) ->
     $scope.UsersListSvc = UsersListSvc
 
-    $scope.getUserEmails = (val) ->
-      $http.get '/api_internal/users', params : q : "*#{val}*"
-        .then(
-          (resp) -> resp.data.map (u) -> u.email
-        )
+    $scope.getUsers = (val) -> User.query(q : "*#{val}*").$promise
 
     $scope.create = (data) ->
       Group.addUser UsersListSvc.group, data,
