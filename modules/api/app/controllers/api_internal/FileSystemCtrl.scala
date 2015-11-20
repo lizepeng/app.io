@@ -4,7 +4,6 @@ import controllers._
 import helpers._
 import models.cfs._
 import play.api.i18n._
-import play.api.libs.iteratee.{Enumeratee => _}
 import play.api.libs.json.Json
 import play.api.mvc._
 import protocols.JsonProtocol.JsonMessage
@@ -32,7 +31,6 @@ class FileSystemCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
-  with ExceptionDefining
   with I18nSupport
   with AppConfigComponents
   with RateLimitConfigComponents

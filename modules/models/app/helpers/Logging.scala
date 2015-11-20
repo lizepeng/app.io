@@ -16,6 +16,13 @@ trait Logging extends CanonicalNamed {
       play.api.Logger(this.getClass)
 }
 
+trait I18nLogging extends Logging {
+
+  implicit def messagesApi: MessagesApi
+
+  implicit def langs: Langs
+}
+
 trait Loggable extends Product {
 
   def code: String

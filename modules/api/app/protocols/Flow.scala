@@ -35,7 +35,7 @@ import scala.util._
  * @author zepeng.li@gmail.com
  */
 case class Flow(
-  filename: String = "",
+  filename: Option[String] = None,
   permission: Permission = Role.owner.rw,
   overwrite: Boolean = false,
   maxLength: Long = 1024 * 1024 * 1024,
@@ -71,9 +71,9 @@ case class Flow(
    *
    * @return the eventually filename that will be used.
    */
-  def fileName = {
-    if (filename.isEmpty) originalFileName
-    else Future.successful(filename)
+  def fileName = filename match {
+    case None     => originalFileName
+    case Some(fn) => Future.successful(fn)
   }
 
   def originalFileName = flowParam("flowFilename", _.toString)
@@ -172,8 +172,11 @@ case class Flow(
       }
       _result <- {
         if (renamed) checkIfCompleted(path)(onUploaded)
-        //should never occur, only in case that the temp file name was taken.
-        else Future.successful(Results.NotFound)
+        else {
+          //should never occur, only in case that the temp file name was taken.
+          Logger.debug(s"renaming to $tmpName failed.")
+          Future.successful(Results.NotFound)
+        }
       }
     } yield _result).andThen {
       case Failure(e: BaseException) =>
