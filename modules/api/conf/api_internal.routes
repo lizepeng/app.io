@@ -28,8 +28,6 @@ GET    /access_controls/:prin/:res       controllers.api_internal.AccessControls
 POST   /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.toggle(prin:UUID,res,pos:Int)
 DELETE /access_controls/:prin/:res       controllers.api_internal.AccessControlsCtrl.destroy(prin:UUID,res)
 
-GET    /cfs/stream/$path<.*>             controllers.api_internal.FileSystemCtrl.stream(path:Path)
-GET    /cfs/download/$path<.*>           controllers.api_internal.FileSystemCtrl.download(path:Path,inline:Boolean?=false)
 GET    /cfs/list/$path<.*>               controllers.api_internal.FileSystemCtrl.index(path:Path,p:Pager?=Pager.first)
 GET    /cfs/$path<.*>                    controllers.api_internal.FileSystemCtrl.test(path:Path)
 POST   /cfs/$path<.*>                    controllers.api_internal.FileSystemCtrl.create(path:Path)

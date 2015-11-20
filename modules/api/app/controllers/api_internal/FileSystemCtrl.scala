@@ -35,18 +35,7 @@ class FileSystemCtrl(
   with AppConfigComponents
   with RateLimitConfigComponents
   with BandwidthConfigComponents
-  with CFSStreamComponents
   with Logging {
-
-  def download(path: Path, inline: Boolean) =
-    UserAction(_.Show).async { implicit req =>
-      CFSHttpCaching(path) apply (HttpDownloadResult.send(_, inline = inline))
-    }
-
-  def stream(path: Path) =
-    UserAction(_.Show).async { implicit req =>
-      CFSHttpCaching(path) apply (HttpStreamResult.stream(_))
-    }
 
   def index(path: Path, pager: Pager) =
     UserAction(_.Index).async { implicit req =>

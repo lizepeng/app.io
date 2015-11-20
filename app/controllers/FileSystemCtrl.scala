@@ -4,7 +4,9 @@ import helpers._
 import models.cfs._
 import play.api.i18n._
 import play.api.mvc.Controller
+import protocols._
 import security._
+import services._
 import views._
 
 /**
@@ -14,6 +16,7 @@ class FileSystemCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
   val userActionRequired: UserActionRequired,
+  val bandwidth: BandwidthService,
   val _cfs: CassandraFileSystem
 )
   extends Secured(FileSystemCtrl)
@@ -21,6 +24,8 @@ class FileSystemCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
+  with BandwidthConfigComponents
+  with CFSStreamComponents
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =
@@ -38,6 +43,16 @@ class FileSystemCtrl(
         case e: FileSystemAccessControl.Denied => Forbidden
         case e: BaseException                  => NotFound
       }
+    }
+
+  def download(path: Path, inline: Boolean) =
+    UserAction(_.Show).async { implicit req =>
+      CFSHttpCaching(path) apply (HttpDownloadResult.send(_, inline = inline))
+    }
+
+  def stream(path: Path) =
+    UserAction(_.Show).async { implicit req =>
+      CFSHttpCaching(path) apply (HttpStreamResult.stream(_))
     }
 }
 

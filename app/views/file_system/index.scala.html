@@ -135,7 +135,7 @@ implicit req: UserRequest[_], messages: Messages)
   @helper.javascriptRouter("jsRoutes")(
     routes.javascript.FileSystemCtrl.index,
     routes.javascript.FileSystemCtrl.show,
-    api_internal.routes.javascript.FileSystemCtrl.download,
+    routes.javascript.FileSystemCtrl.download,
     api_internal.routes.javascript.FileSystemCtrl.destroy
   )
 }
