@@ -29,7 +29,7 @@ views.access_controls.index.factory 'ACListSvc', [
         per_page : @options.pageSize
         sort     : @options.sort.join(','),
         (aces, headers) =>
-          @buildPerm ace for ace in aces
+          @convertPerm ace for ace in aces
           LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
           Group.query
             ids: AccessControl.gids(aces).join(','),
@@ -38,8 +38,12 @@ views.access_controls.index.factory 'ACListSvc', [
             ids: AccessControl.uids(aces).join(','),
             (usrs) => @users  = User.toMap usrs
 
-    service.buildPerm = (ace) ->
-      ace.permissions = (ace.permission.charAt(i) is '1' for i in [63..0])
+    service.delete = (ace) ->
+      @aces.splice @aces.indexOf(ace), 1
+
+    service.convertPerm = (ace) ->
+      ace.permissions = []
+      ace.permissions[i] = true for i in ace.permission
 
     service
 ]
@@ -50,7 +54,7 @@ views.access_controls.index.factory 'ACListSvc', [
   'ModalDialog'
   'Alert'
   ($scope, ACListSvc, ModalDialog, Alert) ->
-    $scope.ACListSvc           = ACListSvc
+    $scope.ACListSvc        = ACListSvc
     $scope.jsRoutes         = jsRoutes
     ModalDialog.templateUrl = 'confirm_delete.html'
 
@@ -63,18 +67,14 @@ views.access_controls.index.factory 'ACListSvc', [
     $scope.toggle = (ace, pos) ->
       ace.$save(
         pos : pos
-        (value) -> ACListSvc.buildPerm value
-        (res) ->
-          Alert.danger res.data.message
+        (value) -> ACListSvc.convertPerm value
+        (res) -> Alert.danger res.data.message
       )
-      return
 
     $scope.delete = (ace) ->
       ace.$delete(
-        ->
-          ACListSvc.aces.splice ACListSvc.aces.indexOf(ace), 1
-        (res) ->
-          Alert.danger res.data.message
+        -> ACListSvc.delete ace
+        (res) -> Alert.danger res.data.message
       )
 
     return
@@ -86,7 +86,7 @@ views.access_controls.index.factory 'ACListSvc', [
   'ACListSvc'
   'AccessControl'
   ($scope, $http, ACListSvc, AC) ->
-    $scope.ACListSvc     = ACListSvc
+    $scope.ACListSvc  = ACListSvc
     $scope.checkModel = {}
     $scope.newEntry   =
       principal  : ''
