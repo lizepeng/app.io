@@ -66,11 +66,15 @@ trait CFSImageComponents extends CFSDownloadComponents {
     ): UserRequest[AnyContent] => Future[Result] = implicit req => {
       val path = filePath(req.user)
       val thumbnail = path.filename.map(Thumbnail.choose(_, size))
-      CFSHttpCaching(path + thumbnail) async { file =>
-        CFSImage(file)().downloadable.map {
-          send(_, _ => path.filename.getOrElse(""), inline = true)
+      import security._
+      for {
+        origin <- _cfs.file(path) if origin.r.?
+        result <- CFSHttpCaching(path + thumbnail).async { file =>
+          CFSImage(file)().downloadable.map {
+            send(_, _ => path.filename.getOrElse(""), inline = true)
+          }
         }
-      }
+      } yield result
     }
 
     def test(

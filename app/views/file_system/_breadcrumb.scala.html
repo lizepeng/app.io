@@ -2,8 +2,6 @@
 
 <ol class="breadcrumb">
   @path.subPaths.map {
-    case subPath if subPath.isRoot => {
-      }
     case subPath if subPath == path => {
       <li class="active">
         @pathLabel(subPath)

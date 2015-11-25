@@ -5,13 +5,14 @@ import java.util.UUID
 import com.websudos.phantom.dsl._
 import helpers.ExtString._
 import helpers._
+import models._
 import models.cassandra._
-import models.sys.{SysConfig, SysConfigs}
-import models.{User, Users}
+import models.sys._
+import play.api.libs.iteratee.Enumeratee
 import play.api.libs.json._
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -33,6 +34,7 @@ class CassandraFileSystem(
   implicit val _files         : Files          = new Files
   implicit val _inodes        : INodes         = new INodes
   implicit val _directories   : Directories    = new Directories
+  implicit val _root          : Root           = new Root
 
   def home(implicit user: User): Future[Directory] = {
     val uid = user.id
@@ -47,8 +49,12 @@ class CassandraFileSystem(
   def createHome(implicit user: User): Future[Directory] = {
     val uid = user.id
     val name = uid.toString
+    val home = Directory(name, Path.root / name, uid, uid, uid)
     Logger.debug("Creating user home folder: " + name)
-    Directory(name, Path.root / name, uid, uid, uid).save()(this)
+    for {
+      _ <- _root.add(home.id)
+      h <- home.save()(this)
+    } yield h
   }
 
   def temp(implicit user: User): Future[Directory] = {
@@ -97,6 +103,16 @@ class CassandraFileSystem(
         } yield fr
       }
     }
+
+  def listRoot(pager: Pager): Future[Page[INode]] = Page(pager) {
+    _root.stream &>
+      Enumeratee.mapM { id =>
+        val name: String = id.toString
+        _directories.find(id)(
+          onFound = _.copy(name = name, path = Path.root / name)
+        )
+      }
+  }
 }
 
 trait CassandraFileSystemCanonicalNamed extends CanonicalNamed {
@@ -122,6 +138,8 @@ object CassandraFileSystem
     }
 
     override def toString = pprint
+
+    def toBitSet = ExtLong.BitSet(self)
 
     def pprint = {
       f"${self.toBinaryString}%63s".grouped(3).map(toRWX).mkString("|", "|", "|")

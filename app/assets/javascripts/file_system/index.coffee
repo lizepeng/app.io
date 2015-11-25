@@ -27,14 +27,23 @@ views.files.index
           @inodes =
             _.chain data
               .filter (inode) -> inode.name isnt '.'
-              .map (inode) -> service.wrap(inode)
+              .map    (inode) -> convertPath(inode)
               .sortBy (inode) -> !inode.is_directory
               .value()
           LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
 
-    service.wrap = (inode) ->
+    convertPath = (inode) ->
       inode.path = new Path(inode.path)
       inode
+
+    service.add = (file) ->
+      @inodes.push convertPath(file)
+
+    service.delete = (file) ->
+      @inodes.splice @inodes.indexOf(file), 1
+
+    service.clear = ->
+      @inodes = []
 
     service
 ]
@@ -76,19 +85,19 @@ views.files.index
     $scope.delete = (file) ->
       CFS.delete(file.path)
         .success ->
-          INodeListSvc.inodes.splice INodeListSvc.inodes.indexOf(file), 1
+          INodeListSvc.delete file
         .error (data) ->
           Alert.danger data.message
 
     $scope.clear = ->
       CFS.delete(INodeListSvc.path)
         .success ->
-          INodeListSvc.inodes = []
+          INodeListSvc.clear()
         .error (data) ->
           Alert.danger data.message
 
     $scope.created = (file) ->
-      INodeListSvc.inodes.push INodeListSvc.wrap(file)
+      INodeListSvc.add file
 
     INodeListSvc.load()
     return

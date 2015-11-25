@@ -30,7 +30,7 @@ class FileSystemCtrl(
 
   def index(path: Path, pager: Pager) =
     UserAction(_.Index, _.Create, _.Destroy).apply { implicit req =>
-      Ok(html.file_system.index(if (path.isRoot) path / req.user.id.toString else path, pager))
+      Ok(html.file_system.index(path, pager))
     }
 
   def show(path: Path) =

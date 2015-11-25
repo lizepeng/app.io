@@ -250,6 +250,7 @@ object Directory extends CanonicalNamed with ExceptionDefining {
       "path" -> o.path,
       "owner_id" -> o.owner_id,
       "created_at" -> o.created_at,
+      "permission" -> o.permission.toBitSet.toIndices,
       "is_directory" -> o.is_directory,
       "is_file" -> !o.is_directory
     )

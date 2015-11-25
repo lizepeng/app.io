@@ -43,12 +43,12 @@ implicit req: UserRequest[_], messages: Messages)
                   <th class="col-xs-2 text-right"></th>
                 </tr>
               </thead>
-              <tbody>
-                <tr class="ng-cloak" ng-repeat="inode in INodeListSvc.inodes | orderBy:['is_file','name']">
+              <tbody class="ng-cloak" ng-repeat="inode in INodeListSvc.inodes | orderBy:['is_file','name']">
+                <tr>
                   <!-- Directory -->
                   <td ng-if="inode.is_directory">
                     <i class="fa fa-2x fa-folder fa-fw text-info"></i>
-                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.index(INodeListSvc.path.append(inode.name)).url}}">
+                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.index(inode.path).url}}">
                       {{ inode.name }}
                     </a>
                   </td>
@@ -63,7 +63,7 @@ implicit req: UserRequest[_], messages: Messages)
                   <!-- File -->
                   <td ng-if="!inode.is_directory">
                     <i class="fa fa-2x fa-fw" ng-class="faName(inode.name)"></i>
-                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.show(INodeListSvc.path.set(inode.name)).url}}">
+                    <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.show(inode.path).url}}">
                       {{ inode.name }}
                     </a>
                   </td>
@@ -71,12 +71,12 @@ implicit req: UserRequest[_], messages: Messages)
                     {{ inode.size | filesize }}
                   </td>
                   <td ng-if="!inode.is_directory" class="text-right hidden-xs hidden-sm">
-                    {{ inode.created_at | date:"yyyy-MM-dd hh:mma" }}
+                    {{ inode.created_at | date:"@MSG("datetime.format.created_at")" }}
                   </td>
                   <td ng-if="!inode.is_directory">
                     <div class="btn-toolbar pull-right">
                       <div class="btn-group">
-                        <a ng-href="{{jsRoutes.controllers.api_internal.FileSystemCtrl.download(inode.path).url}}">
+                        <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.download(inode.path).url}}">
                           <i class="fa fa-download fa-lg"></i>
                         </a>
                       </div>

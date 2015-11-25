@@ -57,7 +57,7 @@ case class Path(segments: Seq[String] = Seq(), filename: Option[String] = None) 
 
 object Path extends PathJsonStringifier {
 
-  def root = Path()
+  val root = Path()
 
   def home(implicit user: User) = Path(Seq(user.id.toString))
 

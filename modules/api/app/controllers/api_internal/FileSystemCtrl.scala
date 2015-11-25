@@ -39,10 +39,14 @@ class FileSystemCtrl(
 
   def index(path: Path, pager: Pager) =
     UserAction(_.Index).async { implicit req =>
-      (for {
-        curr <- _cfs.dir(path) if curr.rx.?
-        page <- curr.list(pager)
-      } yield page).map { page =>
+      (path match {
+        case Path.root =>
+          _cfs.listRoot(pager)
+        case _         => for {
+          curr <- _cfs.dir(path) if curr.rx.?
+          page <- curr.list(pager)
+        } yield page
+      }).map { page =>
         Ok(Json.toJson(page.elements)).withHeaders(
           linkHeader(page, routes.FileSystemCtrl.index(path, _))
         )
