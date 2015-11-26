@@ -25,7 +25,7 @@ lazy val security =
 lazy val services =
   (project in file("modules/services"))
     .enablePlugins(PlayScala)
-    .dependsOn(models)
+    .dependsOn(models % "test->test;compile->compile")
     .aggregate(models)
 
 lazy val api =
