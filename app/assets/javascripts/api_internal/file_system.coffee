@@ -8,11 +8,33 @@ angular.module 'api_internal.cfs', []
   ($http) ->
     resource = {}
 
-    resource.find = (path) ->
-      $http.get "/api_internal/cfs/list/#{path.encode()}"
+    resource.list = (path) ->
+      $http(
+        method : 'GET'
+        url    : "/api_internal/cfs/list/#{path.encode()}"
+      )
 
     resource.delete = (path) ->
-      $http.delete "/api_internal/cfs/#{path.encode()}"
+      $http(
+        method : 'DELETE'
+        url    : "/api_internal/cfs/#{path.encode()}"
+      )
+
+    resource.updatePermission = (path, pos, gid) ->
+      params = pos : pos
+      params['gid'] = gid if gid?
+      $http(
+        method : 'POST'
+        url    : "/api_internal/cfs/perm/#{path.encode()}"
+        params : params
+      )
+
+    resource.deletePermission = (path, gid) ->
+      $http(
+        method : 'DELETE'
+        url    : "/api_internal/cfs/perm/#{path.encode()}"
+        params : gid : gid
+      )
 
     return resource
 ]

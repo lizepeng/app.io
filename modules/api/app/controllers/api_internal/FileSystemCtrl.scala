@@ -1,5 +1,7 @@
 package controllers.api_internal
 
+import java.util.UUID
+
 import controllers._
 import helpers._
 import models.cfs._
@@ -93,6 +95,36 @@ class FileSystemCtrl(
         case e: FileSystemAccessControl.Denied => Forbidden
         case e: Directory.ChildNotFound        => NotFound
       }
+    }
+
+  def updatePermission(path: Path, gid: Option[UUID], pos: Int) =
+    UserAction(_.Save).async { implicit req => //TODO Admin
+      (for {
+        inode <- _cfs.inode(path)
+        _ <- gid match {
+          case Some(group_id) =>
+            inode.save(group_id, inode.ext_permission(group_id) ^ (1L << pos))
+          case None           =>
+            inode.save(inode.permission ^ (1L << pos))
+        }
+      } yield {
+        Ok
+      }).recover {
+        case e: BaseException => NotFound
+      }
+    }
+
+  def deletePermission(path: Path, gid: UUID) =
+    UserAction(_.Save).async { implicit req => //TODO Admin
+      (for {
+        inode <- _cfs.inode(path)
+        _ <- inode.save(inode.ext_permission - gid)
+      } yield {
+        Ok
+      }).recover {
+        case e: BaseException => NotFound
+      }
+
     }
 }
 

@@ -69,6 +69,10 @@ class CassandraFileSystem(
     resolve(path, (dir, tail) => dir.file(tail)(this))
   }
 
+  def inode(path: Path)(implicit user: User): Future[INode] = {
+    resolve(path, (dir, tail) => dir.inode(tail)(this))
+  }
+
   private def resolve[T](
     path: Path,
     resolver: (Directory, Path) => Future[T]
@@ -128,6 +132,15 @@ object CassandraFileSystem
     extends BaseException(error_code("invalid.path"))
 
 
+  case class ExtPermission(self: Map[UUID, Permission] = Map()) extends AnyVal {
+
+    def apply(group_id: UUID) = self.getOrElse(group_id, Permission.empty)
+
+    def contains(group_id: UUID) = self.contains(group_id)
+
+    def -(group_id: UUID) = self - group_id
+  }
+
   case class Permission(self: Long) extends AnyVal {
 
     def |(that: Permission) = Permission(self | that.self)
@@ -136,6 +149,8 @@ object CassandraFileSystem
       val want = role(Role).want(access).self
       (self & want) == want
     }
+
+    def ^(raw: Long) = Permission(self ^ raw)
 
     override def toString = pprint
 
@@ -158,6 +173,8 @@ object CassandraFileSystem
   }
 
   object Permission {
+
+    def empty: Permission = Permission(0L)
 
     implicit val jsonFormat = Format(
       Reads.StringReads.map(s => s.tryToLong.getOrElse(0L)).map(Permission.apply),

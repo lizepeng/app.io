@@ -22,22 +22,24 @@ views.files.index
     service.load = ->
       @path = new Path(@options.path)
 
-      CFS.find(@path)
-        .success (data, status, headers) =>
-          @inodes =
-            _.chain data
-              .filter (inode) -> inode.name isnt '.'
-              .map    (inode) -> convertPath(inode)
-              .sortBy (inode) -> !inode.is_directory
-              .value()
-          LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
+      CFS.list(@path).then (resp) =>
+        @inodes =
+          _.chain resp.data
+            .filter (inode) -> inode.name isnt '.'
+            .map    (inode) -> decorate(inode)
+            .sortBy (inode) -> !inode.is_directory
+            .value()
+        LinkHeader.updateLinks @options.nextPage, @options.prevPage, resp.headers
 
-    convertPath = (inode) ->
+    decorate = (inode) ->
       inode.path = new Path(inode.path)
+      inode.permissions = ([false, false, false] for i in [0..20])
+      inode.permissions[Math.floor(idx / 3)][idx % 3] = true for idx in inode.permission
+      inode.collapsed = true
       inode
 
     service.add = (file) ->
-      @inodes.push convertPath(file)
+      @inodes.push decorate(file)
 
     service.delete = (file) ->
       @inodes.splice @inodes.indexOf(file), 1
@@ -98,6 +100,15 @@ views.files.index
 
     $scope.created = (file) ->
       INodeListSvc.add file
+
+    $scope.toggle = (inode, role, access) ->
+      CFS.updatePermission(inode.path, role * 3 + access)
+
+    $scope.roleName = (idx) ->
+      switch idx
+        when 0 then INodeListSvc.dictionary['owner']
+        when 20 then INodeListSvc.dictionary['other']
+        else INodeListSvc.dictionary['intGroupNames'][idx - 1]
 
     INodeListSvc.load()
     return

@@ -26,7 +26,7 @@ case class Directory(
   parent: UUID,
   id: UUID = UUIDs.timeBased(),
   permission: Permission = Role.owner.rwx,
-  ext_permission: Map[UUID, Permission] = Map(),
+  ext_permission: ExtPermission = ExtPermission(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = true
 ) extends INode {
@@ -116,6 +116,13 @@ case class Directory(
         onFound = _.copy(name = n, path = this.path / path)
       )
     }
+
+  def inode(path: Path)(
+    implicit cfs: CassandraFileSystem
+  ): Future[INode] = path.filename match {
+    case Some(_) => file(path)
+    case None    => dir(path)
+  }
 
   def file(name: String)(
     implicit cfs: CassandraFileSystem
@@ -220,7 +227,7 @@ sealed class DirectoryTable
       parent(r),
       inode_id(r),
       Permission(permission(r)),
-      ext_permission(r).mapValues(Permission(_)),
+      ExtPermission(ext_permission(r).mapValues(Permission(_))),
       attributes(r),
       is_directory(r)
     )
@@ -396,7 +403,7 @@ class Directories(
       .value(_.parent, dir.parent)
       .value(_.owner_id, dir.owner_id)
       .value(_.permission, dir.permission.self)
-      .value(_.ext_permission, dir.ext_permission.mapValues(_.self.toInt))
+      .value(_.ext_permission, dir.ext_permission.self.mapValues(_.self.toInt))
       .value(_.is_directory, true)
       .value(_.attributes, dir.attributes)
   }

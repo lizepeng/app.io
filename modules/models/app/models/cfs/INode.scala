@@ -27,7 +27,7 @@ trait INode extends HasUUID with TimeBased {
 
   def permission: Permission
 
-  def ext_permission: Map[UUID, Permission]
+  def ext_permission: ExtPermission
 
   def attributes: Map[String, String]
 
@@ -44,12 +44,30 @@ trait INode extends HasUUID with TimeBased {
 
   def delete()(
     implicit cfs: CassandraFileSystem
-  ): Future[Unit] =
+  ): Future[Unit] = {
     for {
       pdir <- cfs._directories.find(parent)(onFound = p => p)
       done <- cfs._directories.delChild(pdir, this.name)
     } yield Unit
+  }
 
+  def save(permission: Permission)(
+    implicit cfs: CassandraFileSystem
+  ): Future[Unit] = {
+    cfs._inodes.save(id, permission)
+  }
+
+  def save(group_id: UUID, permission: Permission)(
+    implicit cfs: CassandraFileSystem
+  ): Future[Unit] = {
+    cfs._inodes.save(id, group_id, permission)
+  }
+
+  def save(ext_permission: Map[UUID, Permission])(
+    implicit cfs: CassandraFileSystem
+  ): Future[Unit] = {
+    cfs._inodes.save(id, ext_permission)
+  }
 }
 
 trait INodeCanonicalNamed extends CanonicalNamed {
@@ -165,4 +183,32 @@ class INodes(
   def find(id: UUID): Future[Option[Row]] = {
     CQL {select.where(_.inode_id eqs id)}.one()
   }
+
+  def save(
+    id: UUID,
+    permission: Permission
+  ): Future[Unit] = CQL {
+    update
+      .where(_.inode_id eqs id)
+      .modify(_.permission setTo permission.self)
+  }.future().map(_ => Unit)
+
+  def save(
+    id: UUID,
+    group_id: UUID,
+    permission: Permission
+  ): Future[Unit] = CQL {
+    update
+      .where(_.inode_id eqs id)
+      .modify(_.ext_permission put group_id -> permission.self.toInt)
+  }.future().map(_ => Unit)
+
+  def save(
+    id: UUID,
+    ext_permission: Map[UUID, Permission]
+  ): Future[Unit] = CQL {
+    update
+      .where(_.inode_id eqs id)
+      .modify(_.ext_permission setTo ext_permission.mapValues(_.self.toInt))
+  }.future().map(_ => Unit)
 }

@@ -255,6 +255,9 @@ views.file_system.created_at                     =Date Created
 views.file_system.upload.new.file                =Upload New File
 views.file_system.clear.dir                      =Clear All
 
+file_system.role.owner                           =Owner
+file_system.role.other                           =Public
+
 log.models.cfs.dir.child.not.found               =No such child {1} in dir {0}
 log.models.cfs.dir.child.exists                  =There already exists child {1} in dir {0}
 log.models.cfs.dir.not.found                     =No such dir   [{0}]

@@ -1,6 +1,7 @@
 package controllers
 
 import helpers._
+import models._
 import models.cfs._
 import play.api.i18n._
 import play.api.mvc.Controller
@@ -22,6 +23,8 @@ class FileSystemCtrl(
   extends Secured(FileSystemCtrl)
   with Controller
   with BasicPlayComponents
+  with UsersComponents
+  with InternalGroupsComponents
   with UserActionComponents
   with DefaultPlayExecutor
   with BandwidthConfigComponents
@@ -29,8 +32,12 @@ class FileSystemCtrl(
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =
-    UserAction(_.Index, _.Create, _.Destroy).apply { implicit req =>
-      Ok(html.file_system.index(path, pager))
+    UserAction(_.Index, _.Create, _.Destroy).async { implicit req =>
+      for {
+        intGroups <- _groups.find(_internalGroups.Num2Id)
+      } yield {
+        Ok(html.file_system.index(path, pager, intGroups))
+      }
     }
 
   def show(path: Path) =

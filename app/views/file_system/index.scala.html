@@ -1,4 +1,4 @@
-@(path:Path, pager:Pager)(
+@(path:Path, pager:Pager, intGroups:Seq[Group])(
 implicit req: UserRequest[_], messages: Messages)
 
 @import common._
@@ -19,14 +19,16 @@ implicit req: UserRequest[_], messages: Messages)
 
       @ng._msg_confirm_delete()
 
-      <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <button type="button" class="btn btn-danger pull-right" ng-click="confirmClearDir()">
-            <i class="fa fa-trash fa-lg"></i>
-            @FileSystemCtrl.msg("clear.dir")
-          </button>
+      @if(path != Path.root) {
+        <div class="row">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <button type="button" class="btn btn-danger pull-right" ng-click="confirmClearDir()">
+              <i class="fa fa-trash fa-lg"></i>
+              @FileSystemCtrl.msg("clear.dir")
+            </button>
+          </div>
         </div>
-      </div>
+      }
 
       <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -44,7 +46,7 @@ implicit req: UserRequest[_], messages: Messages)
                 </tr>
               </thead>
               <tbody class="ng-cloak" ng-repeat="inode in INodeListSvc.inodes | orderBy:['is_file','name']">
-                <tr>
+                <tr ng-class="inode.collapsed ? '' : 'bg-info'">
                   <!-- Directory -->
                   <td ng-if="inode.is_directory">
                     <i class="fa fa-2x fa-folder fa-fw text-info"></i>
@@ -58,6 +60,11 @@ implicit req: UserRequest[_], messages: Messages)
                     {{ inode.created_at | date:"@MSG("datetime.format.created_at")" }}
                   </td>
                   <td ng-if="inode.is_directory">
+                    <div class="btn-toolbar pull-right">
+                      <div class="btn-group">
+                        <i class="fa fa-key fa-flip-horizontal fa-lg fa-fw text-warning" ng-click="inode.collapsed = !inode.collapsed"></i>
+                      </div>
+                    </div>
                   </td>
 
                   <!-- File -->
@@ -76,14 +83,26 @@ implicit req: UserRequest[_], messages: Messages)
                   <td ng-if="!inode.is_directory">
                     <div class="btn-toolbar pull-right">
                       <div class="btn-group">
+                        <i class="fa fa-key fa-flip-horizontal fa-lg fa-fw text-warning" ng-click="inode.collapsed = !inode.collapsed"></i>
+                      </div>
+                      <div class="btn-group">
                         <a ng-href="{{jsRoutes.controllers.FileSystemCtrl.download(inode.path).url}}">
-                          <i class="fa fa-download fa-lg"></i>
+                          <i class="fa fa-download fa-lg fa-fw"></i>
                         </a>
                       </div>
                       <div class="btn-group">
-                        <i class="fa fa-trash fa-lg text-danger" ng-click="confirmDelete(inode)"></i>
+                        <i class="fa fa-trash fa-lg fa-fw text-danger" ng-click="confirmDelete(inode)"></i>
                       </div>
                     </div>
+                  </td>
+                </tr>
+
+                <tr collapse="inode.collapsed">
+                  <td colspan="3" class="hidden-md hidden-lg">
+                    @permission
+                  </td>
+                  <td colspan="4" class="hidden-xs hidden-sm">
+                    @permission
                   </td>
                 </tr>
               </tbody>
@@ -97,25 +116,27 @@ implicit req: UserRequest[_], messages: Messages)
         </div>
       </div>
 
-      <div class="row ng-cloak">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <div flow-init="{target: '@api_internal.routes.FileSystemCtrl.create(path)'}"
-               flow-files-submitted="$flow.upload()"
-               flow-file-success="success($file, $message)"
-               flow-upload-started="startUpload()"
-               class="pull-right">
+      @if(path != Path.root) {
+        <div class="row ng-cloak">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div flow-init="{target: '@api_internal.routes.FileSystemCtrl.create(path)'}"
+                 flow-files-submitted="$flow.upload()"
+                 flow-file-success="success($file, $message)"
+                 flow-upload-started="startUpload()"
+                 class="pull-right">
 
-            <span ng-show="!uploading" class="btn btn-success" flow-btn>
-              <i class="fa fa-upload"></i>
-              <strong>@FileSystemCtrl.msg("upload.new.file")</strong>
-            </span>
-            <span ng-show="uploading" class="btn btn-success" disabled>
-              <i class="fa fa-refresh fa-spin"></i>
-              <strong>@FileSystemCtrl.msg("upload.new.file")</strong>
-            </span>
+              <span ng-show="!uploading" class="btn btn-success" flow-btn>
+                <i class="fa fa-upload"></i>
+                <strong>@FileSystemCtrl.msg("upload.new.file")</strong>
+              </span>
+              <span ng-show="uploading" class="btn btn-success" disabled>
+                <i class="fa fa-refresh fa-spin"></i>
+                <strong>@FileSystemCtrl.msg("upload.new.file")</strong>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      }
 
     </div>
   </div>
@@ -151,6 +172,40 @@ implicit req: UserRequest[_], messages: Messages)
         userId   : '@req.user.id',
         path     : @Html(Path.toJson(path))
       };
+      INodeListSvc.dictionary = {
+        intGroupNames : @Html(GroupsCtrl.intGroupNames(intGroups)),
+        owner         : '@MSG("file_system.role.owner")',
+        other         : '@MSG("file_system.role.other")'
+      };
     }]);
   </script>
+}
+
+@permission = {
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <h4>@MSG("internal_groups")</h4>
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" ng-repeat="perm in inode.permissions track by $index">
+      <div class="col-xs-8 col-sm-8 col-md-7 col-lg-7 text-ellipsis">
+        {{ roleName($index) }}
+      </div>
+      <div class="col-xs-4 col-sm-4 col-md-5 col-lg-5">
+        <div class="pull-right">
+          @checkbox(2, "r")
+          @checkbox(1, "w")
+          @checkbox(0, "x")
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@checkbox(idx: Int, label: String) = {
+  <label class="checkbox-inline" >
+    <input type="checkbox"
+      ng-model="inode.permissions[$index][@idx]"
+      ng-change="toggle(inode, $index, @idx)">
+    @label
+  </label>
 }
