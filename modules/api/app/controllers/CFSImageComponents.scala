@@ -67,14 +67,18 @@ trait CFSImageComponents extends CFSDownloadComponents {
       val path = filePath(req.user)
       val thumbnail = path.filename.map(Thumbnail.choose(_, size))
       import security._
-      for {
+      (for {
         origin <- _cfs.file(path) if origin.r.?
         result <- CFSHttpCaching(path + thumbnail).async { file =>
           CFSImage(file)().downloadable.map {
             send(_, _ => path.filename.getOrElse(""), inline = true)
           }
         }
-      } yield result
+      } yield {
+        result
+      }).recover {
+        case e: FileSystemAccessControl.Denied => Results.Forbidden
+      }
     }
 
     def test(
