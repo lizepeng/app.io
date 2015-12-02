@@ -142,7 +142,7 @@ object CassandraFileSystem
     def toBitSet = ExtLong.BitSet(self)
 
     def pprint = {
-      f"${self.toBinaryString}%63s".grouped(3).map(toRWX).mkString("|", "|", "|")
+      f"${self.toBinaryString}%63s".grouped(3).toSeq.reverse.map(toRWX).mkString("|", "|", "|")
     }
 
     private def toRWX(code: String): String = {
@@ -188,10 +188,10 @@ object CassandraFileSystem
 
   trait Roles {
 
-    val owner = Role(20 * 3)
-    val other = Role(0)
+    val owner = Role(0)
+    val other = Role(20 * 3)
 
-    def group(gid: Int) = if (gid < 0 || gid > 18) other else Role((19 - gid) * 3)
+    def group(gid: Int) = if (gid < 0 || gid > 18) other else Role((1 + gid) * 3)
   }
 
   case class Access(self: Int = 0) extends AnyVal {
