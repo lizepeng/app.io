@@ -45,12 +45,7 @@ case class Path(segments: Seq[String] = Seq(), filename: Option[String] = None) 
     }
   )
 
-  def subPaths = {
-    for (i <- 0 to segments.size)
-      yield Path(segments.take(i), None)
-  } ++ {
-    if (filename.nonEmpty) Seq(this) else Seq.empty
-  }
+  def subPaths = segments.inits.toSeq.reverse.map(Path(_)) ++ filename.map(_ => this)
 
   def isRoot = segments.isEmpty && filename.isEmpty
 }
