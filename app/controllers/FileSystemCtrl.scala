@@ -1,10 +1,13 @@
 package controllers
 
 import helpers._
+import models._
 import models.cfs._
 import play.api.i18n._
 import play.api.mvc.Controller
+import protocols._
 import security._
+import services._
 import views._
 
 /**
@@ -14,18 +17,27 @@ class FileSystemCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
   val userActionRequired: UserActionRequired,
+  val bandwidth: BandwidthService,
   val _cfs: CassandraFileSystem
 )
   extends Secured(FileSystemCtrl)
   with Controller
   with BasicPlayComponents
+  with UsersComponents
+  with InternalGroupsComponents
   with UserActionComponents
   with DefaultPlayExecutor
+  with BandwidthConfigComponents
+  with CFSStreamComponents
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =
-    UserAction(_.Index, _.Create, _.Destroy).apply { implicit req =>
-      Ok(html.file_system.index(if (path.isRoot) path / req.user.id.toString else path, pager))
+    UserAction(_.Index, _.Create, _.Destroy).async { implicit req =>
+      for {
+        intGroups <- _groups.find(_internalGroups.Num2Id)
+      } yield {
+        Ok(html.file_system.index(path, pager, intGroups))
+      }
     }
 
   def show(path: Path) =
@@ -38,6 +50,16 @@ class FileSystemCtrl(
         case e: FileSystemAccessControl.Denied => Forbidden
         case e: BaseException                  => NotFound
       }
+    }
+
+  def download(path: Path, inline: Boolean) =
+    UserAction(_.Show).async { implicit req =>
+      CFSHttpCaching(path) apply (HttpDownloadResult.send(_, inline = inline))
+    }
+
+  def stream(path: Path) =
+    UserAction(_.Show).async { implicit req =>
+      CFSHttpCaching(path) apply (HttpStreamResult.stream(_))
     }
 }
 

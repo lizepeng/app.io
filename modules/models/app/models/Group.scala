@@ -253,12 +253,7 @@ case class InternalGroupsCode(code: Int) extends AnyVal {
 
 object InternalGroupsCode {
 
-  val ALL     = for (gid <- 0 to 18) yield gid
-  val Half1st = for (gid <- 0 to 9) yield gid
-  val Half2nd = for (gid <- 10 to 18) yield gid
-  val Div1    = for (gid <- 0 to 6) yield gid
-  val Div2    = for (gid <- 7 to 12) yield gid
-  val Div3    = for (gid <- 13 to 18) yield gid
+  val ALL = for (gid <- 0 to 18) yield gid
 
   val AnyoneMask = 1 << 18
   val Anyone     = InternalGroupsCode(0)
@@ -303,7 +298,7 @@ class InternalGroups(
             Group(
               id,
               n match {
-                case InternalGroupsCode.Anyone.code => Name("Anyone")
+                case InternalGroupsCode.Anyone.code => Name("AnyUsers")
                 case _                              => Name(key)
               },
               Some(key),
@@ -317,7 +312,7 @@ class InternalGroups(
       _num2Id = seq.map(_._1)
       _anyoneId = _num2Id(Anyone.code)
       _id2num = _num2Id.zipWithIndex.toMap
-      val initialized = (true /: seq)(_ && _._2)
+      val initialized = (true /: seq) (_ && _._2)
       Logger.info(
         if (initialized)
           "Internal Group Ids has been initialized."
@@ -331,6 +326,8 @@ class InternalGroups(
   def AnyoneId = _anyoneId
 
   def Id2Num = _id2num
+
+  def Num2Id = _num2Id
 
   def map(igs: InternalGroupsCode): Set[UUID] = {
     igs.numbers.map(_num2Id).toSet

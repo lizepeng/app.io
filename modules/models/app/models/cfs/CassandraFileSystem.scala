@@ -5,13 +5,14 @@ import java.util.UUID
 import com.websudos.phantom.dsl._
 import helpers.ExtString._
 import helpers._
+import models._
 import models.cassandra._
-import models.sys.{SysConfig, SysConfigs}
-import models.{User, Users}
+import models.sys._
+import play.api.libs.iteratee.Enumeratee
 import play.api.libs.json._
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -33,6 +34,7 @@ class CassandraFileSystem(
   implicit val _files         : Files          = new Files
   implicit val _inodes        : INodes         = new INodes
   implicit val _directories   : Directories    = new Directories
+  implicit val _root          : Root           = new Root
 
   def home(implicit user: User): Future[Directory] = {
     val uid = user.id
@@ -47,8 +49,12 @@ class CassandraFileSystem(
   def createHome(implicit user: User): Future[Directory] = {
     val uid = user.id
     val name = uid.toString
+    val home = Directory(name, Path.root / name, uid, uid, uid)
     Logger.debug("Creating user home folder: " + name)
-    Directory(name, Path.root / name, uid, uid, uid).save()(this)
+    for {
+      _ <- _root.add(home.id)
+      h <- home.save()(this)
+    } yield h
   }
 
   def temp(implicit user: User): Future[Directory] = {
@@ -61,6 +67,10 @@ class CassandraFileSystem(
 
   def file(path: Path)(implicit user: User): Future[File] = {
     resolve(path, (dir, tail) => dir.file(tail)(this))
+  }
+
+  def inode(path: Path)(implicit user: User): Future[INode] = {
+    resolve(path, (dir, tail) => dir.inode(tail)(this))
   }
 
   private def resolve[T](
@@ -97,6 +107,16 @@ class CassandraFileSystem(
         } yield fr
       }
     }
+
+  def listRoot(pager: Pager): Future[Page[INode]] = Page(pager) {
+    _root.stream &>
+      Enumeratee.mapM { id =>
+        val name: String = id.toString
+        _directories.find(id)(
+          onFound = _.copy(name = name, path = Path.root / name)
+        )
+      }
+  }
 }
 
 trait CassandraFileSystemCanonicalNamed extends CanonicalNamed {
@@ -112,6 +132,15 @@ object CassandraFileSystem
     extends BaseException(error_code("invalid.path"))
 
 
+  case class ExtPermission(self: Map[UUID, Permission] = Map()) extends AnyVal {
+
+    def apply(group_id: UUID) = self.getOrElse(group_id, Permission.empty)
+
+    def contains(group_id: UUID) = self.contains(group_id)
+
+    def -(group_id: UUID) = self - group_id
+  }
+
   case class Permission(self: Long) extends AnyVal {
 
     def |(that: Permission) = Permission(self | that.self)
@@ -121,10 +150,14 @@ object CassandraFileSystem
       (self & want) == want
     }
 
+    def ^(raw: Long) = Permission(self ^ raw)
+
     override def toString = pprint
 
+    def toBitSet = ExtLong.BitSet(self)
+
     def pprint = {
-      f"${self.toBinaryString}%63s".grouped(3).map(toRWX).mkString("|", "|", "|")
+      f"${self.toBinaryString}%63s".grouped(3).toSeq.reverse.map(toRWX).mkString("|", "|", "|")
     }
 
     private def toRWX(code: String): String = {
@@ -140,6 +173,8 @@ object CassandraFileSystem
   }
 
   object Permission {
+
+    def empty: Permission = Permission(0L)
 
     implicit val jsonFormat = Format(
       Reads.StringReads.map(s => s.tryToLong.getOrElse(0L)).map(Permission.apply),
@@ -170,10 +205,10 @@ object CassandraFileSystem
 
   trait Roles {
 
-    val owner = Role(20 * 3)
-    val other = Role(0)
+    val owner = Role(0)
+    val other = Role(20 * 3)
 
-    def group(gid: Int) = if (gid < 0 || gid > 18) other else Role((19 - gid) * 3)
+    def group(gid: Int) = if (gid < 0 || gid > 18) other else Role((1 + gid) * 3)
   }
 
   case class Access(self: Int = 0) extends AnyVal {

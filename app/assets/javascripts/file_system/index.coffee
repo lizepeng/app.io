@@ -22,19 +22,30 @@ views.files.index
     service.load = ->
       @path = new Path(@options.path)
 
-      CFS.find(@path)
-        .success (data, status, headers) =>
-          @inodes =
-            _.chain data
-              .filter (inode) -> inode.name isnt '.'
-              .map (inode) -> service.wrap(inode)
-              .sortBy (inode) -> !inode.is_directory
-              .value()
-          LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
+      CFS.list(@path).then (resp) =>
+        @inodes =
+          _.chain resp.data
+            .filter (inode) -> inode.name isnt '.'
+            .map    (inode) -> decorate(inode)
+            .sortBy (inode) -> !inode.is_directory
+            .value()
+        LinkHeader.updateLinks @options.nextPage, @options.prevPage, resp.headers
 
-    service.wrap = (inode) ->
+    decorate = (inode) ->
       inode.path = new Path(inode.path)
+      inode.permissions = ([false, false, false] for i in [0..20])
+      inode.permissions[Math.floor(idx / 3)][idx % 3] = true for idx in inode.permission
+      inode.collapsed = true
       inode
+
+    service.add = (file) ->
+      @inodes.push decorate(file)
+
+    service.delete = (file) ->
+      @inodes.splice @inodes.indexOf(file), 1
+
+    service.clear = ->
+      @inodes = []
 
     service
 ]
@@ -74,21 +85,28 @@ views.files.index
       $scope.uploading = true
 
     $scope.delete = (file) ->
-      CFS.delete(file.path)
-        .success ->
-          INodeListSvc.inodes.splice INodeListSvc.inodes.indexOf(file), 1
-        .error (data) ->
-          Alert.danger data.message
+      CFS.delete(file.path).then(
+         -> INodeListSvc.delete file
+        (data) -> Alert.danger data.message
+      )
 
     $scope.clear = ->
-      CFS.delete(INodeListSvc.path)
-        .success ->
-          INodeListSvc.inodes = []
-        .error (data) ->
-          Alert.danger data.message
+      CFS.delete(INodeListSvc.path).then(
+        -> INodeListSvc.clear()
+        (data) -> Alert.danger data.message
+      )
 
     $scope.created = (file) ->
-      INodeListSvc.inodes.push INodeListSvc.wrap(file)
+      INodeListSvc.add file
+
+    $scope.toggle = (inode, role, access) ->
+      CFS.updatePermission(inode.path, role * 3 + access)
+
+    $scope.roleName = (idx) ->
+      switch idx
+        when 0 then INodeListSvc.dictionary['owner']
+        when 20 then INodeListSvc.dictionary['other']
+        else INodeListSvc.dictionary['intGroupNames'][idx - 1]
 
     INodeListSvc.load()
     return

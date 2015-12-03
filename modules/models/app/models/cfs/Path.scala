@@ -19,7 +19,15 @@ case class Path(segments: Seq[String] = Seq(), filename: Option[String] = None) 
 
   def /:(dir: String) = if (dir == ".") this else copy(Seq(dir) ++ segments)
 
-  def +(filename: String) = copy(filename = Some(filename))
+  def +(filename: String): Path = copy(filename = Some(filename))
+
+  def +(filename: Option[String]): Path = copy(filename = filename)
+
+  def parent = {
+    if (filename.isDefined) Path(segments)
+    else if (segments.nonEmpty) Path(segments.init)
+    else Path.root
+  }
 
   def headOption: Option[String] = segments.headOption
 
@@ -37,19 +45,14 @@ case class Path(segments: Seq[String] = Seq(), filename: Option[String] = None) 
     }
   )
 
-  def subPaths = {
-    for (i <- 0 to segments.size)
-      yield Path(segments.take(i), None)
-  } ++ {
-    if (filename.nonEmpty) Seq(this) else Seq.empty
-  }
+  def subPaths = segments.inits.toSeq.reverse.map(Path(_)) ++ filename.map(_ => this)
 
   def isRoot = segments.isEmpty && filename.isEmpty
 }
 
 object Path extends PathJsonStringifier {
 
-  def root = Path()
+  val root = Path()
 
   def home(implicit user: User) = Path(Seq(user.id.toString))
 
@@ -93,7 +96,7 @@ object Path extends PathJsonStringifier {
   }
 
   def encodeDirs(segments: Seq[String]): String = {
-    ("" /: segments.map(encode))(_ + _ + "/")
+    ("" /: segments.map(encode)) (_ + _ + "/")
   }
 
   def decode: (String) => String = {

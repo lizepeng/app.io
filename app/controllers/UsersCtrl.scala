@@ -54,9 +54,13 @@ class UsersCtrl(
 
   def show(id: UUID) =
     UserAction(_.Show).async { implicit req =>
-      _users.find(id).map { user =>
-        Ok(html.users.show(user))
+      for {
+        user <- _users.find(id)
+        grps <- _groups.find(_internalGroups.Num2Id)
+      } yield {
+        Ok(html.users.show(user, grps))
       }
+
     }
 
   def index(pager: Pager, sort: Seq[SortField]) = {

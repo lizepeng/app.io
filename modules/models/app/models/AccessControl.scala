@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
-import helpers.ExtString._
+import helpers.ExtLong._
 import helpers._
 import models.cassandra._
 import play.api.libs.iteratee.Enumerator
@@ -75,7 +75,7 @@ object AccessControlEntry
       override def writes(o: AccessControlEntry): JsValue =
         Json.obj(
           "resource" -> o.resource,
-          "permission" -> BinaryString.from(o.permission).toJson,
+          "permission" -> o.permission.toIndices,
           "principal_id" -> o.principal_id,
           "is_group" -> o.is_group
         )

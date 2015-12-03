@@ -14,19 +14,19 @@
       <p>@f.size_pp</p>
     </div>
     @if(f.video.?) {
-      <video src="@api_internal.routes.FileSystemCtrl.stream(f.path)"
+      <video src="@routes.FileSystemCtrl.stream(f.path)"
       type="@f.mimeType"
       class="col-xs-12"
       autobuffer autoloop loop controls>
       </video>
     }
     @if(f.audio.?) {
-      <audio src="@api_internal.routes.FileSystemCtrl.stream(f.path)"
+      <audio src="@routes.FileSystemCtrl.stream(f.path)"
       class="col-xs-12"
       autobuffer autoloop loop controls></audio>
     }
     @if(f.image.?) {
-      <img src="@api_internal.routes.FileSystemCtrl.stream(f.path)"
+      <img src="@routes.FileSystemCtrl.stream(f.path)"
       class="col-xs-12 col-sm-8 col-sm-offset-2" alt="">
     }
   </div>

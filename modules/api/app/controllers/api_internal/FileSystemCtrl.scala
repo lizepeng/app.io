@@ -1,10 +1,11 @@
 package controllers.api_internal
 
+import java.util.UUID
+
 import controllers._
 import helpers._
 import models.cfs._
 import play.api.i18n._
-import play.api.libs.iteratee.{Enumeratee => _}
 import play.api.libs.json.Json
 import play.api.mvc._
 import protocols.JsonProtocol.JsonMessage
@@ -32,30 +33,22 @@ class FileSystemCtrl(
   with BasicPlayComponents
   with UserActionComponents
   with DefaultPlayExecutor
-  with ExceptionDefining
   with I18nSupport
   with AppConfigComponents
   with RateLimitConfigComponents
   with BandwidthConfigComponents
-  with CFSStreamComponents
   with Logging {
-
-  def download(path: Path, inline: Boolean) =
-    UserAction(_.Show).async { implicit req =>
-      CFSHttpCaching(path) apply (HttpDownloadResult.send(_, inline = inline))
-    }
-
-  def stream(path: Path) =
-    UserAction(_.Show).async { implicit req =>
-      CFSHttpCaching(path) apply (HttpStreamResult.stream(_))
-    }
 
   def index(path: Path, pager: Pager) =
     UserAction(_.Index).async { implicit req =>
-      (for {
-        curr <- _cfs.dir(path) if curr.rx.?
-        page <- curr.list(pager)
-      } yield page).map { page =>
+      (path match {
+        case Path.root =>
+          _cfs.listRoot(pager)
+        case _         => for {
+          curr <- _cfs.dir(path) if curr.rx.?
+          page <- curr.list(pager)
+        } yield page
+      }).map { page =>
         Ok(Json.toJson(page.elements)).withHeaders(
           linkHeader(page, routes.FileSystemCtrl.index(path, _))
         )
@@ -93,8 +86,10 @@ class FileSystemCtrl(
         } yield Unit
         case None    => for {
           dir <- _cfs.dir(path) if dir.w.?
-          ___ <- if (clear) dir.clear()
-          else dir.delete(recursive = true)
+          ___ <- {
+            if (clear) dir.clear(checker = _.w.?)
+            else dir.delete(recursive = true, checker = _.w.?)
+          }
         } yield Unit
       }).map {
         _ => NoContent
@@ -102,6 +97,36 @@ class FileSystemCtrl(
         case e: FileSystemAccessControl.Denied => Forbidden
         case e: Directory.ChildNotFound        => NotFound
       }
+    }
+
+  def updatePermission(path: Path, gid: Option[UUID], pos: Int) =
+    UserAction(_.Save).async { implicit req => //TODO Admin
+      (for {
+        inode <- _cfs.inode(path)
+        _ <- gid match {
+          case Some(group_id) =>
+            inode.save(group_id, inode.ext_permission(group_id) ^ (1L << pos))
+          case None           =>
+            inode.save(inode.permission ^ (1L << pos))
+        }
+      } yield {
+        Ok
+      }).recover {
+        case e: BaseException => NotFound
+      }
+    }
+
+  def deletePermission(path: Path, gid: UUID) =
+    UserAction(_.Save).async { implicit req => //TODO Admin
+      (for {
+        inode <- _cfs.inode(path)
+        _ <- inode.save(inode.ext_permission - gid)
+      } yield {
+        Ok
+      }).recover {
+        case e: BaseException => NotFound
+      }
+
     }
 }
 
