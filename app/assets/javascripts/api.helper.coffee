@@ -33,8 +33,8 @@ angular.module 'api.helper', []
   ###
   service.updateLinks = (next, prev, headers) ->
     apiLinks = service.parse headers
-    @links.next = next if apiLinks.next?
-    @links.prev = prev if apiLinks.prev?
+    @links.next = if apiLinks.next? then next else undefined
+    @links.prev = if apiLinks.prev? then prev else undefined
 
   ###
   Parse web link header using regex.

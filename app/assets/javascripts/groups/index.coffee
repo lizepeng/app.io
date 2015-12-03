@@ -82,6 +82,16 @@ views.groups.index.factory 'GroupListSvc', [
 
     $scope.setLayout = (gid, layout) -> Group.setLayout gid, layout
 
+    $scope.loadNextPage = ->
+      if GroupListSvc.links.next
+        GroupListSvc.options.page += 1
+        GroupListSvc.load()
+
+    $scope.loadPrevPage = ->
+      if GroupListSvc.links.prev
+        GroupListSvc.options.page -= 1
+        GroupListSvc.load()
+
     GroupListSvc.load()
     return
 ]
