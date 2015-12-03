@@ -298,7 +298,7 @@ class InternalGroups(
             Group(
               id,
               n match {
-                case InternalGroupsCode.Anyone.code => Name("Anyone")
+                case InternalGroupsCode.Anyone.code => Name("AnyUsers")
                 case _                              => Name(key)
               },
               Some(key),
