@@ -85,18 +85,16 @@ views.files.index
       $scope.uploading = true
 
     $scope.delete = (file) ->
-      CFS.delete(file.path)
-        .success ->
-          INodeListSvc.delete file
-        .error (data) ->
-          Alert.danger data.message
+      CFS.delete(file.path).then(
+         -> INodeListSvc.delete file
+        (data) -> Alert.danger data.message
+      )
 
     $scope.clear = ->
-      CFS.delete(INodeListSvc.path)
-        .success ->
-          INodeListSvc.clear()
-        .error (data) ->
-          Alert.danger data.message
+      CFS.delete(INodeListSvc.path).then(
+        -> INodeListSvc.clear()
+        (data) -> Alert.danger data.message
+      )
 
     $scope.created = (file) ->
       INodeListSvc.add file

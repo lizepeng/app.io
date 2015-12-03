@@ -54,8 +54,10 @@ views.groups.index.factory 'GroupListSvc', [
     $scope.checkName = (data) ->
       d = $q.defer()
       $http.post jsRoutes.controllers.api_internal.GroupsCtrl.checkName(data).url, name: data
-        .success -> d.resolve()
-        .error (data, status) -> d.resolve ClientError.firstMsg(data, status)
+        .then(
+          -> d.resolve()
+          (data, status) -> d.resolve ClientError.firstMsg(data, status)
+        )
       d.promise
 
     $scope.create = (data) ->
