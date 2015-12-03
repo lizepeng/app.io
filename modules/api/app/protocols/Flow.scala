@@ -237,7 +237,7 @@ case class Flow(
         file <- tempFiles &>
           Enumeratee.mapFlatten[File] { f =>
             f.read() &> Enumeratee.onIterateeDone[BLK](() => f.delete())
-          } |>>> curr.save(filename, permission, overwrite, _.w.?)
+          } |>>> curr.save(filename, permission, overwrite, checker = _.w.?)
         _ret <-
         if (file.size <= maxLength) {
           onUploaded(curr, file).map { _ =>

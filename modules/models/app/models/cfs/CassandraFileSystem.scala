@@ -131,6 +131,14 @@ object CassandraFileSystem
   case class InvalidPath(path: Path)
     extends BaseException(error_code("invalid.path"))
 
+  /**
+   * Expecting:
+   * return true if permission checking passed.
+   * throws an exception if permission checking failed.
+   */
+  type PermissionChecker = INode => Boolean
+  val alwaysPass : PermissionChecker = _ => true
+  val alwaysBlock: PermissionChecker = _ => false
 
   case class ExtPermission(self: Map[UUID, Permission] = Map()) extends AnyVal {
 

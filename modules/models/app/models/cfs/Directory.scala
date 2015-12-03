@@ -39,7 +39,7 @@ case class Directory(
    * @param fileName if empty then use file id as its filename
    * @param permission file permission
    * @param overwrite whether to overwrite existing file
-   * @param permChecker check if user have permission to overwrite existing file
+   * @param checker check if user have permission to overwrite existing file
    * @param user user who is saving the file
    * @param cfs cassandra file system
    * @return
@@ -48,7 +48,7 @@ case class Directory(
     fileName: String = "",
     permission: Permission = Role.owner.rw,
     overwrite: Boolean = false,
-    permChecker: File => Boolean = _ => false
+    checker: PermissionChecker = alwaysBlock
   )(
     implicit user: User, cfs: CassandraFileSystem
   ): Iteratee[BLK, File] = {
@@ -67,7 +67,7 @@ case class Directory(
         case e: Directory.ChildExists if overwrite =>
           for {
             old <- file(ff.name)
-            ___ <- old.delete() if permChecker(old)
+            ___ <- old.delete() if checker(old)
             ___ <- updateChild(ff)
           } yield Unit
       }.map { _ => ff.save() }
@@ -182,30 +182,30 @@ case class Directory(
     }
 
   def clear(
-    checker: INode => Boolean = _ => true
+    checker: PermissionChecker = alwaysPass
   )(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] = {
     cfs._directories.stream(this) |>>>
       Iteratee.foreach {
-        case d: Directory if checker(d) => d.delete(recursive = true, checker)
+        case d: Directory if checker(d) => d.delete(recursive = true, checker = checker)
         case f: File if checker(f)      => f.delete()
       }
   }
 
   def delete(
     recursive: Boolean = false,
-    checker: INode => Boolean = _ => true
+    checker: PermissionChecker = alwaysPass
   )(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] =
     if (recursive) for {
-      _____ <- clear(checker)
+      _____ <- clear(checker = checker)
       empty <- isEmpty
-      _____ <- if (empty) delete() else delete(recursive = true)
+      _____ <- if (empty && checker(this)) delete() else delete(recursive = true)
     } yield Unit
     else isEmpty.andThen {
-      case Success(true) => delete()
+      case Success(true) if checker(this) => delete()
     }.map(_ => Unit)
 
   def isEmpty(

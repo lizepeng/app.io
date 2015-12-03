@@ -125,7 +125,7 @@ trait CFSImageComponents extends CFSDownloadComponents {
       implicit user: User
     ): Future[File] = {
       CFSImage(file)(_.scaleTo(width, height)).enumerator |>>>
-        dir.save(name, file.permission, overwrite = true, _.w.?)
+        dir.save(name, file.permission, overwrite = true, checker = _.w.?)
     }
   }
 
