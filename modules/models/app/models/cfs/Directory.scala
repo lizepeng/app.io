@@ -181,21 +181,26 @@ case class Directory(
       case e: Directory.ChildNotFound => mkdir(name)
     }
 
-  def clear()(
+  def clear(
+    checker: INode => Boolean = _ => true
+  )(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] = {
     cfs._directories.stream(this) |>>>
       Iteratee.foreach {
-        case d: Directory => d.delete(recursive = true)
-        case f: File      => f.delete()
+        case d: Directory if checker(d) => d.delete(recursive = true, checker)
+        case f: File if checker(f)      => f.delete()
       }
   }
 
-  def delete(recursive: Boolean = false)(
+  def delete(
+    recursive: Boolean = false,
+    checker: INode => Boolean = _ => true
+  )(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] =
     if (recursive) for {
-      _____ <- clear()
+      _____ <- clear(checker)
       empty <- isEmpty
       _____ <- if (empty) delete() else delete(recursive = true)
     } yield Unit

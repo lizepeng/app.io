@@ -86,8 +86,10 @@ class FileSystemCtrl(
         } yield Unit
         case None    => for {
           dir <- _cfs.dir(path) if dir.w.?
-          ___ <- if (clear) dir.clear()
-          else dir.delete(recursive = true)
+          ___ <- {
+            if (clear) dir.clear(checker = _.w.?)
+            else dir.delete(recursive = true, checker = _.w.?)
+          }
         } yield Unit
       }).map {
         _ => NoContent
