@@ -123,7 +123,7 @@ implicit req: UserRequest[_], messages: Messages)
     </div>
 
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      @ng._pager("GroupListSvc.links", reload = false)
+      @ng._pager("GroupListSvc.links", jump = false)
     </div>
   </div>
 }(
