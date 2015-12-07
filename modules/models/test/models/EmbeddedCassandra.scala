@@ -12,7 +12,7 @@ import play.api.{Configuration, Environment}
 /**
  * @author zepeng.li@gmail.com
  */
-trait MockedCassandra extends BeforeAfterAll with DefaultPlayExecutor {
+trait EmbeddedCassandra extends BeforeAfterAll with DefaultPlayExecutor {
 
   val playEnv = Environment.simple()
 
