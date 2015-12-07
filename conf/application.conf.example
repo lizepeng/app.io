@@ -116,6 +116,13 @@ controllers.api_internal {
     rate_limit.span = 15 minutes
 
     bandwidth.upload = 1.5M
+  }
+}
+
+controllers {
+
+  file_system {
+
     bandwidth.download = 1M
     bandwidth.stream = 1M
   }
