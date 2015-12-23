@@ -7,13 +7,13 @@ import scala.collection.mutable
 /**
  * @author zepeng.li@gmail.com
  */
-trait Logging extends CanonicalNamed {
+trait Logging {
+  self =>
 
-  implicit lazy val Logger =
-    if (basicName.nonEmpty)
-      play.api.Logger(canonicalName)
-    else
-      play.api.Logger(this.getClass)
+  implicit lazy val Logger = self match {
+    case s: CanonicalNamed => play.api.Logger(s.canonicalName)
+    case _                 => play.api.Logger(this.getClass)
+  }
 }
 
 trait I18nLogging extends Logging {

@@ -338,9 +338,8 @@ class Users(
 }
 
 sealed class UsersByEmailIndex
-  extends CassandraTable[UsersByEmailIndex, (String, UUID)] {
-
-  override val tableName = "users_email_index"
+  extends NamedCassandraTable[UsersByEmailIndex, (String, UUID)]
+  with UsersByEmailCanonicalNamed {
 
   object email
     extends StringColumn(this)
@@ -349,6 +348,11 @@ sealed class UsersByEmailIndex
   object id extends UUIDColumn(this)
 
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
+}
+
+trait UsersByEmailCanonicalNamed extends CanonicalNamed {
+
+  override val basicName = "users_email_index"
 }
 
 class UsersByEmail(

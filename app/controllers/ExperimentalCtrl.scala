@@ -27,6 +27,7 @@ class ExperimentalCtrl(
   with NotificationRegionComponents
   with AkkaTimeOutConfig
   with CanonicalNamed
+  with PackageNameAsCanonicalName
   with I18nSupport {
 
   def chat = MaybeUserAction().apply { implicit req =>

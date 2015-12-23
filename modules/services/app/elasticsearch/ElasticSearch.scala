@@ -25,6 +25,7 @@ class ElasticSearch(
   val basicPlayApi: BasicPlayApi
 )
   extends AppConfigComponents
+  with PackageNameAsCanonicalName
   with BasicPlayComponents
   with DefaultPlayExecutor
   with BootingProcess
