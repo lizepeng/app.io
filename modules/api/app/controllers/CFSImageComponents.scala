@@ -78,6 +78,7 @@ trait CFSImageComponents extends CFSDownloadComponents {
         result
       }).recover {
         case e: FileSystemAccessControl.Denied => Results.Forbidden
+        case e: BaseException                  => Results.NotFound
       }
     }
 
@@ -130,6 +131,7 @@ trait CFSImageComponents extends CFSDownloadComponents {
   }
 
   object Thumbnail {
+
     def generate(curr: Directory, file: File)(
       implicit user: User
     ): Future[Seq[File]] = {
