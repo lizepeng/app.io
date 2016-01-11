@@ -1,7 +1,5 @@
 package controllers
 
-import java.util.UUID
-
 import controllers.UsersCtrl._
 import helpers._
 import models._
@@ -15,7 +13,6 @@ import services._
 import views._
 
 import scala.concurrent.Future
-import scala.util.Try
 
 /**
  * @author zepeng.li@gmail.com
@@ -74,7 +71,7 @@ class PasswordResetCtrl(
         },
         success => (for {
           user <- _users.find(success)
-          link <- _expirableLinks.save(user.id.toString)
+          link <- _expirableLinks.save(user.id)
           tmpl <- getEmailTemplate(s"$basicName.email1")
         } yield (user, link.id, tmpl)).map { case (user, id, tmpl) =>
           mailService.sendTo(user)("noreply", tmpl, Map("link" -> id))
@@ -119,7 +116,7 @@ class PasswordResetCtrl(
         success => (for {
           link <- _expirableLinks.find(id)
           ____ <- _expirableLinks.remove(id)
-          _uid <- Future.fromTry(Try(UUID.fromString(link.target_id)))
+          _uid <- Future(link.target_id)
           user <- _users.find(_uid)
           ____ <- user.updatePassword(success.original)
           tmpl <- getEmailTemplate(s"$basicName.email2")
