@@ -2,6 +2,7 @@ package security
 
 import java.util.UUID
 
+import helpers.ExtString._
 import helpers._
 import models._
 
@@ -31,8 +32,7 @@ case class ModulesAccessControl(
 
   override def canAccessAsync: Future[Boolean] = {
 
-    checkGroups(resource, access, principal.groups)
-      .andThen {
+    checkGroups(resource, access, principal.groups).andThen {
       case Failure(e: Denied) => Logger.debug("Groups " + e.reason)
     }.recoverWith {
       case e: Denied => checkUser(resource, access, principal.id)
@@ -57,8 +57,8 @@ case class ModulesAccessControl(
       .findPermissions(resource.name, gids)
       .map(_.map(Permission.apply))
       .map { permissions =>
-      Logger.trace(
-        s"""
+        Logger.trace(
+          s"""
           |Groups      : $group_ids
           |Module      : $resource
           |Access      :
@@ -66,11 +66,11 @@ case class ModulesAccessControl(
           |Permissions :
           |${permissions.mkString("\n")}
          """.stripMargin
-      )
+        )
 
-      if (Permission.union(permissions: _*) ? access) true
-      else throw Denied(group_ids.toString(), access, resource)
-    }
+        if (Permission.union(permissions: _*) ? access) true
+        else throw Denied(group_ids.toString(), access, resource)
+      }
   }
 
   def checkUser(
@@ -82,8 +82,8 @@ case class ModulesAccessControl(
       .findPermission(resource.name, user_id)
       .map(_.map(Permission.apply).getOrElse(Permission.Nothing))
       .map { permission =>
-      Logger.trace(
-        s"""
+        Logger.trace(
+          s"""
           |User       : $user_id
           |Module     : $resource
           |Access     :
@@ -91,11 +91,11 @@ case class ModulesAccessControl(
           |Permission :
           |$permission
          """.stripMargin
-      )
+        )
 
-      if (permission ? access) true
-      else throw Denied(user_id.toString, access, resource)
-    }
+        if (permission ? access) true
+        else throw Denied(user_id.toString, access, resource)
+      }
 
 }
 
@@ -115,7 +115,7 @@ object ModulesAccessControl
 
     def |(that: => Access) = Access(self | that.self)
 
-    override def toString = f"${self.toBinaryString}%64s".replace(' ', '0')
+    override def toString = BinaryString.from(self).toString
   }
 
   case class Permission(self: Long) extends AnyVal {
@@ -124,7 +124,7 @@ object ModulesAccessControl
 
     def ?(access: => Access) = (self & access.self) == access.self
 
-    override def toString = f"${self.toBinaryString}%64s".replace(' ', '0')
+    override def toString = BinaryString.from(self).toString
   }
 
   object Permission {
@@ -132,7 +132,7 @@ object ModulesAccessControl
     val Anything = Permission(0xffffffffffffffffL)
     val Nothing  = Permission(0x0000000000000000L)
 
-    def union(permissions: Permission*) = (Nothing /: permissions)(_ | _)
+    def union(permissions: Permission*) = (Nothing /: permissions) (_ | _)
   }
 
   case class CheckedModule(name: String) extends AnyVal {
@@ -142,9 +142,7 @@ object ModulesAccessControl
 
   trait AccessDefinition {
 
-    val Anything     = Access(0xffffffffffffffffL)
     val Nothing      = Access(0x0000000000000000L)
-
     val NNew         = Access(0x0000000000000001L)
     val Create       = Access(0x0000000000000002L)
     val Show         = Access(0x0000000000000004L)
@@ -156,7 +154,7 @@ object ModulesAccessControl
     val AddRelation  = Access(0x0000000000000100L)
     val DelRelation  = Access(0x0000000000000200L)
 
-    def union(as: Access*) = (Nothing /: as)(_ | _)
+    def union(as: Access*) = (Nothing /: as) (_ | _)
 
     val ALL = Seq(
       NNew,
@@ -170,6 +168,8 @@ object ModulesAccessControl
       AddRelation,
       DelRelation
     )
+
+    val Anything = union(ALL: _*)
   }
 
   object AccessDefinition extends AccessDefinition

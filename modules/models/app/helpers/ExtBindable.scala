@@ -14,22 +14,30 @@ object ExtBindable {
     Lang(_), _.code, (
     key: String,
     e: Exception
-    ) => "Cannot parse parameter %s as Lang: %s".format(key, e.getMessage)
+    ) => s"Cannot parse parameter $key as Lang: ${e.getMessage}"
   )
 
   implicit object bindableQueryDateTime extends Parsing[DateTime](
     s => new DateTime(s.toLong), _.getMillis.toString, (
     key: String,
     e: Exception
-    ) => "Cannot parse parameter %s as DateTime: %s".format(key, e.getMessage)
+    ) => s"Cannot parse parameter $key as DateTime: ${e.getMessage}"
   )
 
   implicit object bindableQueryYearMonth extends Parsing[YearMonth](
     s => YearMonth.parse(s), _.toString, (
     key: String,
     e: Exception
-    ) => "Cannot parse parameter %s as YearMonth: %s".format(key, e.getMessage)
+    ) => s"Cannot parse parameter $key as YearMonth: ${e.getMessage}"
   )
+
+  implicit def bindableQueryEnumeration[T <: Enumeration](implicit enum: T) =
+    new Parsing[T#Value](
+      s => enum.withName(s), _.toString, (
+      key: String,
+      e: Exception
+      ) => s"Cannot parse parameter $key as ${enum.toString} : ${e.getMessage}"
+    )
 
   /**
    * QueryString binder for Seq
@@ -51,18 +59,18 @@ object ExtBindable {
         params.get(key).flatMap(_.headOption)
           .map(_.split(",").filter(_.nonEmpty)) // remove all empty substring
           .map { values =>
-            val folder: Either[String, List[T]] = Right[String, List[T]](Nil)
-            (folder /: values) { (eitherList, value) =>
+          val folder: Either[String, List[T]] = Right[String, List[T]](Nil)
+          (folder /: values) { (eitherList, value) =>
             implicitly[QueryStringBindable[T]]
               .bind(key, Map(key -> Seq(value)))
               .map { eitherBound =>
-              for {
-                list <- eitherList.right
-                bound <- eitherBound.right
-              } yield bound +: list
-            }.getOrElse(eitherList)
+                for {
+                  list <- eitherList.right
+                  bound <- eitherBound.right
+                } yield bound +: list
+              }.getOrElse(eitherList)
           }.right.map(_.toSeq.reverse)
-          }
+        }
       }
 
       val pattern = """(.+)=(.+)""".r
@@ -86,7 +94,7 @@ object ExtBindable {
           |  r[i]=($jsUnbindT)(k,vs[i]);
           | }
           | return r.join(',');
-          |};
+          |}
          """.stripMargin
       }
     }

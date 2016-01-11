@@ -30,10 +30,52 @@ class StaticMapColumn[Owner <: CassandraTable[Owner, Record], Record, K: Primiti
 
   override def qb: CQLQuery = {
     val root = CQLQuery(name).forcePad.append(cassandraType)
-    if (isStatic) {
-      root.forcePad.append(CQLSyntax.static)
-    } else {
-      root
-    }
+    root.forcePad.append(CQLSyntax.static)
+  }
+}
+
+class StaticListColumn[Owner <: CassandraTable[Owner, Record], Record, RR: Primitive](
+  table: CassandraTable[Owner, Record], isStatic: Boolean = true
+)
+  extends ListColumn[Owner, Record, RR](table) with
+  PrimitiveCollectionValue[RR] {
+
+  override def qb: CQLQuery = {
+    val root = CQLQuery(name).forcePad.append(cassandraType)
+    root.forcePad.append(CQLSyntax.static)
+  }
+}
+
+class StaticSetColumn[Owner <: CassandraTable[Owner, Record], Record, RR: Primitive](
+  table: CassandraTable[Owner, Record], isStatic: Boolean = true
+)
+  extends SetColumn[Owner, Record, RR](table) with
+  PrimitiveCollectionValue[RR] {
+
+  override def qb: CQLQuery = {
+    val root = CQLQuery(name).forcePad.append(cassandraType)
+    root.forcePad.append(CQLSyntax.static)
+  }
+}
+
+abstract class StaticJsonColumn[T <: CassandraTable[T, R], R, ValueType](
+  table: CassandraTable[T, R], isStatic: Boolean = true
+)
+  extends JsonColumn[T, R, ValueType](table) {
+
+  override def qb: CQLQuery = {
+    val root = CQLQuery(name).forcePad.append(cassandraType)
+    root.forcePad.append(CQLSyntax.static)
+  }
+}
+
+abstract class StaticOptionalEnumColumn[Owner <: CassandraTable[Owner, Record], Record, EnumType <: Enumeration](
+  table: CassandraTable[Owner, Record], enum: EnumType
+)
+  extends OptionalEnumColumn[Owner, Record, EnumType](table, enum) {
+
+  override def qb: CQLQuery = {
+    val root = CQLQuery(name).forcePad.append(cassandraType)
+    root.forcePad.append(CQLSyntax.static)
   }
 }

@@ -21,6 +21,8 @@ POST /experimental/mail/send                controllers.ExperimentalCtrl.sendMai
 # Map static resources from the /public folder to the /assets URL path
 GET  /assets/*file                          controllers.Assets.at(path="/public", file)
 
+GET  /cfs/stream/$path<.*>                  controllers.FileSystemCtrl.stream(path:Path)
+GET  /cfs/download/$path<.*>                controllers.FileSystemCtrl.download(path:Path,inline:Boolean?=false)
 GET  /cfs/show/$path<.*>                    controllers.FileSystemCtrl.show(path:Path)
 GET  /cfs/$path<.*>                         controllers.FileSystemCtrl.index(path:Path,p:Pager?=Pager.first)
 

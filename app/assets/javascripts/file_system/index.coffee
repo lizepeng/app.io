@@ -1,7 +1,7 @@
 this.views ?= {}
 this.views.files ?= {}
 
-views.files.index = angular.module 'files.list', [
+views.files.index = angular.module 'files.index', [
   'api_internal.cfs'
   'api.helper'
   'ui.parts'
@@ -9,110 +9,107 @@ views.files.index = angular.module 'files.list', [
 
 views.files.index
 
-.factory 'INodeList', [
+.factory 'INodeListSvc', [
   'CFS'
   'Path'
   'LinkHeader'
-  'Alert'
-  (CFS, Path, LinkHeader, Alert) ->
-    service        = {}
-    service.links  = LinkHeader.links
-    service.inodes = []
-    service.params = {}
+  (CFS, Path, LinkHeader) ->
+    service         = {}
+    service.links   = LinkHeader.links
+    service.inodes  = []
+    service.options = {}
 
-    service.reload = (params) ->
-      service.params = params
+    service.load = ->
+      @path = new Path(@options.path)
 
-      service.path = new Path(params.path)
+      CFS.list(@path).then (resp) =>
+        @inodes =
+          _.chain resp.data
+            .filter (inode) -> inode.name isnt '.'
+            .map    (inode) -> decorate(inode)
+            .sortBy (inode) -> !inode.is_directory
+            .value()
+        LinkHeader.updateLinks @options.nextPage, @options.prevPage, resp.headers
 
-      CFS.find(service.path)
-        .success (data, status, headers) ->
-          service.inodes =
-            _.chain data
-              .filter (inode) -> inode.name != '.'
-              .map (inode) ->
-                inode.path = new Path(inode.path)
-                inode
-              .sortBy (inode) -> !inode.is_directory
-              .value()
-          LinkHeader.updateLinks params.nextPage, params.prevPage, headers
+    decorate = (inode) ->
+      inode.path = new Path(inode.path)
+      inode.permissions = ([false, false, false] for i in [0..20])
+      inode.permissions[Math.floor(idx / 3)][idx % 3] = true for idx in inode.permission
+      inode.collapsed = true
+      inode
+
+    service.add = (file) ->
+      @inodes.push decorate(file)
 
     service.delete = (file) ->
-      CFS.delete(file.path)
-        .success ->
-          idx = service.inodes.indexOf(file)
-          service.inodes.splice idx, 1
-        .error (data) ->
-          Alert.push
-            type : 'danger'
-            msg  : data.message
+      @inodes.splice @inodes.indexOf(file), 1
 
     service.clear = ->
-      CFS.delete(service.path)
-        .success ->
-          service.inodes = []
-        .error (data) ->
-          Alert.push
-            type : 'danger'
-            msg  : data.message
-
-    service.created = (file) ->
-      file.path = new Path(file.path)
-      service.inodes.push file
+      @inodes = []
 
     service
 ]
 
 .controller 'FilesCtrl', [
   '$scope'
+  'CFS'
+  'Path'
   'FileExtension'
-  'INodeList'
+  'INodeListSvc'
   'ModalDialog'
-  ($scope, FileExtension, INodeList, ModalDialog) ->
-    $scope.INodeList        = INodeList
+  'Alert'
+  ($scope, CFS, Path, FileExtension, INodeListSvc, ModalDialog, Alert) ->
+    $scope.INodeListSvc     = INodeListSvc
     $scope.jsRoutes         = jsRoutes
-    $scope.path             = INodeList.path
     $scope.uploading        = false
     $scope.faName           = FileExtension.faName
     ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.confirmDelete = (file) ->
       ModalDialog.open().result.then(
-        -> INodeList.delete file
+        -> $scope.delete file
         ->
       )
 
     $scope.confirmClearDir = ->
       ModalDialog.open().result.then(
-        -> INodeList.clear()
+        -> $scope.clear()
         ->
       )
 
     $scope.success = ($file, resp) ->
       $scope.uploading = false
-      INodeList.created(JSON.parse(resp)) if resp isnt ''
+      $scope.created(JSON.parse(resp)) if resp isnt ''
 
     $scope.startUpload = ->
       $scope.uploading = true
 
+    $scope.delete = (file) ->
+      CFS.delete(file.path).then(
+         -> INodeListSvc.delete file
+        (data) -> Alert.danger data.message
+      )
+
+    $scope.clear = ->
+      CFS.delete(INodeListSvc.path).then(
+        -> INodeListSvc.clear()
+        (data) -> Alert.danger data.message
+      )
+
+    $scope.created = (file) ->
+      INodeListSvc.add file
+
+    $scope.toggle = (inode, role, access) ->
+      CFS.updatePermission(inode.path, role * 3 + access)
+
+    $scope.roleName = (idx) ->
+      switch idx
+        when 0 then INodeListSvc.dictionary['owner']
+        when 20 then INodeListSvc.dictionary['other']
+        else INodeListSvc.dictionary['intGroupNames'][idx - 1]
+
+    INodeListSvc.load()
     return
 ]
 
-# -------------------------------------------------------- #
-# Need Math.round10 defined in utility.coffee
-# -------------------------------------------------------- #
-.filter 'filesize', ->
-  (input = 0) ->
-    k = 1000
-    if input < k
-      return "#{Math.round10(input, -3)} bytes"
-    if (input /= k) < k
-      return "#{Math.round10(input, -0)} KB"
-    if (input /= k) < k
-      return "#{Math.round10(input, -1)} MB"
-    if (input /= k) < k
-      return "#{Math.round10(input, -2)} GB"
-    input /= k
-    return   "#{Math.round10(input, -3)} TB"
-
-angular.module('app').requires.push 'files.list', 'flow'
+angular.module('app').requires.push 'files.index', 'flow'

@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
-import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers.ExtEnumeratee._
 import helpers._
 import models.User
@@ -27,7 +26,7 @@ case class Directory(
   parent: UUID,
   id: UUID = UUIDs.timeBased(),
   permission: Permission = Role.owner.rwx,
-  ext_permission: Map[UUID, Permission] = Map(),
+  ext_permission: ExtPermission = ExtPermission(),
   attributes: Map[String, String] = Map(),
   is_directory: Boolean = true
 ) extends INode {
@@ -38,20 +37,28 @@ case class Directory(
    * Note! DO NOT forget to set a permChecker
    *
    * @param fileName if empty then use file id as its filename
+   * @param permission file permission
    * @param overwrite whether to overwrite existing file
-   * @param permChecker check if user have permission to overwrite existing file
+   * @param checker check if user have permission to overwrite existing file
    * @param user user who is saving the file
    * @param cfs cassandra file system
    * @return
    */
   def save(
     fileName: String = "",
+    permission: Permission = Role.owner.rw,
     overwrite: Boolean = false,
-    permChecker: File => Boolean = _ => false
+    checker: PermissionChecker = alwaysBlock
   )(
     implicit user: User, cfs: CassandraFileSystem
   ): Iteratee[BLK, File] = {
-    val f = File(fileName, path + fileName, user.id, id)
+    val f = File(
+      name = fileName,
+      path = path + fileName,
+      owner_id = user.id,
+      parent = id,
+      permission = permission
+    )
     val ff =
       if (fileName.nonEmpty) f
       else f.copy(name = f.id.toString, path = path + f.id.toString)
@@ -60,7 +67,7 @@ case class Directory(
         case e: Directory.ChildExists if overwrite =>
           for {
             old <- file(ff.name)
-            ___ <- old.delete() if permChecker(old)
+            ___ <- old.delete() if checker(old)
             ___ <- updateChild(ff)
           } yield Unit
       }.map { _ => ff.save() }
@@ -109,6 +116,13 @@ case class Directory(
         onFound = _.copy(name = n, path = this.path / path)
       )
     }
+
+  def inode(path: Path)(
+    implicit cfs: CassandraFileSystem
+  ): Future[INode] = path.filename match {
+    case Some(_) => file(path)
+    case None    => dir(path)
+  }
 
   def file(name: String)(
     implicit cfs: CassandraFileSystem
@@ -167,26 +181,31 @@ case class Directory(
       case e: Directory.ChildNotFound => mkdir(name)
     }
 
-  def clear()(
+  def clear(
+    checker: PermissionChecker = alwaysPass
+  )(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] = {
     cfs._directories.stream(this) |>>>
       Iteratee.foreach {
-        case d: Directory => d.delete(recursive = true)
-        case f: File      => f.delete()
+        case d: Directory if checker(d) => d.delete(recursive = true, checker = checker)
+        case f: File if checker(f)      => f.delete()
       }
   }
 
-  def delete(recursive: Boolean = false)(
+  def delete(
+    recursive: Boolean = false,
+    checker: PermissionChecker = alwaysPass
+  )(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] =
     if (recursive) for {
-      _____ <- clear()
+      _____ <- clear(checker = checker)
       empty <- isEmpty
-      _____ <- if (empty) delete() else delete(recursive = true)
+      _____ <- if (empty && checker(this)) delete() else delete(recursive = true)
     } yield Unit
     else isEmpty.andThen {
-      case Success(true) => delete()
+      case Success(true) if checker(this) => delete()
     }.map(_ => Unit)
 
   def isEmpty(
@@ -213,7 +232,7 @@ sealed class DirectoryTable
       parent(r),
       inode_id(r),
       Permission(permission(r)),
-      ext_permission(r).mapValues(Permission(_)),
+      ExtPermission(ext_permission(r).mapValues(Permission(_))),
       attributes(r),
       is_directory(r)
     )
@@ -243,6 +262,7 @@ object Directory extends CanonicalNamed with ExceptionDefining {
       "path" -> o.path,
       "owner_id" -> o.owner_id,
       "created_at" -> o.created_at,
+      "permission" -> o.permission.toBitSet.toIndices,
       "is_directory" -> o.is_directory,
       "is_file" -> !o.is_directory
     )
@@ -388,7 +408,7 @@ class Directories(
       .value(_.parent, dir.parent)
       .value(_.owner_id, dir.owner_id)
       .value(_.permission, dir.permission.self)
-      .value(_.ext_permission, dir.ext_permission.mapValues(_.self.toInt))
+      .value(_.ext_permission, dir.ext_permission.self.mapValues(_.self.toInt))
       .value(_.is_directory, true)
       .value(_.attributes, dir.attributes)
   }

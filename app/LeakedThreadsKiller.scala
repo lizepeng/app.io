@@ -1,6 +1,6 @@
 import java.util.Timer
 
-import helpers.{CanonicalNamed, Logging}
+import helpers.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
  *
  * @author zepeng.li@gmail.com
  */
-object LeakedThreadsKiller extends CanonicalNamed with Logging {
+object LeakedThreadsKiller extends Logging {
 
   val ru     = scala.reflect.runtime.universe
   val mirror = ru.runtimeMirror(getClass.getClassLoader)

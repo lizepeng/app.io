@@ -1,40 +1,23 @@
 this.views ?= {}
 this.views.groups ?= {}
 
-views.groups.show = angular.module('group.users.list', [
+views.groups.show = angular.module('group.show', [
   'api_internal.group'
+  'api_internal.user'
   'api.helper'
   'ui.parts'
 ])
 
-views.groups.show.factory 'GroupUsersList', [
+views.groups.show.factory 'UsersListSvc', [
   'Group'
-  'Alert'
-  (Group, Alert) ->
+  (Group) ->
     service       = {}
+    service.group = {}
     service.users = []
 
-    service.init = (gid) ->
-      if service.users.length == 0
-        service.group = id : gid
-        service.users = Group.users(service.group)
-      service
-
-    service.create = (data) ->
-      Group.addUser service.group, data,
-        (value) ->
-          if _.findIndex(service.users, id:value.id) == -1
-            service.users.unshift value
-        (resp) ->
-          Alert.push
-            type : 'danger'
-            msg  : resp.data.message
-
-    service.remove = (data) ->
-      Group.delUser service.group, uid: data.id,
-        ->
-          idx = service.users.indexOf(data)
-          service.users.splice idx, 1
+    service.load = (gid) ->
+      @group = id : gid
+      @users = Group.users @group
 
     service
 ]
@@ -42,32 +25,50 @@ views.groups.show.factory 'GroupUsersList', [
 .controller 'UserGroupsCtrl', [
   '$scope'
   '$attrs'
-  'GroupUsersList'
+  'Group'
+  'UsersListSvc'
   'ModalDialog'
-  ($scope, $attrs, GroupUsersList, ModalDialog) ->
-    $scope.GroupUsersList   = GroupUsersList.init $attrs.id
+  ($scope, $attrs, Group, UsersListSvc, ModalDialog) ->
+    $scope.UsersListSvc = UsersListSvc
+    $scope.jsRoutes     = jsRoutes
     ModalDialog.templateUrl = 'confirm_delete.html'
 
-    $scope.confirm = (usr) ->
+    $scope.confirm = (user) ->
       ModalDialog.open().result.then(
-        -> GroupUsersList.remove usr
-        ->)
+        -> $scope.remove user
+        ->
+      )
+
+    $scope.remove = (user) ->
+      Group.delUser UsersListSvc.group, uid: user.id,
+        ->
+          users = UsersListSvc.users
+          users.splice users.indexOf(user), 1
+
+
+    UsersListSvc.load $attrs.id
     return
 ]
 
 .controller 'NewEntryCtrl', [
   '$scope'
-  '$http'
-  'GroupUsersList'
-  ($scope, $http, GroupUsersList) ->
-    $scope.GroupUsersList = GroupUsersList
+  'Group'
+  'User'
+  'UsersListSvc'
+  ($scope, Group, User, UsersListSvc) ->
+    $scope.UsersListSvc = UsersListSvc
 
-    $scope.getUserEmails = (val) ->
-      $http.get '/api_internal/users', params : q : "*#{val}*"
-      .then(
+    $scope.getUsers = (val) -> User.query(q : "*#{val}*").$promise
+
+    $scope.create = (data) ->
+      Group.addUser UsersListSvc.group, data,
+        (value) ->
+          users = UsersListSvc.users
+          users.unshift value if _.findIndex(users, id:value.id) is -1
         (resp) ->
-          resp.data.map (u) -> u.email)
+          Alert.danger resp.data.message
+
     return
 ]
 
-angular.module('app').requires.push 'group.users.list'
+angular.module('app').requires.push 'group.show'

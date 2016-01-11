@@ -26,17 +26,17 @@ implicit req: UserRequest[_], messages: Messages)
         ng-controller="NewEntryCtrl" novalidate>
 
         @ng._form_control("email",
-          '_type        -> "email",
+          '_type        -> "text",
           'maxLength    -> 64,
           'email        -> None,
           'placeholder  -> GroupsCtrl.msg("user.email.placeholder"),
-          'typeahead    -> "email for email in getUserEmails($viewValue)",
+          'typeahead    -> "user as user.email for user in getUsers($viewValue)",
           'autocomplete -> "off",
-          Symbol("ng-model") -> "user.email"
+          Symbol("ng-model") -> "user"
         )
 
-        <button type="submit" class="btn btn-success" ng-click="GroupUsersList.create(user)"
-          ng-disabled="form.$invalid || !user.email || user.email === ''">
+        <button type="submit" class="btn btn-success" ng-click="create(user)"
+          ng-disabled="form.$invalid || !user.email">
           <i class="fa fa-user-plus"></i>
           @MSG("add.user")
         </button>
@@ -64,19 +64,19 @@ implicit req: UserRequest[_], messages: Messages)
             </tr>
           </thead>
           <tbody>
-            <tr class="ng-cloak" ng-repeat="usr in GroupUsersList.users">
+            <tr class="ng-cloak" ng-repeat="user in UsersListSvc.users">
               <td>
-                <a ng-href="/users/{{usr.id}}">
+                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(user.id).url}}">
                   <i class="fa fa-user"></i>
-                  {{ usr.email }}
+                  {{ user.email }}
                 </a>
               </td>
               <td class="hidden-xs">
-                {{ usr.name }}
+                {{ user.name }}
               </td>
               <td>
                 <button type="button" class="btn btn-danger btn-xs pull-right"
-                  ng-click="confirm(usr)">
+                  ng-click="confirm(user)">
                   <i class="fa fa-user-times"></i>
                   @MSG("delete")
                 </button>
@@ -92,5 +92,13 @@ implicit req: UserRequest[_], messages: Messages)
   libs.assets("js", "api.helper"),
   libs.assets("js", "ui.parts"),
   libs.assets("js", "api_internal/groups"),
-  libs.assets("js", "groups/show")
+  libs.assets("js", "api_internal/users"),
+  libs.assets("js", "groups/show"),
+  jsRoutes
 )
+
+@jsRoutes = {
+  @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.UsersCtrl.show
+  )
+}

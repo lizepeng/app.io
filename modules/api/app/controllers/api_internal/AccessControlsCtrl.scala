@@ -53,7 +53,9 @@ class AccessControlsCtrl(
 
   def create =
     UserAction(_.Create).async { implicit req =>
-      BindJson().as[AccessControlEntry] { success =>
+      BindJson.and(
+        Json.obj("permission" -> 0L)
+      ).as[AccessControlEntry] { success =>
         _accessControls.find(success).map { found =>
           Ok(Json.toJson(found))
         }.recoverWith {
@@ -63,7 +65,7 @@ class AccessControlsCtrl(
               if (!success.is_group) _users.exists(success.principal_id)
               else _groups.exists(success.principal_id)
 
-              saved <- success.copy(permission = 0L).save
+              saved <- success.save
               _resp <- es.Index(saved) into _accessControls
             } yield (saved, _resp)).map { case (saved, _resp) =>
 

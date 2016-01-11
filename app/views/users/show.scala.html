@@ -1,12 +1,10 @@
-@(user: User)(
+@(user:User, groups:Seq[Group])(
 implicit req: UserRequest[_], messages: Messages)
 
 @import common._
 @import helper._
 
 @layouts.base(UsersCtrl.msg("title")) {
-
-  @common._flashing()
 
   <div class="page-header">
     <h1>
@@ -20,24 +18,29 @@ implicit req: UserRequest[_], messages: Messages)
   </div>
 
   <div class="row" ng-controller="InfoCtrl" data-id="@user.id">
-    @{_info(user)}
+    @{_info(user, groups)}
   </div>
 }()(
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api.helper"),
   libs.assets("js", "api_internal/users"),
+  jsRoutes,
   controller
 )
+
+@jsRoutes = {
+  @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.GroupsCtrl.show
+  )
+}
 
 @controller = {
   <script>
     angular.module('users.show', ['ui.bootstrap', 'api_internal.user'])
-      .controller('InfoCtrl',
-        ['$scope', '$attrs', 'User',
-        function ($scope, $attrs, User) {
+      .controller('InfoCtrl', ['$scope', '$attrs', 'User', function ($scope, $attrs, User) {
         $scope.groups = User.externalGroups({id: $attrs.id});
+        $scope.jsRoutes = jsRoutes
       }]);
-
     angular.module('app').requires.push('users.show');
   </script>
 }

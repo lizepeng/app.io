@@ -21,8 +21,6 @@ class ReIndex[T](
   extends Batch[Int]
   with Logging {
 
-  override val basicName = "reindex"
-
   def start() = {
     Logger.info("Start indexing into elastic search.")
 

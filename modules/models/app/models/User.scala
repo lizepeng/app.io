@@ -3,7 +3,7 @@ package models
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
-import helpers.ExtCrypto._
+import helpers.ExtCodecs._
 import helpers._
 import models.cassandra._
 import models.sys._
@@ -80,10 +80,10 @@ case class User(
   }
 
   private def encrypt(salt: String, passwd: Password) =
-    Crypto.sha2(s"$salt--${passwd.self}")
+    Codecs.sha2(s"$salt--${passwd.self}")
 
   private def makeSalt(passwd: Password) =
-    Crypto.sha2(s"${DateTime.now}--${passwd.self}--${Random.nextString(32)}")
+    Codecs.sha2(s"${DateTime.now}--${passwd.self}--${Random.nextString(32)}")
 }
 
 trait UserCanonicalNamed extends CanonicalNamed {
@@ -338,9 +338,8 @@ class Users(
 }
 
 sealed class UsersByEmailIndex
-  extends CassandraTable[UsersByEmailIndex, (String, UUID)] {
-
-  override val tableName = "users_email_index"
+  extends NamedCassandraTable[UsersByEmailIndex, (String, UUID)]
+  with UsersByEmailCanonicalNamed {
 
   object email
     extends StringColumn(this)
@@ -349,6 +348,11 @@ sealed class UsersByEmailIndex
   object id extends UUIDColumn(this)
 
   override def fromRow(r: Row): (String, UUID) = (email(r), id(r))
+}
+
+trait UsersByEmailCanonicalNamed extends CanonicalNamed {
+
+  override val basicName = "users_email_index"
 }
 
 class UsersByEmail(

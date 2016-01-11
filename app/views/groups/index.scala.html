@@ -24,10 +24,10 @@ implicit req: UserRequest[_], messages: Messages)
         <table class="table table-hover table-ellipsis">
           <thead>
             <tr>
-              <th class="hidden-xs col-sm-4 col-md-3">
+              <th class="hidden-xs col-sm-5 col-md-4">
                 @MSG("id")
               </th>
-              <th class="col-xs-7 col-sm-3 col-md-2">
+              <th class="col-xs-7 col-sm-3 col-md-3">
                 @MSG("name")
               </th>
               <th class="hidden-xs hidden-sm col-md-2">
@@ -36,17 +36,22 @@ implicit req: UserRequest[_], messages: Messages)
               <th class="hidden-xs col-sm-2 col-md-2">
                 @MSG("layout")
               </th>
-              <th class="col-xs-2 col-sm-1 col-md-1 text-right">
+              <th class="col-xs-2 hidden-sm col-md-1 text-right">
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr class="ng-cloak" ng-repeat="grp in GroupList.groups">
+            <tr class="ng-cloak" ng-repeat="grp in GroupListSvc.values">
               <td class="hidden-xs">
                 <a ng-if="!grp.is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(grp.id).url}}">
                   <code>{{ grp.id }}</code>
                 </a>
                 <code ng-if="grp.is_internal" class="bg-primary">{{ grp.id }}</code>
+                <button type="button" class="btn btn-danger btn-xs visible-sm pull-right"
+                  ng-show="!grp.is_internal"
+                  ng-click="confirm(grp)">
+                  <i class="fa fa-trash"></i>
+                </button>
               </td>
 
               <td>
@@ -76,7 +81,7 @@ implicit req: UserRequest[_], messages: Messages)
                 </select>
               </td>
 
-              <td>
+              <td class="hidden-sm">
                 <button type="button" class="btn btn-danger btn-xs pull-right"
                   ng-show="!grp.is_internal"
                   ng-click="confirm(grp)">
@@ -108,7 +113,9 @@ implicit req: UserRequest[_], messages: Messages)
           Symbol("ng-model") -> "group.description"
         )
 
-        <button type="submit" class="btn btn-success" ng-click="GroupList.create(group)" ng-disabled="form.$invalid || !group.name || group.name === ''">
+        <button type="submit" class="btn btn-success"
+          ng-click="create(group)"
+          ng-disabled="form.$invalid || !group.name">
           <i class="fa fa-plus"></i>
           @GroupsCtrl.msg("new.group")
         </button>
@@ -116,7 +123,7 @@ implicit req: UserRequest[_], messages: Messages)
     </div>
 
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      @ng._pager("GroupList.links")
+      @ng._pager("GroupListSvc.links", jump = false)
     </div>
   </div>
 }(
@@ -141,15 +148,15 @@ implicit req: UserRequest[_], messages: Messages)
 
 @controller = {
   <script>
-    views.groups.index.run(['GroupList', function(GroupList) {
-      GroupList.Layouts = @Html(Layouts.toJson);
-      GroupList.reload({
+    views.groups.index.run(['GroupListSvc', function(GroupListSvc) {
+      GroupListSvc.Layouts = @Html(Layouts.toJson);
+      GroupListSvc.options = {
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
         sort     : @Html(SortField.toJson(sort)),
         nextPage : '@Html(routes.GroupsCtrl.index(pager.next, sort).toString)',
         prevPage : '@Html(routes.GroupsCtrl.index(pager.prev, sort).toString)'
-      });
+      };
     }]);
   </script>
 }

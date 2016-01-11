@@ -57,19 +57,20 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
           .map(_ / 1000)
           .getOrElse(120L) seconds
 
+      self ! EntityActor.SetReceiveTimeout
       tryToBecomeResourcesReady()
 
   }: Receive) orElse handleTimeout orElse stashAll
 
   final def tryToBecomeResourcesReady(): Unit = {
     if (isAllResourcesReady) {
-      log.debug(s"${self.path}, all resources are ready")
+      log.debug(s"${self.path.name}, All resources are ready.")
       resourcesReady()
     }
   }
 
   def resourcesReady(): Unit = {
-    log.debug(s"${self.path}, ready to receive messages")
+    log.debug(s"${self.path.name}, Ready to receive messages.")
     becomeReceiveReady(receive)
   }
 
@@ -85,20 +86,20 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
 
     case EntityActor.SetReceiveTimeout =>
       if (isIdle) {
-        log.debug(s"${self.path}, set ReceiveTimeout: $receiveTimeout")
+        log.debug(s"${self.path.name}, Set ReceiveTimeout: $receiveTimeout.")
         context.setReceiveTimeout(receiveTimeout.duration)
       }
 
     case EntityActor.UnsetReceiveTimeout =>
       if (!isIdle) {
-        log.debug(s"${self.path}, set no ReceiveTimeout")
+        log.debug(s"${self.path.name}, Set no ReceiveTimeout.")
         context.setReceiveTimeout(Duration.Undefined)
       }
 
     case ReceiveTimeout =>
       if (isIdle) {
         context.parent ! Passivate(stopMessage = PoisonPill)
-        log.debug(s"${self.path}, passivate right now")
+        log.debug(s"${self.path.name}, Passivate after being idle for $receiveTimeout.")
       }
   }
 

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
-import helpers.ExtCrypto._
+import helpers.ExtCodecs._
 import helpers._
 import models.cassandra._
 
@@ -16,7 +16,7 @@ import scala.util.Random
 /**
  * @author zepeng.li@gmail.com
  */
-case class ExpirableLink(id: String, target_id: String)
+case class ExpirableLink(id: String, target_id: UUID)
 
 trait ExpirableLinkCanonicalNamed extends CanonicalNamed {
 
@@ -32,7 +32,7 @@ sealed class ExpirableLinkTable
     with PartitionKey[String]
 
   object target_id
-    extends StringColumn(this)
+    extends UUIDColumn(this)
 
   override def fromRow(r: Row): ExpirableLink =
     ExpirableLink(id(r), target_id(r))
@@ -70,7 +70,7 @@ class ExpirableLinks(
     }
 
   def save(
-    target_id: String,
+    target_id: UUID,
     secure: Boolean = true,
     length: Int = 256,
     ttl: FiniteDuration = 24 hours
@@ -80,7 +80,7 @@ class ExpirableLinks(
         Random.alphanumeric.take(length).mkString
       } else {
         val ln = if (length == 512) 512 else 256
-        Crypto.sha2(s"$target_id--${UUID.randomUUID()}", ln)
+        Codecs.sha2(s"$target_id--${UUID.randomUUID()}", ln)
       }
     CQL {
       insert.value(_.id, id)

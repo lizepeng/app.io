@@ -6,6 +6,7 @@ import elasticsearch._
 import helpers._
 import models._
 import play.api.i18n._
+import play.api.libs.json._
 import play.api.mvc.Controller
 import security._
 import views._
@@ -45,4 +46,17 @@ class GroupsCtrl(
 object GroupsCtrl
   extends Secured(Group)
   with CanonicalNameBasedMessages
-  with ViewMessages
+  with ViewMessages {
+
+  def groupNames(groups: Seq[Group]) = Json.prettyPrint(
+    JsObject(
+      groups.map(g => g.id.toString -> JsString(g.name.self))
+    )
+  )
+
+  def intGroupNames(groups: Seq[Group]) = Json.prettyPrint(
+    JsObject(
+      groups.zipWithIndex.map(p => p._2.toString -> JsString(p._1.name.self))
+    )
+  )
+}

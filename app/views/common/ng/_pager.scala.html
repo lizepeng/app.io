@@ -1,28 +1,29 @@
 @**
  * Parameter 'links' should be a javascript object like this:
  * {
- *    prev: '<link>',
- *    next: '<link>',
- *    has : function(rel) {
- *      return rel in this && this[rel] !== '';
- *    }
- *  }
- *  and a default could be found in LinkHeader service
+ *   prev: '<link>', // or undefined
+ *   next: '<link>'  // or undefined
+ * }
+ * and a default one could be found in LinkHeader service
+ *
+ * Parameter 'jump':
+ *   if true, jump to the next/prev page.
+ *   if false, reload data by calling loadNextPage/loadPrevPage.
  *@
-@(links: String)(implicit messages: Messages)
+@(links: String, jump: Boolean = true)(implicit messages: Messages)
 
 <nav>
   <ul class="pager">
     <li class="previous disabled"
       ng-class="@(links).prev ? '' : 'disabled'">
-      <a ng-href="{{@(links).prev}}">
+      <a @if(jump){ ng-href="{{@(links).prev}}" } else { href="" ng-click="loadPrevPage()" }>
         <i class="fa fa-long-arrow-left"></i>
         @MSG("previous")
       </a>
     </li>
     <li class="next disabled"
       ng-class="@(links).next ? '' : 'disabled'">
-      <a ng-href="{{@(links).next}}">
+      <a @if(jump){ ng-href="{{@(links).next}}" } else { href="" ng-click="loadNextPage()" }>
         @MSG("next")
         <i class="fa fa-long-arrow-right"></i>
       </a>
