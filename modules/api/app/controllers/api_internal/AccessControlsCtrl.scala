@@ -6,6 +6,7 @@ import controllers.RateLimitConfigComponents
 import elasticsearch._
 import helpers._
 import models._
+import models.misc._
 import play.api.i18n._
 import play.api.libs.json._
 import play.api.mvc.Controller

@@ -2,10 +2,10 @@ package models
 
 import java.util.UUID
 
-import com.datastax.driver.core.Row
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
+import models.misc._
 import org.joda.time.DateTime
 import play.api.libs.json._
 
@@ -16,8 +16,7 @@ import scala.concurrent.Future
  */
 case class Person(
   id: UUID,
-  first_name: HumanName = HumanName.empty,
-  last_name: HumanName = HumanName.empty,
+  name: PersonalName = PersonalName.default,
   updated_at: DateTime = DateTime.now
 ) extends HasUUID with TimeBased
 
@@ -26,16 +25,16 @@ trait PersonCanonicalNamed extends CanonicalNamed {
   override val basicName = "persons"
 }
 
-sealed class PersonTable
-  extends NamedCassandraTable[PersonTable, Person]
+sealed class PersonTable extends NamedCassandraTable[PersonTable, Person]
   with PersonCanonicalNamed {
 
   object id
     extends TimeUUIDColumn(this)
-    with PartitionKey[UUID]
+      with PartitionKey[UUID]
 
-  object first_name
-    extends StringColumn(this)
+  object name
+    extends JsonColumn[PersonTable, Person, PersonalName](this)
+      with PersonalNameJsonStringifier
 
   object last_name
     extends StringColumn(this)
@@ -46,15 +45,13 @@ sealed class PersonTable
   override def fromRow(r: Row): Person = {
     Person(
       id(r),
-      HumanName(first_name(r)),
-      HumanName(last_name(r)),
+      name(r),
       updated_at(r)
     )
   }
 }
 
-object Person
-  extends PersonCanonicalNamed
+object Person extends PersonCanonicalNamed
   with ExceptionDefining {
 
   case class NotFound(id: UUID)
@@ -67,8 +64,7 @@ class Persons(
   implicit
   val basicPlayApi: BasicPlayApi,
   val contactPoint: KeySpaceBuilder
-)
-  extends PersonTable
+) extends PersonTable
   with EntityTable[Person]
   with ExtCQL[PersonTable, Person]
   with BasicPlayComponents
@@ -95,8 +91,7 @@ class Persons(
   def save(p: Person): Future[ResultSet] = CQL {
     update
       .where(_.id eqs p.id)
-      .modify(_.first_name setTo p.first_name.self)
-      .and(_.last_name setTo p.last_name.self)
+      .modify(_.name setTo p.name)
       .and(_.updated_at setTo DateTime.now)
   }.future()
 

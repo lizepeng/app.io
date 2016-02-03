@@ -7,6 +7,7 @@ import controllers.UsersCtrl.PasswordConfirmation
 import elasticsearch._
 import helpers._
 import models._
+import models.misc._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._

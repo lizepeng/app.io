@@ -1,5 +1,6 @@
-package helpers
+package models.misc
 
+import helpers._
 import play.api.data.format.Formatter
 import play.api.data.validation._
 import play.api.data.{Forms, Mapping}

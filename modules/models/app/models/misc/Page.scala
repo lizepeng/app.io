@@ -1,10 +1,10 @@
-package helpers
+package models.misc
 
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import play.api.http._
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.{Json, Writes}
-import play.api.mvc.{Codec, QueryStringBindable}
+import play.api.libs.json._
+import play.api.mvc._
 
 import scala.collection.Iterable
 import scala.concurrent._
@@ -19,7 +19,7 @@ import scala.language.implicitConversions
  * One should use {{{Page.PageToIterable}}} to iterate elements in one page,
  * because which will exclude the redundant on from the iterating process.
  *
- * @param pager the parameter indicates that current location in the whole data set
+ * @param pager    the parameter indicates that current location in the whole data set
  * @param elements retrieved subset of the whole data set
  * @tparam E type of the element
  */
@@ -49,7 +49,7 @@ object Page {
   def apply[R](p: Pager)(enumerator: Enumerator[R])(
     implicit ec: ExecutionContext
   ): Future[Page[R]] = {
-    (enumerator |>>> PIteratee.slice[R](p.start,p.limit))
+    (enumerator |>>> PIteratee.slice[R](p.start, p.limit))
       .map(_.toIterable)
       .recover { case e: Throwable => Nil }
       .map(Page(p, _))

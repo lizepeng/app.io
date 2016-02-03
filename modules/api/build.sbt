@@ -11,9 +11,9 @@ libraryDependencies += "com.sksamuel.scrimage" %% "scrimage-core" % "2.1.0"
 routesImport ++= Seq(
   "elasticsearch.SortField",
   "helpers.ExtBindable._",
-  "helpers.Pager",
   "java.util.UUID",
   "models.cfs._",
+  "models.misc._",
   "org.joda.time._",
   "play.api.i18n.Lang",
   "scala.language.reflectiveCalls"

@@ -3,6 +3,7 @@ package controllers
 import controllers.UsersCtrl._
 import helpers._
 import models._
+import models.misc._
 import models.sys._
 import play.api.data.Form
 import play.api.data.Forms._

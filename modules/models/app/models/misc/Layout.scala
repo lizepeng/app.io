@@ -1,5 +1,6 @@
-package helpers
+package models.misc
 
+import helpers.Stringifier
 import play.api.libs.json.Json
 
 /**

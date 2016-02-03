@@ -1,4 +1,4 @@
-package helpers
+package models.misc
 
 import java.util.Locale
 

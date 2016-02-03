@@ -5,6 +5,7 @@ import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
+import models.misc._
 import org.joda.time.DateTime
 import play.api.i18n._
 import play.api.libs.iteratee.Enumeratee

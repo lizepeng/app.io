@@ -1,6 +1,6 @@
 package elasticsearch
 
-import helpers.{PageLike, Pager}
+import models.misc._
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.xcontent._
 import play.api.http._

@@ -10,6 +10,7 @@ import models.User
 import models.cassandra._
 import models.cfs.Block.BLK
 import models.cfs.CassandraFileSystem._
+import models.misc._
 import play.api.libs.iteratee.{Enumeratee => _, _}
 import play.api.libs.json._
 

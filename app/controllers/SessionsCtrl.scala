@@ -3,6 +3,7 @@ package controllers
 import helpers.ExtRequest._
 import helpers._
 import models._
+import models.misc._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n._

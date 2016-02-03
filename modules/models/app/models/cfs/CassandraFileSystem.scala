@@ -7,6 +7,7 @@ import helpers.ExtString._
 import helpers._
 import models._
 import models.cassandra._
+import models.misc._
 import models.sys._
 import play.api.libs.iteratee.Enumeratee
 import play.api.libs.json._

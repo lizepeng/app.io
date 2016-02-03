@@ -6,6 +6,7 @@ import com.websudos.phantom.dsl._
 import helpers.ExtCodecs._
 import helpers._
 import models.cassandra._
+import models.misc._
 import models.sys._
 import org.joda.time.DateTime
 import play.api.libs.iteratee.Enumerator

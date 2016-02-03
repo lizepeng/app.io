@@ -3,6 +3,7 @@ package controllers
 import helpers._
 import models._
 import models.cfs._
+import models.misc._
 import play.api.i18n._
 import play.api.mvc.Controller
 import protocols._

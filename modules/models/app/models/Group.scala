@@ -6,7 +6,8 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
-import models.sys.{SysConfig, SysConfigs}
+import models.misc._
+import models.sys._
 import org.joda.time.DateTime
 import play.api.libs.iteratee._
 import play.api.libs.json._

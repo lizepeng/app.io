@@ -3,8 +3,9 @@ package models.sys
 import com.datastax.driver.core.utils.UUIDs
 import helpers._
 import models._
+import models.misc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent._
 
 /**
  * @author zepeng.li@gmail.com

@@ -2,6 +2,7 @@ package controllers
 
 import helpers._
 import models._
+import models.misc._
 import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._

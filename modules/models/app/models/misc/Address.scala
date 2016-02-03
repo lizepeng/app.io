@@ -1,6 +1,6 @@
-package models
+package models.misc
 
-import helpers.{CountryCode, JsonStringifier}
+import helpers._
 import play.api.libs.json._
 
 /**
