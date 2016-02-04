@@ -25,7 +25,7 @@ trait SystemAccounts {
           id = uid,
           name = Name(named.basicName),
           email = EmailAddress(s"${named.basicName}@$domain")
-        )(_users._internalGroups)
+        )
       )
     }
   } yield user
