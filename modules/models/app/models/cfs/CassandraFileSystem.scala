@@ -3,13 +3,13 @@ package models.cfs
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
+import helpers.ExtEnumeratee._
 import helpers.ExtString._
 import helpers._
 import models._
 import models.cassandra._
 import models.misc._
 import models.sys._
-import play.api.libs.iteratee.Enumeratee
 import play.api.libs.json._
 
 import scala.concurrent.Future
@@ -110,9 +110,9 @@ class CassandraFileSystem(
     }
   }
 
-  def listRoot(pager: Pager): Future[Page[INode]] = Page(pager) {
+  def listRoot(pager: Pager): Future[Page[Directory]] = Page(pager) {
     _root.stream &>
-      Enumeratee.mapM { id =>
+      Enumeratee.mapM2 { id =>
         val name: String = id.toString
         _directories.find(id)(
           onFound = _.copy(name = name, path = Path.root / name)
