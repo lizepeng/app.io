@@ -35,9 +35,9 @@ class FileSystemCtrl(
   def index(path: Path, pager: Pager) =
     UserAction(_.Index, _.Create, _.Destroy).async { implicit req =>
       for {
-        intGroups <- _groups.find(_internalGroups.Num2Id)
+        internalGroups <- _groups.find(_internalGroups.InternalGroupIds)
       } yield {
-        Ok(html.file_system.index(path, pager, intGroups))
+        Ok(html.file_system.index(path, pager, internalGroups))
       }
     }
 

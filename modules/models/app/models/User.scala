@@ -25,7 +25,7 @@ case class User(
   salt: String = "",
   encrypted_password: String = "",
   email: EmailAddress = EmailAddress.empty,
-  internal_groups_code: InternalGroupsCode = InternalGroupsCode(0),
+  internal_group_bits: InternalGroupBits = InternalGroup.Anyone,
   internal_groups: Set[UUID] = Set(),
   external_groups: Set[UUID] = Set(),
   password: Password = Password.empty,
@@ -60,23 +60,13 @@ case class User(
 
   def save(implicit _users: Users) = _users.save(this)
 
-  def addGroup(grp: InternalGroupsCode)(
+  def addGroup(grp: InternalGroup)(
     implicit _users: Users
-  ): Future[User] = {
-    val igc = internal_groups_code + grp
-    _users
-      .updateGroup(id, igc)
-      .map(_ => copy(internal_groups_code = igc))
-  }
+  ): Future[User] = _users.updateGroup(copy(internal_group_bits = internal_group_bits + grp))
 
-  def delGroup(grp: InternalGroupsCode)(
+  def delGroup(grp: InternalGroup)(
     implicit _users: Users
-  ): Future[User] = {
-    val igc = internal_groups_code - grp
-    _users
-      .updateGroup(id, igc)
-      .map(_ => copy(internal_groups_code = igc))
-  }
+  ): Future[User] = _users.updateGroup(copy(internal_group_bits = internal_group_bits - grp))
 
   private def encrypt(salt: String, passwd: Password) =
     Codecs.sha2(s"$salt--${passwd.self}")
@@ -186,15 +176,15 @@ class Users(
   onStart(create.ifNotExists.future())
 
   override def fromRow(r: Row): User = {
-    val internal_groups_code = InternalGroupsCode(internal_groups(r))
+    val ig_bits = InternalGroupBits(internal_groups(r))
     User(
       id(r),
       Name(name(r)),
       salt(r),
       encrypted_password(r),
       EmailAddress(email(r)),
-      internal_groups_code,
-      _internalGroups.map(internal_groups_code),
+      ig_bits,
+      _internalGroups.find(ig_bits),
       external_groups(r),
       Password.empty,
       remember_me = false,
@@ -251,7 +241,7 @@ class Users(
           .value(_.salt, u.salt)
           .value(_.encrypted_password, u.encrypted_password)
           .value(_.email, u.email.self)
-          .value(_.internal_groups, u.internal_groups_code.code | InternalGroupsCode.AnyoneMask)
+          .value(_.internal_groups, (u.internal_group_bits + InternalGroup.Anyone).bits)
           .value(_.external_groups, Set[UUID]())
           .value(_.updated_at, u.updated_at)
       }.future().map(_ => u)
@@ -259,15 +249,12 @@ class Users(
     } yield user
   }
 
-  def updateGroup(
-    id: UUID,
-    igc: InternalGroupsCode
-  ): Future[ResultSet] = {
-    CQL {
-      update
-        .where(_.id eqs id)
-        .modify(_.internal_groups setTo igc.code)
-    }.future()
+  def updateGroup(user: User): Future[User] = CQL {
+    update
+      .where(_.id eqs user.id)
+      .modify(_.internal_groups setTo (user.internal_group_bits + InternalGroup.Anyone).bits)
+  }.future().map { _ =>
+    user.copy(internal_groups = _internalGroups.find(user.internal_group_bits))
   }
 
   def updatePassword(user: User, newPassword: Password): Future[User] = {

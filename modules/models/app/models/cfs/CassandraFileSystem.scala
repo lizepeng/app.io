@@ -217,7 +217,7 @@ object CassandraFileSystem
     val owner = Role(0)
     val other = Role(20 * 3)
 
-    def group(gid: Int) = if (gid < 0 || gid > 18) other else Role((1 + gid) * 3)
+    def group(g: InternalGroup) = if (!g.isValid) other else Role((1 + g.code) * 3)
   }
 
   case class Access(self: Int = 0) extends AnyVal {

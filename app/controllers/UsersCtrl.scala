@@ -57,7 +57,7 @@ class UsersCtrl(
     UserAction(_.Show).async { implicit req =>
       for {
         user <- _users.find(id)
-        grps <- _groups.find(_internalGroups.Num2Id)
+        grps <- _groups.find(_internalGroups.InternalGroupIds)
       } yield {
         Ok(html.users.show(user, grps))
       }
