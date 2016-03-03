@@ -138,14 +138,16 @@ case class Directory(
     }
 
   def mkdir(name: String)(
-    implicit user: User, cfs: CassandraFileSystem
-  ): Future[Directory] =
-    Directory(name, path / name, user.id, id).save()
+    implicit user: User, cfs: CassandraFileSystem, dirPermission: Permission
+  ): Future[Directory] = {
+    val uid = user.id
+    Directory(name, path / name, uid, id, permission = dirPermission).save()
+  }
 
   def mkdir(name: String, uid: UUID)(
-    implicit cfs: CassandraFileSystem
+    implicit cfs: CassandraFileSystem, dirPermission: Permission
   ): Future[Directory] =
-    Directory(name, path / name, uid, id).save()
+    Directory(name, path / name, uid, id, permission = dirPermission).save()
 
   def addChild(child: INode)(
     implicit cfs: CassandraFileSystem
@@ -172,7 +174,7 @@ case class Directory(
     }
 
   def dir_!(name: String)(
-    implicit user: User, cfs: CassandraFileSystem
+    implicit user: User, cfs: CassandraFileSystem, dirPermission: Permission
   ): Future[Directory] =
     cfs._directories.findChild(id, name).flatMap {
       case (_, i) => cfs._directories.find(i)(

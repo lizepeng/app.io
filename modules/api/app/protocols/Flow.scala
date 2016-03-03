@@ -136,7 +136,7 @@ case class Flow(
       for {
         tc <- totalChunks
         id <- identifier
-        temp <- _cfs.temp
+        temp <- _cfs.temp()
       } yield Enumerator[Int](1 to tc: _*) &>
         Enumeratee.map(genTempFileName(id, _)) &>
         Enumeratee.mapM1(temp.file)
@@ -297,7 +297,7 @@ case class Flow(
   def testTempFile: Future[Result] = {
     (for {
       size <- currentChunkSize
-      temp <- _cfs.temp
+      temp <- _cfs.temp()
       name <- tempFileName
       file <- temp.file(name)
     } yield {
