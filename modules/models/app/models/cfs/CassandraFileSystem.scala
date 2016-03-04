@@ -21,7 +21,7 @@ import scala.util._
 class CassandraFileSystem(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _users: Users,
   val _sysConfig: SysConfigs
 ) extends CassandraFileSystemCanonicalNamed

@@ -1,10 +1,10 @@
 package services.actors
 
 import akka.actor._
+import com.websudos.phantom.connectors.KeySpaceDef
 import elasticsearch.ElasticSearch
 import helpers.BasicPlayApi
 import models._
-import models.cassandra.KeySpaceBuilder
 import services._
 
 /**
@@ -17,7 +17,7 @@ object ResourcesMediator extends CanonicalNamedActor {
   def props(
     implicit
     basicPlayApi: BasicPlayApi,
-    contactPoint: KeySpaceBuilder,
+    keySpaceDef: KeySpaceDef,
     elasticSearch: ElasticSearch,
     mailService: MailService,
     _chatHistories: ChatHistories,
@@ -26,13 +26,13 @@ object ResourcesMediator extends CanonicalNamedActor {
   ): Props = Props(new ResourcesMediator)
 
   case object GetBasicPlayApi
-  case object GetKeySpaceBuilder
+  case object GetKeySpaceDef
 }
 
 class ResourcesMediator(
   implicit
   basicPlayApi: BasicPlayApi,
-  contactPoint: KeySpaceBuilder,
+  keySpaceDef: KeySpaceDef,
   elasticSearch: ElasticSearch,
   mailService: MailService,
   _chatHistories: ChatHistories,
@@ -51,13 +51,13 @@ class ResourcesMediator(
   def receive = {
 
     case keys: List[Any] => sender ! keys.collect {
-      case GetBasicPlayApi    => basicPlayApi
-      case GetKeySpaceBuilder => contactPoint
-      case ElasticSearch      => elasticSearch
-      case MailService        => mailService
-      case ChatHistory        => _chatHistories
-      case MailInbox          => _mailInbox
-      case MailSent           => _mailSent
+      case GetBasicPlayApi => basicPlayApi
+      case GetKeySpaceDef  => keySpaceDef
+      case ElasticSearch   => elasticSearch
+      case MailService     => mailService
+      case ChatHistory     => _chatHistories
+      case MailInbox       => _mailInbox
+      case MailSent        => _mailSent
     }
   }
 }

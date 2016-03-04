@@ -67,7 +67,7 @@ object MailInbox
 class MailInbox(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends MailInboxTable
   with ExtCQL[MailInboxTable, Mail]
@@ -139,7 +139,7 @@ object MailSent
 class MailSent(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends MailSentTable
   with ExtCQL[MailSentTable, Mail]

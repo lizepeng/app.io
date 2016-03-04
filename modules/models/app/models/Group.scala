@@ -95,7 +95,7 @@ object Group
 class Groups(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _users: Users,
   val _sysConfig: SysConfigs
 )
@@ -290,7 +290,7 @@ class InternalGroups(
 )(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _sysConfig: SysConfigs
 ) extends GroupTable
   with EntityTable[Group]

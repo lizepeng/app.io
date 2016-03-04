@@ -169,7 +169,7 @@ object INode extends INodeCanonicalNamed {
 class INodes(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends INodeTable
   with ExtCQL[INodeTable, Row]

@@ -48,7 +48,7 @@ object PeriodicallyCleaned extends PeriodicallyCleanedCNamed
 class PeriodicallyCleaned(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 ) extends PeriodicallyCleanedTable
   with ExtCQL[PeriodicallyCleanedTable, UUID]
   with BasicPlayComponents

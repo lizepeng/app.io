@@ -42,7 +42,7 @@ object UserLoginIPs
 class UserLoginIPs(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends UserLoginIPTable
   with ExtCQL[UserLoginIPTable, (DateTime, InetAddress)]

@@ -57,7 +57,7 @@ object IndirectBlock extends IndirectBlockCanonicalNamed
 class IndirectBlocks(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _blocks: Blocks
 )
   extends IndirectBlockTable

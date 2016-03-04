@@ -77,7 +77,7 @@ object SysConfig
 class SysConfigs(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends SysConfigTable
   with ExtCQL[SysConfigTable, SysConfigEntry]

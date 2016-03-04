@@ -1,24 +1,24 @@
 import batches.ReIndexInternalGroups
 import com.websudos.phantom.connectors.ContactPoint.DefaultPorts
-import elasticsearch.{ESIndexCleaner, ElasticSearch}
+import com.websudos.phantom.connectors._
+import elasticsearch._
 import filters._
 import helpers._
 import messages._
 import models._
-import models.cassandra.KeySpaceBuilder
 import models.cfs._
 import models.sys.SysConfigs
 import play.api.ApplicationLoader.Context
 import play.api.i18n._
-import play.api.inject.{NewInstanceInjector, SimpleInjector}
+import play.api.inject._
 import play.api.libs.ws.ning.NingWSComponents
 import play.api.mvc._
 import router.Routes
 import services.actors.ResourcesMediator
 import services.web.ip_api.IPService
-import services.{BandwidthService, MailService}
+import services._
 
-import scala.concurrent.Future
+import scala.concurrent._
 import scala.util.Success
 
 /**
@@ -26,9 +26,11 @@ import scala.util.Success
  */
 class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
-  with I18nComponents
-  with NingWSComponents
-  with DefaultPlayExecutor {
+    with I18nComponents
+    with NingWSComponents
+    with AppDomainComponents
+    with DefaultPlayExecutor
+    with Logging {
 
   play.api.Logger.configure(context.environment)
 
@@ -37,16 +39,25 @@ class Components(context: Context)
   applicationLifecycle.addStopHook(() => LeakedThreadsKiller.killTimerInConcurrent())
 
   // Cassandra Connector
-  implicit val contactPoint: KeySpaceBuilder =
+  val contactPoint: KeySpaceBuilder =
     new KeySpaceBuilder(
-      applicationLifecycle, _
-        .addContactPoints(
-          configuration
-            .getStringSeq("cassandra.contact_points")
-            .getOrElse(Seq("localhost")): _*
-        )
-        .withPort(DefaultPorts.live)
+      _.addContactPoints(
+        configuration
+          .getStringSeq("cassandra.contact_points")
+          .getOrElse(Seq("localhost")): _*
+      ).withPort(DefaultPorts.live)
     )
+
+  implicit val keySpaceDef: KeySpaceDef = contactPoint.keySpace(domain.replace(".", "_"))
+
+  applicationLifecycle.addStopHook(
+    () => Future.successful {
+      com.websudos.phantom.Manager.shutdown()
+      keySpaceDef.session.getCluster.close()
+      keySpaceDef.session.close()
+      Logger.info("Shutdown Phantom Cassandra Driver")
+    }
+  )
 
   // Basic Play Api
   implicit val basicPlayApi = BasicPlayApi(

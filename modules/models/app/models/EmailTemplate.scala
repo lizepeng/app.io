@@ -165,7 +165,7 @@ object EmailTemplate
 class EmailTemplates(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends EmailTemplateTable
   with ExtCQL[EmailTemplateTable, ET]
@@ -304,7 +304,7 @@ object EmailTemplateHistory
 class EmailTemplateHistories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends EmailTemplateHistoryTable
   with ExtCQL[EmailTemplateHistoryTable, ETH]
