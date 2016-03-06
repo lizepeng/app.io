@@ -1,4 +1,4 @@
-@(textType: String, name: String, isDev: Boolean = play.api.Play.isDev(play.api.Play.current))
+@(textType: String, name: String)(implicit env: Environment)
 
 @textType match {
   case "js" => {
@@ -24,7 +24,7 @@
 }
 
 @css(name: String, minified: String, root: String) = {
-  @if(isDev){
+  @if(env.mode == play.api.Mode.Dev){
     @stylesheet(name, root)
   } else {
     @stylesheet(minified, root)
@@ -32,7 +32,7 @@
 }
 
 @js(name: String, minified: String, root: String) = {
-  @if(isDev){
+  @if(env.mode == play.api.Mode.Dev){
     @javascript(name, root)
   } else {
     @javascript(minified, root)

@@ -1,13 +1,14 @@
 package security
 
+import akka.actor.ActorSystem
 import helpers._
-import models.{User, Users}
+import models._
+import play.api.libs.streams.ActorFlow
 import play.api.mvc.WebSocket._
 import play.api.mvc._
 
 import scala.concurrent.Future
 import scala.language.higherKinds
-import scala.reflect.ClassTag
 
 /**
  * @author zepeng.li@gmail.com
@@ -40,21 +41,23 @@ case class MaybeUser(
 
   def Action() = new InternalActionBuilder()
 
-  import play.api.Play.current
-
   def WebSocket[In, Out](
     handler: RequestHeader => User => HandlerProps,
     onError: => Result
   )(
     implicit
-    in: FrameFormatter[In],
-    out: FrameFormatter[Out],
-    outMessageType: ClassTag[Out]
-  ) = play.api.mvc.WebSocket.tryAcceptWithActor[In, Out] { implicit req =>
-    pam(_users)(req).map {
-      user => Right(handler(req)(user))
-    }.recover {
-      case e: BaseException => Left(onError)
-    }
+    actorSystem: ActorSystem,
+    transformer: MessageFlowTransformer[In, Out] 
+  ) = {
+    acceptOrResult({
+      req:RequestHeader =>
+        pam(_users)(req).map {
+          user => Right(handler(req)(user))
+        }.recover {
+          case e: BaseException => Left(onError)
+        }
+    }.andThen(_.map(_.right.map { props =>
+      ActorFlow.actorRef(props)
+    })))
   }
 }

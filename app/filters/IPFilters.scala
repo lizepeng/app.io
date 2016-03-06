@@ -2,6 +2,7 @@ package filters
 
 import java.net.InetAddress
 
+import akka.stream.Materializer
 import helpers.ExtRequest._
 import helpers._
 import models.IPRateLimits
@@ -32,18 +33,20 @@ abstract class AbstractIPFilter(
   }
 }
 
-class LoopbackIPFilter
-  extends AbstractIPFilter(ip => ip.isLoopbackAddress)
+class LoopbackIPFilter(
+  implicit val mat: Materializer
+) extends AbstractIPFilter(ip => ip.isLoopbackAddress)
 
-class InvalidIPFilter
-  extends AbstractIPFilter(ip => ip.isSiteLocalAddress || ip.isMulticastAddress)
+class InvalidIPFilter(
+  implicit val mat: Materializer
+) extends AbstractIPFilter(ip => ip.isSiteLocalAddress || ip.isMulticastAddress)
 
 class RateLimitExceededIPFilter(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _ipRateLimits: IPRateLimits
-)
-  extends Filter
+  val _ipRateLimits: IPRateLimits,
+  val mat: Materializer
+) extends Filter
   with BasicPlayComponents
   with DefaultPlayExecutor {
 
@@ -71,7 +74,7 @@ class RateLimitExceededIPFilter(
         _ipRateLimits.get(ip, period_start)
           .flatMap { counter =>
           if (counter >= limit) Future.successful {
-            Results.TooManyRequest
+            Results.TooManyRequests
           } else if (counter * 5 > limit * 4) {
             // greater than 80%
             _ipRateLimits.inc(ip, period_start).flatMap(_ => next(req))
@@ -80,7 +83,7 @@ class RateLimitExceededIPFilter(
             next(req)
           }
         }
-      case Failure(_)  => Future.successful(Results.TooManyRequest)
+      case Failure(_)  => Future.successful(Results.TooManyRequests)
     }
   }
 }

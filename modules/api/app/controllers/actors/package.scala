@@ -4,8 +4,7 @@ import helpers.BaseException
 import play.api.data.validation.ValidationError
 import play.api.i18n.Messages
 import play.api.libs.json._
-import play.api.mvc.WebSocket.FrameFormatter
-import protocols.JsonProtocol._
+import play.api.mvc.WebSocket.MessageFlowTransformer
 
 import scala.util._
 
@@ -17,19 +16,15 @@ package object actors {
   case class JsonParseError(e: Seq[(JsPath, Seq[ValidationError])])
     extends BaseException("json.parse.error")
 
-  def jsonFrame[A: Format](implicit message: Messages): FrameFormatter[Try[A]] =
-    FrameFormatter.stringFrame.transform[Try[A]](
-      _ match {
-        case Success(a)                => Json.stringify(Json.toJson(a))
-        case Failure(e: BaseException) => Json.stringify(JsonMessage(e))
-        case Failure(e: Throwable)     => Json.stringify(JsonMessage(e.getMessage))
-      },
-      in => Try(Json.parse(in)) match {
-        case Success(json)         => Json.fromJson[A](json).fold(
-          failure => Failure(JsonParseError(failure)),
-          success => Success(success)
-        )
-        case Failure(e: Throwable) => Failure(e)
-      }
+  def caseClassMessageFlowTransformer[A: Format, B: Format](
+    implicit message: Messages
+  ): MessageFlowTransformer[Try[A], B] = {
+    MessageFlowTransformer.jsonMessageFlowTransformer.map(
+      in => Json.fromJson[A](in).fold(
+        failure => Failure(JsonParseError(failure)),
+        success => Success(success)
+      ),
+      out => Json.toJson(out)
     )
+  }
 }

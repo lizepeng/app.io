@@ -1,5 +1,6 @@
 package models
 
+import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.websudos.phantom.connectors._
 import helpers._
@@ -40,9 +41,11 @@ trait EmbeddedCassandra extends BeforeAfterAll with DefaultPlayExecutor {
   implicit lazy val basicPlayApi: BasicPlayApi = BasicPlayApi(
     langs = null,
     messagesApi = null,
+    environment = null,
     configuration = playConf,
     applicationLifecycle = playAppLifecycle,
-    actorSystem = actorSystem
+    actorSystem = actorSystem,
+    ActorMaterializer()(actorSystem)
   )
 
   implicit lazy val contactPoint: KeySpaceBuilder = new KeySpaceBuilder(

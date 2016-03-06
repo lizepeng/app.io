@@ -1,5 +1,5 @@
 @(pager: Pager, sort:Seq[SortField])(
-implicit req: UserRequest[_], messages: Messages, secured: RegisteredSecured)
+implicit req: UserRequest[_], messages: Messages, env: Environment, secured: RegisteredSecured)
 
 @import common._
 @import helper._

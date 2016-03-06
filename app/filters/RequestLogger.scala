@@ -1,5 +1,6 @@
 package filters
 
+import akka.stream.Materializer
 import play.api.Logger
 import play.api.mvc._
 
@@ -9,7 +10,9 @@ import scala.concurrent._
  * @author zepeng.li@gmail.com
  */
 class RequestLogger(
-  implicit val ec: ExecutionContext
+  implicit
+  val ec: ExecutionContext,
+  val mat: Materializer
 ) extends Filter {
 
   def apply(next: RequestHeader => Future[Result])(

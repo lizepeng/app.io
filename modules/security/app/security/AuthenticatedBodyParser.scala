@@ -2,7 +2,7 @@ package security
 
 import helpers._
 import models.User
-import play.api.libs.iteratee.Iteratee
+import play.api.libs.streams.Accumulator
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
 
@@ -25,8 +25,8 @@ trait AuthenticatedBodyParser[A]
 
   def basicPlayApi: BasicPlayApi
 
-  override def apply(req: RequestHeader): Iteratee[Array[Byte], Either[Result, A]] = {
-    Iteratee.flatten {
+  override def apply(req: RequestHeader) = {
+    Accumulator.flatten {
       pam(_users)(req).flatMap {
         user => invokeParser(req)(user)
       }.andThen {

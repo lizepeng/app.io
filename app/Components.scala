@@ -11,12 +11,16 @@ import models.sys.SysConfigs
 import play.api.ApplicationLoader.Context
 import play.api.i18n._
 import play.api.inject._
-import play.api.libs.ws.ning.NingWSComponents
+import play.api.libs.Crypto
+import play.api.libs.crypto._
+import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.mvc._
+import play.api.{Environment, LoggerConfigurator}
+import play.filters.gzip.GzipFilterConfig
 import router.Routes
+import services._
 import services.actors.ResourcesMediator
 import services.web.ip_api.IPService
-import services._
 
 import scala.concurrent._
 import scala.util.Success
@@ -24,15 +28,18 @@ import scala.util.Success
 /**
  * @author zepeng.li@gmail.com
  */
+@SuppressWarnings(Array("deprecation"))
 class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
     with I18nComponents
-    with NingWSComponents
+    with AhcWSComponents
     with AppDomainComponents
     with DefaultPlayExecutor
     with Logging {
 
-  play.api.Logger.configure(context.environment)
+  LoggerConfigurator(environment.classLoader).foreach {
+    _.configure(environment)
+  }
 
   // Prevent thread leaks in dev mode
   applicationLifecycle.addStopHook(() => LeakedThreadsKiller.killPlayInternalExecutionContext())
@@ -52,7 +59,7 @@ class Components(context: Context)
 
   applicationLifecycle.addStopHook(
     () => Future.successful {
-      com.websudos.phantom.Manager.shutdown()
+      // com.websudos.phantom.Manager.shutdown()
       keySpaceDef.session.getCluster.close()
       keySpaceDef.session.close()
       Logger.info("Shutdown Phantom Cassandra Driver")
@@ -61,7 +68,7 @@ class Components(context: Context)
 
   // Basic Play Api
   implicit val basicPlayApi = BasicPlayApi(
-    langs, messagesApi, configuration, applicationLifecycle, actorSystem
+    langs, messagesApi, environment, configuration, applicationLifecycle, actorSystem, materializer
   )
 
   // Services
@@ -204,18 +211,32 @@ class Components(context: Context)
       case "LoopbackIPFilter"          => new LoopbackIPFilter()
       case "InvalidIPFilter"           => new InvalidIPFilter()
       case "RateLimitExceededIPFilter" => new RateLimitExceededIPFilter()
-      case "Compressor"                => new Compressor()
+      case "Compressor"                => new Compressor(GzipFilterConfig.fromConfiguration(configuration))
       case "RequestLogger"             => new RequestLogger()
       case "RequestTimeLogger"         => new RequestTimeLogger()
     }
+
+  def crypto: Crypto = {
+    val config = new CryptoConfigParser(
+      Environment.simple(), configuration
+    ).get
+    // Configuration.from(Map("play.crypto.aes.transformation" -> "AES/CTR/NoPadding")
+    val cookieSigner = new CookieSignerProvider(config).get
+    val tokenSigner = new CSRFTokenSignerProvider(cookieSigner).get
+    val crypter = new AESCTRCrypter(config)
+    new Crypto(cookieSigner, tokenSigner, crypter)
+  }
 
   // temporary workaround until issue #4614 in play framework is fixed. See https://github.com/playframework/playframework/issues/4614
   override lazy val injector =
     new SimpleInjector(NewInstanceInjector) +
       router.asInstanceOf[play.api.routing.Router] +
-      crypto +
+      cookieSigner +
+      csrfTokenSigner +
       httpConfiguration +
-      actorSystem
+      tempFileCreator +
+      global +
+      crypto
 
   def startActors(): Unit = {
     actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)

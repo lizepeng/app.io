@@ -1,8 +1,10 @@
 package protocols
 
+import akka.NotUsed
+import akka.stream.scaladsl.Source
+import models.cfs.Block._
 import play.api.http._
 import play.api.libs.MimeTypes
-import play.api.libs.iteratee.Enumerator
 import play.api.mvc._
 import play.utils.UriEncoding
 
@@ -11,9 +13,10 @@ import play.utils.UriEncoding
  */
 
 trait HttpDownloadable {
+
   def size: Long
   def name: String
-  def whole: Enumerator[Array[Byte]]
+  def whole: Source[BLK, NotUsed]
 }
 
 trait HttpDownloadResult extends HeaderNames with Status {
@@ -24,14 +27,12 @@ trait HttpDownloadResult extends HeaderNames with Status {
     inline: Boolean = false
   ): Result = {
     val result = Result(
-      ResponseHeader(
-        OK,
-        Map(
-          CONTENT_TYPE -> contentTypeOf(file),
-          CONTENT_LENGTH -> s"${file.size}"
-        )
-      ),
-      file.whole
+      ResponseHeader(OK),
+      HttpEntity.Streamed(
+        file.whole,
+        Some(file.size),
+        contentTypeOf(file)
+      )
     )
     if (inline) result
     else {
@@ -42,8 +43,8 @@ trait HttpDownloadResult extends HeaderNames with Status {
     }
   }
 
-  private def contentTypeOf(inode: HttpDownloadable): String = {
-    MimeTypes.forFileName(inode.name).getOrElse(ContentTypes.BINARY)
+  def contentTypeOf(inode: HttpDownloadable): Option[String] = {
+    MimeTypes.forFileName(inode.name).orElse(Some(ContentTypes.BINARY))
   }
 }
 

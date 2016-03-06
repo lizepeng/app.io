@@ -2,6 +2,7 @@ package plugins.akka.persistence
 
 import akka.actor.{Actor, Props}
 import akka.persistence.journal.JournalSpec
+import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.websudos.phantom.connectors._
 import helpers.BasicPlayApi
@@ -43,6 +44,7 @@ class CassandraJournalSpec extends JournalSpec {
   implicit lazy val basicPlayApi: BasicPlayApi = BasicPlayApi(
     langs = null,
     messagesApi = null,
+    environment = null,
     configuration = Configuration(
       ConfigFactory.parseString(
         """
@@ -51,7 +53,8 @@ class CassandraJournalSpec extends JournalSpec {
       )
     ),
     applicationLifecycle = new DefaultApplicationLifecycle,
-    actorSystem = system
+    actorSystem = system,
+    ActorMaterializer()(system)
   )
 
   implicit lazy val contactPoint: KeySpaceBuilder = new KeySpaceBuilder(

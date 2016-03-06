@@ -3,8 +3,10 @@ package controllers
 import helpers._
 import models._
 import models.cfs._
+import play.api.libs.streams.Streams
 import play.api.mvc.BodyParsers._
 import play.api.mvc.BodyParsers.parse._
+import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart._
 import security.FileSystemAccessControl._
@@ -44,11 +46,13 @@ case class CFSBodyParser(
   override def parser(req: RequestHeader)(
     implicit user: User
   ): Future[BodyParser[MultipartFormData[File]]] = {
-    def saveTo(dir: Directory)(implicit user: User) = {
-      handleFilePart {
-        case FileInfo(partName, fileName, contentType) =>
-          bandwidth.LimitTo(bandwidthConfig.upload) &>> dir.save()
-      }
+    def saveTo(dir: Directory)(implicit user: User): FilePartHandler[File] = {
+      case FileInfo(partName, filename, contentType) =>
+        Streams.iterateeToAccumulator(
+          (bandwidth.LimitTo(bandwidthConfig.upload) &>> dir.save()).map { file =>
+            FilePart(partName, filename, contentType, file)
+          }
+        )
     }
 
     (for {

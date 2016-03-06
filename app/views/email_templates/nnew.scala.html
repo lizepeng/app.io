@@ -1,5 +1,5 @@
 @(fm: Form[_])(
-implicit req: UserRequest[_], messages: Messages, langs: Langs)
+implicit req: UserRequest[_], messages: Messages, env: Environment, langs: Langs)
 
 @import common._
 @import helper._
