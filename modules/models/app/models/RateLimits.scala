@@ -46,7 +46,7 @@ object RateLimits
 class RateLimits(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends RateLimitTable
   with ExtCQL[RateLimitTable, UUID]

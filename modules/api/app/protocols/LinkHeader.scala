@@ -1,6 +1,6 @@
 package protocols
 
-import helpers._
+import models.misc._
 import play.api.mvc.{Call, RequestHeader}
 
 /**

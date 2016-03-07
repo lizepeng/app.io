@@ -9,8 +9,8 @@ import akka.persistence.serialization.Snapshot
 import akka.persistence.snapshot.SnapshotStore
 import akka.serialization.SerializationExtension
 import com.datastax.driver.core.utils.Bytes
+import com.websudos.phantom.connectors.KeySpaceDef
 import helpers.BasicPlayApi
-import models.cassandra.KeySpaceBuilder
 import play.api.libs.iteratee._
 import plugins.akka.persistence.cassandra._
 import services.actors.ResourcesMediator
@@ -34,10 +34,10 @@ class CassandraSnapshotStore extends SnapshotStore with Stash {
   var snapshots: Snapshots = _
 
   context become awaitingResources
-  mediator ! List(GetBasicPlayApi, GetKeySpaceBuilder)
+  mediator ! List(GetBasicPlayApi, GetKeySpaceDef)
 
   def awaitingResources: Actor.Receive = {
-    case List(bpa: BasicPlayApi, cp: KeySpaceBuilder) =>
+    case List(bpa: BasicPlayApi, cp: KeySpaceDef) =>
       snapshots = new Snapshots(bpa, cp)
       (for {
         _ <- snapshots.createIfNotExists()

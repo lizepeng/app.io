@@ -34,6 +34,19 @@ object ExtEnumeratee {
     }
 
     /**
+     * Like `mapM`, but push Empty into stream when exception occurs.
+     */
+    def mapM2[E] = new MapM[E] {
+      def apply[NE](f: E => Future[NE])(
+        implicit ec: ExecutionContext
+      ): PlayEnumeratee[E, NE] = PlayEnumeratee.mapInputM[E] {
+        case Input.Empty => Future.successful(Input.Empty)
+        case Input.EOF   => Future.successful(Input.EOF)
+        case Input.El(e) => f(e).map(Input.El(_))(dec).recover { case e: Exception => Input.Empty }(dec)
+      }(ec)
+    }
+
+    /**
      * Like `take`, but take long type count.
      */
     def take[E](count: Long): PlayEnumeratee[E, E] = new CheckDone[E, E] {

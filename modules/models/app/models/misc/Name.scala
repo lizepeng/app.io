@@ -1,5 +1,6 @@
-package helpers
+package models.misc
 
+import helpers._
 import play.api.data._
 import play.api.data.format.Formatter
 import play.api.data.validation._
@@ -10,24 +11,6 @@ import play.api.libs.json._
 /**
  * @author zepeng.li@gmail.com
  */
-case class HumanName(self: String) extends AnyVal with NameLike
-
-object HumanName {
-
-  def empty = HumanName("")
-
-  implicit val jsonFormat = Format(
-    (minLength[String](1) <~ maxLength[String](255)).map(js => HumanName(js)),
-    Writes[HumanName](o => JsString(o.self))
-  )
-
-  implicit def formatter: Formatter[HumanName] = ExtFormatter.anyValFormatter(HumanName.apply, _.self)
-
-  def constrained: Mapping[HumanName] = Forms.of[HumanName].verifying(
-    Name.constraint("constraint.human_name.check", minLength = 1)
-  )
-}
-
 case class Name(self: String) extends AnyVal with NameLike
 
 object Name {
@@ -41,7 +24,17 @@ object Name {
 
   implicit def formatter: Formatter[Name] = ExtFormatter.anyValFormatter(Name.apply, _.self)
 
-  def constrained: Mapping[Name] = Forms.of[Name].verifying(constraint())
+  def constrained: Mapping[Name] = Forms.of[Name].verifying(NameLike.constraint())
+}
+
+trait NameLike extends Any {
+
+  def self: String
+
+  override def toString = self
+}
+
+object NameLike {
 
   def constraint[T <: NameLike](
     name: String = "constraint.name.check",
@@ -55,11 +48,4 @@ object Name {
         case _                         => Valid
       }
   }
-}
-
-trait NameLike extends Any {
-
-  def self: String
-
-  override def toString = self
 }

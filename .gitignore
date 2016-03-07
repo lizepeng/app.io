@@ -21,3 +21,5 @@ projectFilesBackup*
 /conf/logback.xml
 /project/plugins.sbt
 /data
+*.orig
+modules/services/journal/

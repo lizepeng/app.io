@@ -6,6 +6,7 @@ import com.websudos.phantom.builder._
 import com.websudos.phantom.builder.query._
 import helpers.Logging
 import play.api.Configuration
+import shapeless.HList
 
 /**
  * @author zepeng.li@gmail.com
@@ -36,15 +37,17 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
     L <: LimitBound,
     O <: OrderBound,
     S <: ConsistencyBound,
-    C <: WhereBound](
-    cql: SelectQuery[T1, R1, L, O, S, C]
+    C <: WhereBound,
+    P <: HList](
+    cql: SelectQuery[T1, R1, L, O, S, C, P]
   ) = trace(cql, cql.queryString, (flags & 0x08) != 0)
 
   def CQL[
     T1 <: CassandraTable[T1, _],
     R1,
-    S <: ConsistencyBound](
-    cql: InsertQuery[T1, R1, S]
+    S <: ConsistencyBound,
+    P <: HList](
+    cql: InsertQuery[T1, R1, S, P]
   ) = trace(cql, cql.queryString, (flags & 0x04) != 0)
 
   def CQL[
@@ -53,8 +56,9 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
     L <: LimitBound,
     O <: OrderBound,
     S <: ConsistencyBound,
-    C <: WhereBound](
-    cql: AssignmentsQuery[T1, R1, L, O, S, C]
+    C <: WhereBound,
+    P <: HList](
+    cql: AssignmentsQuery[T1, R1, L, O, S, C, P]
   ) = trace(cql, cql.queryString, (flags & 0x02) != 0)
 
   def CQL[
@@ -63,8 +67,9 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
     L <: LimitBound,
     O <: OrderBound,
     S <: ConsistencyBound,
-    C <: WhereBound](
-    cql: ConditionalQuery[T1, R1, L, O, S, C]
+    C <: WhereBound,
+    P <: HList](
+    cql: ConditionalQuery[T1, R1, L, O, S, C, P]
   ) = trace(cql, cql.queryString, (flags & 0x02) != 0)
 
   def CQL[
@@ -73,8 +78,9 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
     L <: LimitBound,
     O <: OrderBound,
     S <: ConsistencyBound,
-    C <: WhereBound](
-    cql: DeleteQuery[T1, R1, L, O, S, C]
+    C <: WhereBound,
+    P <: HList](
+    cql: DeleteQuery[T1, R1, L, O, S, C, P]
   ) = trace(cql, cql.queryString, (flags & 0x01) != 0)
 
   def trace[A](cql: A, query: String, log: Boolean): A = {

@@ -31,7 +31,7 @@ sealed class RootTable
 class Root(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends RootTable
   with ExtCQL[RootTable, UUID]

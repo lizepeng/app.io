@@ -22,8 +22,9 @@ import scala.language.postfixOps
  */
 case class CFSBodyParser(
   path: User => Path,
-  access: Access = AccessDefinition.Create,
   pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
+  dirPermission: CassandraFileSystem.Permission = CassandraFileSystem.Role.owner.rwx,
+  access: Access = AccessDefinition.Create,
   onUnauthorized: RequestHeader => Result = req => Results.NotFound,
   onPermDenied: RequestHeader => Result = req => Results.NotFound,
   onPathNotFound: RequestHeader => Result = req => Results.NotFound,
@@ -51,7 +52,7 @@ case class CFSBodyParser(
     }
 
     (for {
-      temp <- _cfs.temp(user)
+      temp <- _cfs.temp(dirPermission)(user)
       dest <- _cfs.dir(path(user)) if dest.w ?
     } yield temp).map { case temp =>
       multipartFormData(saveTo(temp)(user))
@@ -68,7 +69,7 @@ case class CFSBodyParser(
 
 object CFSBodyParser
   extends CanonicalNamed
-  with ExceptionDefining {
+    with ExceptionDefining {
 
   override def basicName: String = CassandraFileSystem.basicName
 

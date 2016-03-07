@@ -3,8 +3,8 @@ package plugins.akka.persistence
 import akka.actor.{Actor, Props}
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.ConfigFactory
+import com.websudos.phantom.connectors._
 import helpers.BasicPlayApi
-import models.cassandra.KeySpaceBuilder
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.junit.runner._
 import org.specs2.runner._
@@ -22,6 +22,7 @@ class CassandraJournalSpec extends JournalSpec(
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
      | akka.loglevel = "OFF"
+     | akka.test.single-expect-default = 10000
      |
      | akka.persistence.journal.plugin = "cassandra-journal"
      | cassandra-journal {
@@ -55,9 +56,10 @@ class CassandraJournalSpec extends JournalSpec(
   )
 
   implicit lazy val contactPoint: KeySpaceBuilder = new KeySpaceBuilder(
-    basicPlayApi.applicationLifecycle,
     _.addContactPoint("localhost").withPort(9142)
   )
+
+  implicit lazy val keySpaceDef: KeySpaceDef = contactPoint.keySpace("test")
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra()
@@ -66,7 +68,7 @@ class CassandraJournalSpec extends JournalSpec(
       Props(
         new Actor {
           override def receive: Receive = {
-            case _ => sender ! List(basicPlayApi, contactPoint)
+            case _ => sender ! List(basicPlayApi, keySpaceDef)
           }
         }
       ), ResourcesMediator.basicName
@@ -75,7 +77,6 @@ class CassandraJournalSpec extends JournalSpec(
 
   override def afterAll(): Unit = {
     super.afterAll()
-    contactPoint.sessionProvider.shutdown()
     EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
   }
 }

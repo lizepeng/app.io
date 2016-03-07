@@ -6,13 +6,15 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
-import models.sys.{SysConfig, SysConfigs}
+import models.misc._
+import models.sys._
 import org.joda.time.DateTime
 import play.api.libs.iteratee._
 import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
+import scala.language.implicitConversions
 import scala.util.Success
 
 /**
@@ -93,7 +95,7 @@ object Group
 class Groups(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _users: Users,
   val _sysConfig: SysConfigs
 )
@@ -133,7 +135,7 @@ class Groups(
   }.future().map(_ => group)
 
   def remove(id: UUID): Future[ResultSet] =
-    if (_internalGroups.Id2Num.contains(id))
+    if (_internalGroups.InternalGroupIds.contains(id))
       Future.failed(Group.NotWritable(id))
     else
       CQL {
@@ -216,28 +218,59 @@ class Groups(
   override def sortable: Set[SortableField] = Set(name)
 }
 
-case class InternalGroupsCode(code: Int) extends AnyVal {
+case class InternalGroup(code: Int) extends AnyVal {
 
-  def contains(gid: Int) = gid >= 0 && gid <= 18 && exists(gid)
+  def toBits =
+    if (!isValid) InternalGroupBits(0)
+    else InternalGroupBits(1 << (InternalGroup.max - code))
 
-  def numbers = for (gid <- InternalGroupsCode.ALL if exists(gid)) yield gid
+  def bit = toBits.bits
 
-  def +(that: InternalGroupsCode) = InternalGroupsCode(code | (1 << 18 - that.code))
+  def isValid = code >= InternalGroup.min && code <= InternalGroup.max
 
-  def -(that: InternalGroupsCode) = InternalGroupsCode(code & ~(1 << 18 - that.code))
+  def |(that: InternalGroup) = toBits + that
 
-  private def exists(gid: Int) = (code & 1 << (19 - 1 - gid)) > 0
+  override def toString = code.toString
+}
+
+object InternalGroup {
+
+  val min = 0
+  val max = 18
+
+  val All    = for (code <- min to max) yield InternalGroup(code)
+  val Anyone = InternalGroup(0)
+
+  implicit def InternalGroupToInternalGroupBits(ig: InternalGroup): InternalGroupBits = ig.toBits
+}
+
+case class InternalGroupBits(bits: Int) extends AnyVal {
+
+  def contains(g: InternalGroup) = g.isValid && exists(g)
+
+  def toInternalGroups = for (g <- InternalGroup.All if exists(g)) yield g
+
+  def |(that: InternalGroupBits) = InternalGroupBits(bits | that.bits)
+
+  def +(g: InternalGroup) = InternalGroupBits(bits | g.bit)
+
+  def -(g: InternalGroup) = InternalGroupBits(bits & ~g.bit)
+
+  private def exists(g: InternalGroup) = {
+    val bit = g.bit
+    (bits & bit) == bit
+  }
 
   def pprintLine1 = {
     import scala.Predef._
-    (for (i <- InternalGroupsCode.ALL) yield {
-      "%3s".format("G" + i)
+    (for (i <- InternalGroup.All) yield {
+      "%3s".format("G" + i.code)
     }).mkString("|   |", "|", "|   |")
   }
 
   def pprintLine2: String = {
     import scala.Predef._
-    "%21s".format((code << 1).toBinaryString)
+    "%21s".format((bits << 1).toBinaryString)
       .grouped(1).map {
       case "1" => " Y "
       case _   => "   "
@@ -246,17 +279,9 @@ case class InternalGroupsCode(code: Int) extends AnyVal {
 
   override def toString =
     s"""
-      $pprintLine1
-      $pprintLine2
-     """
-}
-
-object InternalGroupsCode {
-
-  val ALL = for (gid <- 0 to 18) yield gid
-
-  val AnyoneMask = 1 << 18
-  val Anyone     = InternalGroupsCode(0)
+       |$pprintLine1
+       |$pprintLine2
+       |""".stripMargin
 }
 
 class InternalGroups(
@@ -265,10 +290,9 @@ class InternalGroups(
 )(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _sysConfig: SysConfigs
-)
-  extends GroupTable
+) extends GroupTable
   with EntityTable[Group]
   with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
@@ -277,9 +301,7 @@ class InternalGroups(
   with BootingProcess
   with Logging {
 
-  @volatile private var _num2Id  : Seq[UUID]      = _
-  @volatile private var _id2num  : Map[UUID, Int] = _
-  @volatile private var _anyoneId: UUID           = _
+  @volatile private var _internalGroupIds: Seq[UUID] = _
 
   onStart(
     create.ifNotExists.future()
@@ -289,17 +311,16 @@ class InternalGroups(
   )
 
   private def loadOrInit: Future[Boolean] = {
-    import InternalGroupsCode._
     Future.sequence(
-      InternalGroupsCode.ALL.map { n =>
-        val key = s"internal_group_${"%02d".format(n)}"
+      InternalGroup.All.map { n =>
+        val key = s"internal_group_${"%02d".format(n.code)}"
         System.UUID(key).flatMap { id =>
           createIfNotExist(
             Group(
               id,
               n match {
-                case InternalGroupsCode.Anyone.code => Name("AnyUsers")
-                case _                              => Name(key)
+                case InternalGroup.Anyone => Name("AnyUsers")
+                case _                    => Name(key)
               },
               Some(key),
               is_internal = true,
@@ -309,9 +330,7 @@ class InternalGroups(
         }
       }
     ).map { seq =>
-      _num2Id = seq.map(_._1)
-      _anyoneId = _num2Id(Anyone.code)
-      _id2num = _num2Id.zipWithIndex.toMap
+      _internalGroupIds = seq.map(_._1)
       val initialized = (true /: seq) (_ && _._2)
       Logger.info(
         if (initialized)
@@ -323,14 +342,12 @@ class InternalGroups(
     }
   }
 
-  def AnyoneId = _anyoneId
+  def AnyoneId = _internalGroupIds(InternalGroup.Anyone.code)
 
-  def Id2Num = _id2num
+  def InternalGroupIds = _internalGroupIds
 
-  def Num2Id = _num2Id
-
-  def map(igs: InternalGroupsCode): Set[UUID] = {
-    igs.numbers.map(_num2Id).toSet
+  def find(igb: InternalGroupBits): Set[UUID] = {
+    igb.toInternalGroups.map(_.code).map(_internalGroupIds).toSet
   }
 
   private def createIfNotExist(group: Group): Future[Boolean] = CQL {
@@ -358,7 +375,7 @@ class InternalGroups(
     Enumeratee.map(t => Group.apply _ tupled t)
 
   def all: Enumerator[Group] = CQL {
-    select(_.id).distinct.where(_.id in _num2Id.toList)
+    select(_.id).distinct.where(_.id in _internalGroupIds.toList)
   }.fetchEnumerator &>
     Enumeratee.grouped {
       Enumeratee.take(1000) &>>

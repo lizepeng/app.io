@@ -1,7 +1,7 @@
 import java.io.IOException
 
 import com.sksamuel.elastic4s.source._
-import helpers.Pager
+import models.misc._
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.bytes.BytesReference
 import org.elasticsearch.common.compress.CompressorFactory

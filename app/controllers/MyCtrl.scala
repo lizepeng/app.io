@@ -6,6 +6,7 @@ import helpers._
 import models._
 import models.cfs.CassandraFileSystem.Role
 import models.cfs._
+import models.misc._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
@@ -29,8 +30,7 @@ class MyCtrl(
   val _accessControls: AccessControls,
   val bandwidth: BandwidthService,
   val es: ElasticSearch
-)
-  extends Secured(User)
+) extends Secured(User)
   with Controller
   with BasicPlayComponents
   with UsersComponents
@@ -60,8 +60,8 @@ class MyCtrl(
 
   val ProfileFM = Form(
     tuple(
-      "first_name" -> HumanName.constrained,
-      "last_name" -> HumanName.constrained
+      "first_name" -> PersonalName.Part.constrained,
+      "last_name" -> PersonalName.Part.constrained
     )
   )
 
@@ -120,26 +120,25 @@ class MyCtrl(
       val bound = ProfileFM.bindFromRequest()
 
       bound.fold(
-        failure =>
-          Future.successful {
-            BadRequest(html.my.profile(failure))
-          },
-        _ match { case (first, last) =>
+      failure => Future.successful {
+        BadRequest(html.my.profile(failure))
+      }, {
+        case (first, last) =>
           for {
-            p <- Future.successful(Person(req.user.id, first, last))
+            p <- Future.successful(Person(req.user.id, PersonalName(last, first)))
             _ <- _persons.save(p)
             _ <- es.Index(p) into _persons
           } yield {
             Ok(html.my.profile(filledWith(p)))
           }
-        }
+      }
       )
     }
 
   def filledWith(p: Person) =
     ProfileFM.fill(
-      p.first_name,
-      p.last_name
+      p.name.first,
+      p.name.last
     )
 
   val profileImageFileName = "profile.png"

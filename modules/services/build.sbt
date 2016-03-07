@@ -11,8 +11,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"      %% "akka-persistence"      % "2.4.0",
   "com.typesafe.akka"      %% "akka-cluster-tools"    % "2.4.0",
   "com.typesafe.akka"      %% "akka-cluster-sharding" % "2.4.0",
-  "com.typesafe.akka"      %% "akka-testkit"          % "2.4.0"   % "test",
-  "com.typesafe.akka"      %% "akka-persistence-tck"  % "2.4.0"   % "test"
+  "com.typesafe.akka"      %% "akka-slf4j"            % "2.4.0",
+  "com.typesafe.akka"      %% "akka-testkit"          % "2.4.0"  % "test",
+  "com.typesafe.akka"      %% "akka-persistence-tck"  % "2.4.0"  % "test"
 )
 
 // Two cassandra starting process could not be launched simultaneously

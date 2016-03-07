@@ -40,7 +40,7 @@ sealed class JournalVolumeTable
 
 class JournalVolumes(
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends JournalVolumeTable
   with ExtCQL[JournalVolumeTable, ByteBuffer]

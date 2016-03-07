@@ -10,6 +10,7 @@ import models.User
 import models.cassandra._
 import models.cfs.Block.BLK
 import models.cfs.CassandraFileSystem._
+import models.misc._
 import play.api.libs.iteratee.{Enumeratee => _, _}
 import play.api.libs.json._
 
@@ -137,14 +138,16 @@ case class Directory(
     }
 
   def mkdir(name: String)(
-    implicit user: User, cfs: CassandraFileSystem
-  ): Future[Directory] =
-    Directory(name, path / name, user.id, id).save()
+    implicit user: User, cfs: CassandraFileSystem, dirPermission: Permission
+  ): Future[Directory] = {
+    val uid = user.id
+    Directory(name, path / name, uid, id, permission = dirPermission).save()
+  }
 
   def mkdir(name: String, uid: UUID)(
-    implicit cfs: CassandraFileSystem
+    implicit cfs: CassandraFileSystem, dirPermission: Permission
   ): Future[Directory] =
-    Directory(name, path / name, uid, id).save()
+    Directory(name, path / name, uid, id, permission = dirPermission).save()
 
   def addChild(child: INode)(
     implicit cfs: CassandraFileSystem
@@ -171,7 +174,7 @@ case class Directory(
     }
 
   def dir_!(name: String)(
-    implicit user: User, cfs: CassandraFileSystem
+    implicit user: User, cfs: CassandraFileSystem, dirPermission: Permission
   ): Future[Directory] =
     cfs._directories.findChild(id, name).flatMap {
       case (_, i) => cfs._directories.find(i)(
@@ -272,7 +275,7 @@ object Directory extends CanonicalNamed with ExceptionDefining {
 class Directories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _inodes: INodes,
   val _files: Files
 )

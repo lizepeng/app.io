@@ -3,12 +3,13 @@ package models.cfs
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
+import helpers.ExtEnumeratee._
 import helpers.ExtString._
 import helpers._
 import models._
 import models.cassandra._
+import models.misc._
 import models.sys._
-import play.api.libs.iteratee.Enumeratee
 import play.api.libs.json._
 
 import scala.concurrent.Future
@@ -20,11 +21,10 @@ import scala.util._
 class CassandraFileSystem(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _users: Users,
   val _sysConfig: SysConfigs
-)
-  extends CassandraFileSystemCanonicalNamed
+) extends CassandraFileSystemCanonicalNamed
   with BasicPlayComponents
   with SysConfig
   with Logging {
@@ -36,20 +36,26 @@ class CassandraFileSystem(
   implicit val _directories   : Directories    = new Directories
   implicit val _root          : Root           = new Root
 
-  def home(implicit user: User): Future[Directory] = {
+  import CassandraFileSystem._
+
+  def home(
+    dirPermission: Permission = Role.owner.rwx
+  )(implicit user: User): Future[Directory] = {
     val uid = user.id
     val name = uid.toString
     _directories.find(uid)(
       onFound = _.copy(name = name, path = Path.root / name)
     ).recoverWith {
-      case e: Directory.NotFound => createHome
+      case e: Directory.NotFound => createHome(dirPermission)
     }
   }
 
-  def createHome(implicit user: User): Future[Directory] = {
+  def createHome(
+    dirPermission: Permission = Role.owner.rwx
+  )(implicit user: User): Future[Directory] = {
     val uid = user.id
     val name = uid.toString
-    val home = Directory(name, Path.root / name, uid, uid, uid)
+    val home = Directory(name, Path.root / name, uid, uid, uid, dirPermission)
     Logger.debug("Creating user home folder: " + name)
     for {
       _ <- _root.add(home.id)
@@ -57,25 +63,34 @@ class CassandraFileSystem(
     } yield h
   }
 
-  def temp(implicit user: User): Future[Directory] = {
-    home(user).flatMap(_.dir_!("temp")(user, this))
+  def temp(
+    dirPermission: Permission = Role.owner.rwx
+  )(implicit user: User): Future[Directory] = {
+    home(dirPermission)(user).flatMap(_.dir_!("temp")(user, this, dirPermission))
   }
 
-  def dir(path: Path)(implicit user: User): Future[Directory] = {
-    resolve(path, (dir, tail) => dir.dir(tail)(this))
+  def dir(
+    path: Path, dirPermission: Permission = Role.owner.rwx
+  )(implicit user: User): Future[Directory] = {
+    resolve(path, (dir, tail) => dir.dir(tail)(this), dirPermission)
   }
 
-  def file(path: Path)(implicit user: User): Future[File] = {
-    resolve(path, (dir, tail) => dir.file(tail)(this))
+  def file(
+    path: Path, dirPermission: Permission = Role.owner.rwx
+  )(implicit user: User): Future[File] = {
+    resolve(path, (dir, tail) => dir.file(tail)(this), dirPermission)
   }
 
-  def inode(path: Path)(implicit user: User): Future[INode] = {
-    resolve(path, (dir, tail) => dir.inode(tail)(this))
+  def inode(
+    path: Path, dirPermission: Permission = Role.owner.rwx
+  )(implicit user: User): Future[INode] = {
+    resolve(path, (dir, tail) => dir.inode(tail)(this), dirPermission)
   }
 
   private def resolve[T](
     path: Path,
-    resolver: (Directory, Path) => Future[T]
+    resolver: (Directory, Path) => Future[T],
+    dirPermission: Permission
   )(implicit user: User): Future[T] = {
     path.segments.headOption match {
       case Some(head) =>
@@ -84,7 +99,7 @@ class CassandraFileSystem(
             _directories.find(id)(
               onFound = _.copy(name = head, path = Path.root / head)
             ).recoverWith {
-              case e: Directory.NotFound if id == user.id => createHome
+              case e: Directory.NotFound if id == user.id => createHome(dirPermission)
             }.flatMap(resolver(_, path.tail))
           case Failure(e: Throwable) =>
             Logger.debug(e.getMessage)
@@ -95,22 +110,9 @@ class CassandraFileSystem(
     }
   }
 
-  lazy val root: Future[Directory] =
-    System.UUID("root").flatMap { id =>
-      _directories.find(id)(
-        onFound = root => root
-      ).recoverWith {
-        case ex: Directory.NotFound => for {
-          ur <- _users.root
-          fr <- Directory("/", Path.root, ur.id, id, id).save()(this)
-          __ <- fr.mkdir("tmp", ur.id)(this)
-        } yield fr
-      }
-    }
-
-  def listRoot(pager: Pager): Future[Page[INode]] = Page(pager) {
+  def listRoot(pager: Pager): Future[Page[Directory]] = Page(pager) {
     _root.stream &>
-      Enumeratee.mapM { id =>
+      Enumeratee.mapM2 { id =>
         val name: String = id.toString
         _directories.find(id)(
           onFound = _.copy(name = name, path = Path.root / name)
@@ -126,7 +128,7 @@ trait CassandraFileSystemCanonicalNamed extends CanonicalNamed {
 
 object CassandraFileSystem
   extends CassandraFileSystemCanonicalNamed
-  with ExceptionDefining {
+    with ExceptionDefining {
 
   case class InvalidPath(path: Path)
     extends BaseException(error_code("invalid.path"))
@@ -216,7 +218,7 @@ object CassandraFileSystem
     val owner = Role(0)
     val other = Role(20 * 3)
 
-    def group(gid: Int) = if (gid < 0 || gid > 18) other else Role((1 + gid) * 3)
+    def group(g: InternalGroup) = if (!g.isValid) other else Role((1 + g.code) * 3)
   }
 
   case class Access(self: Int = 0) extends AnyVal {

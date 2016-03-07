@@ -47,7 +47,7 @@ case class FileSystemAccessControl(
       if (resource.ext_permission(gid) ?(_.other, access)) return true
     }
     //check internal group permission
-    for (gid <- principal.internal_groups_code.numbers) {
+    for (gid <- principal.internal_group_bits.toInternalGroups) {
       if (resource.permission ?(_.group(gid), access)) return true
     }
     //check other permission
@@ -71,8 +71,8 @@ case class FileSystemAccessControl(
       |${pprintLine(20)}
       |${pprintIndices(20)}
       |${resource.permission.pprint}
-      |${principal.internal_groups_code.pprintLine1}
-      |${principal.internal_groups_code.pprintLine2}
+      |${principal.internal_group_bits.pprintLine1}
+      |${principal.internal_group_bits.pprintLine2}
       |${pprintLine(20)}
      """.stripMargin
 }

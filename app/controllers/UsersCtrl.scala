@@ -7,6 +7,7 @@ import controllers.UsersCtrl.PasswordConfirmation
 import elasticsearch._
 import helpers._
 import models._
+import models.misc._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n._
@@ -56,7 +57,7 @@ class UsersCtrl(
     UserAction(_.Show).async { implicit req =>
       for {
         user <- _users.find(id)
-        grps <- _groups.find(_internalGroups.Num2Id)
+        grps <- _groups.find(_internalGroups.InternalGroupIds)
       } yield {
         Ok(html.users.show(user, grps))
       }

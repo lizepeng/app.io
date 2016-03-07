@@ -41,7 +41,7 @@ sealed class JournalTable
 
 class Journal(
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends JournalTable
   with ExtCQL[JournalTable, UUID]
@@ -49,7 +49,7 @@ class Journal(
   with CassandraComponents
   with Logging {
 
-  val journalVolumes = new JournalVolumes(basicPlayApi, contactPoint)
+  val journalVolumes = new JournalVolumes(basicPlayApi, keySpaceDef)
 
   import JournalRecord._
 

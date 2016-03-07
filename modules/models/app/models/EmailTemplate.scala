@@ -5,6 +5,7 @@ import com.websudos.phantom.dsl._
 import com.websudos.phantom.iteratee.{Iteratee => PIteratee}
 import helpers._
 import models.cassandra._
+import models.misc._
 import org.joda.time.DateTime
 import play.api.i18n._
 import play.api.libs.iteratee.Enumeratee
@@ -164,7 +165,7 @@ object EmailTemplate
 class EmailTemplates(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends EmailTemplateTable
   with ExtCQL[EmailTemplateTable, ET]
@@ -303,7 +304,7 @@ object EmailTemplateHistory
 class EmailTemplateHistories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends EmailTemplateHistoryTable
   with ExtCQL[EmailTemplateHistoryTable, ETH]

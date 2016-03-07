@@ -1,24 +1,22 @@
 package models.cassandra
 
-import com.datastax.driver.core.Session
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.builder.primitives.Primitive
 import com.websudos.phantom.builder.query.CQLQuery
 import com.websudos.phantom.builder.syntax.CQLSyntax
 import com.websudos.phantom.column._
 import com.websudos.phantom.connectors._
-import helpers.AppDomainComponents
 
 /**
  * @author zepeng.li@gmail.com
  */
-trait CassandraComponents extends AppDomainComponents {
+trait CassandraComponents extends RootConnector {
 
-  def contactPoint: KeySpaceBuilder
+  def keySpaceDef: KeySpaceDef
 
-  implicit val keySpace: KeySpace = KeySpace(domain.replace(".", "_"))
+  implicit def space = KeySpace(keySpaceDef.name)
 
-  implicit lazy val session: Session = contactPoint.keySpace(keySpace.name).session
+  implicit def session = keySpaceDef.session
 }
 
 // Workaround since phantom 1.8.12 do not support static collection column?
@@ -26,7 +24,7 @@ class StaticMapColumn[Owner <: CassandraTable[Owner, Record], Record, K: Primiti
   table: CassandraTable[Owner, Record], isStatic: Boolean = true
 )
   extends MapColumn[Owner, Record, K, V](table) with
-  PrimitiveCollectionValue[V] {
+    PrimitiveCollectionValue[V] {
 
   override def qb: CQLQuery = {
     val root = CQLQuery(name).forcePad.append(cassandraType)
@@ -38,7 +36,7 @@ class StaticListColumn[Owner <: CassandraTable[Owner, Record], Record, RR: Primi
   table: CassandraTable[Owner, Record], isStatic: Boolean = true
 )
   extends ListColumn[Owner, Record, RR](table) with
-  PrimitiveCollectionValue[RR] {
+    PrimitiveCollectionValue[RR] {
 
   override def qb: CQLQuery = {
     val root = CQLQuery(name).forcePad.append(cassandraType)
@@ -50,7 +48,7 @@ class StaticSetColumn[Owner <: CassandraTable[Owner, Record], Record, RR: Primit
   table: CassandraTable[Owner, Record], isStatic: Boolean = true
 )
   extends SetColumn[Owner, Record, RR](table) with
-  PrimitiveCollectionValue[RR] {
+    PrimitiveCollectionValue[RR] {
 
   override def qb: CQLQuery = {
     val root = CQLQuery(name).forcePad.append(cassandraType)

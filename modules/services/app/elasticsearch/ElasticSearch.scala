@@ -6,6 +6,7 @@ import com.sksamuel.elastic4s.mappings._
 import helpers._
 import models._
 import models.cassandra.Indexable
+import models.misc._
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingResponse
 import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.delete.DeleteResponse

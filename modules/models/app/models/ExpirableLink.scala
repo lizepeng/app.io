@@ -50,7 +50,7 @@ object ExpirableLink
 class ExpirableLinks(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends ExpirableLinkTable
   with ExtCQL[ExpirableLinkTable, ExpirableLink]

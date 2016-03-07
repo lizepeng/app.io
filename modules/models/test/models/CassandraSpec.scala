@@ -70,7 +70,7 @@ sealed class EntityTable
 class Entities(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends EntityTable
   with BasicPlayComponents

@@ -55,7 +55,8 @@ libraryDependencies ++= Seq(
   "org.webjars.bower" % "angular-sanitize"   % "1.4.4",
   "org.webjars.bower" % "underscore"         % "1.8.3",
   "org.webjars.bower" % "animate.css"        % "3.4.0",
-  "org.webjars"       % "ng-flow"            % "2.6.1"
+  "org.webjars"       % "ng-flow"            % "2.6.1",
+  "com.codeborne"     % "phantomjsdriver"    % "1.2.1"   % Test
 )
 
 dependencyOverrides += "org.webjars.bower" % "angular" % "1.4.4"
@@ -66,9 +67,9 @@ resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 
 TwirlKeys.templateImports ++= Seq(
   "elasticsearch.SortField",
-  "helpers._",
   "java.util.UUID",
   "models.cfs._",
+  "models.misc._",
   "org.joda.time._",
   "play.api.i18n.{Messages => MSG}",
   "security._"
@@ -77,9 +78,9 @@ TwirlKeys.templateImports ++= Seq(
 routesImport ++= Seq(
   "elasticsearch.SortField",
   "helpers.ExtBindable._",
-  "helpers._",
   "java.util.UUID",
   "models.cfs._",
+  "models.misc._",
   "org.joda.time.DateTime",
   "play.api.i18n.Lang",
   "scala.language.reflectiveCalls"

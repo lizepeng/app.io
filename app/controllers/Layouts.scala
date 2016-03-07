@@ -1,7 +1,8 @@
 package controllers
 
 import helpers._
-import models.InternalGroups
+import models._
+import models.misc._
 import play.api.i18n.Messages
 import play.api.libs.json.Json
 import views.html
