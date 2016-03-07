@@ -1,6 +1,7 @@
 package plugins.akka.persistence
 
 import akka.actor.{Actor, Props}
+import akka.persistence.CapabilityFlag
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.ConfigFactory
 import com.websudos.phantom.connectors._
@@ -31,6 +32,8 @@ class CassandraJournalSpec extends JournalSpec(
     """.stripMargin
   )
 ) {
+
+  protected def supportsRejectingNonSerializableObjects = CapabilityFlag.on
 
   def context: ApplicationLoader.Context =
     ApplicationLoader.createContext(

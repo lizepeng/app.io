@@ -73,7 +73,6 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec(
         }
       ), ResourcesMediator.basicName
     )
-    Thread.sleep(3000) //wait until cassandra is ready
   }
 
   override def afterAll(): Unit = {

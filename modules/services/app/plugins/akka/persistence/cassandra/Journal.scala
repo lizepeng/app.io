@@ -26,12 +26,16 @@ sealed class JournalTable
 
   object persistence_id
     extends StringColumn(this)
-    with PartitionKey[String]
+      with PartitionKey[String]
 
   object volume_nr
     extends LongColumn(this)
-    with ClusteringOrder[Long]
-    with Ascending
+      with ClusteringOrder[Long]
+      with Ascending
+
+  object highest_sequence_nr
+    extends LongColumn(this)
+      with StaticColumn[Long]
 
   object volume_id
     extends UUIDColumn(this)
@@ -42,8 +46,7 @@ sealed class JournalTable
 class Journal(
   val basicPlayApi: BasicPlayApi,
   val keySpaceDef: KeySpaceDef
-)
-  extends JournalTable
+) extends JournalTable
   with ExtCQL[JournalTable, UUID]
   with BasicPlayComponents
   with CassandraComponents
@@ -64,42 +67,77 @@ class Journal(
   )(volume_size: Long): Future[ResultSet] = {
     for {
       map <- findVolumeIDs(messages)(volume_size)
-      vol <- Future.successful(
+      ret <- journalVolumes.save(
         messages.map {
           case (pid, snr, buff) =>
             ((map(Key(pid, snr / volume_size)), snr), buff)
         }
       )
-      ret <- journalVolumes.save(vol)
     } yield ret
   }
 
   def remove(
     pid: String, to: Long
-  )(batchSize: Int): Future[Unit] = {
-    CQL {
-      select(_.volume_id)
+  )(batchSize: Int)(volume_size: Int): Future[Unit] = {
+    for {
+      hsn <- readHighestSequenceNr(pid, 0L)(volume_size)
+      ___ <- {
+        if (to >= hsn) saveHighestSequenceNr(pid, hsn)
+        else Future(Unit)
+      }
+      ret <- CQL {
+        select(_.volume_id)
+          .where(_.persistence_id eqs pid)
+          .and(_.volume_nr gte 0L)
+          .and(_.volume_nr lte to)
+      }.fetchEnumerator() &>
+        Enumeratee.mapFlatten(vid => journalVolumes.keys(vid, to = to)) &>
+        Enumeratee.takeWhile(_._2 <= to) &>
+        Enumeratee.grouped(Iteratee.takeUpTo(batchSize)) |>>>
+        Iteratee.foreach(journalVolumes.remove(_))
+    } yield ret
+  }
+
+  private def saveHighestSequenceNr(
+    pid: String, snr: Long
+  ): Future[ResultSet] = {
+    def cql_insert(pid: String, snr: Long) =
+      insert.value(_.persistence_id, pid)
+        .value(_.highest_sequence_nr, 0L)
+        .ifNotExists()
+
+    def cql_update(pid: String, snr: Long) =
+      update
         .where(_.persistence_id eqs pid)
-        .and(_.volume_nr gte 0L)
-        .and(_.volume_nr lte to)
-    }.fetchEnumerator() &>
-      Enumeratee.mapFlatten(vid => journalVolumes.keys(vid, to = to)) &>
-      Enumeratee.takeWhile(_._2 <= to) &>
-      Enumeratee.grouped(Iteratee.takeUpTo(batchSize)) |>>>
-      Iteratee.foreach(journalVolumes.remove(_))
+        .modify(_.highest_sequence_nr setTo snr)
+        .onlyIf(_.highest_sequence_nr isLt snr)
+
+    for {
+      i <- CQL {cql_insert(pid, snr)}.future()
+      u <- CQL {cql_update(pid, snr)}.future()
+    } yield u
   }
 
   def readHighestSequenceNr(
     pid: String, from: Long
   )(volume_size: Long): Future[Long] = {
-    CQL {
-      select(_.volume_id)
-        .where(_.persistence_id eqs pid)
-        .and(_.volume_nr gte from / volume_size)
-    }.fetchEnumerator() &>
-      Enumeratee.mapFlatten(vid => journalVolumes.keys(vid, from)) &>
-      Enumeratee.map(_._2) |>>>
-      Iteratee.fold(0L)((a, b) => Math.max(a, b))
+    for {
+      hsn <- CQL {
+        select(_.volume_id)
+          .where(_.persistence_id eqs pid)
+          .and(_.volume_nr gte from / volume_size)
+      }.fetchEnumerator() &>
+        Enumeratee.mapFlatten(vid => journalVolumes.keys(vid, from)) &>
+        Enumeratee.map(_._2) |>>>
+        Iteratee.fold(0L)((a, b) => Math.max(a, b))
+      ret <- {
+        if (hsn > 0) Future(hsn)
+        else CQL {
+          select(_.highest_sequence_nr)
+            .where(_.persistence_id eqs pid)
+        }.one.map(_.getOrElse(0L))
+      }
+    } yield ret
   }
 
   def stream(

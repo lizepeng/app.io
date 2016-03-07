@@ -79,7 +79,7 @@ class CassandraJournal extends AsyncWriteJournal with Stash with ActorLogging {
     persistenceId: String,
     toSequenceNr: Long
   ): Future[Unit] = {
-    journal.remove(persistenceId, toSequenceNr)(batchSize)
+    journal.remove(persistenceId, toSequenceNr)(batchSize)(volumeSize)
   }
 
   override def asyncReadHighestSequenceNr(
