@@ -17,13 +17,13 @@ import services.actors.ResourcesMediator
  * @author zepeng.li@gmail.com
  */
 @RunWith(classOf[JUnitRunner])
-class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
-
-  lazy override val config = ConfigFactory.parseString(
+class CassandraSnapshotStoreSpec extends SnapshotStoreSpec(
+  config = ConfigFactory.parseString(
     """
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
      | akka.loglevel = "OFF"
+     | akka.test.single-expect-default = 10000
      |
      | akka.persistence.snapshot-store.plugin = "cassandra-snapshot-store"
      | cassandra-snapshot-store {
@@ -31,6 +31,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
      | }
     """.stripMargin
   )
+) {
 
   def context: ApplicationLoader.Context =
     ApplicationLoader.createContext(
@@ -65,6 +66,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    super.beforeAll()
     system.actorOf(
       Props(
         new Actor {
@@ -74,8 +76,6 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
         }
       ), ResourcesMediator.basicName
     )
-    super.beforeAll()
-    Thread.sleep(3000) //wait until cassandra is ready
   }
 
   override def afterAll(): Unit = {
