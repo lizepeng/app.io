@@ -52,7 +52,7 @@ class Components(context: Context)
 
   applicationLifecycle.addStopHook(
     () => Future.successful {
-      com.websudos.phantom.Manager.shutdown()
+      // com.websudos.phantom.Manager.shutdown()
       keySpaceDef.session.getCluster.close()
       keySpaceDef.session.close()
       Logger.info("Shutdown Phantom Cassandra Driver")
