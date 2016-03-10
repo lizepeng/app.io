@@ -121,8 +121,14 @@ class Groups(
     case None    => throw Group.NotFound(id)
   }
 
-  def find(ids: TraversableOnce[UUID]): Future[Seq[Group]] = {
-    _internalGroups.stream(ids) |>>> Iteratee.getChunks[Group]
+  def find(ids: Traversable[UUID]): Future[Seq[Group]] = {
+    (_internalGroups.stream(ids) |>>> Iteratee.getChunks[Group]).map { grps =>
+      ids.map {
+        id => grps.find(_.id == id)
+      }.collect {
+        case g if g.nonEmpty => g.get
+      }.toSeq
+    }
   }
 
   def save(group: Group): Future[Group] = CQL {
