@@ -1,7 +1,7 @@
 package elasticsearch
 
+import com.sksamuel.elastic4s.MultiSearchResult
 import models.misc._
-import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.common.xcontent._
 import play.api.http._
 import play.api.mvc.Codec
@@ -13,7 +13,7 @@ import scala.language.implicitConversions
  */
 case class PageMSResp(
   pager: Pager,
-  resp: MultiSearchResponse
+  resp: MultiSearchResult
 ) extends PageLike {
 
   //TODO

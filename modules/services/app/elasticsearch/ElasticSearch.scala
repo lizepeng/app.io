@@ -2,18 +2,15 @@ package elasticsearch
 
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s._
+import com.sksamuel.elastic4s.analyzers._
 import com.sksamuel.elastic4s.mappings._
 import helpers._
 import models._
-import models.cassandra.Indexable
+import models.cassandra.ESIndexable
 import models.misc._
-import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingResponse
-import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.delete.DeleteResponse
-import org.elasticsearch.action.index.IndexResponse
-import org.elasticsearch.action.search.MultiSearchResponse
 import org.elasticsearch.action.update.UpdateResponse
-import org.elasticsearch.common.settings.ImmutableSettings
+import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.XContentBuilder
 import play.api.libs.json.JsValue
 
@@ -24,8 +21,7 @@ import scala.concurrent._
  */
 class ElasticSearch(
   val basicPlayApi: BasicPlayApi
-)
-  extends AppConfigComponents
+) extends AppConfigComponents
   with PackageNameAsCanonicalName
   with BasicPlayComponents
   with DefaultPlayExecutor
@@ -42,7 +38,7 @@ class ElasticSearch(
   implicit lazy val Client = (
     for {
       settings <- config.getString("cluster.name").map { name =>
-        ImmutableSettings
+        Settings
           .settingsBuilder()
           .put("cluster.name", name)
           .build()
@@ -51,7 +47,7 @@ class ElasticSearch(
         ElasticsearchClientUri(uri)
       }
     } yield {
-      ElasticClient.remote(settings, uri)
+      ElasticClient.transport(settings, uri)
     })
     .getOrElse {
       Logger.warn("client.uri / cluster.name is not configured yet")
@@ -72,17 +68,15 @@ class ElasticSearch(
     }
   )
 
-  def PutMapping[T <: Indexable[_]](
+  def PutMapping[T <: ESIndexable[_]](
     mapping: T => Iterable[TypedFieldDefinition]
   )(implicit t: T) = Client.execute {
-    put mapping indexName / t.basicName as mapping(t)
+    put mapping indexName / t.basicName fields mapping(t)
   }
 
   def Index[T <: HasID[_]](r: T) = new IndexAction[T](r)
 
   def Delete[ID](r: ID) = new DeleteAction[ID](r)
-
-  def Delete = new DeleteMappingAction
 
   def Update[T <: HasID[_]](r: T) = new UpdateAction[T](r)
 
@@ -121,7 +115,7 @@ object ESyntax {
     val defs: Seq[SearchDefinition]
   ) {
 
-    def future(): Future[MultiSearchResponse] = {
+    def future(): Future[MultiSearchResult] = {
       client.execute(multi(defs))
     }
   }
@@ -130,7 +124,7 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def in(t: Indexable[_]): ReadySearchDefinition = {
+    def in(t: ESIndexable[_]): ReadySearchDefinition = {
       val sortable = t.sortable.map(_.name)
 
       val sortDefs = sort.collect {
@@ -160,9 +154,9 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: Indexable[T])(
+    def into(t: ESIndexable[T])(
       implicit converter: T => JsonDocSource
-    ): Future[(JsValue, Future[IndexResponse])] = {
+    ): Future[(JsValue, Future[IndexResult])] = {
       val src = converter(r)
       Future.successful(
         src.jsval, client.execute {
@@ -176,19 +170,9 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def from[T <: HasID[ID]](t: Indexable[T]): Future[DeleteResponse] =
+    def from[T <: HasID[ID]](t: ESIndexable[T]): Future[DeleteResponse] =
       client.execute {
         delete id id from s"$indexName/${t.basicName}"
-      }
-  }
-
-  class DeleteMappingAction(
-    implicit client: ElasticClient, indexName: String
-  ) {
-
-    def from[T](t: Indexable[T]): Future[DeleteMappingResponse] =
-      client.execute {
-        delete mapping indexName / t.basicName
       }
   }
 
@@ -196,14 +180,14 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def in(t: Indexable[T])(
+    def in(t: ESIndexable[T])(
       implicit converter: T => JsonDocSource
     ): Future[(JsValue, Future[UpdateResponse])] = {
       val src = converter(r)
       Future.successful(
-        src.jsval, client.execute {
-          update id r.id in s"$indexName/${t.basicName}" doc r
-        }
+        (src.jsval, client.execute {
+          update id r.id in s"$indexName/${t.basicName}" doc src
+        })
       )
     }
   }
@@ -212,9 +196,9 @@ object ESyntax {
     implicit client: ElasticClient, indexName: String
   ) {
 
-    def into(t: Indexable[T])(
+    def into(t: ESIndexable[T])(
       implicit converter: T => JsonDocSource
-    ): Future[BulkResponse] = client.execute {
+    ): Future[BulkResult] = client.execute {
       bulk(
         rs.map { r =>
           index into s"$indexName/${t.basicName}" id r.id doc r

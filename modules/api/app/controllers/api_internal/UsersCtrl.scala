@@ -38,7 +38,6 @@ class UsersCtrl(
   with I18nSupport
   with Logging {
 
-  onStart(ESIndexCleaner(_users).dropIndexIfEmpty)
   onStart(es.PutMapping(UserMapping))
 
   case class UserInfo(

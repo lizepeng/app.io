@@ -16,8 +16,8 @@ import models.Users
  */
 object UserMapping extends (Users => Iterable[TypedFieldDefinition]) {
   override def apply(v1: Users): Iterable[TypedFieldDefinition] = Seq(
-    v1.id.name typed StringType,
-    v1.name.name typed StringType,
-    v1.email.name typed StringType analyzer ElasticSearch.analyzers.email
+    field(v1.id.name) typed StringType,
+    field(v1.name.name) typed StringType,
+    field(v1.email.name) typed StringType analyzer ElasticSearch.analyzers.email
   )
 }

@@ -39,8 +39,6 @@ class GroupsCtrl(
   with I18nSupport
   with Logging {
 
-  onStart(ESIndexCleaner(_groups).dropIndexIfEmpty)
-
   case class GroupInfo(name: Name, description: Option[String])
 
   object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}

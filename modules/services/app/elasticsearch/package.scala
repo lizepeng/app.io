@@ -1,12 +1,6 @@
-import java.io.IOException
-
 import com.sksamuel.elastic4s.source._
 import models.misc._
 import org.elasticsearch.action.search.SearchResponse
-import org.elasticsearch.common.bytes.BytesReference
-import org.elasticsearch.common.compress.CompressorFactory
-import org.elasticsearch.common.io.Streams
-import org.elasticsearch.common.xcontent._
 import play.api.http._
 import play.api.libs.json._
 import play.api.mvc._
@@ -41,50 +35,6 @@ package object elasticsearch {
    */
   implicit def contentTypeOf_SearchResponse(implicit codec: Codec): ContentTypeOf[SearchResponse] =
     ContentTypeOf[SearchResponse](Some(ContentTypes.JSON))
-
-  /**
-   * Directly writes the source to the output builder
-   *
-   * The only thing we're aiming for here is a raw pretty printed Json Array
-   *
-   * @see [[org.elasticsearch.common.xcontent.XContentHelper.writeDirect]]
-   * @throws IOException
-   */
-  private[elasticsearch] def writeDirect(
-    source: BytesReference,
-    builder: XContentBuilder,
-    params: ToXContent.Params
-  ) {
-    val compressor = CompressorFactory.compressor(source)
-    if (compressor != null) {
-      val compressedStreamInput = compressor.streamInput(source.streamInput)
-      val contentType = XContentFactory.xContentType(compressedStreamInput)
-      compressedStreamInput.resetToBufferStart()
-      if (contentType == builder.contentType) {
-        Streams.copy(compressedStreamInput, builder.stream)
-      }
-      else {
-        using(XContentFactory.xContent(contentType).createParser(compressedStreamInput)) {
-          builder.copyCurrentStructure(_)
-        }
-      }
-    }
-    else {
-      val contentType = XContentFactory.xContentType(source)
-      using(XContentFactory.xContent(contentType).createParser(source)) {
-        builder.copyCurrentStructure(_)
-      }
-    }
-  }
-
-  private def using(parser: XContentParser)(f: XContentParser => Unit) = {
-    try {
-      parser.nextToken
-      f(parser)
-    } finally {
-      if (parser != null) parser.close()
-    }
-  }
 
   implicit class RichPager(val p: Pager) extends AnyVal {
 
@@ -123,6 +73,7 @@ package object elasticsearch {
   }
 
   implicit class CassandraTableToSortFields[T](val table: T) extends AnyVal {
+
     def sorting(fs: (T => SortField)*): Seq[SortField] = fs.map(f => f(table))
   }
 
