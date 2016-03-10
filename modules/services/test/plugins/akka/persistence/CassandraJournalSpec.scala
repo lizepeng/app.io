@@ -60,7 +60,7 @@ class CassandraJournalSpec extends JournalSpec {
   )
 
   override protected def beforeAll(): Unit = {
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
     system.actorOf(
       Props(
         new Actor {

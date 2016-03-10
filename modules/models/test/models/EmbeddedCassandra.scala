@@ -51,7 +51,7 @@ trait EmbeddedCassandra extends BeforeAfterAll with DefaultPlayExecutor {
   )
 
   def beforeAll(): Unit = {
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
   }
 
   def afterAll(): Unit = {
