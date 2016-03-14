@@ -25,13 +25,14 @@ class UsersCtrl(
   val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
   val _groups: Groups
-)
-  extends Secured(UsersCtrl)
+) extends UserCanonicalNamed
+  with CheckedModuleName
   with Controller
   with LinkHeader
   with BasicPlayComponents
   with InternalGroupsComponents
-  with UserActionComponents
+  with UserActionComponents[SearchCtrl.AccessDef]
+  with SearchCtrl.AccessDef
   with DefaultPlayExecutor
   with RateLimitConfigComponents
   with BootingProcess
@@ -50,7 +51,7 @@ class UsersCtrl(
   object UserInfo {implicit val jsonFormat = Json.format[UserInfo]}
 
   def show(id: UUID) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       _users.find(id).map { user =>
         Ok(Json.toJson(user))
       }.recover {
@@ -59,7 +60,7 @@ class UsersCtrl(
     }
 
   def groups(id: UUID, options: Option[String]) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P16).async { implicit req =>
       (for {
         user <- _users.find(id)
         grps <- _groups.find(
@@ -77,7 +78,7 @@ class UsersCtrl(
     }
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[SortField]) =
-    UserAction(_.Index).async { implicit req =>
+    UserAction(_.P03).async { implicit req =>
       if (ids.nonEmpty)
         _users.find(ids).map { usrs =>
           Ok(Json.toJson(usrs))
@@ -91,7 +92,7 @@ class UsersCtrl(
     }
 
   def create =
-    UserAction(_.Save).async { implicit req =>
+    UserAction(_.P01).async { implicit req =>
       BindJson().as[UserInfo] {
         success => (for {
           saved <- User(
@@ -113,4 +114,19 @@ class UsersCtrl(
 
 }
 
-object UsersCtrl extends Secured(User)
+object UsersCtrl
+  extends UserCanonicalNamed
+    with PermissionCheckable {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    /** IndexGroups */
+    val P16 = Access.Pos(16)
+
+    def values = Seq(P01, P02, P03, P16)
+  }
+
+  object AccessDef extends AccessDef
+}

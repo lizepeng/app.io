@@ -10,43 +10,14 @@ import security._
 /**
  * @author zepeng.li@gmail.com
  */
-object UserAction {
-
-  import UserActionComponents._
-
-  def apply(specifiers: (AccessDefinition => Access)*)(
-    implicit
-    resource: CheckedModule,
-    onDenied: (CheckedModule, Access, RequestHeader) => Result,
-    basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired,
-    rateLimitConfig: RateLimitConfig
-  ): ActionBuilder[UserRequest] = apply(
-    AccessDefinition.union(specifiers.map(_ (AccessDefinition)): _*)
-  )
-
-  def apply(access: Access)(
-    implicit
-    resource: CheckedModule,
-    onDenied: (CheckedModule, Access, RequestHeader) => Result,
-    basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired,
-    rateLimitConfig: RateLimitConfig
-  ): ActionBuilder[UserRequest] = {
-    MaybeUser().Action() andThen
-      AuthChecker andThen
-      RateLimitChecker() andThen
-      PermissionChecker(access)
-  }
-}
-
 case class UserActionRequired(
   _users: Users,
   _accessControls: AccessControls,
   _rateLimits: RateLimits
 )
 
-trait UserActionComponents {
+trait UserActionComponents[T <: BasicAccessDef] {
+  self: T =>
 
   def userActionRequired: UserActionRequired
 
@@ -58,6 +29,21 @@ trait UserActionComponents {
 
   implicit def onDenied: (CheckedModule, Access, RequestHeader) => Result = {
     (_, _, _) => Results.NotFound
+  }
+
+  def UserAction(specifiers: (T => Access.Pos)*)(
+    implicit
+    resource: CheckedModule,
+    onDenied: (CheckedModule, Access, RequestHeader) => Result,
+    basicPlayApi: BasicPlayApi,
+    userActionRequired: UserActionRequired,
+    rateLimitConfig: RateLimitConfig
+  ): ActionBuilder[UserRequest] = {
+    val access = Access.union(specifiers.map(_ (this).toAccess))
+    MaybeUser().Action() andThen
+      AuthChecker andThen
+      RateLimitChecker() andThen
+      PermissionChecker(access)
   }
 }
 

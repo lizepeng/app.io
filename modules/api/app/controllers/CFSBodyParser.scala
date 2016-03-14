@@ -22,9 +22,9 @@ import scala.language.postfixOps
  */
 case class CFSBodyParser(
   path: User => Path,
+  access: Access,
   pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
   dirPermission: CassandraFileSystem.Permission = CassandraFileSystem.Role.owner.rwx,
-  access: Access = AccessDefinition.Create,
   onUnauthorized: RequestHeader => Result = req => Results.NotFound,
   onPermDenied: RequestHeader => Result = req => Results.NotFound,
   onPathNotFound: RequestHeader => Result = req => Results.NotFound,

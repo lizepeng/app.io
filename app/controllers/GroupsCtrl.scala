@@ -19,22 +19,23 @@ class GroupsCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
   val userActionRequired: UserActionRequired
-)
-  extends Secured(GroupsCtrl)
+) extends GroupCanonicalNamed
+  with CheckedModuleName
   with Controller
   with BasicPlayComponents
-  with UserActionComponents
+  with UserActionComponents[GroupsCtrl.AccessDef]
+  with GroupsCtrl.AccessDef
   with DefaultPlayExecutor
   with I18nSupport {
 
   def index(pager: Pager, sort: Seq[SortField]) =
-    UserAction(_.Index, _.Create, _.Save, _.Destroy).apply { implicit req =>
+    UserAction(_.P03, _.P01, _.P05, _.P06).apply { implicit req =>
       val default = _groups.sorting(_.name.asc)
       Ok(html.groups.index(pager, if (sort.nonEmpty) sort else default))
     }
 
   def show(id: UUID) =
-    UserAction(_.Show, _.AddRelation, _.DelRelation).async { implicit req =>
+    UserAction(_.P02, _.P16, _.P17).async { implicit req =>
       _groups.find(id).map { grp =>
         if (grp.is_internal) MethodNotAllowed
         else Ok(html.groups.show(grp))
@@ -45,9 +46,25 @@ class GroupsCtrl(
 }
 
 object GroupsCtrl
-  extends Secured(Group)
-  with CanonicalNameBasedMessages
-  with ViewMessages {
+  extends GroupCanonicalNamed
+    with PermissionCheckable
+    with CanonicalNameBasedMessages
+    with ViewMessages {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    /** Add User */
+    val P16 = Access.Pos(16)
+
+    /** Remove User */
+    val P17 = Access.Pos(17)
+
+    def values = Seq(P01, P02, P03, P05, P06, P16, P17)
+  }
+
+  object AccessDef extends AccessDef
 
   def groupNames(groups: Seq[Group]) = Json.prettyPrint(
     JsObject(
