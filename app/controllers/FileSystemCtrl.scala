@@ -20,20 +20,21 @@ class FileSystemCtrl(
   val userActionRequired: UserActionRequired,
   val bandwidth: BandwidthService,
   val _cfs: CassandraFileSystem
-)
-  extends Secured(FileSystemCtrl)
+) extends CassandraFileSystemCanonicalNamed
+  with CheckedModuleName
   with Controller
   with BasicPlayComponents
   with UsersComponents
   with InternalGroupsComponents
-  with UserActionComponents
+  with UserActionComponents[FileSystemCtrl.AccessDef]
+  with FileSystemCtrl.AccessDef
   with DefaultPlayExecutor
   with BandwidthConfigComponents
   with CFSStreamComponents
   with I18nSupport {
 
   def index(path: Path, pager: Pager) =
-    UserAction(_.Index, _.Create, _.Destroy).async { implicit req =>
+    UserAction(_.P03, _.P01, _.P06).async { implicit req =>
       for {
         internalGroups <- _groups.find(_internalGroups.InternalGroupIds)
       } yield {
@@ -42,7 +43,7 @@ class FileSystemCtrl(
     }
 
   def show(path: Path) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       (for {
         file <- _cfs.file(path)
       } yield file).map { file =>
@@ -54,17 +55,31 @@ class FileSystemCtrl(
     }
 
   def download(path: Path, inline: Boolean) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P16).async { implicit req =>
       CFSHttpCaching(path) apply (HttpDownloadResult.send(_, inline = inline))
     }
 
   def stream(path: Path) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P16).async { implicit req =>
       CFSHttpCaching(path) apply (HttpStreamResult.stream(_))
     }
 }
 
 object FileSystemCtrl
-  extends Secured(CassandraFileSystem)
-  with CanonicalNameBasedMessages
-  with ViewMessages
+  extends CassandraFileSystemCanonicalNamed
+    with PermissionCheckable
+    with CanonicalNameBasedMessages
+    with ViewMessages {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    /** Download */
+    val P16 = Access.Pos(16)
+
+    def values = Seq(P01, P02, P03, P06, P16)
+  }
+
+  object AccessDef extends AccessDef
+}

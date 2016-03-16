@@ -2,7 +2,6 @@ package controllers
 
 import play.api.i18n.Messages
 import play.api.libs.json._
-import security.ModulesAccessControl._
 import security._
 
 /**
@@ -14,12 +13,12 @@ class RegisteredSecured(
 
   object Modules {
 
-    def names: Seq[String] = modules.map(_.CheckedModuleName.name)
+    def names: Seq[String] = modules.map(_.checkedModuleName.name)
 
     def toJson(implicit messages: Messages) = Json.prettyPrint(
       JsObject(
         names.map { name =>
-          (name, JsString(messages(s"$name.name")))
+          name -> JsString(messages(s"$name.name"))
         }
       )
     )
@@ -27,15 +26,16 @@ class RegisteredSecured(
 
   object AccessDef {
 
-    def names: Seq[String] = access_def.map(_.self.toString)
-
     def toJson(implicit messages: Messages) = Json.prettyPrint(
-      JsArray(
-        names.map { name => JsString(messages(s"actions.$name")) }
+      Json.toJson(
+        modules.map { m =>
+          val name = m.checkedModuleName.name
+          name ->
+            m.AccessDef.values.map { p =>
+              p.self.toString -> messages(s"$name.ac.$p")
+            }.toMap
+        }.toMap
       )
     )
-
-    lazy val access_def: Seq[Access] = AccessDefinition.ALL
   }
-
 }

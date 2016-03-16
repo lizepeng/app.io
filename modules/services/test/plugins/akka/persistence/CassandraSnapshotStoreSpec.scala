@@ -23,6 +23,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
      | akka.loglevel = "OFF"
+     | akka.test.single-expect-default = 20000
      |
      | akka.persistence.snapshot-store.plugin = "cassandra-snapshot-store"
      | cassandra-snapshot-store {
@@ -61,7 +62,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
   implicit lazy val keySpaceDef: KeySpaceDef = contactPoint.keySpace("test")
 
   override protected def beforeAll(): Unit = {
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
     system.actorOf(
       Props(
         new Actor {

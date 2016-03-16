@@ -27,11 +27,13 @@ class FileSystemCtrl(
   val userActionRequired: UserActionRequired,
   val bandwidth: BandwidthService,
   val _cfs: CassandraFileSystem
-) extends Secured(FileSystemCtrl)
+) extends CassandraFileSystemCanonicalNamed
+  with CheckedModuleName
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with UserActionComponents
+  with UserActionComponents[FileSystemCtrl.AccessDef]
+  with FileSystemCtrl.AccessDef
   with DefaultPlayExecutor
   with I18nSupport
   with AppConfigComponents
@@ -40,7 +42,7 @@ class FileSystemCtrl(
   with Logging {
 
   def index(path: Path, pager: Pager) =
-    UserAction(_.Index).async { implicit req =>
+    UserAction(_.P03).async { implicit req =>
       (path match {
         case Path.root =>
           _cfs.listRoot(pager)
@@ -59,12 +61,12 @@ class FileSystemCtrl(
     }
 
   def test(path: Path) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       Flow().bindFromQueryString.test(path)
     }
 
   def create(path: Path) =
-    UserAction(_.Create).async(CFSBodyParser(_ => path)) { implicit req =>
+    UserAction(_.P01).async(CFSBodyParser(_ => path, P01)) { implicit req =>
       (req.body.file("file").map(_.ref) match {
         case Some(file) => Flow().bindFromRequestBody.upload(file, path)()
         case None       => throw CFSBodyParser.MissingFile()
@@ -78,7 +80,7 @@ class FileSystemCtrl(
     }
 
   def destroy(path: Path, clear: Boolean) =
-    UserAction(_.Destroy).async { implicit req =>
+    UserAction(_.P06).async { implicit req =>
       (path.filename match {
         case Some(_) => for {
           file <- _cfs.file(path) if file.w.?
@@ -100,7 +102,7 @@ class FileSystemCtrl(
     }
 
   def updatePermission(path: Path, gid: Option[UUID], pos: Int) =
-    UserAction(_.Save).async { implicit req => //TODO Admin
+    UserAction(_.P16).async { implicit req =>
       (for {
         inode <- _cfs.inode(path)
         _ <- gid match {
@@ -119,7 +121,7 @@ class FileSystemCtrl(
     }
 
   def deletePermission(path: Path, gid: UUID) =
-    UserAction(_.Save).async { implicit req => //TODO Admin
+    UserAction(_.P16).async { implicit req =>
       (for {
         inode <- _cfs.inode(path)
         _ <- inode.deletePerm(gid)
@@ -132,4 +134,19 @@ class FileSystemCtrl(
     }
 }
 
-object FileSystemCtrl extends Secured(CassandraFileSystem)
+object FileSystemCtrl
+  extends CassandraFileSystemCanonicalNamed
+    with PermissionCheckable {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    /** Save Permission */
+    val P16 = Access.Pos(16)
+
+    def values = Seq(P01, P02, P03, P06, P16)
+  }
+
+  object AccessDef extends AccessDef
+}

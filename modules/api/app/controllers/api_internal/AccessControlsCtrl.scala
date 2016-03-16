@@ -23,19 +23,20 @@ class AccessControlsCtrl(
   val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
   val _groups: Groups
-)
-  extends Secured(AccessControlsCtrl)
+) extends AccessControlCanonicalNamed
+  with CheckedModuleName
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with UserActionComponents
+  with UserActionComponents[AccessControlsCtrl.AccessDef]
+  with AccessControlsCtrl.AccessDef
   with DefaultPlayExecutor
   with RateLimitConfigComponents
   with I18nSupport
   with Logging {
 
   def index(q: Option[String], p: Pager, sort: Seq[SortField]) =
-    UserAction(_.Index).async { implicit req =>
+    UserAction(_.P03).async { implicit req =>
       (es.Search(q, p, sort) in _accessControls future()).map { page =>
         Ok(page).withHeaders(
           linkHeader(page, routes.AccessControlsCtrl.index(q, _, sort))
@@ -44,7 +45,7 @@ class AccessControlsCtrl(
     }
 
   def show(principal_id: UUID, resource: String) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       _accessControls.find(principal_id, resource).map { ace =>
         Ok(Json.toJson(ace))
       }.recover {
@@ -53,7 +54,7 @@ class AccessControlsCtrl(
     }
 
   def create =
-    UserAction(_.Create).async { implicit req =>
+    UserAction(_.P01).async { implicit req =>
       BindJson.and(
         Json.obj("permission" -> 0L)
       ).as[AccessControlEntry] { success =>
@@ -85,7 +86,7 @@ class AccessControlsCtrl(
     }
 
   def destroy(principal_id: UUID, resource: String) =
-    UserAction(_.Destroy).async { implicit req =>
+    UserAction(_.P06).async { implicit req =>
       (for {
         ___ <- es.Delete(AccessControlEntry.genId(resource, principal_id)) from _accessControls
         ace <- _accessControls.find(principal_id, resource)
@@ -98,7 +99,7 @@ class AccessControlsCtrl(
     }
 
   def toggle(principal_id: UUID, resource: String, pos: Int) =
-    UserAction(_.Save).async { implicit req =>
+    UserAction(_.P05).async { implicit req =>
       (for {
         found <- _accessControls.find(principal_id, resource)
         saved <- found.copy(permission = found.permission ^ (1L << pos)).save
@@ -111,4 +112,16 @@ class AccessControlsCtrl(
     }
 }
 
-object AccessControlsCtrl extends Secured(AccessControl)
+object AccessControlsCtrl
+  extends AccessControlCanonicalNamed
+    with PermissionCheckable {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    def values = Seq(P01, P02, P03, P05, P06)
+  }
+
+  object AccessDef extends AccessDef
+}

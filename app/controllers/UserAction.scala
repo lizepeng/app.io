@@ -9,36 +9,6 @@ import security._
 /**
  * @author zepeng.li@gmail.com
  */
-object UserAction {
-
-  import UserActionRequired._
-  import UsersComponents._
-
-  def apply(specifiers: (AccessDefinition => Access)*)(
-    implicit
-    resource: CheckedModule,
-    onDenied: (CheckedModule, Access, RequestHeader) => Result,
-    basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired
-  ): ActionBuilder[UserRequest] = apply(
-    AccessDefinition.union(specifiers.map(_(AccessDefinition)): _*)
-  )
-
-  def apply(access: Access)(
-    implicit
-    resource: CheckedModule,
-    onDenied: (CheckedModule, Access, RequestHeader) => Result,
-    basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired
-  ): ActionBuilder[UserRequest] = {
-    MaybeUser().Action() andThen
-      LayoutLoader() andThen
-      AuthChecker andThen
-      PermissionChecker(access)
-  }
-
-}
-
 object MaybeUserAction {
 
   import UsersComponents._
@@ -65,7 +35,10 @@ object UserActionRequired {
 
 }
 
-trait UserActionComponents {
+trait UserActionComponents[T <: BasicAccessDef] {
+  self: T =>
+
+  import UsersComponents._
 
   def userActionRequired: UserActionRequired
 
@@ -75,5 +48,19 @@ trait UserActionComponents {
 
   implicit def onDenied: (CheckedModule, Access, RequestHeader) => Result = {
     (_, _, _) => Results.NotFound
+  }
+
+  def UserAction(specifiers: (T => Access.Pos)*)(
+    implicit
+    resource: CheckedModule,
+    onDenied: (CheckedModule, Access, RequestHeader) => Result,
+    basicPlayApi: BasicPlayApi,
+    userActionRequired: UserActionRequired
+  ): ActionBuilder[UserRequest] = {
+    val access = Access.union(specifiers.map(_ (this).toAccess))
+    MaybeUser().Action() andThen
+      LayoutLoader() andThen
+      AuthChecker andThen
+      PermissionChecker(access)
   }
 }

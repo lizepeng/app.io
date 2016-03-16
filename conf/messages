@@ -201,6 +201,23 @@ controllers.api_internal.groups.name             =Groups(Internal API)
 controllers.groups.name                          =Groups
 controllers.groups.created                       =New group created
 
+controllers.api_internal.groups.ac.1             =Add
+controllers.api_internal.groups.ac.2             =Show
+controllers.api_internal.groups.ac.3             =List
+controllers.api_internal.groups.ac.6             =Delete
+controllers.api_internal.groups.ac.16            =List Users
+controllers.api_internal.groups.ac.17            =Add User
+controllers.api_internal.groups.ac.18            =Remove User
+controllers.api_internal.groups.ac.19            =List Layouts
+controllers.api_internal.groups.ac.20            =Save Layout
+controllers.groups.ac.1                          =Add
+controllers.groups.ac.2                          =Show
+controllers.groups.ac.3                          =List
+controllers.groups.ac.5                          =Save
+controllers.groups.ac.6                          =Delete
+controllers.groups.ac.16                         =Add User
+controllers.groups.ac.17                         =Remove User
+
 views.groups.head                                =Groups
 views.groups.title                               =Groups
 views.groups.user.email.placeholder              =Enter User''s Email
@@ -216,6 +233,15 @@ controllers.api_internal.users.name              =Users(Internal API)
 controllers.users.name                           =Users
 controllers.users.password.changed               =Password changed successfully
 controllers.users.old.password.invalid           =Old Password is invalid
+
+controllers.api_internal.users.ac.1              =Create
+controllers.api_internal.users.ac.2              =Show
+controllers.api_internal.users.ac.3              =List
+controllers.api_internal.users.ac.16             =List Groups
+controllers.users.ac.1                           =Create
+controllers.users.ac.2                           =Show
+controllers.users.ac.3                           =List
+controllers.users.ac.16                          =Upload Profile Image
 
 views.users.head                                 =Users
 views.users.title                                =Users
@@ -243,6 +269,17 @@ controllers.file_system.missing                  =Missing File
 controllers.file_system.uploaded                 ={0} Uploaded
 controllers.file_system.deleted                  ={0} Deleted
 controllers.file_system.not.found                ={0} Not Found
+
+controllers.api_internal.file_system.ac.1        =Upload
+controllers.api_internal.file_system.ac.2        =Show
+controllers.api_internal.file_system.ac.3        =List
+controllers.api_internal.file_system.ac.6        =Delete
+controllers.api_internal.file_system.ac.16       =Save Permission
+controllers.file_system.ac.1                     =Upload
+controllers.file_system.ac.2                     =Show
+controllers.file_system.ac.3                     =List
+controllers.file_system.ac.6                     =Delete
+controllers.file_system.ac.16                    =Download
 
 views.file_system.title                          =File System
 views.file_system.head                           =File System
@@ -292,6 +329,13 @@ controllers.email_templates.deleted              =Email Template {0} has been de
 controllers.email_templates.exists               =Email Template {0} already exists.
 controllers.email_templates.saved                =Email Template {0} has been saved.
 
+controllers.email_templates.ac.1                 =Create
+controllers.email_templates.ac.2                 =Show
+controllers.email_templates.ac.3                 =List
+controllers.email_templates.ac.5                 =Save
+controllers.email_templates.ac.6                 =Delete
+controllers.email_templates.ac.7                 =History
+
 views.email_templates.title                      =Email Templates
 views.email_templates.head                       =Email Templates
 views.email_templates.name.place_holder          =Enter name of your new email template
@@ -316,6 +360,16 @@ controllers.access_controls.name                 =Access Control List
 controllers.access_controls.entry.deleted        =Access Control Entry deleted
 controllers.access_controls.entry.created        =Access Control Entry created
 
+controllers.api_internal.access_controls.ac.1    =Add
+controllers.api_internal.access_controls.ac.2    =Show
+controllers.api_internal.access_controls.ac.3    =List
+controllers.api_internal.access_controls.ac.5    =Save
+controllers.api_internal.access_controls.ac.6    =Delete
+controllers.access_controls.ac.1                 =Add
+controllers.access_controls.ac.3                 =List
+controllers.access_controls.ac.5                 =Save
+controllers.access_controls.ac.6                 =Delete
+
 views.access_controls.title                      =Access Control
 views.access_controls.head                       =Access Control
 views.access_controls.principal.placeholder      =Enter a User Email or Group Name
@@ -337,6 +391,8 @@ log.security.onUnauthorized                      =Authentication Failed.
 
 # search
 controllers.api_internal.search.name             =Search Engine(Internal API)
+
+controllers.api_internal.search.ac.16            =Search
 
 # alert
 alert.success.title                              =Success!
