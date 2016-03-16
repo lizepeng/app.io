@@ -14,6 +14,7 @@ import services._
 
 import scala.concurrent._
 import scala.language.postfixOps
+import scala.util.Failure
 
 /**
  * BodyParser for uploading file to our cassandra file system
@@ -57,11 +58,15 @@ case class CFSBodyParser(
       dest <- _cfs.dir(path(user)) if dest.w ?
     } yield temp).map { case temp =>
       multipartFormData(saveTo(temp)(user))
+    }.andThen {
+      case Failure(e: BaseException) => Logger.debug(e.reason)
     }.recover {
       case _: Directory.NotFound | _: Directory.ChildNotFound =>
         parse.error(Future.successful(onPathNotFound(req)))
       case _: FileSystemAccessControl.Denied                  =>
         parse.error(Future.successful(onFilePermDenied(req)))
+      case e: BaseException                                   =>
+        parse.error(Future.successful(onBaseException(req)))
     }
   }
 

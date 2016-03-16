@@ -169,7 +169,7 @@ class MyCtrl(
     ) {
       CFSImage.upload(
         filePath = u => Path.home(u) + profileImageFileName,
-        permission = Role.owner.rw | Role.other.r,
+        permission = Role.owner.rw + Role.other.r,
         overwrite = true,
         maxLength = profileImageMaxLength,
         accept = MyCtrl.acceptProfileImageFormats

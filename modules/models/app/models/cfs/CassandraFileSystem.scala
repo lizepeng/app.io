@@ -152,16 +152,16 @@ object CassandraFileSystem
 
   case class Permission(self: Long) extends AnyVal {
 
-    def |(that: Permission) = Permission(self | that.self)
+    def +(that: Permission) = Permission(self | that.self)
+
+    def -(that: Permission) = Permission(self & ~that.self)
 
     def ?(role: Roles => Role, access: Access) = {
       val want = role(Role).want(access).self
       (self & want) == want
     }
 
-    def ^(raw: Long) = Permission(self ^ raw)
-
-    def toggle(pos: Int) = this ^ (1L << pos)
+    def toggle(pos: Int) = Permission(self ^ (1L << pos))
 
     def isEmpty = self == 0L
 

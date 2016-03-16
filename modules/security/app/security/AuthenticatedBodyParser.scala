@@ -38,6 +38,9 @@ trait AuthenticatedBodyParser[A]
           parse.error(Future.successful(onUnauthorized(req)))
         case e: BaseException      =>
           parse.error(Future.successful(onBaseException(req)))
+        case e: Throwable          =>
+          Logger.debug("AuthenticatedBodyParser Failed", e)
+          parse.error(Future.successful(onBaseException(req)))
       }.map(_.apply(req))
     }
   }

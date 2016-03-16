@@ -7,6 +7,7 @@ import play.api.mvc._
 import security.ModulesAccessControl._
 
 import scala.concurrent.Future
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -25,15 +26,17 @@ trait PermissionCheckedBodyParser[A]
   override def invokeParser(req: RequestHeader)(
     implicit user: User
   ): Future[BodyParser[A]] = {
-
-    (for {
+    for {
       passCheck <- preCheck
       canAccess <- ModulesAccessControl(user, access, resource).canAccessAsync
       result <- super.invokeParser(req)(user) if passCheck && canAccess
-    } yield result).recover {
-      case e: Throwable =>
-        Logger.debug("PermissionCheckedBodyParser Failed", e)
-        parse.error(Future.successful(onPermDenied(req)))
-    }
+    } yield result
+  }.andThen {
+    case Failure(e: BaseException) => Logger.debug(e.reason)
+  }.recover {
+    case e: ModulesAccessControl.Denied =>
+      parse.error(Future.successful(onPermDenied(req)))
+    case e: BaseException               =>
+      parse.error(Future.successful(onBaseException(req)))
   }
 }
