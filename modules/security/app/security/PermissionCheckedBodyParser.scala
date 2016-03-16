@@ -1,7 +1,7 @@
 package security
 
-import helpers.BasicPlayApi
-import models.{AccessControls, User}
+import helpers._
+import models._
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
 import security.ModulesAccessControl._
@@ -17,6 +17,7 @@ trait PermissionCheckedBodyParser[A]
   def access: Access
   def resource: CheckedModule
   def onPermDenied: RequestHeader => Result
+  def preCheck: Future[Boolean]
 
   implicit def basicPlayApi: BasicPlayApi
   implicit def _accessControls: AccessControls
@@ -26,10 +27,13 @@ trait PermissionCheckedBodyParser[A]
   ): Future[BodyParser[A]] = {
 
     (for {
+      passCheck <- preCheck
       canAccess <- ModulesAccessControl(user, access, resource).canAccessAsync
-      result <- super.invokeParser(req)(user) if canAccess
+      result <- super.invokeParser(req)(user) if passCheck && canAccess
     } yield result).recover {
-      case e: Throwable => parse.error(Future.successful(onPermDenied(req)))
+      case e: Throwable =>
+        Logger.debug("PermissionCheckedBodyParser Failed", e)
+        parse.error(Future.successful(onPermDenied(req)))
     }
   }
 }

@@ -17,7 +17,7 @@ trait AuthenticatedBodyParser[A]
   with BasicPlayComponents
   with DefaultPlayExecutor
   with Authentication
-  with Logging {
+  with I18nLogging {
 
   def onUnauthorized: RequestHeader => Result
 
@@ -30,7 +30,7 @@ trait AuthenticatedBodyParser[A]
       pam(_users)(req).flatMap {
         user => invokeParser(req)(user)
       }.andThen {
-        case Failure(e: BaseException) => Logger.trace(e.reason)
+        case Failure(e: BaseException) => Logger.debug(e.reason)
       }.recover {
         case e: User.NoCredentials =>
           parse.error(Future.successful(onUnauthorized(req)))
