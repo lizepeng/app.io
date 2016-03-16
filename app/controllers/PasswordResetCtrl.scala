@@ -26,8 +26,7 @@ class PasswordResetCtrl(
   val _expirableLinks: ExpirableLinks,
   val _emailTemplates: EmailTemplates,
   val _sysConfig: SysConfigs
-)
-  extends Secured(PasswordResetCtrl)
+) extends PasswordResetCtrlCNamed
   with Controller
   with BasicPlayComponents
   with UsersComponents
@@ -147,7 +146,11 @@ class PasswordResetCtrl(
   }
 }
 
-object PasswordResetCtrl extends CanonicalNamed with ViewMessages {
+object PasswordResetCtrl
+  extends PasswordResetCtrlCNamed
+    with ViewMessages
 
-  override val basicName = "password_reset"
+trait PasswordResetCtrlCNamed extends CanonicalNamed {
+
+  val basicName = "password_reset"
 }

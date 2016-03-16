@@ -19,7 +19,6 @@ projectFilesBackup*
 /conf/application*.conf
 /conf/logger.xml
 /conf/logback.xml
-/project/plugins.sbt
 /data
 *.orig
 modules/services/journal/

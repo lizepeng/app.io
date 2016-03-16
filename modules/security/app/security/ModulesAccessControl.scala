@@ -7,6 +7,7 @@ import helpers._
 import models._
 
 import scala.concurrent.Future
+import scala.language.implicitConversions
 import scala.util.Failure
 
 /**
@@ -20,8 +21,7 @@ case class ModulesAccessControl(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _accessControls: AccessControls
-)
-  extends AccessControl[User, ModulesAccessControl.Access, ModulesAccessControl.CheckedModule]
+) extends AccessControl[User, ModulesAccessControl.Access, ModulesAccessControl.CheckedModule]
   with BasicPlayComponents
   with DefaultPlayExecutor
   with Logging {
@@ -101,7 +101,7 @@ case class ModulesAccessControl(
 
 object ModulesAccessControl
   extends CanonicalNamed
-  with ExceptionDefining {
+    with ExceptionDefining {
 
   override def basicName: String = "modules"
 
@@ -115,7 +115,28 @@ object ModulesAccessControl
 
     def |(that: => Access) = Access(self | that.self)
 
+    def toPermission = Permission(self)
+
     override def toString = BinaryString.from(self).toString
+  }
+
+  object Access {
+
+    case class Pos(self: Int) extends AnyVal {
+
+      def toAccess = Access(1L << self.min(63).max(0))
+
+      override def toString = self.toString
+    }
+
+    object Pos {
+
+      implicit def PosToAccess(pos: Pos): Access = pos.toAccess
+    }
+
+    val Nothing = Access(0L)
+
+    def union(accesses: Iterable[Access]) = (Nothing /: accesses) (_ | _)
   }
 
   case class Permission(self: Long) extends AnyVal {
@@ -129,7 +150,7 @@ object ModulesAccessControl
 
   object Permission {
 
-    val Anything = Permission(0xffffffffffffffffL)
+    val Anything = Permission(0xFFFFFFFFFFFFFFFFL)
     val Nothing  = Permission(0x0000000000000000L)
 
     def union(permissions: Permission*) = (Nothing /: permissions) (_ | _)
@@ -140,38 +161,30 @@ object ModulesAccessControl
     override def toString = name
   }
 
-  trait AccessDefinition {
+  trait BasicAccessDef {
 
-    val Nothing      = Access(0x0000000000000000L)
-    val NNew         = Access(0x0000000000000001L)
-    val Create       = Access(0x0000000000000002L)
-    val Show         = Access(0x0000000000000004L)
-    val Index        = Access(0x0000000000000008L)
-    val Edit         = Access(0x0000000000000010L)
-    val Save         = Access(0x0000000000000020L)
-    val Destroy      = Access(0x0000000000000040L)
-    val HistoryIndex = Access(0x0000000000000080L)
-    val AddRelation  = Access(0x0000000000000100L)
-    val DelRelation  = Access(0x0000000000000200L)
+    def Pos(pos: Int) = Access(1L << pos.min(63).max(0))
 
-    def union(as: Access*) = (Nothing /: as) (_ | _)
+    /** Access : New 0x0000000000000001L */
+    val P00 = Access.Pos(0)
+    /** Access : Create */
+    val P01 = Access.Pos(1)
+    /** Access : Show */
+    val P02 = Access.Pos(2)
+    /** Access : Index */
+    val P03 = Access.Pos(3)
+    /** Access : Edit */
+    val P04 = Access.Pos(4)
+    /** Access : Save */
+    val P05 = Access.Pos(5)
+    /** Access : Destroy */
+    val P06 = Access.Pos(6)
+    /** Access : Index History */
+    val P07 = Access.Pos(7)
+    // 8 ~ 15 are preserved
 
-    val ALL = Seq(
-      NNew,
-      Create,
-      Show,
-      Index,
-      Edit,
-      Save,
-      Destroy,
-      HistoryIndex,
-      AddRelation,
-      DelRelation
-    )
+    def values: Seq[Access.Pos]
 
-    val Anything = union(ALL: _*)
+    def permission: Permission = Access.union(values.map(_.toAccess)).toPermission
   }
-
-  object AccessDefinition extends AccessDefinition
-
 }

@@ -21,11 +21,12 @@ class EmailTemplatesCtrl(
   val _sessionData: SessionData,
   val _emailTemplates: EmailTemplates,
   val _emailTemplateHistories: EmailTemplateHistories
-)
-  extends Secured(EmailTemplatesCtrl)
+) extends EmailTemplateCanonicalNamed
+  with CheckedModuleName
   with Controller
   with BasicPlayComponents
-  with UserActionComponents
+  with UserActionComponents[AccessControlsCtrl.AccessDef]
+  with AccessControlsCtrl.AccessDef
   with UsersComponents
   with DefaultPlayExecutor
   with CanonicalNameBasedMessages
@@ -60,7 +61,7 @@ class EmailTemplatesCtrl(
   }
 
   def index(pager: Pager) =
-    UserAction(_.Index).async { implicit req =>
+    UserAction(_.P03).async { implicit req =>
       _emailTemplates.list(pager).map { list =>
         Ok(html.email_templates.index(Page(pager, list)))
       }.recover {
@@ -69,7 +70,7 @@ class EmailTemplatesCtrl(
     }
 
   def show(id: String, lang: Lang, updated_at: Option[DateTime] = None) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       for {
         tmpl <- _emailTemplates.find(id, lang, updated_at)
         usr1 <- _users.find(tmpl.updated_by)
@@ -80,14 +81,14 @@ class EmailTemplatesCtrl(
     }
 
   def nnew() =
-    UserAction(_.NNew).async { implicit req =>
+    UserAction(_.P00).async { implicit req =>
       Future.successful {
         Ok(html.email_templates.nnew(TemplateFM))
       }
     }
 
   def create =
-    UserAction(_.Create).async { implicit req =>
+    UserAction(_.P01).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure => Future.successful {
@@ -123,7 +124,7 @@ class EmailTemplatesCtrl(
     }
 
   def edit(id: String, lang: Lang) =
-    UserAction(_.Edit).async { implicit req =>
+    UserAction(_.P04).async { implicit req =>
       val result =
         for {
           tmpl <- _emailTemplates.find(id, lang)
@@ -143,7 +144,7 @@ class EmailTemplatesCtrl(
     }
 
   def save(id: String, lang: Lang) =
-    UserAction(_.Save).async { implicit req =>
+    UserAction(_.P05).async { implicit req =>
       val bound = TemplateFM.bindFromRequest()
       bound.fold(
         failure =>
@@ -185,7 +186,7 @@ class EmailTemplatesCtrl(
     }
 
   def history(id: String, lang: Lang, pager: Pager) =
-    UserAction(_.HistoryIndex).async { implicit req =>
+    UserAction(_.P07).async { implicit req =>
       for {
         tmpl <- _emailTemplates.find(id, lang)
         list <- _emailTemplateHistories.list(id, lang, pager)
@@ -199,7 +200,7 @@ class EmailTemplatesCtrl(
     }
 
   def destroy(id: String, lang: Lang) =
-    UserAction(_.Destroy).async { implicit req => {
+    UserAction(_.P06).async { implicit req => {
       for {
         tmpl <- _emailTemplates.find(id, lang)
         ___ <- _emailTemplates.destroy(id, lang)
@@ -218,6 +219,17 @@ class EmailTemplatesCtrl(
 }
 
 object EmailTemplatesCtrl
-  extends Secured(EmailTemplate)
-  with CanonicalNameBasedMessages
-  with ViewMessages
+  extends EmailTemplateCanonicalNamed
+    with PermissionCheckable
+    with CanonicalNameBasedMessages
+    with ViewMessages {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    def values = Seq(P01, P02, P03, P05, P06, P07)
+  }
+
+  object AccessDef extends AccessDef
+}

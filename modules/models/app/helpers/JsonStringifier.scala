@@ -1,13 +1,13 @@
 package helpers
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json._
 
 import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
  */
-trait JsonStringifier[A] {
+trait JsonStringifier[A] extends Logging {
 
   def jsonFormat: Format[A]
 
@@ -15,7 +15,9 @@ trait JsonStringifier[A] {
 
   def fromJson(obj: String): A = Try(Json.parse(obj)) match {
     case Success(json) => jsonFormat.reads(json).getOrElse(default)
-    case Failure(e)    => default
+    case Failure(e)    =>
+      Logger.warn("Json parse failed and reverts to default value")
+      default
   }
 
   def toJson(obj: A): String = Json.stringify(jsonFormat.writes(obj))
