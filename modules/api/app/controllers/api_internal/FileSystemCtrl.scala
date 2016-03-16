@@ -62,13 +62,13 @@ class FileSystemCtrl(
 
   def test(path: Path) =
     UserAction(_.P02).async { implicit req =>
-      Flow().bindFromQueryString.test(path)
+      FlowJs().bindFromQueryString.test(path)
     }
 
   def create(path: Path) =
     UserAction(_.P01).async(CFSBodyParser(_ => path, P01)) { implicit req =>
       (req.body.file("file").map(_.ref) match {
-        case Some(file) => Flow().bindFromRequestBody.upload(file, path)()
+        case Some(file) => FlowJs().bindFromRequestBody.upload(file, path)()
         case None       => throw CFSBodyParser.MissingFile()
       }).andThen {
         case Failure(e: CFSBodyParser.MissingFile)      => Logger.warn(e.message)

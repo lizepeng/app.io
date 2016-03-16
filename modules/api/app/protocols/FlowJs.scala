@@ -22,19 +22,18 @@ import scala.util._
 /**
  * Server-Side Implementation of flow.js protocol
  *
- * @param filename if filename specified, it takes priority over the flowFilename one
- * @param permission file permission
- * @param overwrite whether overwrite the old one if inode with the same name already exists
- * @param maxLength maximum size of uploading file
- * @param accept the types of files are allowed to be uploaded
- * @param form queryString or data part in multipart/form
- * @param req Request
+ * @param filename     if filename specified, it takes priority over the flowFilename one
+ * @param permission   file permission
+ * @param overwrite    whether overwrite the old one if inode with the same name already exists
+ * @param maxLength    maximum size of uploading file
+ * @param accept       the types of files are allowed to be uploaded
+ * @param form         queryString or data part in multipart/form
+ * @param req          Request
  * @param basicPlayApi common play api
- * @param _cfs cassandra file system api
- *
+ * @param _cfs         cassandra file system api
  * @author zepeng.li@gmail.com
  */
-case class Flow(
+case class FlowJs(
   filename: Option[String] = None,
   permission: Permission = Role.owner.rw,
   overwrite: Boolean = false,
@@ -46,21 +45,20 @@ case class Flow(
   val req: UserRequest[_],
   val basicPlayApi: BasicPlayApi,
   val _cfs: CassandraFileSystem
-)
-  extends BasicPlayComponents
+) extends BasicPlayComponents
   with DefaultPlayExecutor
   with I18nSupport
   with Logging {
 
   def bindFromQueryString(
     implicit req: UserRequest[_]
-  ): Flow = {
+  ): FlowJs = {
     this.copy(form = req.queryString)
   }
 
   def bindFromRequestBody(
     implicit req: UserRequest[MultipartFormData[File]]
-  ): Flow = {
+  ): FlowJs = {
     this.copy(form = req.body.asFormUrlEncoded)
   }
 
@@ -109,7 +107,7 @@ case class Flow(
    * Extract value of the parameter in protocol flow.js, from query string or request body.
    * because of every parameter could missing, this method will return future for convenience.
    *
-   * @param key the key of parameter
+   * @param key       the key of parameter
    * @param transform the transformation method to convert the value to specific Type of scala
    * @tparam T the Type of the parameter
    * @return return future of the value corresponding specified parameter key.
@@ -121,7 +119,7 @@ case class Flow(
     } yield value
   } match {
     case Some(v) => Future.successful(v)
-    case None    => Future.failed(Flow.MissingFlowArgument(key))
+    case None    => Future.failed(FlowJs.MissingFlowArgument(key))
   }
 
   override def toString = form.toString()
@@ -146,8 +144,8 @@ case class Flow(
    * Uploading a chunk of the whole file,
    * this method will be invoked after body parser saving the request body as a temp file.
    *
-   * @param chunk the temp file that body parser parsed and created
-   * @param path target path to upload the file
+   * @param chunk      the temp file that body parser parsed and created
+   * @param path       target path to upload the file
    * @param onUploaded callback method on success
    * @return
    */
@@ -158,11 +156,11 @@ case class Flow(
       _ <- originalFileName.map { fn =>
         val mimeType = MimeTypes.forFileName(fn).getOrElse("")
         if (accept.isEmpty || accept.contains(mimeType)) fn
-        else throw Flow.NotSupported(fn, accept)
+        else throw FlowJs.NotSupported(fn, accept)
       }
       _ <- totalSize.map { ts =>
         if (ts <= maxLength) ts
-        else throw Flow.TooLarge(File.pprint(maxLength))
+        else throw FlowJs.TooLarge(File.pprint(maxLength))
       }
       tmpName <- tempFileName.andThen {
         case Success(fn) => Logger.trace(s"uploading $fn")
@@ -183,8 +181,8 @@ case class Flow(
         Logger.debug(e.reason)
         chunk.delete()
     }.recover {
-      case e: Flow.NotSupported => Results.UnsupportedMediaType(JsonMessage(e))
-      case e: Flow.TooLarge     => Results.EntityTooLarge(JsonMessage(e))
+      case e: FlowJs.NotSupported => Results.UnsupportedMediaType(JsonMessage(e))
+      case e: FlowJs.TooLarge     => Results.EntityTooLarge(JsonMessage(e))
     }
   }
 
@@ -192,7 +190,7 @@ case class Flow(
    * Once flow.js finish uploading a chunk of the file, it will check if that was the last one.
    * If so flow.js will start concatenating process
    *
-   * @param path target path to upload the file
+   * @param path       target path to upload the file
    * @param onUploaded callback method on success
    * @return
    */
@@ -221,8 +219,8 @@ case class Flow(
   /**
    * Concatenate all chunks to the whole file.
    *
-   * @param path target path to upload the file
-   * @param filename uploading file name
+   * @param path       target path to upload the file
+   * @param filename   uploading file name
    * @param onUploaded callback method on success
    * @return
    */
@@ -246,7 +244,7 @@ case class Flow(
           }
         } else Future.successful {
 
-          val err: Flow.TooLarge = Flow.TooLarge(File.pprint(maxLength))
+          val err: FlowJs.TooLarge = FlowJs.TooLarge(File.pprint(maxLength))
           Logger.debug(err.reason)
           file.delete()
           Logger.debug(s"deleting file: ${path + filename}.")
@@ -306,13 +304,13 @@ case class Flow(
     }).andThen {
       case Failure(e: BaseException) => Logger.debug(e.reason)
     }.recover {
-      case e: Flow.MissingFlowArgument => Results.NotFound
-      case e: ChildNotFound            => Results.NoContent
+      case e: FlowJs.MissingFlowArgument => Results.NotFound
+      case e: ChildNotFound              => Results.NoContent
     }
   }
 }
 
-object Flow extends ExceptionDefining with CanonicalNamed {
+object FlowJs extends ExceptionDefining with CanonicalNamed {
 
   override def basicName = "flow.js"
 

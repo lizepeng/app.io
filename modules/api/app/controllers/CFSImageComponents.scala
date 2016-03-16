@@ -86,7 +86,7 @@ trait CFSImageComponents extends CFSDownloadComponents {
       filePath: User => Path
     ): UserRequest[AnyContent] => Future[Result] = implicit req => {
       val path = filePath(req.user)
-      Flow(filename = path.filename).bindFromQueryString.test(path)
+      FlowJs(filename = path.filename).bindFromQueryString.test(path)
     }
 
     def upload(
@@ -98,7 +98,7 @@ trait CFSImageComponents extends CFSDownloadComponents {
     ): UserRequest[MultipartFormData[File]] => Future[Result] = implicit req => {
       val path = filePath(req.user)
       (req.body.file("file").map(_.ref) match {
-        case Some(chunk) => Flow(
+        case Some(chunk) => FlowJs(
           filename = path.filename,
           permission = permission,
           overwrite = overwrite,
