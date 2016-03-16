@@ -60,7 +60,7 @@ object ChatHistory
 class ChatHistories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends ChatHistoryTable
   with ExtCQL[ChatHistoryTable, ChatMessage]

@@ -1,13 +1,13 @@
 package models
 
 import com.typesafe.config.ConfigFactory
-import helpers.{BasicPlayApi, DefaultPlayExecutor}
-import models.cassandra.KeySpaceBuilder
+import com.websudos.phantom.connectors._
+import helpers._
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.specs2.specification.BeforeAfterAll
 import play.api.inject.DefaultApplicationLifecycle
 import play.api.libs.concurrent.ActorSystemProvider
-import play.api.{Configuration, Environment}
+import play.api._
 
 /**
  * @author zepeng.li@gmail.com
@@ -46,16 +46,16 @@ trait EmbeddedCassandra extends BeforeAfterAll with DefaultPlayExecutor {
   )
 
   implicit lazy val contactPoint: KeySpaceBuilder = new KeySpaceBuilder(
-    basicPlayApi.applicationLifecycle,
     _.addContactPoint("localhost").withPort(9142)
   )
+
+  implicit lazy val keySpaceDef: KeySpaceDef = contactPoint.keySpace("test")
 
   def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
   }
 
   def afterAll(): Unit = {
-    contactPoint.sessionProvider.shutdown()
     EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
   }
 }

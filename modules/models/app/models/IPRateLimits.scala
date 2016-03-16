@@ -42,7 +42,7 @@ object IPRateLimits
 class IPRateLimits(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends IPRateLimitTable
   with ExtCQL[IPRateLimitTable, InetAddress]

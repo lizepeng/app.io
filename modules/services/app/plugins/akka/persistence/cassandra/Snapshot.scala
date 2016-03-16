@@ -54,7 +54,7 @@ sealed class SnapshotTable
 
 class Snapshots(
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends SnapshotTable
   with ExtCQL[SnapshotTable, SnapshotRecord]

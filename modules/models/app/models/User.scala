@@ -159,7 +159,7 @@ object User
 class Users(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _sysConfig: SysConfigs,
   val _internalGroups: InternalGroups
 ) extends UserTable
@@ -167,6 +167,7 @@ class Users(
   with ExtCQL[UserTable, User]
   with BasicPlayComponents
   with CassandraComponents
+  with AppDomainComponents
   with SystemAccounts
   with BootingProcess
   with Logging {
@@ -345,7 +346,7 @@ trait UsersByEmailCanonicalNamed extends CanonicalNamed {
 class UsersByEmail(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 ) extends UsersByEmailIndex
   with ExtCQL[UsersByEmailIndex, (String, UUID)]
   with BasicPlayComponents

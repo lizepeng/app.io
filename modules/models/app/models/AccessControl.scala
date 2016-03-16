@@ -92,7 +92,7 @@ object AccessControlEntry
 class AccessControls(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends AccessControlTable
   with EntityTable[AccessControlEntry]

@@ -54,7 +54,7 @@ object Block extends BlockCanonicalNamed {
 class Blocks(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 )
   extends BlockTable
   with BasicPlayComponents

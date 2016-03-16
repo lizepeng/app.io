@@ -275,7 +275,7 @@ object Directory extends CanonicalNamed with ExceptionDefining {
 class Directories(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _inodes: INodes,
   val _files: Files
 )

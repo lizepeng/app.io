@@ -7,7 +7,6 @@ import helpers.ExtEnumeratee._
 import helpers.ExtString._
 import helpers._
 import models._
-import models.cassandra._
 import models.misc._
 import models.sys._
 import play.api.libs.json._
@@ -21,7 +20,7 @@ import scala.util._
 class CassandraFileSystem(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _users: Users,
   val _sysConfig: SysConfigs
 ) extends CassandraFileSystemCanonicalNamed
@@ -161,6 +160,10 @@ object CassandraFileSystem
     }
 
     def ^(raw: Long) = Permission(self ^ raw)
+
+    def toggle(pos: Int) = this ^ (1L << pos)
+
+    def isEmpty = self == 0L
 
     override def toString = pprint
 

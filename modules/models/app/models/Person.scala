@@ -63,7 +63,7 @@ object Person extends PersonCanonicalNamed
 class Persons(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
+  val keySpaceDef: KeySpaceDef
 ) extends PersonTable
   with EntityTable[Person]
   with ExtCQL[PersonTable, Person]

@@ -51,22 +51,22 @@ trait INode extends HasUUID with TimeBased {
     } yield Unit
   }
 
-  def save(permission: Permission)(
+  def savePerm(perm: Permission)(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] = {
-    cfs._inodes.save(id, permission)
+    cfs._inodes.savePerm(id, perm)
   }
 
-  def save(group_id: UUID, permission: Permission)(
+  def savePerm(gid: UUID, perm: Permission)(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] = {
-    cfs._inodes.save(id, group_id, permission)
+    cfs._inodes.savePerm(id, gid, perm)
   }
 
-  def save(ext_permission: Map[UUID, Permission])(
+  def deletePerm(gid: UUID)(
     implicit cfs: CassandraFileSystem
   ): Future[Unit] = {
-    cfs._inodes.save(id, ext_permission)
+    cfs._inodes.deletePerm(id, gid)
   }
 }
 
@@ -169,9 +169,8 @@ object INode extends INodeCanonicalNamed {
 class INodes(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder
-)
-  extends INodeTable
+  val keySpaceDef: KeySpaceDef
+) extends INodeTable
   with ExtCQL[INodeTable, Row]
   with BasicPlayComponents
   with CassandraComponents
@@ -184,31 +183,20 @@ class INodes(
     CQL {select.where(_.inode_id eqs id)}.one()
   }
 
-  def save(
-    id: UUID,
-    permission: Permission
-  ): Future[Unit] = CQL {
+  def savePerm(id: UUID, perm: Permission): Future[Unit] = CQL {
     update
       .where(_.inode_id eqs id)
-      .modify(_.permission setTo permission.self)
+      .modify(_.permission setTo perm.self)
   }.future().map(_ => Unit)
 
-  def save(
-    id: UUID,
-    group_id: UUID,
-    permission: Permission
-  ): Future[Unit] = CQL {
+  def savePerm(id: UUID, gid: UUID, perm: Permission): Future[Unit] = CQL {
     update
       .where(_.inode_id eqs id)
-      .modify(_.ext_permission put group_id -> permission.self.toInt)
+      .modify(_.ext_permission put gid -> perm.self.toInt)
   }.future().map(_ => Unit)
 
-  def save(
-    id: UUID,
-    ext_permission: Map[UUID, Permission]
-  ): Future[Unit] = CQL {
-    update
+  def deletePerm(id: UUID, gid: UUID): Future[Unit] = CQL {
+    delete(_.ext_permission(gid))
       .where(_.inode_id eqs id)
-      .modify(_.ext_permission setTo ext_permission.mapValues(_.self.toInt))
   }.future().map(_ => Unit)
 }

@@ -119,7 +119,7 @@ object File extends CanonicalNamed with ExceptionDefining {
 class Files(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val contactPoint: KeySpaceBuilder,
+  val keySpaceDef: KeySpaceDef,
   val _blocks: Blocks,
   val _indirectBlocks: IndirectBlocks
 )

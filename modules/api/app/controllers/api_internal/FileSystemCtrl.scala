@@ -106,10 +106,12 @@ class FileSystemCtrl(
       (for {
         inode <- _cfs.inode(path)
         _ <- gid match {
-          case Some(group_id) =>
-            inode.save(group_id, inode.ext_permission(group_id) ^ (1L << pos))
-          case None           =>
-            inode.save(inode.permission ^ (1L << pos))
+          case Some(g) =>
+            val perm = inode.ext_permission(g).toggle(pos)
+            if (perm.isEmpty) inode.deletePerm(g)
+            else inode.savePerm(g, perm)
+          case None    =>
+            inode.savePerm(inode.permission.toggle(pos))
         }
       } yield {
         Ok
@@ -122,7 +124,7 @@ class FileSystemCtrl(
     UserAction(_.P16).async { implicit req =>
       (for {
         inode <- _cfs.inode(path)
-        _ <- inode.save(inode.ext_permission - gid)
+        _ <- inode.deletePerm(gid)
       } yield {
         Ok
       }).recover {

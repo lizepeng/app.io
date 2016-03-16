@@ -3,8 +3,8 @@ package plugins.akka.persistence
 import akka.actor.{Actor, Props}
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.ConfigFactory
+import com.websudos.phantom.connectors._
 import helpers.BasicPlayApi
-import models.cassandra.KeySpaceBuilder
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.junit.runner._
 import org.specs2.runner._
@@ -56,9 +56,10 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
   )
 
   implicit lazy val contactPoint: KeySpaceBuilder = new KeySpaceBuilder(
-    basicPlayApi.applicationLifecycle,
     _.addContactPoint("localhost").withPort(9142)
   )
+
+  implicit lazy val keySpaceDef: KeySpaceDef = contactPoint.keySpace("test")
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
@@ -66,17 +67,17 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
       Props(
         new Actor {
           override def receive: Receive = {
-            case _ => sender ! List(basicPlayApi, contactPoint)
+            case _ => sender ! List(basicPlayApi, keySpaceDef)
           }
         }
       ), ResourcesMediator.basicName
     )
     super.beforeAll()
+    Thread.sleep(3000) //wait until cassandra is ready
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
-    contactPoint.sessionProvider.shutdown()
     EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
   }
 }
