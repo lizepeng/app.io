@@ -16,7 +16,7 @@ trait JsonStringifier[A] extends Logging {
   def fromJson(obj: String): A = Try(Json.parse(obj)) match {
     case Success(json) => jsonFormat.reads(json).getOrElse(default)
     case Failure(e)    =>
-      Logger.warn("Json parse failed and reverts to default value")
+      Logger.warn("Json parse failed and reverts to default value", e)
       default
   }
 

@@ -165,7 +165,7 @@ object ModulesAccessControl
 
     def Pos(pos: Int) = Access(1L << pos.min(63).max(0))
 
-    /** Access : New 0x0000000000000001L */
+    /** Access : New */
     val P00 = Access.Pos(0)
     /** Access : Create */
     val P01 = Access.Pos(1)
