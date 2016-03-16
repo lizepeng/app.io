@@ -27,12 +27,13 @@ class GroupsCtrl(
   val es: ElasticSearch,
   val _sysConfig: SysConfigs,
   val _groups: Groups
-)
-  extends Secured(GroupsCtrl)
+) extends GroupCanonicalNamed
+  with CheckedModuleName
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with UserActionComponents
+  with UserActionComponents[GroupsCtrl.AccessDef]
+  with GroupsCtrl.AccessDef
   with DefaultPlayExecutor
   with RateLimitConfigComponents
   with BootingProcess
@@ -46,7 +47,7 @@ class GroupsCtrl(
   object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}
 
   def index(ids: Seq[UUID], q: Option[String], p: Pager, sort: Seq[SortField]) =
-    UserAction(_.Index).async { implicit req =>
+    UserAction(_.P03).async { implicit req =>
       if (ids.nonEmpty)
         _groups.find(ids).map { grps =>
           Ok(Json.toJson(grps))
@@ -60,7 +61,7 @@ class GroupsCtrl(
     }
 
   def show(id: UUID) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       _groups.find(id).flatMap {
         HttpCaching { grp =>
           Ok(Json.toJson(grp))
@@ -71,7 +72,7 @@ class GroupsCtrl(
     }
 
   def create =
-    UserAction(_.Save).async { implicit req =>
+    UserAction(_.P01).async { implicit req =>
       BindJson().as[GroupInfo] { success =>
         for {
           saved <- _groups.save(Group(name = success.name, description = success.description))
@@ -86,7 +87,7 @@ class GroupsCtrl(
     }
 
   def destroy(id: UUID) =
-    UserAction(_.Destroy).async { implicit req =>
+    UserAction(_.P06).async { implicit req =>
       (for {
         grp <- _groups.find(id)
         ___ <- _groups.remove(id)
@@ -104,7 +105,7 @@ class GroupsCtrl(
     }
 
   def checkName =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       BodyIsJsObject { obj =>
         Future.successful {
           (obj \ "name").validate[Name].fold(
@@ -116,7 +117,7 @@ class GroupsCtrl(
     }
 
   def save(id: UUID) =
-    UserAction(_.Save).async { implicit req =>
+    UserAction(_.P05).async { implicit req =>
       BindJson().as[GroupInfo] { grp =>
         (for {
           group <- _groups.find(id)
@@ -131,7 +132,7 @@ class GroupsCtrl(
     }
 
   def users(id: UUID, pager: Pager) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P16).async { implicit req =>
       (for {
         page <- _groups.children(id, pager)
         usrs <- _users.find(page)
@@ -144,7 +145,7 @@ class GroupsCtrl(
     }
 
   def addUser(id: UUID) =
-    UserAction(_.Save).async { implicit req =>
+    UserAction(_.P17).async { implicit req =>
       BodyIsJsObject { obj =>
         def u1 = (obj \ "id").validate[UUID].map(_users.find)
         def u2 = (obj \ "email").validate[EmailAddress].map(_users.find)
@@ -167,12 +168,12 @@ class GroupsCtrl(
     }
 
   def delUser(id: UUID, uid: UUID) =
-    UserAction(_.Destroy).async { implicit req =>
+    UserAction(_.P18).async { implicit req =>
       _groups.delChild(id, uid).map { _ => NoContent }
     }
 
   def layouts(ids: Seq[UUID]) =
-    UserAction(_.Index).async { implicit req =>
+    UserAction(_.P19).async { implicit req =>
       _groups.findLayouts(ids).map { layouts =>
         val map = layouts.collect {
           case (gid, layout) if layout.isDefined =>
@@ -183,7 +184,7 @@ class GroupsCtrl(
     }
 
   def setLayout(gid: UUID) =
-    UserAction(_.Save).async { implicit req =>
+    UserAction(_.P20).async { implicit req =>
       BindJson().as[Layout] { success =>
         _groups.setLayout(gid, success).map { saved =>
           Ok(Json.toJson(saved))
@@ -194,4 +195,27 @@ class GroupsCtrl(
     }
 }
 
-object GroupsCtrl extends Secured(Group)
+object GroupsCtrl
+  extends GroupCanonicalNamed
+    with PermissionCheckable {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    /** Index Users */
+    val P16 = Access.Pos(16)
+    /** Add User */
+    val P17 = Access.Pos(17)
+    /** Remove User */
+    val P18 = Access.Pos(18)
+    /** Index Layouts */
+    val P19 = Access.Pos(19)
+    /** Save Layouts */
+    val P20 = Access.Pos(20)
+
+    def values = Seq(P01, P02, P03, P06, P16, P17, P18, P19, P20)
+  }
+
+  object AccessDef extends AccessDef
+}

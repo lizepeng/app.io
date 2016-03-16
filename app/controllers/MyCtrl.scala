@@ -12,7 +12,7 @@ import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.libs.MimeTypes
 import play.api.mvc._
-import security.{Session, _}
+import security.Session
 import services._
 import views._
 
@@ -30,8 +30,9 @@ class MyCtrl(
   val _accessControls: AccessControls,
   val bandwidth: BandwidthService,
   val es: ElasticSearch
-) extends Secured(User)
+) extends UserCanonicalNamed
   with Controller
+  with UsersCtrl.AccessDef
   with BasicPlayComponents
   with UsersComponents
   with DefaultPlayExecutor
@@ -164,7 +165,7 @@ class MyCtrl(
 
   def uploadProfileImage =
     (MaybeUserAction() andThen AuthChecker).async(
-      CFSBodyParser(u => Path.home(u))
+      CFSBodyParser(u => Path.home(u), P16)
     ) {
       CFSImage.upload(
         filePath = u => Path.home(u) + profileImageFileName,

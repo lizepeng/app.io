@@ -6,11 +6,10 @@ import models._
 import models.misc._
 import play.api.i18n._
 import play.api.mvc.Controller
-import security.ModulesAccessControl._
 import security._
 import views._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent._
 import scala.util.Success
 
 /**
@@ -21,15 +20,16 @@ class AccessControlsCtrl(
   val basicPlayApi: BasicPlayApi,
   val userActionRequired: UserActionRequired,
   val secured: RegisteredSecured
-)
-  extends Secured(AccessControlsCtrl)
+) extends AccessControlCanonicalNamed
+  with CheckedModuleName
   with Controller
   with BasicPlayComponents
-  with UserActionComponents
+  with UserActionComponents[AccessControlsCtrl.AccessDef]
+  with AccessControlsCtrl.AccessDef
   with I18nSupport {
 
   def index(pager: Pager, sort: Seq[SortField]) =
-    UserAction(_.Index, _.Save, _.Create, _.Destroy).apply { implicit req =>
+    UserAction(_.P01, _.P03, _.P05, _.P06).apply { implicit req =>
       val default = _accessControls.sorting(
         _.principal_id.desc,
         _.resource.asc
@@ -40,10 +40,20 @@ class AccessControlsCtrl(
 }
 
 object AccessControlsCtrl
-  extends Secured(AccessControl)
-  with CanonicalNameBasedMessages
-  with ViewMessages
-  with Logging {
+  extends AccessControlCanonicalNamed
+    with PermissionCheckable
+    with CanonicalNameBasedMessages
+    with ViewMessages
+    with Logging {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    def values = Seq(P01, P03, P05, P06)
+  }
+
+  object AccessDef extends AccessDef
 
   def initIfFirstRun(
     implicit
@@ -57,10 +67,10 @@ object AccessControlsCtrl
       _empty <- _accessControls.isEmpty
       result <-
       if (_empty) Future.sequence(
-        secured.Modules.names.map { resource =>
+        secured.modules.map { resource =>
           AccessControlEntry(
-            resource,
-            AccessDefinition.Anything.self,
+            resource.checkedModuleName.name,
+            resource.AccessDef.permission.self,
             _internalGroups.AnyoneId,
             is_group = true
           ).save.flatMap { saved =>

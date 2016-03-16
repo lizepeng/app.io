@@ -26,12 +26,13 @@ class UsersCtrl(
   val basicPlayApi: BasicPlayApi,
   val userActionRequired: UserActionRequired,
   val es: ElasticSearch
-)
-  extends Secured(UsersCtrl)
+) extends UserCanonicalNamed
+  with CheckedModuleName
   with Controller
   with security.Session
   with BasicPlayComponents
-  with UserActionComponents
+  with UserActionComponents[UsersCtrl.AccessDef]
+  with UsersCtrl.AccessDef
   with UsersComponents
   with InternalGroupsComponents
   with DefaultPlayExecutor
@@ -54,7 +55,7 @@ class UsersCtrl(
   )
 
   def show(id: UUID) =
-    UserAction(_.Show).async { implicit req =>
+    UserAction(_.P02).async { implicit req =>
       for {
         user <- _users.find(id)
         grps <- _groups.find(_internalGroups.InternalGroupIds)
@@ -66,7 +67,7 @@ class UsersCtrl(
 
   def index(pager: Pager, sort: Seq[SortField]) = {
     val default = _users.sorting(_.email.asc)
-    UserAction(_.Index, _.Create).apply { implicit req =>
+    UserAction(_.P03, _.P01).apply { implicit req =>
       Ok(html.users.index(pager, if (sort.nonEmpty) sort else default))
     }
   }
@@ -119,7 +120,7 @@ class UsersCtrl(
     form.bindFromRequest().fold(
       failure => Future.successful(Forbidden(failure.errorsAsJson)),
       success => _users.checkEmail(success).map { _ =>
-        Ok("")
+        Ok
       }.recover {
         case e: User.EmailTaken =>
           Forbidden(Json.obj("value" -> e.message))
@@ -132,16 +133,29 @@ class UsersCtrl(
 
     form.bindFromRequest().fold(
       failure => Forbidden(failure.errorsAsJson),
-      success => Ok("")
+      success => Ok
     )
   }
 
 }
 
 object UsersCtrl
-  extends Secured(User)
-  with CanonicalNameBasedMessages
-  with ViewMessages {
+  extends UserCanonicalNamed
+    with PermissionCheckable
+    with CanonicalNameBasedMessages
+    with ViewMessages {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    /** Access : Upload Profile Image */
+    val P16 = Access.Pos(16)
+
+    def values = Seq(P01, P02, P03, P16)
+  }
+
+  object AccessDef extends AccessDef
 
   case class PasswordConfirmation(original: Password, confirmation: String) {
 

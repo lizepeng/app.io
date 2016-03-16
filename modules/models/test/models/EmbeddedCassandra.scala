@@ -52,7 +52,7 @@ trait EmbeddedCassandra extends BeforeAfterAll with DefaultPlayExecutor {
   implicit lazy val keySpaceDef: KeySpaceDef = contactPoint.keySpace("test")
 
   def beforeAll(): Unit = {
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
   }
 
   def afterAll(): Unit = {

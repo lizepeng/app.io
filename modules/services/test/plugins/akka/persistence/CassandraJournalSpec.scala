@@ -23,7 +23,7 @@ class CassandraJournalSpec extends JournalSpec(
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
      | akka.loglevel = "OFF"
-     | akka.test.single-expect-default = 10000
+     | akka.test.single-expect-default = 20000
      |
      | akka.persistence.journal.plugin = "cassandra-journal"
      | cassandra-journal {
@@ -65,7 +65,7 @@ class CassandraJournalSpec extends JournalSpec(
   implicit lazy val keySpaceDef: KeySpaceDef = contactPoint.keySpace("test")
 
   override protected def beforeAll(): Unit = {
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra()
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
     super.beforeAll()
     system.actorOf(
       Props(

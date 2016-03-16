@@ -22,14 +22,15 @@ class SearchCtrl(
   val userActionRequired: UserActionRequired,
   val es: ElasticSearch,
   val _groups: Groups
-)
-  extends Secured(SearchCtrl)
+) extends SearchCtrlCNamed
+  with CheckedModuleName
   with Controller
   with LinkHeader
   with BasicPlayComponents
-  with UserActionComponents
-  with DefaultPlayExecutor
+  with UserActionComponents[SearchCtrl.AccessDef]
+  with SearchCtrl.AccessDef
   with RateLimitConfigComponents
+  with DefaultPlayExecutor
   with I18nSupport {
 
   def index(
@@ -38,7 +39,7 @@ class SearchCtrl(
     p: Pager,
     sort: Seq[SortField]
   ) =
-    UserAction(_.Index).async { implicit req =>
+    UserAction(_.P16).async { implicit req =>
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
@@ -61,4 +62,24 @@ class SearchCtrl(
     }
 }
 
-object SearchCtrl extends Secured("search")
+object SearchCtrl
+  extends SearchCtrlCNamed
+    with PermissionCheckable {
+
+  import ModulesAccessControl._
+
+  trait AccessDef extends BasicAccessDef {
+
+    /** Search */
+    val P16 = Access.Pos(16)
+
+    def values = Seq(P16)
+  }
+
+  object AccessDef extends AccessDef
+}
+
+trait SearchCtrlCNamed extends CanonicalNamed {
+
+  def basicName: String = "search"
+}
