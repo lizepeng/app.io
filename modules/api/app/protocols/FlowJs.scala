@@ -165,7 +165,10 @@ case class FlowJs(
       tmpName <- tempFileName.andThen {
         case Success(fn) => Logger.trace(s"uploading $fn")
       }
-      renamed <- chunk.rename(tmpName).andThen {
+      renamed <- currentChunkSize.map(_ == chunk.size).flatMap {
+        case false => Future(false) //the upload was stopped by end user
+        case true  => chunk.rename(tmpName)
+      }.andThen {
         case Success(false) => chunk.delete()
       }
       _result <- {
