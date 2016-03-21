@@ -18,7 +18,7 @@ trait PermissionCheckedBodyParser[A]
   def access: Access
   def resource: CheckedModule
   def onPermDenied: RequestHeader => Result
-  def preCheck: Future[Boolean]
+  def preCheck: User => Future[Boolean]
 
   implicit def basicPlayApi: BasicPlayApi
   implicit def _accessControls: AccessControls
@@ -27,7 +27,7 @@ trait PermissionCheckedBodyParser[A]
     implicit user: User
   ): Future[BodyParser[A]] = {
     for {
-      passCheck <- preCheck
+      passCheck <- preCheck(user)
       canAccess <- ModulesAccessControl(user, access, resource).canAccessAsync
       result <- super.invokeParser(req)(user) if passCheck && canAccess
     } yield result

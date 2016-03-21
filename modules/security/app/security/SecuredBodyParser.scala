@@ -12,7 +12,7 @@ import scala.concurrent.Future
  */
 case class SecuredBodyParser[A](
   access: Access,
-  preCheck: Future[Boolean] = Future.successful(true),
+  preCheck: User => Future[Boolean] = user => Future.successful(true),
   onUnauthorized: RequestHeader => Result = req => Results.NotFound,
   onPermDenied: RequestHeader => Result = req => Results.NotFound,
   onBaseException: RequestHeader => Result = req => Results.NotFound,
