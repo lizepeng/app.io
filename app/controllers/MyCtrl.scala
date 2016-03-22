@@ -97,10 +97,10 @@ class MyCtrl(
           else
             req.user.updatePassword(
               success.new_password.original
-            ).map { user =>
+            ).flatMap { user =>
               Redirect(routes.MyCtrl.account()).flashing {
                 AlertLevel.Info -> message("password.changed")
-              }.createSession(rememberMe = false)(user)
+              }.createSession(rememberMe = false)(user, _users)
             }
         }
       )

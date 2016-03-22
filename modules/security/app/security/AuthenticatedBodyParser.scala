@@ -32,13 +32,13 @@ trait AuthenticatedBodyParser[A]
       }.andThen {
         case Failure(e: BaseException) => Logger.debug(e.reason)
       }.recover {
-        case e: User.NoCredentials =>
+        case e: User.NoCredentials     =>
           parse.error(Future.successful(onUnauthorized(req)))
-        case e: User.SaltNotMatch  =>
+        case e: User.SessionIdNotMatch =>
           parse.error(Future.successful(onUnauthorized(req)))
-        case e: BaseException      =>
+        case e: BaseException          =>
           parse.error(Future.successful(onBaseException(req)))
-        case e: Throwable          =>
+        case e: Throwable              =>
           Logger.debug("AuthenticatedBodyParser Failed", e)
           parse.error(Future.successful(onBaseException(req)))
       }.map(_.apply(req))

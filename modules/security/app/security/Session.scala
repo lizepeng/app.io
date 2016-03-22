@@ -1,52 +1,68 @@
 package security
 
-import helpers.syntax._
 import models._
-import play.api.mvc._
+import play.api.Configuration
+import play.api.mvc.{Session => PlaySession, _}
 
-import scala.language.implicitConversions
+import scala.concurrent._
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
  */
 object Session {
 
-  val user_id_key   = "usr_id"
-  val user_salt_key = "usr_salt"
+  val USER_ID_KEY = "USER_ID"
+  val SESS_ID_KEY = "SESS_ID"
 }
 
 trait Session {
 
+  def configuration: Configuration
+
+  implicit def defaultContext: ExecutionContext
+
+  lazy val maxAge = configuration
+    .getMilliseconds("session.maxAge")
+    .map(_ / 1000)
+    .map(_.toInt)
+    .getOrElse(1.day.toSeconds.toInt)
+
+  class SessionCookieBaker(override val maxAge: Option[Int] = None) extends CookieBaker[PlaySession] {
+
+    def COOKIE_NAME = PlaySession.COOKIE_NAME
+    def emptyCookie = PlaySession.emptyCookie
+    override val isSigned = true
+    override def secure = PlaySession.secure
+    override def httpOnly = PlaySession.httpOnly
+    override def path = PlaySession.path
+    override def domain = PlaySession.domain
+    def deserialize(data: Map[String, String]) = PlaySession.deserialize(data)
+    def serialize(session: PlaySession) = PlaySession.serialize(session)
+  }
+
   implicit class ResultWithSession(result: Result) {
 
-    import Session._
+    def createSession(rememberMe: Boolean)(
+      implicit user: User, _users: Users
+    ): Future[Result] = {
 
-    def createSession(rememberMe: Boolean)(implicit user: User): Result = {
-      val maxAge = Some(365.days.toStandardSeconds.getSeconds)
+      val cookieBaker = new SessionCookieBaker(if (rememberMe) Some(maxAge) else None)
 
-      val resultWithSession = result
-        .withNewSession
-        .withSession(
-          user_id_key -> user.id.toString,
-          user_salt_key -> user.salt
-        )
+      _users.saveSessionId(user.withNewSessionId, maxAge seconds).map { u =>
 
-      if (!rememberMe) resultWithSession
-      else {
-        resultWithSession.withCookies(
-          Cookie(user_id_key, user.id.toString, maxAge = maxAge),
-          Cookie(user_salt_key, user.salt, maxAge = maxAge)
+        if (u.session_id.isEmpty) result.withNewSession
+        else result.withNewSession.withCookies(
+          cookieBaker.encodeAsCookie(
+            PlaySession.emptyCookie
+              + (Session.USER_ID_KEY -> u.id.toString)
+              + (Session.SESS_ID_KEY -> u.session_id.get)
+          )
         )
       }
     }
 
-    def destroySession: Result = {
-      result.withNewSession
-        .discardingCookies(
-          DiscardingCookie(user_id_key),
-          DiscardingCookie(user_salt_key)
-        )
-    }
+    def destroySession: Result = result.withNewSession
   }
-
 }

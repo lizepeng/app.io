@@ -98,10 +98,10 @@ class UsersCtrl(
           password = success.password.original
         ).save
         _____ <- es.Index(saved) into _users
-      } yield saved).map { case saved =>
+      } yield saved).flatMap { case saved =>
         Redirect {
           routes.MyCtrl.dashboard()
-        }.createSession(rememberMe = false)(saved)
+        }.createSession(rememberMe = false)(saved, _users)
       }.recover {
         case e: User.EmailTaken =>
           BadRequest {

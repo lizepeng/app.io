@@ -61,8 +61,8 @@ class SessionsCtrl(
         case e: User.WrongPassword => Logger.warn(e.reason); throw User.AuthFailed()
       }.andThen {
         case Success(user) => req.clientIP.map(_userLoginIPs.log(user.id, _))
-      }.map { implicit user =>
-        Redirect(routes.MyCtrl.dashboard()).createSession(success.remember_me)
+      }.flatMap { user =>
+        Redirect(routes.MyCtrl.dashboard()).createSession(success.remember_me)(user, _users)
       }.recover { case e: BaseException =>
         BadRequest(html.account.login(form.withGlobalError(e.message)))
       }

@@ -78,6 +78,8 @@ app.akka.cluster {
   entity_actor.receive_timeout = 5 minutes
 }
 
+session.maxAge = 14 days
+
 contexts {
   mailer {
     fork-join-executor.parallelism-max=4

@@ -14,27 +14,24 @@ import scala.util.Try
  */
 case class AuthenticateBySession(
   basicPlayApi: BasicPlayApi
-)
-  extends PAM
+) extends PAM
   with BasicPlayComponents
   with DefaultPlayExecutor
   with Logging {
-
-  import Session._
 
   /**
    * authenticate user by user's salt
    *
    * @return authenticated user
    *         [[User.NoCredentials]] - if no credentials exists in session or cookie
-   *         [[User.SaltNotMatch]]  - if salt is wrong
+   *         [[User.SessionIdNotMatch]]  - if session id is wrong
    */
   override def apply(users: Users): (RequestHeader) => Future[User] = {
     req => retrieve(req) match {
-      case None             => Future.failed(User.NoCredentials())
-      case Some((id, salt)) => users.find(id).map { user =>
-        if (user.salt == salt) user
-        else throw User.SaltNotMatch(id)
+      case None                => Future.failed(User.NoCredentials())
+      case Some((id, sess_id)) => users.find(id).map { user =>
+        if (user.session_id.contains(sess_id)) user
+        else throw User.SessionIdNotMatch(id)
       }
     }
     //No need to log anything here,
@@ -42,14 +39,9 @@ case class AuthenticateBySession(
   }
 
   def retrieve(req: RequestHeader): Option[(UUID, String)] = {
-    val cookie = req.cookies
-    for (u <- cookie.get(user_id_key).map(_.value).flatMap(toUUID);
-      s <- cookie.get(user_salt_key).map(_.value)
-    ) yield (u, s)
-  } orElse {
     val session = req.session
-    for (u <- session.get(user_id_key).flatMap(toUUID);
-      s <- session.get(user_salt_key)
+    for (u <- session.get(Session.USER_ID_KEY).flatMap(toUUID);
+      s <- session.get(Session.SESS_ID_KEY)
     ) yield (u, s)
   }
 

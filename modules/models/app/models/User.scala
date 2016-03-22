@@ -1,5 +1,6 @@
 package models
 
+import java.security.SecureRandom
 import java.util.UUID
 
 import com.websudos.phantom.dsl._
@@ -14,7 +15,7 @@ import play.api.libs.json._
 
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
-import scala.util.Random
+import scala.concurrent.duration._
 
 /**
  * @author zepeng.li@gmail.com
@@ -24,6 +25,7 @@ case class User(
   name: Name = Name.empty,
   salt: String = "",
   encrypted_password: String = "",
+  session_id: Option[String] = None,
   email: EmailAddress = EmailAddress.empty,
   internal_group_bits: InternalGroupBits = InternalGroup.Anyone,
   internal_groups: Set[UUID] = Set(),
@@ -68,11 +70,21 @@ case class User(
     implicit _users: Users
   ): Future[User] = _users.updateGroup(copy(internal_group_bits = internal_group_bits - grp))
 
+  def withNewSessionId = copy(
+    session_id = Some(
+      Codecs.sha2(s"${DateTime.now}--$salt--$randomString", length = 256)
+    )
+  )
+
+  def withNoSessionId = copy(session_id = None)
+
   private def encrypt(salt: String, passwd: Password) =
-    Codecs.sha2(s"$salt--${passwd.self}")
+    Codecs.sha2(s"$salt--${passwd.self}", length = 256)
 
   private def makeSalt(passwd: Password) =
-    Codecs.sha2(s"${DateTime.now}--${passwd.self}--${Random.nextString(32)}")
+    Codecs.sha2(s"${DateTime.now}--${passwd.self}--$randomString", length = 256)
+
+  private def randomString = BigInt(130, SecureRandom.getInstanceStrong).toString(32)
 }
 
 trait UserCanonicalNamed extends CanonicalNamed {
@@ -99,6 +111,9 @@ sealed abstract class UserTable
 
   object encrypted_password
     extends StringColumn(this)
+
+  object session_id
+    extends OptionalStringColumn(this)
 
   object email
     extends StringColumn(this)
@@ -132,8 +147,8 @@ object User
   case class WrongPassword(email: String)
     extends BaseException(error_code("wrong.password"))
 
-  case class SaltNotMatch(id: UUID)
-    extends BaseException(error_code("salt.not.match"))
+  case class SessionIdNotMatch(id: UUID)
+    extends BaseException(error_code("sesson_id.not.match"))
 
   case class AccessTokenNotMatch(id: UUID)
     extends BaseException(error_code("access_token.not.match"))
@@ -183,6 +198,7 @@ class Users(
       Name(name(r)),
       salt(r),
       encrypted_password(r),
+      session_id(r),
       EmailAddress(email(r)),
       ig_bits,
       _internalGroups.find(ig_bits),
@@ -249,6 +265,13 @@ class Users(
       else throw User.EmailTaken(u.email.self)
     } yield user
   }
+
+  def saveSessionId(user: User, maxAge: FiniteDuration): Future[User] = CQL {
+    update
+      .where(_.id eqs user.id)
+      .modify(_.session_id setTo user.session_id)
+      .ttl(maxAge)
+  }.future.map(_ => user)
 
   def updateGroup(user: User): Future[User] = CQL {
     update

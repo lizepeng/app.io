@@ -9,7 +9,7 @@ import scala.language.implicitConversions
 package object security {
 
   /**
-   * May be caused by [[User.SaltNotMatch]] or [[User.NoCredentials]]
+   * May be caused by [[User.SessionIdNotMatch]] or [[User.NoCredentials]]
    *
    * @see [[AuthenticateBySession.apply]]
    * @see [[AuthenticationCheck.onUnauthorized]]
