@@ -16,6 +16,8 @@ object EnumLike {
     def self: String
 
     override def toString = self
+
+    def in(others: Any*) = others.map(_ == this).reduce(_ || _)
   }
 
   trait Definition[T <: Value] extends CanonicalNamed {

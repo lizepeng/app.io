@@ -15,6 +15,13 @@ class EnumLikeSpec extends Specification {
       Enum1.basicName mustEqual "EnumLikeSpec.Enum1"
       Inner.Enum2.basicName mustEqual "EnumLikeSpec.Inner.Enum2"
     }
+
+    "be able to compare to other object" in {
+      Enum1.A.in(Enum1.A) mustEqual true
+      Enum1.A.in(Enum1.A, Enum1.B) mustEqual true
+      Enum1.A.in(Enum1.B) mustEqual false
+      Enum1.A.in(Enum1.C, Enum1.B) mustEqual false
+    }
   }
 }
 
