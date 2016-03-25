@@ -4,6 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
+import helpers.ExtMap._
 import helpers._
 import helpers.syntax._
 import models.cassandra._
@@ -73,7 +74,7 @@ sealed class FileTable
       indirect_block_size(r),
       block_size(r),
       Permission(permission(r)),
-      ExtPermission(ext_permission(r).mapValues(Permission(_))),
+      ExtPermission(ext_permission(r).mapValuesSafely(Permission(_))),
       attributes(r),
       is_directory(r)
     )
@@ -122,8 +123,7 @@ class Files(
   val keySpaceDef: KeySpaceDef,
   val _blocks: Blocks,
   val _indirectBlocks: IndirectBlocks
-)
-  extends FileTable
+) extends FileTable
   with ExtCQL[FileTable, File]
   with BasicPlayComponents
   with CassandraComponents
@@ -177,7 +177,7 @@ class Files(
       .value(_.block_size, f.block_size)
       .value(_.owner_id, f.owner_id)
       .value(_.permission, f.permission.self)
-      .value(_.ext_permission, f.ext_permission.self.mapValues(_.self.toInt))
+      .value(_.ext_permission, f.ext_permission.self.mapValuesSafely(_.self.toInt))
       .value(_.attributes, f.attributes)
   }.future().map(_ => f)
 }

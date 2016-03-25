@@ -5,6 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers.ExtEnumeratee._
+import helpers.ExtMap._
 import helpers._
 import models.User
 import models.cassandra._
@@ -37,12 +38,12 @@ case class Directory(
    *
    * Note! DO NOT forget to set a permChecker
    *
-   * @param fileName if empty then use file id as its filename
+   * @param fileName   if empty then use file id as its filename
    * @param permission file permission
-   * @param overwrite whether to overwrite existing file
-   * @param checker check if user have permission to overwrite existing file
-   * @param user user who is saving the file
-   * @param cfs cassandra file system
+   * @param overwrite  whether to overwrite existing file
+   * @param checker    check if user have permission to overwrite existing file
+   * @param user       user who is saving the file
+   * @param cfs        cassandra file system
    * @return
    */
   def save(
@@ -235,7 +236,7 @@ sealed class DirectoryTable
       parent(r),
       inode_id(r),
       Permission(permission(r)),
-      ExtPermission(ext_permission(r).mapValues(Permission(_))),
+      ExtPermission(ext_permission(r).mapValuesSafely(Permission(_))),
       attributes(r),
       is_directory(r)
     )
@@ -278,8 +279,7 @@ class Directories(
   val keySpaceDef: KeySpaceDef,
   val _inodes: INodes,
   val _files: Files
-)
-  extends DirectoryTable
+) extends DirectoryTable
   with ExtCQL[DirectoryTable, Directory]
   with BasicPlayComponents
   with CassandraComponents
@@ -301,7 +301,7 @@ class Directories(
   /**
    * Note: After calling this method, you have to set path to correct value
    *
-   * @param id inode_id
+   * @param id      inode_id
    * @param onFound will be called after inode being found
    * @return found inode
    */
@@ -349,8 +349,8 @@ class Directories(
   /**
    * Rename the child to another name
    *
-   * @param dir target dir
-   * @param inode renaming inode
+   * @param dir     target dir
+   * @param inode   renaming inode
    * @param newName new name for target inode
    * @return
    */
@@ -411,7 +411,7 @@ class Directories(
       .value(_.parent, dir.parent)
       .value(_.owner_id, dir.owner_id)
       .value(_.permission, dir.permission.self)
-      .value(_.ext_permission, dir.ext_permission.self.mapValues(_.self.toInt))
+      .value(_.ext_permission, dir.ext_permission.self.mapValuesSafely(_.self.toInt))
       .value(_.is_directory, true)
       .value(_.attributes, dir.attributes)
   }
