@@ -92,6 +92,13 @@ object EnumLikeMapConverts {
     }
   }
 
+  implicit class EnumLikeKeyMapEnumLikeKeyMap[K <: EnumLike.Value, A](val map: Map[K, A]) extends AnyVal {
+
+    def keyToEnum[J <: EnumLike.Value](implicit enum: EnumLike.Definition[J]): Map[J, A] = {
+      map.map { case (k, v) if enum.hasName(k.self) => enum.withName(k.self) -> v }
+    }
+  }
+
   implicit class StringValueMapToEnumLikeValueMap[A](val map: Map[A, String]) extends AnyVal {
 
     def valueToEnum[V <: EnumLike.Value](implicit enum: EnumLike.Definition[V]): Map[A, V] = {

@@ -1,5 +1,6 @@
 package helpers
 
+import helpers.EnumLikeMapConverts._
 import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
@@ -21,6 +22,20 @@ class EnumLikeSpec extends Specification {
       Enum1.A.in(Enum1.A, Enum1.B) mustEqual true
       Enum1.A.in(Enum1.B) mustEqual false
       Enum1.A.in(Enum1.C, Enum1.B) mustEqual false
+    }
+
+    "be able to convert to another EnumLike" in {
+      val map1 = Map(
+        Enum1.A -> 1,
+        Enum1.B -> 2,
+        Enum1.C -> 2
+      )
+      val map3 = Map(
+        Enum3("A") -> 1,
+        Enum3("B") -> 2,
+        Enum3("C") -> 2
+      )
+      map1.keyToEnum[Enum3] mustEqual map3
     }
   }
 }
@@ -55,5 +70,16 @@ object EnumLikeSpec {
 
       implicit def self = this
     }
+  }
+
+  case class Enum3(self: String) extends AnyVal with EnumLike.Value
+
+  object Enum3 extends EnumLike.Definition[Enum3] {
+
+    val Unknown = Enum3("Unknown")
+
+    val values = Enum1.values.map(v => Enum3(v.self))
+
+    implicit def self = this
   }
 }
