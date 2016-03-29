@@ -148,7 +148,7 @@ object User
     extends BaseException(error_code("wrong.password"))
 
   case class SessionIdNotMatch(id: UUID)
-    extends BaseException(error_code("sesson_id.not.match"))
+    extends BaseException(error_code("session_id.not.match"))
 
   case class AccessTokenNotMatch(id: UUID)
     extends BaseException(error_code("access_token.not.match"))
