@@ -1,10 +1,13 @@
 package models.cassandra
 
-import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.dsl._
-import helpers.CanonicalNamed
+import java.util.UUID
 
-import scala.concurrent.Future
+import com.websudos.phantom.dsl._
+import helpers._
+import models.misc._
+import play.api.libs.iteratee._
+
+import scala.concurrent._
 import scala.language.implicitConversions
 
 /**
@@ -33,3 +36,18 @@ trait SortableFields[R] {
 }
 
 case class SortableField(name: String) extends AnyVal
+
+trait EntityCollect[R] {
+  self: CassandraTable[_, R] =>
+
+  def collect(predicate: R => Boolean): Collect = new Collect(predicate)
+
+  class Collect(predicate: R => Boolean) {
+
+    def >>:(page: Page[UUID]) = {
+      (stream(page.elements, predicate) |>>> Iteratee.getChunks).map(Page(page.pager, _))
+    }
+  }
+
+  def stream(ids: Traversable[UUID], predicate: R => Boolean): Enumerator[R]
+}
