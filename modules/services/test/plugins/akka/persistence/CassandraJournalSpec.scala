@@ -1,7 +1,9 @@
 package plugins.akka.persistence
 
 import akka.actor.{Actor, Props}
+import akka.persistence.CapabilityFlag
 import akka.persistence.journal.JournalSpec
+import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.websudos.phantom.connectors._
 import helpers.BasicPlayApi
@@ -16,9 +18,8 @@ import services.actors.ResourcesMediator
  * @author zepeng.li@gmail.com
  */
 @RunWith(classOf[JUnitRunner])
-class CassandraJournalSpec extends JournalSpec {
-
-  lazy override val config = ConfigFactory.parseString(
+class CassandraJournalSpec extends JournalSpec(
+  config = ConfigFactory.parseString(
     """
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
@@ -31,6 +32,9 @@ class CassandraJournalSpec extends JournalSpec {
      | }
     """.stripMargin
   )
+) {
+
+  protected def supportsRejectingNonSerializableObjects = CapabilityFlag.on
 
   def context: ApplicationLoader.Context =
     ApplicationLoader.createContext(
@@ -44,6 +48,7 @@ class CassandraJournalSpec extends JournalSpec {
   implicit lazy val basicPlayApi: BasicPlayApi = BasicPlayApi(
     langs = null,
     messagesApi = null,
+    environment = null,
     configuration = Configuration(
       ConfigFactory.parseString(
         """
@@ -52,7 +57,8 @@ class CassandraJournalSpec extends JournalSpec {
       )
     ),
     applicationLifecycle = new DefaultApplicationLifecycle,
-    actorSystem = system
+    actorSystem = system,
+    ActorMaterializer()(system)
   )
 
   implicit lazy val contactPoint: KeySpaceBuilder = new KeySpaceBuilder(
@@ -63,6 +69,7 @@ class CassandraJournalSpec extends JournalSpec {
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
+    super.beforeAll()
     system.actorOf(
       Props(
         new Actor {
@@ -72,8 +79,6 @@ class CassandraJournalSpec extends JournalSpec {
         }
       ), ResourcesMediator.basicName
     )
-    super.beforeAll()
-    Thread.sleep(3000) //wait until cassandra is ready
   }
 
   override def afterAll(): Unit = {

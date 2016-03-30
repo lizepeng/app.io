@@ -2,7 +2,7 @@
   content: Html)(
   css: Html *)(
   js: Html *)(
-  implicit req: MaybeUserRequest[_], messages: Messages)
+  implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
 @base_tmpl(title, above_content, main_menu)(content)(css:_*)(js:_*)
 

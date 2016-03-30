@@ -2,6 +2,7 @@ package plugins.akka.persistence
 
 import akka.actor.{Actor, Props}
 import akka.persistence.snapshot.SnapshotStoreSpec
+import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.websudos.phantom.connectors._
 import helpers.BasicPlayApi
@@ -16,9 +17,8 @@ import services.actors.ResourcesMediator
  * @author zepeng.li@gmail.com
  */
 @RunWith(classOf[JUnitRunner])
-class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
-
-  lazy override val config = ConfigFactory.parseString(
+class CassandraSnapshotStoreSpec extends SnapshotStoreSpec(
+  config = ConfigFactory.parseString(
     """
      | akka.loggers = ["akka.testkit.TestEventListener"]
      | akka.stdout-loglevel = "OFF"
@@ -31,6 +31,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
      | }
     """.stripMargin
   )
+) {
 
   def context: ApplicationLoader.Context =
     ApplicationLoader.createContext(
@@ -44,6 +45,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
   implicit lazy val basicPlayApi: BasicPlayApi = BasicPlayApi(
     langs = null,
     messagesApi = null,
+    environment = null,
     configuration = Configuration(
       ConfigFactory.parseString(
         """
@@ -52,7 +54,8 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
       )
     ),
     applicationLifecycle = new DefaultApplicationLifecycle,
-    actorSystem = system
+    actorSystem = system,
+    ActorMaterializer()(system)
   )
 
   implicit lazy val contactPoint: KeySpaceBuilder = new KeySpaceBuilder(
@@ -63,6 +66,7 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra-test.yaml")
+    super.beforeAll()
     system.actorOf(
       Props(
         new Actor {
@@ -72,8 +76,6 @@ class CassandraSnapshotStoreSpec extends SnapshotStoreSpec {
         }
       ), ResourcesMediator.basicName
     )
-    super.beforeAll()
-    Thread.sleep(3000) //wait until cassandra is ready
   }
 
   override def afterAll(): Unit = {

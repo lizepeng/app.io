@@ -1,8 +1,9 @@
 package protocols
 
+import akka.NotUsed
+import akka.stream.scaladsl.Source
+import models.cfs.Block._
 import play.api.http._
-import play.api.libs.MimeTypes
-import play.api.libs.iteratee.Enumerator
 import play.api.mvc._
 
 /**
@@ -11,7 +12,8 @@ import play.api.mvc._
  * @author zepeng.li@gmail.com
  */
 trait HttpStreamable extends HttpDownloadable {
-  def range(first: Long, length: Long): Enumerator[Array[Byte]]
+
+  def range(first: Long, length: Long): Source[BLK, NotUsed]
 }
 
 object HttpStreamResult extends HttpDownloadResult {
@@ -52,12 +54,14 @@ object HttpStreamResult extends HttpDownloadResult {
         PARTIAL_CONTENT,
         Map(
           ACCEPT_RANGES -> "bytes",
-          CONTENT_TYPE -> contentTypeOf(resource),
-          CONTENT_RANGE -> s"bytes $first-$end/${resource.size}",
-          CONTENT_LENGTH -> s"${end - first + 1}"
+          CONTENT_RANGE -> s"bytes $first-$end/${resource.size}"
         )
       ),
-      resource.range(first, end - first + 1)
+      HttpEntity.Streamed(
+        resource.range(first, end - first + 1),
+        Some(end - first + 1),
+        contentTypeOf(resource)
+      )
     )
   }
 
@@ -66,15 +70,14 @@ object HttpStreamResult extends HttpDownloadResult {
       ResponseHeader(
         REQUESTED_RANGE_NOT_SATISFIABLE,
         Map(
-          CONTENT_RANGE -> s"*/${resource.size}",
-          CONTENT_TYPE -> contentTypeOf(resource)
+          CONTENT_RANGE -> s"*/${resource.size}"
         )
       ),
-      Enumerator.empty
+      HttpEntity.Streamed(
+        Source.empty,
+        None,
+        contentTypeOf(resource)
+      )
     )
-  }
-
-  private def contentTypeOf(inode: HttpStreamable): String = {
-    MimeTypes.forFileName(inode.name).getOrElse(ContentTypes.BINARY)
   }
 }

@@ -1,4 +1,4 @@
-@(textType: String, name: String, isDev: Boolean = play.api.Play.isDev(play.api.Play.current))
+@(textType: String, name: String)(implicit env: Environment)
 
 @import routes.Assets._
 
@@ -136,7 +136,7 @@
 }
 
 @css(name: String, minified: String) = {
-  @if(isDev){
+  @if(env.mode == play.api.Mode.Dev){
     @stylesheet(name)
   } else {
     @stylesheet(minified)
@@ -144,7 +144,7 @@
 }
 
 @js(name: String, minified: String) = {
-  @if(isDev){
+  @if(env.mode == play.api.Mode.Dev){
     @javascript(name)
   } else {
     @javascript(minified)

@@ -1,5 +1,7 @@
 package controllers
 
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import com.sksamuel.scrimage.Image
 import com.sksamuel.scrimage.nio._
 import controllers.CFSBodyParser.MissingFile
@@ -10,6 +12,7 @@ import models.cfs.CassandraFileSystem._
 import models.cfs._
 import play.api.i18n.I18nSupport
 import play.api.libs.iteratee._
+import play.api.libs.streams.Streams
 import play.api.mvc._
 import protocols.JsonProtocol.JsonMessage
 import protocols._
@@ -33,16 +36,16 @@ trait CFSImageComponents extends CFSDownloadComponents {
     writer: ImageWriter = PngWriter.MaxCompression
   ) {
 
-    def content: Future[Array[Byte]] =
+    def content: Future[BLK] =
       (file.read() |>>> Iteratee.consume[BLK]()).map { origin =>
         //Since the bytes may not be a image
-        Try(manipulator(Image(origin))) match {
-          case Success(img: Image)   => img.bytes(writer)
-          case Failure(e: Throwable) => Array[Byte]()
+        Try(manipulator(Image(origin.toArray))) match {
+          case Success(img: Image)   => ByteString.fromArray(img.bytes(writer))
+          case Failure(e: Throwable) => ByteString.empty
         }
       }
 
-    def enumerator: Enumerator[Array[Byte]] =
+    def enumerator: Enumerator[BLK] =
       Enumerator.flatten(
         content.map(Enumerator(_))
       )
@@ -52,8 +55,12 @@ trait CFSImageComponents extends CFSDownloadComponents {
         new HttpDownloadable {
           def size = bytes.length
           def name = file.name
-          def whole = Enumerator(bytes) &>
-            bandwidth.LimitTo(bandwidthConfig.download)
+          def whole = Source.fromPublisher(
+            Streams.enumeratorToPublisher(
+              Enumerator(bytes) &>
+                bandwidth.LimitTo(bandwidthConfig.download)
+            )
+          )
         }
       }
   }

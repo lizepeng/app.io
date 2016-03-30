@@ -3,8 +3,7 @@ package models.cfs
 import java.nio.ByteBuffer
 import java.util.UUID
 
-import com.datastax.driver.core.utils.Bytes
-import com.datastax.driver.core.{ResultSet, Row}
+import akka.util._
 import com.websudos.phantom.dsl._
 import helpers._
 import models.cassandra._
@@ -48,7 +47,7 @@ sealed class BlockTable
 
 object Block extends BlockCanonicalNamed {
 
-  type BLK = Array[Byte]
+  type BLK = ByteString
 }
 
 class Blocks(
@@ -68,16 +67,15 @@ class Blocks(
   def read(ind_blk_id: UUID): Enumerator[BLK] = {
     select(_.data)
       .where(_.indirect_block_id eqs ind_blk_id)
-      .fetchEnumerator().map(Bytes.getArray)
+      .fetchEnumerator().map(ByteString.fromByteBuffer)
   }
 
   def read(ind_blk_id: UUID, offset: Long, blk_sz: Int): Enumerator[BLK] = {
-    import scala.Predef._
     Enumerator.flatten(
       select(_.data)
         .where(_.indirect_block_id eqs ind_blk_id)
         .and(_.offset eqs offset - offset % blk_sz)
-        .one().map(_.map(Bytes.getArray))
+        .one().map(_.map(ByteString.fromByteBuffer))
         .map {
           case None      => Enumerator.empty[BLK]
           case Some(blk) => Enumerator(blk.drop((offset % blk_sz).toInt))
@@ -85,7 +83,7 @@ class Blocks(
         _ >>> select(_.data)
           .where(_.indirect_block_id eqs ind_blk_id)
           .and(_.offset gt offset - offset % blk_sz)
-          .fetchEnumerator().map(Bytes.getArray)
+          .fetchEnumerator().map(ByteString.fromByteBuffer)
       }
     )
   }
@@ -93,7 +91,7 @@ class Blocks(
   def write(ind_blk_id: UUID, blk_id: Long, blk: BLK): Future[ResultSet] = {
     insert.value(_.indirect_block_id, ind_blk_id)
       .value(_.offset, blk_id)
-      .value(_.data, ByteBuffer.wrap(blk)).future()
+      .value(_.data, blk.toByteBuffer).future()
   }
 
   def purge(ind_blk_id: UUID): Future[ResultSet] = {

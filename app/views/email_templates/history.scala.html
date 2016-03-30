@@ -1,5 +1,5 @@
 @(tmpl: EmailTemplate, page: Page[EmailTemplateHistory], usrs:Map[UUID,User])(
-implicit req: UserRequest[_], messages: Messages)
+implicit req: UserRequest[_], messages: Messages, env: Environment)
 
 @import common._
 

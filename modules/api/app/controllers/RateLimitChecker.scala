@@ -51,7 +51,7 @@ case class RateLimitChecker(
     _rateLimits.get(resource.name, period_start)(user)
       .flatMap { counter =>
         if (counter >= rateLimitConfig.limit) Future.successful {
-          Results.TooManyRequest {
+          Results.TooManyRequests {
             JsonMessage(s"api.$basicName.exceeded")(request2Messages(req))
           }.withHeaders(
             X_RATE_LIMIT_LIMIT -> rateLimitConfig.limit.toString,

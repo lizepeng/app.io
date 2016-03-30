@@ -142,7 +142,7 @@ akka {
   remote {
     log-remote-lifecycle-events = off
     netty.tcp {
-      hostname = "127.0.0.1"
+      # hostname = "127.0.0.1"
       port=2551
     }
   }
@@ -153,24 +153,24 @@ akka {
       "akka.tcp://application@127.0.0.1:2552"
     ]
     auto-down-unreachable-after = 10s
+    sharding {
+      handoff-timeout = 60 s
+    }
+    pub-sub {
+      routing-logic = random
+      gossip-interval = 1s
+    }
   }
 
-  extensions = ["akka.contrib.pattern.DistributedPubSubExtension"]
-
-  contrib.cluster.pub-sub {
-    routing-logic = random
-    gossip-interval = 1s
-  }
+  extensions = ["akka.cluster.pubsub.DistributedPubSub"]
 
   ## Since we're using our own cassandra plugins
   # persistence.journal.leveldb.dir = "target/journal"
   # persistence.snapshot-store.local.dir = "target/snapshots"
 
-  persistence.journal.plugin = "cassandra-journal"
-  persistence.snapshot-store.plugin = "cassandra-snapshot-store"
-
-  contrib.cluster.sharding {
-    handoff-timeout = 60 s
+  persistence {
+    journal.plugin = "cassandra-journal"
+    snapshot-store.plugin = "cassandra-snapshot-store"
   }
 }
 

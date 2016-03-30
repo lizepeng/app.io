@@ -1,4 +1,4 @@
-@(videoOpt: Option[Path])(implicit req: MaybeUserRequest[_], messages: Messages)
+@(videoOpt: Option[Path])(implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
 @layouts.base(MSG("wiki"), above_content = movie){
 

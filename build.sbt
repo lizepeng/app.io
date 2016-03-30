@@ -71,6 +71,7 @@ TwirlKeys.templateImports ++= Seq(
   "models.cfs._",
   "models.misc._",
   "org.joda.time._",
+  "play.api.Environment",
   "play.api.i18n.{Messages => MSG}",
   "security._"
 )

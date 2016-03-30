@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor._
 import messages._
 import play.api.i18n.Messages
-import play.api.mvc.WebSocket.FrameFormatter
+import play.api.mvc.WebSocket.MessageFlowTransformer
 import services.actors.Envelope
 
 import scala.language.{implicitConversions, postfixOps}
@@ -22,11 +22,11 @@ object UserWebSocket {
     implicit messages: Messages
   ) = Props(new UserWebSocket(out, user_id))
 
-  implicit def recv_frame_fmt(
+  implicit def userWebSocketMessageFlowTransformer(
     implicit message: Messages
-  ): FrameFormatter[Try[Recv]] = jsonFrame[Recv]
-
-  implicit val send_frame_fmt = FrameFormatter.jsonFrame[Send]
+  ): MessageFlowTransformer[Try[Recv], Send] = {
+    caseClassMessageFlowTransformer[Recv, Send]
+  }
 }
 
 class UserWebSocket(out: ActorRef, uid: UUID)(

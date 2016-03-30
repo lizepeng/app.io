@@ -20,9 +20,9 @@ class UserWebSocketCtrl(
   with BasicPlayComponents
   with I18nSupport {
 
-  def connect: WebSocket[Try[Recv], Send] =
+  def connect: WebSocket =
     MaybeUser().WebSocket[Try[Recv], Send](
-      implicit req => user => UserWebSocket.props(_, user.id),
+      req => user => UserWebSocket.props(_, user.id),
       Forbidden
     )
 }

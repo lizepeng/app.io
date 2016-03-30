@@ -1,7 +1,7 @@
 package services.actors
 
 import akka.actor._
-import akka.contrib.pattern.{ClusterSharding, ShardRegion}
+import akka.cluster.sharding._
 import play.api.Configuration
 
 import scala.language.postfixOps
@@ -27,9 +27,10 @@ trait ActorClusterSharding {
 
     ClusterSharding(actorSystem).start(
       typeName = shardName,
-      entryProps = Some(props),
-      idExtractor = idExtractor,
-      shardResolver = shardResolver(numberOfShards)
+      entityProps = props,
+      settings = ClusterShardingSettings(actorSystem),
+      extractEntityId = extractEntityId,
+      extractShardId = extractShardId(numberOfShards)
     )
   }
 
@@ -37,11 +38,11 @@ trait ActorClusterSharding {
     ClusterSharding(system).shardRegion(shardName)
   }
 
-  val idExtractor: ShardRegion.IdExtractor = {
+  def extractEntityId: ShardRegion.ExtractEntityId = {
     case env@Envelope(id, _) => (id.toString, env)
   }
 
-  def shardResolver(numberOfShards: Int): ShardRegion.ShardResolver = {
+  def extractShardId(numberOfShards: Int): ShardRegion.ExtractShardId = {
     case Envelope(id, _) => (math.abs(id.hashCode) % numberOfShards).toString
   }
 }

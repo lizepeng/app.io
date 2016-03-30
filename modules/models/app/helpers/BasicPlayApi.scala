@@ -1,8 +1,9 @@
 package helpers
 
 import akka.actor.ActorSystem
-import play.api.Configuration
-import play.api.i18n.{Langs, MessagesApi}
+import akka.stream.Materializer
+import play.api._
+import play.api.i18n._
 import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.ExecutionContext
@@ -13,9 +14,11 @@ import scala.concurrent.ExecutionContext
 case class BasicPlayApi(
   langs: Langs,
   messagesApi: MessagesApi,
+  environment: Environment,
   configuration: Configuration,
   applicationLifecycle: ApplicationLifecycle,
-  actorSystem: ActorSystem
+  actorSystem: ActorSystem,
+  materializer: Materializer
 )
 
 trait BasicPlayComponents {
@@ -26,11 +29,15 @@ trait BasicPlayComponents {
 
   implicit def langs: Langs = basicPlayApi.langs
 
+  implicit def environment: Environment = basicPlayApi.environment
+
   implicit def configuration: Configuration = basicPlayApi.configuration
 
-  def applicationLifecycle: ApplicationLifecycle = basicPlayApi.applicationLifecycle
+  implicit def applicationLifecycle: ApplicationLifecycle = basicPlayApi.applicationLifecycle
 
-  def actorSystem: ActorSystem = basicPlayApi.actorSystem
+  implicit def actorSystem: ActorSystem = basicPlayApi.actorSystem
+
+  implicit def materializer: Materializer = basicPlayApi.materializer
 }
 
 trait DefaultPlayExecutor {
