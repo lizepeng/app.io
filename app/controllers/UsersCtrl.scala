@@ -10,7 +10,9 @@ import models._
 import models.misc._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.http.HttpConfiguration
 import play.api.i18n._
+import play.api.libs.crypto.CookieSigner
 import play.api.libs.json.Json
 import play.api.mvc._
 import security._
@@ -22,6 +24,9 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class UsersCtrl(
+  val httpConfiguration: HttpConfiguration,
+  val cookieSigner: CookieSigner
+)(
   implicit
   val basicPlayApi: BasicPlayApi,
   val userActionRequired: UserActionRequired,
@@ -101,7 +106,7 @@ class UsersCtrl(
       } yield saved).flatMap { case saved =>
         Redirect {
           routes.MyCtrl.dashboard()
-        }.createSession(rememberMe = false)(saved, _users)
+        }.createSession(saved, rememberMe = false)
       }.recover {
         case e: User.EmailTaken =>
           BadRequest {

@@ -5,6 +5,7 @@ name := s"${Common.appName}.models"
 scalacOptions += "-feature"
 
 libraryDependencies ++= Seq(
+  "org.mindrot"       %  "jbcrypt"           % "0.3m",
   "com.websudos"      %% "phantom-dsl"       % "1.22.0",
   "com.websudos"      %% "phantom-zookeeper" % "1.22.0",
   "org.cassandraunit" %  "cassandra-unit"    % "2.2.2.1" % Test

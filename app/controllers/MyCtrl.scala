@@ -9,10 +9,11 @@ import models.cfs._
 import models.misc._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.http.HttpConfiguration
 import play.api.i18n.I18nSupport
 import play.api.libs.MimeTypes
+import play.api.libs.crypto.CookieSigner
 import play.api.mvc._
-import security.Session
 import services._
 import views._
 
@@ -22,6 +23,9 @@ import scala.concurrent.Future
  * @author zepeng.li@gmail.com
  */
 class MyCtrl(
+  val httpConfiguration: HttpConfiguration,
+  val cookieSigner: CookieSigner
+)(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _groups: Groups,
@@ -32,11 +36,11 @@ class MyCtrl(
   val es: ElasticSearch
 ) extends UserCanonicalNamed
   with Controller
+  with security.Session
   with UsersCtrl.AccessDef
   with BasicPlayComponents
   with UsersComponents
   with DefaultPlayExecutor
-  with Session
   with CanonicalNameBasedMessages
   with BandwidthConfigComponents
   with CFSImageComponents
@@ -100,7 +104,7 @@ class MyCtrl(
             ).flatMap { user =>
               Redirect(routes.MyCtrl.account()).flashing {
                 AlertLevel.Info -> message("password.changed")
-              }.createSession(rememberMe = false)(user, _users)
+              }.createSession(user, rememberMe = false)
             }
         }
       )
@@ -121,18 +125,18 @@ class MyCtrl(
       val bound = ProfileFM.bindFromRequest()
 
       bound.fold(
-      failure => Future.successful {
-        BadRequest(html.my.profile(failure))
-      }, {
-        case (first, last) =>
-          for {
-            p <- Future.successful(Person(req.user.id, PersonalName(last, first)))
-            _ <- _persons.save(p)
-            _ <- es.Index(p) into _persons
-          } yield {
-            Ok(html.my.profile(filledWith(p)))
-          }
-      }
+        failure => Future.successful {
+          BadRequest(html.my.profile(failure))
+        }, {
+          case (first, last) =>
+            for {
+              p <- Future.successful(Person(req.user.id, PersonalName(last, first)))
+              _ <- _persons.save(p)
+              _ <- es.Index(p) into _persons
+            } yield {
+              Ok(html.my.profile(filledWith(p)))
+            }
+        }
       )
     }
 

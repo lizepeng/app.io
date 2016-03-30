@@ -6,7 +6,9 @@ import models._
 import models.misc._
 import play.api.data.Forms._
 import play.api.data._
+import play.api.http.HttpConfiguration
 import play.api.i18n._
+import play.api.libs.crypto.CookieSigner
 import play.api.mvc._
 import views._
 
@@ -18,12 +20,14 @@ import scala.util.Success
  *
  **/
 class SessionsCtrl(
+  val httpConfiguration: HttpConfiguration,
+  val cookieSigner: CookieSigner
+)(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _groups: Groups,
   val _userLoginIPs: UserLoginIPs
-)
-  extends Controller
+) extends Controller
   with security.Session
   with BasicPlayComponents
   with UsersComponents
@@ -62,15 +66,15 @@ class SessionsCtrl(
       }.andThen {
         case Success(user) => req.clientIP.map(_userLoginIPs.log(user.id, _))
       }.flatMap { user =>
-        Redirect(routes.MyCtrl.dashboard()).createSession(success.remember_me)(user, _users)
+        Redirect(routes.MyCtrl.dashboard()).createSession(user, success.remember_me)
       }.recover { case e: BaseException =>
         BadRequest(html.account.login(form.withGlobalError(e.message)))
       }
     )
   }
 
-  def destroy = Action {
-    Redirect(routes.Application.index()).destroySession
-  }
-
+  def destroy = (MaybeUserAction() andThen AuthChecker)
+    .async(BodyParsers.parse.empty) { req =>
+      Redirect(routes.Application.index()).destroySession(req.user)
+    }
 }

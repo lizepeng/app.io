@@ -10,6 +10,7 @@ import models.cassandra._
 import models.misc._
 import models.sys._
 import org.joda.time.DateTime
+import org.mindrot.jbcrypt.BCrypt
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 
@@ -38,9 +39,9 @@ case class User(
 
   def groups: Set[UUID] = external_groups union internal_groups
 
-  def hasPassword(submittedPasswd: Password) = {
+  def hasPassword(passwd: Password) = {
     if (encrypted_password == "") false
-    else encrypted_password == encrypt(salt, submittedPasswd)
+    else BCrypt.checkpw(s"$salt--${passwd.self}", encrypted_password)
   }
 
   def encryptPassword = {
@@ -70,21 +71,20 @@ case class User(
     implicit _users: Users
   ): Future[User] = _users.updateGroup(copy(internal_group_bits = internal_group_bits - grp))
 
-  def withNewSessionId = copy(
-    session_id = Some(
-      Codecs.sha2(s"${DateTime.now}--$salt--$randomString", length = 256)
-    )
-  )
+  def withNewSessionId = copy(session_id = Some(makeSessionId))
 
   def withNoSessionId = copy(session_id = None)
 
   private def encrypt(salt: String, passwd: Password) =
-    Codecs.sha2(s"$salt--${passwd.self}", length = 256)
+    BCrypt.hashpw(s"$salt--${passwd.self}", BCrypt.gensalt())
 
   private def makeSalt(passwd: Password) =
-    Codecs.sha2(s"${DateTime.now}--${passwd.self}--$randomString", length = 256)
+    Codecs.sha2(randomString, length = 256)
 
-  private def randomString = BigInt(130, SecureRandom.getInstanceStrong).toString(32)
+  private def makeSessionId =
+    Codecs.sha2(randomString, length = 256)
+
+  private def randomString = BigInt(130, User.secureRandom).toString(32)
 }
 
 trait UserCanonicalNamed extends CanonicalNamed {
@@ -97,11 +97,11 @@ trait UserCanonicalNamed extends CanonicalNamed {
  */
 sealed abstract class UserTable
   extends NamedCassandraTable[UserTable, User]
-  with UserCanonicalNamed {
+    with UserCanonicalNamed {
 
   object id
     extends TimeUUIDColumn(this)
-    with PartitionKey[UUID]
+      with PartitionKey[UUID]
 
   object name
     extends StringColumn(this)
@@ -134,7 +134,9 @@ sealed abstract class UserTable
 
 object User
   extends UserCanonicalNamed
-  with ExceptionDefining {
+    with ExceptionDefining {
+
+  val secureRandom = SecureRandom.getInstanceStrong
 
   /**
    * Thrown when user is not found
@@ -350,11 +352,11 @@ class Users(
 
 sealed class UsersByEmailIndex
   extends NamedCassandraTable[UsersByEmailIndex, (String, UUID)]
-  with UsersByEmailCanonicalNamed {
+    with UsersByEmailCanonicalNamed {
 
   object email
     extends StringColumn(this)
-    with PartitionKey[String]
+      with PartitionKey[String]
 
   object id extends UUIDColumn(this)
 
