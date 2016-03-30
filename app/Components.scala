@@ -9,13 +9,10 @@ import models._
 import models.cfs._
 import models.sys.SysConfigs
 import play.api.ApplicationLoader.Context
+import play.api.LoggerConfigurator
 import play.api.i18n._
-import play.api.inject._
-import play.api.libs.Crypto
-import play.api.libs.crypto._
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.mvc._
-import play.api.{Environment, LoggerConfigurator}
 import play.filters.gzip.GzipFilterConfig
 import router.Routes
 import services._
@@ -215,28 +212,6 @@ class Components(context: Context)
       case "RequestLogger"             => new RequestLogger()
       case "RequestTimeLogger"         => new RequestTimeLogger()
     }
-
-  def crypto: Crypto = {
-    val config = new CryptoConfigParser(
-      Environment.simple(), configuration
-    ).get
-    // Configuration.from(Map("play.crypto.aes.transformation" -> "AES/CTR/NoPadding")
-    val cookieSigner = new CookieSignerProvider(config).get
-    val tokenSigner = new CSRFTokenSignerProvider(cookieSigner).get
-    val crypter = new AESCTRCrypter(config)
-    new Crypto(cookieSigner, tokenSigner, crypter)
-  }
-
-  // temporary workaround until issue #4614 in play framework is fixed. See https://github.com/playframework/playframework/issues/4614
-  override lazy val injector =
-    new SimpleInjector(NewInstanceInjector) +
-      router.asInstanceOf[play.api.routing.Router] +
-      cookieSigner +
-      csrfTokenSigner +
-      httpConfiguration +
-      tempFileCreator +
-      global +
-      crypto
 
   def startActors(): Unit = {
     actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
