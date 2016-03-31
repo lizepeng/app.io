@@ -13,11 +13,11 @@ import scala.language.implicitConversions
 /**
  * @author zepeng.li@gmail.com
  */
-trait EntityTable[R] extends Indexable[R] {
+trait EntityTable[R] extends ESIndexable[R] {
   self: CassandraTable[_, R] =>
 }
 
-trait Indexable[R] extends CanonicalNamed with SortableFields[R] {
+trait ESIndexable[R] extends CanonicalNamed with SortableFields[R] {
 
   def isEmpty: Future[Boolean]
 }

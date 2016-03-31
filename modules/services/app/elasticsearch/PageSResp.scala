@@ -1,7 +1,7 @@
 package elasticsearch
 
+import com.sksamuel.elastic4s.RichSearchResponse
 import models.misc._
-import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.xcontent._
 import play.api.http._
 import play.api.mvc.Codec
@@ -11,7 +11,7 @@ import scala.language.implicitConversions
 /**
  * @author zepeng.li@gmail.com
  */
-case class PageSResp(pager: Pager, resp: SearchResponse) extends PageLike {
+case class PageSResp(pager: Pager, resp: RichSearchResponse) extends PageLike {
 
   def hasNext: Boolean = resp.getHits.hits.size > pager.pageSize
 }
@@ -33,14 +33,13 @@ object PageSResp {
     Writeable(
       p => {
         val hits = p.resp.getHits
-        val empty = ToXContent.EMPTY_PARAMS
 
         val builder = XContentFactory.jsonBuilder.prettyPrint
         builder.startArray
 
         val array = hits.hits()
         for (i <- 0 until Math.min(p.pager.pageSize, array.length)) {
-          writeDirect(array(i).sourceRef, builder, empty)
+          builder.rawValue(array(i).sourceRef)
         }
 
         builder.endArray
@@ -56,5 +55,4 @@ object PageSResp {
     implicit codec: Codec
   ): ContentTypeOf[PageSResp] =
     ContentTypeOf[PageSResp](Some(ContentTypes.JSON))
-
 }

@@ -92,11 +92,10 @@ class Components(context: Context)
   implicit val _sysConfig      = new SysConfigs
   implicit val _accessControls = new AccessControls
   implicit val _internalGroups = new InternalGroups(
-    ESIndexCleaner(_).dropIndexIfEmpty,
+    ig => Future.successful(Unit),
     implicit ig => Future.sequence(
       Seq(
         ReIndexInternalGroups(es, ig).start(),
-        ESIndexCleaner(_accessControls).dropIndexIfEmpty,
         controllers.AccessControlsCtrl.initIfFirstRun,
         controllers.Layouts.initIfFirstRun
       )
