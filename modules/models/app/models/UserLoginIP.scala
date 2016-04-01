@@ -51,7 +51,7 @@ class UserLoginIPs(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def log(
     user_id: UUID,

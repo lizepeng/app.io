@@ -54,13 +54,14 @@ class Blocks(
   implicit
   val basicPlayApi: BasicPlayApi,
   val keySpaceDef: KeySpaceDef
-)
-  extends BlockTable
+) extends BlockTable
+  with ExtCQL[BlockTable, Block]
   with BasicPlayComponents
   with CassandraComponents
-  with BootingProcess {
+  with BootingProcess
+  with Logging{
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   import Block._
 

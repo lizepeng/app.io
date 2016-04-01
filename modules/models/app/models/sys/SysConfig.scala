@@ -86,7 +86,7 @@ class SysConfigs(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def find(module: String, key: String): Future[SysConfigEntry] = CQL {
     select.where(_.module eqs module).and(_.key eqs key)

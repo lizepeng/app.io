@@ -56,7 +56,7 @@ class PeriodicallyCleaned(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def isScheduledMonthly(id: UUID, key: String): Future[Boolean] = CQL {
     select(_.next_run_time_monthly)

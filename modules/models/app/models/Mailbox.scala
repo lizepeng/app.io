@@ -76,7 +76,7 @@ class MailInbox(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def save(user_id: UUID, mail: Mail): Future[ResultSet] = {
     val now = DateTime.now
@@ -148,7 +148,7 @@ class MailSent(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def save(mail: Mail): Future[ResultSet] = {
     val now = DateTime.now

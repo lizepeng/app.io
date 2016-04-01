@@ -50,7 +50,7 @@ class JournalVolumes(
 
   import JournalVolumeRecord._
 
-  def createIfNotExists(): Future[ResultSet] = create.ifNotExists.future()
+  def createIfNotExists(): Future[ResultSet] = CQL(create.ifNotExists).future()
 
   def keys(
     vid: UUID, from: Long = 0L, to: Long = Long.MaxValue

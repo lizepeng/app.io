@@ -92,7 +92,7 @@ contexts {
 cassandra {
   contact_points = ["localhost", "127.0.0.1"]
 
-  # cassandra.cql.log=[batch,select,insert,update,delete]
+  # cassandra.cql.log=[create,batch,select,insert,update,delete]
   cql.log = []
 }
 

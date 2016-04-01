@@ -191,7 +191,7 @@ class Users(
 
   val byEmail = new UsersByEmail
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   override def fromRow(r: Row): User = {
     val ig_bits = InternalGroupBits(internal_groups(r))
@@ -371,7 +371,7 @@ class UsersByEmail(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def save(email: EmailAddress, id: UUID): Future[Boolean] = CQL {
     insert

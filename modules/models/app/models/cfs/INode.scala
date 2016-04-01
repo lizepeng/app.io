@@ -177,7 +177,7 @@ class INodes(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def find(id: UUID): Future[Option[Row]] = {
     CQL {select.where(_.inode_id eqs id)}.one()

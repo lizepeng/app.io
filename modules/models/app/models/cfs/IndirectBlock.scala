@@ -67,7 +67,7 @@ class IndirectBlocks(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def read(id: UUID): Enumerator[BLK] = {
     select(_.indirect_block_id)

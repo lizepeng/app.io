@@ -55,7 +55,7 @@ class SessionData(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def get[T: TypeTag](
     key: String

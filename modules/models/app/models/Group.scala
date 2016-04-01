@@ -309,7 +309,7 @@ class InternalGroups(
   @volatile private var _internalGroupIds: Seq[UUID] = _
 
   onStart(
-    create.ifNotExists.future()
+    CQL(create.ifNotExists).future()
       .andThen { case _ => preLoad(this) }
       .flatMap { case _ => loadOrInit }
       .andThen { case Success(true) => postInit(this) }

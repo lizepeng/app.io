@@ -58,7 +58,7 @@ class Journal(
 
   def createIfNotExists(): Future[ResultSet] =
     for {
-      ret <- create.ifNotExists.future()
+      ret <- CQL(create.ifNotExists).future()
       ___ <- journalVolumes.createIfNotExists()
     } yield ret
 

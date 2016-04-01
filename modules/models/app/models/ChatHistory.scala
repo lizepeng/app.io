@@ -69,7 +69,7 @@ class ChatHistories(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def save(msg: ChatMessage): Future[ResultSet] = {
     val (p1, p2) = genKey(msg)

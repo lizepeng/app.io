@@ -25,7 +25,6 @@ import scala.util.Success
 /**
  * @author zepeng.li@gmail.com
  */
-@SuppressWarnings(Array("deprecation"))
 class Components(context: Context)
   extends play.api.BuiltInComponentsFromContext(context)
     with I18nComponents

@@ -174,7 +174,7 @@ class EmailTemplates(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def find(
     id: String,

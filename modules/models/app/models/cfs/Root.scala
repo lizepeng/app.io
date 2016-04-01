@@ -40,7 +40,7 @@ class Root(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def add(inode_id: UUID): Future[Boolean] = CQL {
     insert

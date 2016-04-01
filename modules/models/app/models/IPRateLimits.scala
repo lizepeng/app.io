@@ -51,7 +51,7 @@ class IPRateLimits(
   with BootingProcess
   with Logging {
 
-  onStart(create.ifNotExists.future())
+  onStart(CQL(create.ifNotExists).future())
 
   def get(
     ip: InetAddress,

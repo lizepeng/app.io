@@ -62,7 +62,7 @@ class Snapshots(
   with CassandraComponents
   with Logging {
 
-  def createIfNotExists(): Future[ResultSet] = create.ifNotExists.future()
+  def createIfNotExists(): Future[ResultSet] = CQL(create.ifNotExists).future()
 
   def save(
     sr: SnapshotRecord
