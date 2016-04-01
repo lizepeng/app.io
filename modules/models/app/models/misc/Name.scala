@@ -27,6 +27,32 @@ object Name {
   def constrained: Mapping[Name] = Forms.of[Name].verifying(NameLike.constraint())
 }
 
+/**
+ * @author zepeng.li@gmail.com
+ */
+case class UserName private(chars: Array[Char]) extends NameLike {
+
+  val self = String.valueOf(chars)
+
+  override def toString = self
+}
+
+object UserName {
+
+  def apply(self: String): UserName = UserName(self.toLowerCase.toCharArray)
+
+  def empty = UserName("")
+
+  implicit val jsonFormat = Format(
+    (minLength[String](4) <~ maxLength[String](255)).map(js => UserName(js)),
+    Writes[UserName](o => JsString(o.self))
+  )
+
+  implicit def formatter: Formatter[UserName] = ExtFormatter.anyValFormatter(UserName.apply, _.self)
+
+  def constrained: Mapping[UserName] = Forms.of[UserName].verifying(NameLike.constraint(minLength = 4))
+}
+
 trait NameLike extends Any {
 
   def self: String

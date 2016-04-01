@@ -12,7 +12,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
     <h1>
       <i class="fa fa-group fa-lg fa-fw"></i>
       @GroupsCtrl.msg("head")
-      <small>@group.name</small>
+      <small>@group.group_name</small>
     </h1>
   </div>
 
@@ -72,7 +72,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                 </a>
               </td>
               <td class="hidden-xs">
-                {{ user.name }}
+                {{ user.user_name }}
               </td>
               <td>
                 <button type="button" class="btn btn-danger btn-xs pull-right"

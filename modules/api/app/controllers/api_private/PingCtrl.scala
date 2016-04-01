@@ -25,7 +25,7 @@ class PingCtrl(
     Ok(
       Json.prettyPrint(
         Json.obj(
-          "username" -> req.user.name,
+          "username" -> req.user.user_name,
           "email" -> req.user.email,
           "datetime" -> DateTime.now
         )

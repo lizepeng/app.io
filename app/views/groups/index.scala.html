@@ -62,10 +62,10 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                   <i ng-if="grp.is_internal" class="fa fa-info-circle fa-lg"></i>
                 </div>
 
-                <a href="#" editable-text="grp.name" buttons="no"
+                <a href="#" editable-text="grp.group_name" buttons="no"
                   onbeforesave="checkName($data)"
                   onaftersave="grp.$save()">
-                  {{ grp.name }}
+                  {{ grp.group_name }}
                 </a>
               </td>
 
@@ -104,7 +104,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
           'tabindex     -> 1,
           'placeholder  -> GroupsCtrl.msg("name.placeholder"),
           'autocomplete -> "off",
-          Symbol("ng-model") -> "group.name"
+          Symbol("ng-model") -> "group.group_name"
         )
 
         @ng._form_control("description",
@@ -115,7 +115,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
 
         <button type="submit" class="btn btn-success"
           ng-click="create(group)"
-          ng-disabled="form.$invalid || !group.name">
+          ng-disabled="form.$invalid || !group.group_name">
           <i class="fa fa-plus"></i>
           @GroupsCtrl.msg("new.group")
         </button>

@@ -1,4 +1,4 @@
-@(pager: Pager, sort:Seq[SortField])(
+@(q: Option[String], pager: Pager, sort:Seq[SortField])(
 implicit req: UserRequest[_], messages: Messages, env: Environment, secured: RegisteredSecured)
 
 @import common._
@@ -71,11 +71,11 @@ implicit req: UserRequest[_], messages: Messages, env: Environment, secured: Reg
               <td ng-if="ace.is_group">
                 <a ng-if="!ACListSvc.groups[ace.principal_id].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal_id).url}}">
                   <i class="fa fa-group fa-lg fa-fw text-info"></i>
-                  {{ ACListSvc.groups[ace.principal_id].name }}
+                  {{ ACListSvc.groups[ace.principal_id].group_name }}
                 </a>
                 <span ng-if="ACListSvc.groups[ace.principal_id].is_internal">
                   <i class="fa fa-group fa-lg fa-fw"></i>
-                  {{ ACListSvc.groups[ace.principal_id].name }}
+                  {{ ACListSvc.groups[ace.principal_id].group_name }}
                 </span>
               </td>
               <td ng-if="!ace.is_group">
@@ -149,9 +149,10 @@ implicit req: UserRequest[_], messages: Messages, env: Environment, secured: Reg
       ACListSvc.options = {
         page     : @pager.pageNum,
         pageSize : @pager.pageSize,
+        q        : '@q.getOrElse("")',
         sort     : @Html(SortField.toJson(sort)),
-        nextPage : '@Html(routes.AccessControlsCtrl.index(pager.next,sort).toString)',
-        prevPage : '@Html(routes.AccessControlsCtrl.index(pager.prev,sort).toString)'
+        nextPage : '@Html(routes.AccessControlsCtrl.index(q,pager.next,sort).toString)',
+        prevPage : '@Html(routes.AccessControlsCtrl.index(q,pager.prev,sort).toString)'
       };
     }]);
   </script>

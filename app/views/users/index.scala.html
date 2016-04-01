@@ -47,7 +47,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                 @MSG("email")
               </th>
               <th class="hidden-xs hidden-sm col-md-3">
-                @MSG("user.name")
+                @MSG("user.user_name")
               </th>
               <th class="col-xs-4  col-sm-3  col-md-1 text-right">
               </th>
@@ -69,7 +69,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                 </a>
               </td>
               <td class="hidden-xs hidden-sm">
-                {{ usr.name }}
+                {{ usr.user_name }}
               </td>
               <td>
                 <div class="pull-right">
@@ -96,14 +96,14 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
 
         @ng._form_control("name",
           'maxLength    -> 64,
-          'minLength    -> 2,
+          'minLength    -> 4,
           'tabindex    -> 2,
           'placeholder -> UsersCtrl.msg("name.placeholder"),
-          Symbol("ng-model") -> "user.name"
+          Symbol("ng-model") -> "user.user_name"
         )
 
         <button type="submit" class="btn btn-success" ng-click="create(user)"
-          ng-disabled="form.$invalid || !user.email || !user.name">
+          ng-disabled="form.$invalid || !user.email || !user.user_name">
           <i class="fa fa-user-plus"></i>
           @UsersCtrl.msg("new.user")
         </button>

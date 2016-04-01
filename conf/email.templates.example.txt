@@ -4,7 +4,7 @@
 [${app.name}] Please reset your password
 
 # to
-#{to.name}
+#{to.user_name}
 
 #
 We heard that you lost your ${app.name} password. Sorry about that!
@@ -26,10 +26,10 @@ Your friends at ${app.name}
 [${app.name}] Your password has changed
 
 # to
-#{to.name}
+#{to.user_name}
 
 #
-Hello #{to.name},
+Hello #{to.user_name},
 
 We wanted to let you know that your ${app.name} password was changed.
 

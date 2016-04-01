@@ -26,7 +26,6 @@ package object elasticsearch {
    * `Writable` for `SearchResponse` values - Json
    */
   implicit def writableOf_SearchResponse(implicit codec: Codec): Writeable[SearchResponse] = {
-    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(response => codec.encode(response.toString))
   }
 

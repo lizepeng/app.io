@@ -64,4 +64,4 @@ POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(
 GET  /email_templates/history/:id           controllers.EmailTemplatesCtrl.history(id:String,lang:Lang,p:Pager?=Pager.first)
 POST /email_templates/destroy/:id           controllers.EmailTemplatesCtrl.destroy(id:String,lang:Lang)
 
-GET  /access_controls                       controllers.AccessControlsCtrl.index(p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)
+GET  /access_controls                       controllers.AccessControlsCtrl.index(q:Option[String]?=None,p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)

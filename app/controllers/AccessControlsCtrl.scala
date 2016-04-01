@@ -29,13 +29,13 @@ class AccessControlsCtrl(
   with AccessControlsCtrl.AccessDef
   with I18nSupport {
 
-  def index(pager: Pager, sort: Seq[SortField]) =
+  def index(q: Option[String], pager: Pager, sort: Seq[SortField]) =
     UserAction(_.P01, _.P03, _.P05, _.P06).apply { implicit req =>
       val default = _accessControls.sorting(
         _.principal_id.desc,
         _.resource.asc
       )
-      Ok(html.access_controls.index(pager, if (sort.nonEmpty) sort else default))
+      Ok(html.access_controls.index(q, pager, if (sort.nonEmpty) sort else default))
     }
 
 }

@@ -22,7 +22,7 @@ import scala.util.Success
  */
 case class Group(
   id: UUID = UUIDs.timeBased,
-  name: Name = Name.empty,
+  group_name: Name = Name.empty,
   description: Option[String] = None,
   is_internal: Boolean = false,
   updated_at: DateTime = DateTime.now
@@ -35,40 +35,40 @@ trait GroupCanonicalNamed extends CanonicalNamed {
 
 sealed trait GroupTable
   extends NamedCassandraTable[GroupTable, Group]
-  with GroupCanonicalNamed {
+    with GroupCanonicalNamed {
 
   object id
     extends TimeUUIDColumn(this)
-    with PartitionKey[UUID]
+      with PartitionKey[UUID]
 
   object child_id
     extends UUIDColumn(this)
-    with ClusteringOrder[UUID]
+      with ClusteringOrder[UUID]
 
-  object name
+  object group_name
     extends StringColumn(this)
-    with StaticColumn[String]
+      with StaticColumn[String]
 
   object description
     extends OptionalStringColumn(this)
-    with StaticColumn[Option[String]]
+      with StaticColumn[Option[String]]
 
   object is_internal
     extends OptionalBooleanColumn(this)
-    with StaticColumn[Option[Boolean]]
+      with StaticColumn[Option[Boolean]]
 
   object layout
     extends OptionalStringColumn(this)
-    with StaticColumn[Option[String]]
+      with StaticColumn[Option[String]]
 
   object updated_at
     extends DateTimeColumn(this)
-    with StaticColumn[DateTime]
+      with StaticColumn[DateTime]
 
   override def fromRow(r: Row): Group = {
     Group(
       id(r),
-      Name(name(r)),
+      Name(group_name(r)),
       description(r),
       is_internal(r).contains(true),
       updated_at(r)
@@ -78,7 +78,7 @@ sealed trait GroupTable
 
 object Group
   extends GroupCanonicalNamed
-  with ExceptionDefining {
+    with ExceptionDefining {
 
   case class NotFound(id: UUID)
     extends BaseException(error_code("not.found"))
@@ -98,8 +98,7 @@ class Groups(
   val keySpaceDef: KeySpaceDef,
   val _users: Users,
   val _sysConfig: SysConfigs
-)
-  extends GroupTable
+) extends GroupTable
   with EntityTable[Group]
   with ExtCQL[GroupTable, Group]
   with BasicPlayComponents
@@ -134,7 +133,7 @@ class Groups(
   def save(group: Group): Future[Group] = CQL {
     update
       .where(_.id eqs group.id)
-      .modify(_.name setTo group.name.self)
+      .modify(_.group_name setTo group.group_name.self)
       .and(_.description setTo group.description)
       .and(_.is_internal setTo Some(group.is_internal).filter(_ == true))
       .and(_.updated_at setTo DateTime.now)
@@ -221,7 +220,7 @@ class Groups(
 
   def isEmpty: Future[Boolean] = _internalGroups.isEmpty
 
-  override def sortable: Set[SortableField] = Set(name)
+  override def sortable: Set[SortableField] = Set(group_name)
 }
 
 case class InternalGroup(code: Int) extends AnyVal {
@@ -359,7 +358,7 @@ class InternalGroups(
   private def createIfNotExist(group: Group): Future[Boolean] = CQL {
     insert
       .value(_.id, group.id)
-      .value(_.name, group.name.self)
+      .value(_.group_name, group.group_name.self)
       .value(_.description, group.description)
       .value(_.is_internal, Some(group.is_internal).filter(_ == true))
       .value(_.updated_at, group.updated_at)
@@ -373,7 +372,7 @@ class InternalGroups(
   }.future().map(_.wasApplied)
 
   def stream(ids: TraversableOnce[UUID]): Enumerator[Group] = CQL {
-    select(_.id, _.name, _.description, _.is_internal, _.updated_at)
+    select(_.id, _.group_name, _.description, _.is_internal, _.updated_at)
       .distinct
       .where(_.id in ids.toList.distinct)
   }.fetchEnumerator() &>

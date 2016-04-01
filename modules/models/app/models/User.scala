@@ -23,7 +23,7 @@ import scala.concurrent.duration._
  */
 case class User(
   id: UUID,
-  name: Name = Name.empty,
+  user_name: UserName = UserName.empty,
   salt: String = "",
   encrypted_password: String = "",
   session_id: Option[String] = None,
@@ -103,7 +103,7 @@ sealed abstract class UserTable
     extends TimeUUIDColumn(this)
       with PartitionKey[UUID]
 
-  object name
+  object user_name
     extends StringColumn(this)
 
   object salt
@@ -167,7 +167,7 @@ object User
   implicit val jsonWrites = new Writes[User] {
     override def writes(o: User): JsValue = Json.obj(
       "id" -> o.id,
-      "name" -> o.name,
+      "user_name" -> o.user_name,
       "email" -> o.email
     )
   }
@@ -189,7 +189,7 @@ class Users(
   with BootingProcess
   with Logging {
 
-  val _usersByEmail = new UsersByEmail
+  val byEmail = new UsersByEmail
 
   onStart(create.ifNotExists.future())
 
@@ -197,7 +197,7 @@ class Users(
     val ig_bits = InternalGroupBits(internal_groups(r))
     User(
       id(r),
-      Name(name(r)),
+      UserName(user_name(r)),
       salt(r),
       encrypted_password(r),
       session_id(r),
@@ -229,7 +229,7 @@ class Users(
   }
 
   def find(email: EmailAddress): Future[User] = {
-    _usersByEmail.find(email).flatMap { case (_, id) => find(id) }
+    byEmail.find(email).flatMap { case (_, id) => find(id) }
   }
 
   def find(ids: TraversableOnce[UUID]): Future[Seq[User]] = CQL {
@@ -238,7 +238,7 @@ class Users(
   }.fetch()
 
   def checkEmail(email: EmailAddress): Future[Boolean] = {
-    _usersByEmail.cql_check(email).one().map {
+    byEmail.cql_check(email).one().map {
       case None => true
       case _    => throw User.EmailTaken(email.self)
     }
@@ -252,11 +252,11 @@ class Users(
   def save(user: User): Future[User] = {
     val u = user.encryptPassword
     for {
-      done <- _usersByEmail.save(u.email, u.id)
-      user <- if (done) CQL {
+      ____ <- byEmail.save(u.email, u.id)
+      user <- CQL {
         insert
           .value(_.id, u.id)
-          .value(_.name, u.name.self)
+          .value(_.user_name, u.user_name.self)
           .value(_.salt, u.salt)
           .value(_.encrypted_password, u.encrypted_password)
           .value(_.email, u.email.self)
@@ -264,7 +264,6 @@ class Users(
           .value(_.external_groups, Set[UUID]())
           .value(_.updated_at, u.updated_at)
       }.future().map(_ => u)
-      else throw User.EmailTaken(u.email.self)
     } yield user
   }
 
@@ -294,18 +293,11 @@ class Users(
     }.future().map(_ => u)
   }
 
-  def updateName(id: UUID, name: String): Future[ResultSet] = CQL {
-    update
-      .where(_.id eqs id)
-      .modify(_.name setTo name)
-      .and(_.updated_at setTo DateTime.now)
-  }.future()
-
   def remove(id: UUID): Future[ResultSet] = {
     find(id).flatMap { user =>
       CQL {
         Batch.logged
-          .add(_usersByEmail.cql_del(user.email))
+          .add(byEmail.cql_del(user.email))
           .add(delete.where(_.id eqs id))
       }.future()
     }
@@ -335,7 +327,7 @@ class Users(
       .modify(_.updated_at setTo DateTime.now)
   }
 
-  override def sortable: Set[SortableField] = Set(name, email)
+  override def sortable: Set[SortableField] = Set(user_name, email)
 
   ////////////////////////////////////////////////////////////////
   def findAccessToken(id: UUID): Future[Option[String]] = {
@@ -386,7 +378,10 @@ class UsersByEmail(
       .value(_.email, email.self)
       .value(_.id, id)
       .ifNotExists()
-  }.future().map(_.wasApplied())
+  }.future().map { ret =>
+    if (ret.wasApplied()) true
+    else throw User.EmailTaken(email.self)
+  }
 
   def find(email: EmailAddress): Future[(String, UUID)] = {
     if (email.self.isEmpty) Future.failed(User.NotFound(email.self))

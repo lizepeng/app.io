@@ -23,7 +23,7 @@ trait SystemAccounts {
       case e: User.NotFound => _users.save(
         User(
           id = uid,
-          name = Name(named.basicName),
+          user_name = UserName(named.basicName),
           email = EmailAddress(s"${named.basicName}@$domain")
         )
       )

@@ -51,12 +51,12 @@ views.groups.index.factory 'GroupListSvc', [
     $scope.jsRoutes         = jsRoutes
     ModalDialog.templateUrl = 'confirm_delete.html'
 
-    $scope.checkName = (data) ->
+    $scope.checkName = (name) ->
       d = $q.defer()
-      $http.post jsRoutes.controllers.api_internal.GroupsCtrl.checkName(data).url, name: data
+      $http.post jsRoutes.controllers.api_internal.GroupsCtrl.checkName().url, group_name: name
         .then(
           -> d.resolve()
-          (data, status) -> d.resolve ClientError.firstMsg(data, status)
+          (resp) -> d.resolve ClientError.firstMsg(resp)
         )
       d.promise
 

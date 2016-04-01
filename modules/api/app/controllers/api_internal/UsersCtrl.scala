@@ -44,7 +44,7 @@ class UsersCtrl(
   case class UserInfo(
     uid: Option[UUID],
     email: EmailAddress,
-    name: Option[Name]
+    user_name: Option[UserName]
   )
 
   object UserInfo {implicit val jsonFormat = Json.format[UserInfo]}
@@ -97,7 +97,7 @@ class UsersCtrl(
           saved <- User(
             id = success.uid.getOrElse(UUIDs.timeBased),
             email = success.email,
-            name = success.name.getOrElse(Name.empty)
+            user_name = success.user_name.getOrElse(UserName.empty)
           ).save
           _resp <- es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>

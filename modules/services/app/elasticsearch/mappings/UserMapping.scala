@@ -17,8 +17,8 @@ import models.Users
 object UserMapping extends (Users => Iterable[TypedFieldDefinition]) {
 
   override def apply(v1: Users): Iterable[TypedFieldDefinition] = Seq(
-    field(v1.id.name) typed StringType,
-    field(v1.name.name) typed StringType index MappingParams.Index.NotAnalyzed,
+    field(v1.id.name) typed StringType index MappingParams.Index.NotAnalyzed,
+    field(v1.user_name.name) typed StringType index MappingParams.Index.NotAnalyzed,
     field(v1.email.name) typed StringType index MappingParams.Index.NotAnalyzed
   )
 }

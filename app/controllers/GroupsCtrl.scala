@@ -30,7 +30,7 @@ class GroupsCtrl(
 
   def index(pager: Pager, sort: Seq[SortField]) =
     UserAction(_.P03, _.P01, _.P05, _.P06).apply { implicit req =>
-      val default = _groups.sorting(_.name.asc)
+      val default = _groups.sorting(_.group_name.asc)
       Ok(html.groups.index(pager, if (sort.nonEmpty) sort else default))
     }
 
@@ -68,13 +68,13 @@ object GroupsCtrl
 
   def groupNames(groups: Seq[Group]) = Json.prettyPrint(
     JsObject(
-      groups.map(g => g.id.toString -> JsString(g.name.self))
+      groups.map(g => g.id.toString -> JsString(g.group_name.self))
     )
   )
 
   def intGroupNames(groups: Seq[Group]) = Json.prettyPrint(
     JsObject(
-      groups.zipWithIndex.map(p => p._2.toString -> JsString(p._1.name.self))
+      groups.zipWithIndex.map(p => p._2.toString -> JsString(p._1.group_name.self))
     )
   )
 }

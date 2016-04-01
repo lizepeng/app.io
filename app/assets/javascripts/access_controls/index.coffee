@@ -27,6 +27,7 @@ views.access_controls.index.factory 'ACListSvc', [
       @aces = AccessControl.query
         page     : @options.page
         per_page : @options.pageSize
+        q        : @options.q
         sort     : @options.sort.join(','),
         (aces, headers) =>
           @convertPerm ace for ace in aces
@@ -119,15 +120,15 @@ views.access_controls.index.factory 'ACListSvc', [
         '/api_internal/search'
         params:
           types : types.join ','
-          q     : "email:*#{val}* OR name:*#{val}* "
-          sort  : " name"
+          q     : "email:*#{val}* OR group_name:*#{val}* "
+          sort  : " group_name, email"
       ).then (response) ->
         _.chain response.data
           .filter (item) -> _.contains types, item._type
           .each   (item) ->
             item.id    = item._source.id
             item.label = item._source.email if item._type is 'users'
-            item.label = item._source.name  if item._type is 'groups'
+            item.label = item._source.group_name  if item._type is 'groups'
         response.data
 
     ACListSvc.load()

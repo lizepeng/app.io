@@ -9,10 +9,10 @@ angular.module 'api.helper', []
 .factory 'ClientError', ->
   service = {}
 
-  service.firstMsg = (data, status) ->
+  service.firstMsg = (resp) ->
     unknown = "Unknown Error Occurred."
-    switch status
-      when 422 then data.errors?[0].errors?[0].message || unknown
+    switch resp.status
+      when 422 then resp.data.errors?[0].errors?[0].message || unknown
       else unknown
 
   return service

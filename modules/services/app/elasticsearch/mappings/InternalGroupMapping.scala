@@ -12,8 +12,8 @@ import models.InternalGroups
 object InternalGroupMapping extends (InternalGroups => Iterable[TypedFieldDefinition]) {
 
   override def apply(v1: InternalGroups): Iterable[TypedFieldDefinition] = Seq(
-    field(v1.id.name) typed StringType,
-    field(v1.name.name) typed StringType index MappingParams.Index.NotAnalyzed,
+    field(v1.id.name) typed StringType index MappingParams.Index.NotAnalyzed,
+    field(v1.group_name.name) typed StringType index MappingParams.Index.NotAnalyzed,
     field(v1.layout.name) typed StringType index MappingParams.Index.NotAnalyzed
   )
 }

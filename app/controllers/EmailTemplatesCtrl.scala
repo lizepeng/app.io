@@ -228,7 +228,7 @@ object EmailTemplatesCtrl
 
   trait AccessDef extends BasicAccessDef {
 
-    def values = Seq(P01, P02, P03, P05, P06, P07)
+    def values = Seq(P00, P01, P02, P03, P04, P05, P06, P07)
   }
 
   object AccessDef extends AccessDef

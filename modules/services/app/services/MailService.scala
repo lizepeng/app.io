@@ -16,8 +16,7 @@ import scala.concurrent.duration._
  */
 class MailService(
   val basicPlayApi: BasicPlayApi
-)
-  extends MailServiceCanonicalNamed
+) extends MailServiceCanonicalNamed
   with BasicPlayComponents
   with AppConfigComponents
   with I18nSupport {
@@ -34,7 +33,7 @@ class MailService(
     args: Map[String, Any] = Map()
   ): Cancellable = send(
     mailer, tmpl, args ++ Seq(
-      "to.name" -> user.name,
+      "to.user_name" -> user.user_name,
       "to.email" -> user.email
     )
   )
@@ -80,14 +79,14 @@ class MailService(
 object MailService extends MailServiceCanonicalNamed
 
 trait MailServiceCanonicalNamed extends CanonicalNamed {
+
   override val basicName: String = "mailer"
 }
 
 class MAMailerPlugin(
   val configuration: Configuration,
   val actorSystem: ActorSystem
-)
-  extends ConfiguredExecutor
+) extends ConfiguredExecutor
   with Logging {
 
   val executor: ExecutionContext = lookupExecutionContext("contexts.mailer")

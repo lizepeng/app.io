@@ -13,7 +13,7 @@ import scala.language.implicitConversions
  */
 case class PageSResp(pager: Pager, resp: RichSearchResponse) extends PageLike {
 
-  def hasNext: Boolean = resp.getHits.hits.size > pager.pageSize
+  def hasNext: Boolean = resp.getHits.hits.length > pager.pageSize
 }
 
 object PageSResp {
@@ -29,7 +29,6 @@ object PageSResp {
   implicit def writableOf_PageSearchResponse(
     implicit codec: Codec
   ): Writeable[PageSResp] = {
-    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(
       p => {
         val hits = p.resp.getHits

@@ -9,8 +9,8 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
   <div class="page-header">
     <h1>
       <i class="fa fa-user fa-lg fa-fw"></i>
-      @if(user.name.self.nonEmpty) {
-        @user.name
+      @if(user.user_name.self.nonEmpty) {
+        @user.user_name
       } else {
         @user.email
       }

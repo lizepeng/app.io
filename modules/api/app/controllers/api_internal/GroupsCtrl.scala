@@ -39,7 +39,7 @@ class GroupsCtrl(
   with I18nSupport
   with Logging {
 
-  case class GroupInfo(name: Name, description: Option[String])
+  case class GroupInfo(group_name: Name, description: Option[String])
 
   object GroupInfo {implicit val jsonFormat = Json.format[GroupInfo]}
 
@@ -72,7 +72,7 @@ class GroupsCtrl(
     UserAction(_.P01).async { implicit req =>
       BindJson().as[GroupInfo] { success =>
         for {
-          saved <- _groups.save(Group(name = success.name, description = success.description))
+          saved <- _groups.save(Group(group_name = success.group_name, description = success.description))
           _resp <- es.Index(saved) into _groups
         } yield {
           Created(_resp._1)
@@ -105,7 +105,7 @@ class GroupsCtrl(
     UserAction(_.P02).async { implicit req =>
       BodyIsJsObject { obj =>
         Future.successful {
-          (obj \ "name").validate[Name].fold(
+          (obj \ "group_name").validate[Name].fold(
             failure => UnprocessableEntity(JsonClientErrors(failure)),
             success => Ok
           )
@@ -118,7 +118,7 @@ class GroupsCtrl(
       BindJson().as[GroupInfo] { grp =>
         (for {
           group <- _groups.find(id)
-          saved <- _groups.save(group.copy(name = grp.name, description = grp.description))
+          saved <- _groups.save(group.copy(group_name = grp.group_name, description = grp.description))
           _resp <- es.Update(saved) in _groups
         } yield _resp._1).map {
           Ok(_)
@@ -211,7 +211,7 @@ object GroupsCtrl
     /** Save Layouts */
     val P20 = Access.Pos(20)
 
-    def values = Seq(P01, P02, P03, P06, P16, P17, P18, P19, P20)
+    def values = Seq(P01, P02, P03, P05, P06, P16, P17, P18, P19, P20)
   }
 
   object AccessDef extends AccessDef
