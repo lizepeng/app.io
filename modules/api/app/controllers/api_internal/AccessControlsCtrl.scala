@@ -37,7 +37,7 @@ class AccessControlsCtrl(
 
   def index(q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.P03).async { implicit req =>
-      (es.Search(q, p, sort) in _accessControls future()).map { page =>
+      (es.Search(q, p, sort, None) in _accessControls future()).map { page =>
         Ok(page).withHeaders(
           linkHeader(page, routes.AccessControlsCtrl.index(q, _, sort))
         )

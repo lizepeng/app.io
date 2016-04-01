@@ -29,7 +29,8 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
           <input type="search" class="form-control" id="search-users"
             placeholder="@UsersCtrl.msg("search.placeholder")"
             autocomplete="off"
-            ng-model="keyword">
+            ng-model="keyword"
+            ng-model-options="{ debounce: 500 }">
         </div>
       </div>
     </div>

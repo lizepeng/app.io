@@ -119,7 +119,7 @@ views.access_controls.index.factory 'ACListSvc', [
         '/api_internal/search'
         params:
           types : types.join ','
-          q     : "*#{val}*"
+          q     : "email:*#{val}* OR name:*#{val}* "
           sort  : " name"
       ).then (response) ->
         _.chain response.data

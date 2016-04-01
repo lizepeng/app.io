@@ -36,7 +36,6 @@ class GroupsCtrl(
   with GroupsCtrl.AccessDef
   with DefaultPlayExecutor
   with RateLimitConfigComponents
-  with BootingProcess
   with I18nSupport
   with Logging {
 
@@ -51,7 +50,7 @@ class GroupsCtrl(
           Ok(Json.toJson(grps))
         }
       else
-        (es.Search(q, p, sort) in _groups future()).map { page =>
+        (es.Search(q, p, sort, Some(false)) in _groups future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.GroupsCtrl.index(Nil, q, _, sort))
           )

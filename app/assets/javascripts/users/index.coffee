@@ -22,7 +22,7 @@ views.users.index.factory 'UserListSvc', [
         page     : @options.page
         per_page : @options.pageSize
         sort     : @options.sort.join(',')
-        q        : "*#{q}*",
+        q        : "email:#{q}*",
         (value, headers) =>
           LinkHeader.updateLinks @options.nextPage, @options.prevPage, headers
 

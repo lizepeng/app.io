@@ -60,8 +60,8 @@ class ElasticSearch(
   onStart(
     Client.execute {
       create index indexName analysis(
-        ElasticSearch.analyzers.defaultDef,
-        ElasticSearch.analyzers.emailDef)
+        ElasticSearch.Analyzers.defaultDef,
+        ElasticSearch.Analyzers.emailDef)
     }.recover {
       // if index already exists
       case e: Throwable => Logger.debug(e.getMessage)
@@ -82,8 +82,12 @@ class ElasticSearch(
 
   def BulkIndex[T <: HasID[_]](rs: Seq[T]) = new BulkIndexAction[T](rs)
 
-  def Search(q: Option[String], p: Pager, sort: Seq[SortField]) =
-    new SearchAction(q, p, sort)
+  def Search(
+    q: Option[String],
+    p: Pager,
+    sort: Seq[SortField],
+    lowercase_expanded_terms: Option[Boolean] = None
+  ) = new SearchAction(q, p, sort, lowercase_expanded_terms)
 
   def Multi(defs: (ElasticSearch => ReadySearchDefinition)*) =
     new ReadyMultiSearchDefinition(Client)(
@@ -96,7 +100,18 @@ object ElasticSearch extends CanonicalNamed {
 
   override val basicName: String = "elastic_search"
 
-  object analyzers {
+  object MappingParams {
+
+    object Index {
+
+      val No          = "no"
+      val NotAnalyzed = "not_analyzed"
+      val Analyzed    = "analyzed"
+    }
+  }
+
+  object Analyzers {
+
     val emailDef = CustomAnalyzerDefinition("email", UaxUrlEmailTokenizer)
     val email    = CustomAnalyzer("email")
 
@@ -120,7 +135,12 @@ object ESyntax {
     }
   }
 
-  class SearchAction(q: Option[String], p: Pager, sort: Seq[SortField])(
+  class SearchAction(
+    q: Option[String],
+    p: Pager,
+    sort: Seq[SortField],
+    lowercase_expanded_terms: Option[Boolean]
+  )(
     implicit client: ElasticClient, indexName: String
   ) {
 
@@ -134,7 +154,12 @@ object ESyntax {
       new ReadySearchDefinition(client, p)(
         Def(search in indexName / t.basicName)
           .?(cond = true)(_ start p.start limit p.limit)
-          .?(q.isDefined && q.get.nonEmpty)(_ query q.get)
+          .?(q.isDefined && q.get.nonEmpty)(
+            _ query Def(new QueryStringQueryDefinition(q.get))
+              .?(lowercase_expanded_terms.isDefined)(
+                _ lowercaseExpandedTerms lowercase_expanded_terms.get
+              ).result
+          )
           .?(sortDefs.nonEmpty)(_ sort (sortDefs: _*))
           .result
       )

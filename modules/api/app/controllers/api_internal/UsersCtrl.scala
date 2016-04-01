@@ -83,7 +83,7 @@ class UsersCtrl(
           Ok(Json.toJson(usrs))
         }
       else
-        (es.Search(q, p, sort) in _users future()).map { page =>
+        (es.Search(q, p, sort, Some(false)) in _users future()).map { page =>
           Ok(page).withHeaders(
             linkHeader(page, routes.UsersCtrl.index(Nil, q, _, sort))
           )

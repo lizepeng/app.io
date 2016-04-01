@@ -33,20 +33,15 @@ class SearchCtrl(
   with DefaultPlayExecutor
   with I18nSupport {
 
-  def index(
-    types: Seq[String],
-    q: Option[String],
-    p: Pager,
-    sort: Seq[SortField]
-  ) =
+  def index(types: Seq[String], q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.P16).async { implicit req =>
       val indexTypes = types.distinct
 
       val defs = indexTypes.zip(p / indexTypes.size).flatMap {
         case (name, _p) if name == _users.basicName  =>
-          Some((es: ElasticSearch) => es.Search(q, _p, sort) in _users)
+          Some((es: ElasticSearch) => es.Search(q, _p, sort, Some(false)) in _users)
         case (name, _p) if name == _groups.basicName =>
-          Some((es: ElasticSearch) => es.Search(q, _p, sort) in _groups)
+          Some((es: ElasticSearch) => es.Search(q, _p, sort, Some(false)) in _groups)
         case _                                       => None
       }
 

@@ -3,7 +3,7 @@ package elasticsearch.mappings
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.mappings.FieldType._
 import com.sksamuel.elastic4s.mappings._
-import elasticsearch.ElasticSearch
+import elasticsearch.ElasticSearch._
 import models.Users
 
 /**
@@ -15,9 +15,10 @@ import models.Users
  * @author zepeng.li@gmail.com
  */
 object UserMapping extends (Users => Iterable[TypedFieldDefinition]) {
+
   override def apply(v1: Users): Iterable[TypedFieldDefinition] = Seq(
     field(v1.id.name) typed StringType,
-    field(v1.name.name) typed StringType,
-    field(v1.email.name) typed StringType analyzer ElasticSearch.analyzers.email
+    field(v1.name.name) typed StringType index MappingParams.Index.NotAnalyzed,
+    field(v1.email.name) typed StringType index MappingParams.Index.NotAnalyzed
   )
 }

@@ -95,7 +95,7 @@ class Components(context: Context)
     ig => Future.successful(Unit),
     implicit ig => Future.sequence(
       Seq(
-        ReIndexInternalGroups(es, ig).start(),
+        ReIndexInternalGroups(ig).start(),
         controllers.AccessControlsCtrl.initIfFirstRun,
         controllers.Layouts.initIfFirstRun
       )

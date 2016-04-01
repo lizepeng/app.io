@@ -1,6 +1,7 @@
 package controllers
 
 import elasticsearch._
+import elasticsearch.mappings.AccessControlMapping
 import helpers._
 import models._
 import models.misc._
@@ -44,6 +45,7 @@ object AccessControlsCtrl
     with PermissionCheckable
     with CanonicalNameBasedMessages
     with ViewMessages
+    with BootingProcess
     with Logging {
 
   import ModulesAccessControl._
@@ -62,7 +64,10 @@ object AccessControlsCtrl
     ec: ExecutionContext,
     _internalGroups: InternalGroups,
     _accessControls: AccessControls
-  ): Future[Boolean] =
+  ): Future[Boolean] = {
+
+    onStart(es.PutMapping(AccessControlMapping))
+
     for {
       _empty <- _accessControls.isEmpty
       result <-
@@ -82,4 +87,5 @@ object AccessControlsCtrl
       }.map(_ => true)
       else Future.successful(false)
     } yield result
+  }
 }
