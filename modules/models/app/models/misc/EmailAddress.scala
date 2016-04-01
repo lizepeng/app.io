@@ -12,12 +12,16 @@ import play.api.mvc.QueryStringBindable.Parsing
 /**
  * @author zepeng.li@gmail.com
  */
-case class EmailAddress(self: String) extends AnyVal {
+case class EmailAddress private(chars: Array[Char]) {
+
+  val self = String.valueOf(chars)
 
   override def toString = self
 }
 
 object EmailAddress {
+
+  def apply(self: String): EmailAddress = EmailAddress(self.toLowerCase.toCharArray)
 
   def empty = EmailAddress("")
 
@@ -28,8 +32,8 @@ object EmailAddress {
 
   implicit object bindableQueryEmailAddress extends Parsing[EmailAddress](
     EmailAddress(_), _.self, (
-    key: String,
-    e: Exception
+      key: String,
+      e: Exception
     ) => "Cannot parse parameter %s as EmailAddress: %s".format(key, e.getMessage)
   )
 
