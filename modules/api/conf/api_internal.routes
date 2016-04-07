@@ -3,7 +3,7 @@
 # ~~~~
 
 GET    /search                           controllers.api_internal.SearchCtrl.index(types:Seq[String]?=Nil,q:Option[String],p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)
-GET    /ip/search/:ip                    controllers.api_internal.IPCtrl.show(ip:String)
+GET    /ip/search/:ip                    controllers.api_internal.IPCtrl.show(ip)
 
 GET    /groups                           controllers.api_internal.GroupsCtrl.index(ids:Seq[UUID]?=Nil,q:Option[String],p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)
 POST   /groups                           controllers.api_internal.GroupsCtrl.create

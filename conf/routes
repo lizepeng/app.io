@@ -58,10 +58,10 @@ POST /password_reset/:id                    controllers.PasswordResetCtrl.save(i
 GET  /email_templates                       controllers.EmailTemplatesCtrl.index(p:Pager?=Pager.first)
 GET  /email_templates/new                   controllers.EmailTemplatesCtrl.nnew
 POST /email_templates/new                   controllers.EmailTemplatesCtrl.create
-GET  /email_templates/edit/:id              controllers.EmailTemplatesCtrl.edit(id:String,lang:Lang)
-GET  /email_templates/show/:id              controllers.EmailTemplatesCtrl.show(id:String,lang:Lang,updated_at:Option[DateTime]?=None)
-POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(id:String,lang:Lang)
-GET  /email_templates/history/:id           controllers.EmailTemplatesCtrl.history(id:String,lang:Lang,p:Pager?=Pager.first)
-POST /email_templates/destroy/:id           controllers.EmailTemplatesCtrl.destroy(id:String,lang:Lang)
+GET  /email_templates/edit/:id              controllers.EmailTemplatesCtrl.edit(id,lang:Lang)
+GET  /email_templates/show/:id              controllers.EmailTemplatesCtrl.show(id,lang:Lang,updated_at:Option[DateTime]?=None)
+POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(id,lang:Lang)
+GET  /email_templates/history/:id           controllers.EmailTemplatesCtrl.history(id,lang:Lang,p:Pager?=Pager.first)
+POST /email_templates/destroy/:id           controllers.EmailTemplatesCtrl.destroy(id,lang:Lang)
 
 GET  /access_controls                       controllers.AccessControlsCtrl.index(q:Option[String]?=None,p:Pager?=Pager.first,sort:Seq[SortField]?=Nil)
