@@ -19,7 +19,7 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
   lazy val flags: Int = configuration
     .getStringSeq("cassandra.cql.log")
     .getOrElse(Seq.empty).map {
-    case "create" => 0x11
+    case "create" => 0x20
     case "batch"  => 0x10
     case "select" => 0x08
     case "insert" => 0x04
@@ -29,7 +29,7 @@ trait ExtCQL[T <: CassandraTable[T, R], R] {
 
   def CQL(
     cql: CreateQuery.Default[T, R]
-  ) = trace(cql, cql.queryString, (flags & 0x11) != 0)
+  ) = trace(cql, cql.queryString, (flags & 0x20) != 0)
 
   def CQL[
     Status <: ConsistencyBound](
