@@ -102,7 +102,7 @@ class FileSystemCtrl(
     }
 
   def updatePermission(path: Path, gid: Option[UUID], pos: Int) =
-    UserAction(_.P16).async { implicit req =>
+    UserAction(_.P16).async(BodyParsers.parse.empty) { implicit req =>
       (for {
         inode <- _cfs.inode(path)
         _ <- gid match {

@@ -57,7 +57,7 @@ POST /password_reset/:id                    controllers.PasswordResetCtrl.save(i
 
 GET  /email_templates                       controllers.EmailTemplatesCtrl.index(p:Pager?=Pager.first)
 GET  /email_templates/new                   controllers.EmailTemplatesCtrl.nnew
-POST /email_templates/new                   controllers.EmailTemplatesCtrl.create
+POST /email_templates                       controllers.EmailTemplatesCtrl.create
 GET  /email_templates/edit/:id              controllers.EmailTemplatesCtrl.edit(id,lang:Lang)
 GET  /email_templates/show/:id              controllers.EmailTemplatesCtrl.show(id,lang:Lang,updated_at:Option[DateTime]?=None)
 POST /email_templates/:id                   controllers.EmailTemplatesCtrl.save(id,lang:Lang)
