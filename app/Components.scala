@@ -98,8 +98,8 @@ class Components(context: Context)
         controllers.AccessControlsCtrl.initIfFirstRun,
         controllers.Layouts.initIfFirstRun
       )
-    ).andThen {
-      case Success(_) => play.api.Logger.info("System has been initialized.")
+    ).andThen { case Success(_) =>
+      play.api.Logger.info("InternalGroups/AccessControls have been initialized with default data.")
     }
   )
 
@@ -118,6 +118,8 @@ class Components(context: Context)
   implicit val _mailInbox              = new MailInbox
   implicit val _mailSent               = new MailSent
 
+  play.api.Logger.info("Models have been created.")
+
   // Actors
   startActors()
 
@@ -135,6 +137,8 @@ class Components(context: Context)
   val apiInternalUsersCtrl          = new controllers.api_internal.UsersCtrl
   val apiInternalAccessControlsCtrl = new controllers.api_internal.AccessControlsCtrl
   val apiInternalFileSystemCtrl     = new controllers.api_internal.FileSystemCtrl
+
+  play.api.Logger.info("Internal Controllers have been created.")
 
   // Internal Api Router
   val apiInternalRouter = new api_internal.Routes(
@@ -181,6 +185,8 @@ class Components(context: Context)
   val emailTemplatesCtrl = new controllers.EmailTemplatesCtrl()
   val accessControlsCtrl = new controllers.AccessControlsCtrl()
 
+  play.api.Logger.info("Root Controllers have been created.")
+
   // Root Router
   lazy val router: Routes = new Routes(
     errorHandler,
@@ -218,5 +224,9 @@ class Components(context: Context)
     MailActor.startRegion(configuration, actorSystem)
     ChatActor.startRegion(configuration, actorSystem)
     NotificationActor.startRegion(configuration, actorSystem)
+
+    play.api.Logger.info("Actor ShardRegions have been started.")
   }
+
+  play.api.Logger.info("System has been started.")
 }

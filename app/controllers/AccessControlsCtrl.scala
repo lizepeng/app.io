@@ -83,7 +83,7 @@ object AccessControlsCtrl
           }
         }
       ).andThen {
-        case Success(_) => Logger.info("Granted permission to anyone")
+        case Success(_) => Logger.info("Granted permission to anyone.")
       }.map(_ => true)
       else Future.successful(false)
     } yield result

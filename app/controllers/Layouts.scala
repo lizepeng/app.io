@@ -37,7 +37,7 @@ object Layouts extends Logging {
     _internalGroups
       .setLayout(_internalGroups.AnyoneId, layout_admin)
       .andThen { case Success(true) =>
-        Logger.debug("Initialized layout of Anyone")
+        Logger.info("Initialized layout of Anyone.")
       }
   }
 }
