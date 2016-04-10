@@ -12,9 +12,9 @@ import play.api.mvc.QueryStringBindable.Parsing
 /**
  * @author zepeng.li@gmail.com
  */
-case class EmailAddress private(chars: Array[Char]) {
+case class EmailAddress private(chars: IndexedSeq[Char]) {
 
-  val self = String.valueOf(chars)
+  val self = String.valueOf(chars.toArray)
 
   override def toString = self
 }
