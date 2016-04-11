@@ -136,7 +136,7 @@ object User
   extends UserCanonicalNamed
     with ExceptionDefining {
 
-  val secureRandom = SecureRandom.getInstanceStrong
+  val secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking")
 
   /**
    * Thrown when user is not found
