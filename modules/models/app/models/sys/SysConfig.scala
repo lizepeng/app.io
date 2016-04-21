@@ -17,11 +17,11 @@ trait SysConfig {
   object System {
 
     def config[T](key: String, default: T)(
-      implicit serializer: Stringifier[T], sysConfig: SysConfigs
+      implicit stringifier: Stringifier[T], sysConfig: SysConfigs
     ) = {
       sysConfig.getOrElseUpdate(
         canonicalName, key, default
-      )(serializer)
+      )(stringifier)
     }
 
     def UUID(key: String)(
@@ -43,15 +43,15 @@ case class SysConfigEntry(
 
 sealed class SysConfigTable
   extends NamedCassandraTable[SysConfigTable, SysConfigEntry]
-  with SysConfigCanonicalNamed {
+    with SysConfigCanonicalNamed {
 
   object module
     extends StringColumn(this)
-    with PartitionKey[String]
+      with PartitionKey[String]
 
   object key
     extends StringColumn(this)
-    with ClusteringOrder[String] with Ascending
+      with ClusteringOrder[String] with Ascending
 
   object value extends StringColumn(this)
 
@@ -67,7 +67,7 @@ trait SysConfigCanonicalNamed extends CanonicalNamed {
 
 object SysConfig
   extends SysConfigCanonicalNamed
-  with ExceptionDefining {
+    with ExceptionDefining {
 
   case class NotFound(module: String, key: String)
     extends BaseException(error_code("not.found"))
@@ -78,8 +78,7 @@ class SysConfigs(
   implicit
   val basicPlayApi: BasicPlayApi,
   val keySpaceDef: KeySpaceDef
-)
-  extends SysConfigTable
+) extends SysConfigTable
   with ExtCQL[SysConfigTable, SysConfigEntry]
   with BasicPlayComponents
   with CassandraComponents
@@ -119,22 +118,22 @@ class SysConfigs(
     module: String,
     key: String,
     op: => T
-  )(implicit serializer: Stringifier[T]): Future[T] = {
+  )(implicit stringifier: Stringifier[T]): Future[T] = {
     for {
       maybe <- CQL {
         select(_.value)
           .where(_.module eqs module)
           .and(_.key eqs key)
       }.one()
-      value <- maybe match {
+      value <- maybe.flatMap(stringifier <<< _) match {
         case None    =>
           val v: T = op
-          persist(module, key, v >>: serializer).flatMap { applied =>
+          persist(module, key, v >>: stringifier).flatMap { applied =>
             if (applied) Future.successful(v)
             else getOrElseUpdate(module, key, op)
           }
         case Some(v) =>
-          Future.successful(serializer << v)
+          Future.successful(v)
       }
     } yield value
   }

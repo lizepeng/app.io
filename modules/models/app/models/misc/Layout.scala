@@ -3,6 +3,8 @@ package models.misc
 import helpers.Stringifier
 import play.api.libs.json.Json
 
+import scala.util._
+
 /**
  * @author zepeng.li@gmail.com
  */
@@ -12,9 +14,9 @@ object Layout {
 
   implicit val jsonFormat = Json.format[Layout]
 
-  implicit val layoutSerializer = new Stringifier[Layout] {
+  implicit val stringifier = new Stringifier[Layout] {
 
-    def << = Layout.apply
+    def << = str => Success(Layout(str))
 
     def >>: = _.layout
   }
