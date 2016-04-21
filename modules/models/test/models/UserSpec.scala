@@ -37,13 +37,24 @@ class UserSpec extends Specification with EmbeddedCassandra {
       val future1 = for {
         u1 <- user.addGroup(InternalGroup(1))
         u2 <- _users.find(user.id)
-      } yield (u1, u2)
+        __ <- user.preferences + ("layout" -> List("Admin", "User"))
+        __ <- user.preferences + ("page_size" -> 100)
+        __ <- user.preferences + ("page_size" -> 200)
+        __ <- user.preferences + ("page_num" -> 2)
+        __ <- user.preferences - "page_num"
+        l1 <- user.preferences[List[String]]("layout")
+        p1 <- user.preferences[Int]("page_size")
+        p2 <- user.preferences[Int]("page_num")
+      } yield (u1, u2, l1, p1, p2)
 
-      val (u1, u2) = Await.result(future1, 5.seconds)
+      val (u1, u2, l1, p1, p2) = Await.result(future1, 5.seconds)
       u1.internal_group_bits mustEqual (InternalGroup.Anyone | InternalGroup(1))
       u2.internal_group_bits mustEqual (InternalGroup.Anyone | InternalGroup(1))
       u1.internal_groups mustEqual _groups.InternalGroupIds.take(2)
       u2.internal_groups mustEqual _groups.InternalGroupIds.take(2)
+      l1 mustEqual Some(List("Admin", "User"))
+      p1 mustEqual Some(200)
+      p2 mustEqual None
     }
   }
 }

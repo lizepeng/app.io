@@ -1,6 +1,6 @@
 @()(implicit req: UserRequest[_], messages: Messages, env: Environment)
 
-@layoutsOpt = @{req.maybeUser.flatMap(_.preferences.get[List[String]]("layouts"))}
+@layoutsOpt = @{req.maybeUser.flatMap(_.attributes[List[String]]("layouts"))}
 @baseAdmin  = @{views.html.layouts.base_admin.getClass.getCanonicalName}
 
 @layoutsOpt match {

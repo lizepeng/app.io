@@ -17,6 +17,7 @@ import play.api.libs.json._
 import scala.collection.TraversableOnce
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
  * @author zepeng.li@gmail.com
@@ -33,9 +34,24 @@ case class User(
   external_groups: Set[UUID] = Set(),
   password: Password = Password.empty,
   remember_me: Boolean = false,
-  preferences: Preferences = Preferences(),
+  attributes: Attributes = Attributes(),
   updated_at: DateTime = DateTime.now
 ) extends HasUUID with TimeBased {
+
+  object preferences {
+
+    def apply[T](key: String)(
+      implicit _users: Users, jos: JsonOptionalStringifier[T]
+    ) = _users.preferences.find(id, key)
+
+    def +[T](entry: (String, T))(
+      implicit _users: Users, jos: JsonOptionalStringifier[T]
+    ) = _users.preferences.save(id, entry)
+
+    def -(key: String)(
+      implicit _users: Users
+    ) = _users.preferences.remove(id, key)
+  }
 
   def groups: Set[UUID] = external_groups union internal_groups
 
@@ -189,7 +205,8 @@ class Users(
   with BootingProcess
   with Logging {
 
-  val byEmail = new UsersByEmail
+  val byEmail     = new UsersByEmail
+  val preferences = new UserPreferences
 
   onStart(CQL(create.ifNotExists).future())
 
@@ -207,7 +224,7 @@ class Users(
       external_groups(r),
       Password.empty,
       remember_me = false,
-      preferences = Preferences(),
+      attributes = Attributes(),
       updated_at(r)
     )
   }
@@ -405,6 +422,69 @@ class UsersByEmail(
     cql_del(email).future()
   }
 }
+
+sealed class UserPreferencesTable
+  extends NamedCassandraTable[UserPreferencesTable, UUID]
+    with UserPreferencesCanonicalNamed {
+
+  object id
+    extends UUIDColumn(this)
+      with PartitionKey[UUID]
+
+  object key
+    extends StringColumn(this)
+      with PrimaryKey[String]
+
+  object value
+    extends StringColumn(this)
+
+  override def fromRow(r: Row) = id(r)
+}
+
+trait UserPreferencesCanonicalNamed extends CanonicalNamed {
+
+  override val basicName = "user_preferences"
+}
+
+class UserPreferences(
+  implicit
+  val basicPlayApi: BasicPlayApi,
+  val keySpaceDef: KeySpaceDef
+) extends UserPreferencesTable
+  with ExtCQL[UserPreferencesTable, UUID]
+  with BasicPlayComponents
+  with CassandraComponents
+  with BootingProcess
+  with Logging {
+
+  onStart(CQL(create.ifNotExists).future())
+
+  def find[T](id: UUID, key: String)(
+    implicit jos: JsonOptionalStringifier[T]
+  ): Future[Option[T]] = CQL {
+    select(_.value)
+      .where(_.id eqs id)
+      .and(_.key eqs key)
+  }.one().map(_.flatMap(jos.optionalFromJson))
+
+  def save[T](id: UUID, entry: (String, T))(
+    implicit jos: JsonOptionalStringifier[T]
+  ): Future[ResultSet] = CQL {
+    val (key, value) = entry
+    update.where(_.id eqs id)
+      .and(_.key eqs key)
+      .modify(_.value setTo jos.toJson(value))
+      .ttl(365 days)
+  }.future()
+
+  def remove(id: UUID, key: String): Future[ResultSet] =
+    CQL {
+      delete
+        .where(_.id eqs id)
+        .and(_.key eqs key)
+    }.future()
+}
+
 
 trait UsersComponents {
 

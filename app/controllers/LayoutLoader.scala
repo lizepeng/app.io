@@ -25,7 +25,7 @@ case class LayoutLoader(
       val list = layouts.collect {
         case (gid, layout) if layout.isDefined => layout.get
       }
-      user.copy(preferences = user.preferences + ("layouts" -> list))
+      user.copy(attributes = user.attributes + ("layouts" -> list))
     }
 
   override protected def transform[A](
