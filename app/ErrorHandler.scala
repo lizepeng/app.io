@@ -22,19 +22,22 @@ class ErrorHandler(
     statusCode: Int,
     message: String
   ) = {
-    if (statusCode == play.api.http.Status.BAD_REQUEST) {
-      if (request.uri.startsWith("/api_internal")) {
-        Future.successful(Results.NotFound)
+    import play.api.http.Status._
+    import play.api.mvc.Results._
+
+    val uri = request.uri
+    val b1 = uri.startsWith("/api_internal")
+    val b2 = uri.startsWith("/api_private")
+    val b3 = uri.startsWith("/sockets")
+
+    if (env.mode == Mode.Prod && (b1 || b2 || b3)) Future.successful {
+      statusCode match {
+        case BAD_REQUEST => BadRequest
+        case FORBIDDEN   => Forbidden
+        case _           => NotFound
       }
     }
-
-    if (statusCode == play.api.http.Status.NOT_FOUND) {
-      if (request.uri.startsWith("/api_internal")) {
-        Future.successful(Results.NotFound)
-      }
-    }
-
-    super.onClientError(request, statusCode, message)
+    else super.onClientError(request, statusCode, message)
   }
 
   override def onProdServerError(

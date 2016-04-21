@@ -124,7 +124,7 @@ class Components(context: Context)
   startActors()
 
   // Error Handler
-  val errorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
+  override lazy val httpErrorHandler = new ErrorHandler(environment, configuration, sourceMapper, Some(router))
 
   // Internal Api Permission Checking
   implicit val apiInternalPermCheckRequired =
@@ -142,7 +142,7 @@ class Components(context: Context)
 
   // Internal Api Router
   val apiInternalRouter = new api_internal.Routes(
-    errorHandler,
+    httpErrorHandler,
     apiInternalSearchCtrl,
     apiInternalIPCtrl,
     apiInternalGroupsCtrl,
@@ -156,7 +156,7 @@ class Components(context: Context)
 
   // Sockets Router
   val socketsRouter = new sockets.Routes(
-    errorHandler,
+    httpErrorHandler,
     userWebSocketCtrl
   )
 
@@ -165,7 +165,7 @@ class Components(context: Context)
 
   // Private Api Router
   val apiPrivateRouter = new api_private.Routes(
-    errorHandler,
+    httpErrorHandler,
     apiPrivatePingCtrl
   )
 
@@ -189,13 +189,13 @@ class Components(context: Context)
 
   // Root Router
   lazy val router: Routes = new Routes(
-    errorHandler,
+    httpErrorHandler,
     apiInternalRouter,
     socketsRouter,
     apiPrivateRouter,
     applicationCtrl,
     experimentalCtrl,
-    new controllers.Assets(errorHandler),
+    new controllers.Assets(httpErrorHandler),
     fileSystemCtrl,
     sessionsCtrl,
     usersCtrl,

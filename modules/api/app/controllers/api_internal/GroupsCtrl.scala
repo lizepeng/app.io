@@ -80,7 +80,7 @@ class GroupsCtrl(
               LOCATION -> routes.GroupsCtrl.show(saved.id).url
             )
         }
-      }
+      }()
     }
 
   def destroy(id: UUID) =
@@ -105,7 +105,7 @@ class GroupsCtrl(
     UserAction(_.P02).async { implicit req =>
       BodyIsJsObject { obj =>
         Future.successful {
-          (obj \ "group_name").validate[Name].fold(
+          Reads.at[Name](__ \ "group_name").reads(obj).fold(
             failure => UnprocessableEntity(JsonClientErrors(failure)),
             success => Ok
           )
@@ -125,7 +125,7 @@ class GroupsCtrl(
         }.recover {
           case e: BaseException => NotFound
         }
-      }
+      }()
     }
 
   def users(id: UUID, pager: Pager) =
@@ -144,8 +144,8 @@ class GroupsCtrl(
   def addUser(id: UUID) =
     UserAction(_.P17).async { implicit req =>
       BodyIsJsObject { obj =>
-        def u1 = (obj \ "id").validate[UUID].map(_users.find)
-        def u2 = (obj \ "email").validate[EmailAddress].map(_users.find)
+        def u1 = Reads.at[UUID](__ \ "id").reads(obj).map(_users.find)
+        def u2 = Reads.at[EmailAddress](__ \ "email").reads(obj).map(_users.find)
         (u1 orElse u2).fold(
           failure => Future.successful {
             UnprocessableEntity(JsonClientErrors(failure))
@@ -186,7 +186,7 @@ class GroupsCtrl(
         _groups.setLayout(gid, success).map { saved =>
           Ok(Json.toJson(saved))
         }
-      }.recover {
+      }().recover {
         case e: BaseException => NotFound(JsonMessage(e))
       }
     }

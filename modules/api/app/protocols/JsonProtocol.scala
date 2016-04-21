@@ -16,33 +16,31 @@ object JsonProtocol {
   object JsonClientErrors {
 
     def apply(
-      jse: JsError
-    )(implicit messages: Messages): JsObject = apply(jse.errors)
-
-    def apply(
-      errors: Seq[(JsPath, Seq[ValidationError])]
-    )(implicit messages: Messages): JsObject = Json.obj(
-      "message" -> messages("api.json.validation.failed"),
-      "errors" -> JsArray {
-        errors.map { case (path, errs) =>
-          Json.obj(
-            "field" ->
-              path.path.map(
-                _.toJsonString.tail
-              ).mkString("."),
-            "errors" -> JsArray {
-              errs.map { err =>
-                Json.obj(
-                  "code" -> err.message,
-                  "message" -> messages(err.message, err.args: _*)
-                )
+      errors: Seq[(JsPath, Seq[ValidationError])],
+      prefix: String = ""
+    )(implicit messages: Messages): JsObject = {
+      Json.obj(
+        "message" -> messages("api.json.validation.failed"),
+        "errors" -> JsArray {
+          errors.map { case (path, errs) =>
+            val field = if (prefix.nonEmpty) s"$prefix.${path.toJsonString}" else path.toJsonString
+            val ers = errs.distinct.map { err => err.message -> messages(err.message, err.args: _*) }
+            Json.obj(
+              "field" -> field,
+              "message" -> messages(field, ers.map(_._2): _*),
+              "errors" -> JsArray {
+                ers.map { case (code, msg) =>
+                  Json.obj(
+                    "code" -> code,
+                    "message" -> msg
+                  )
+                }
               }
-            }
-          )
+            )
+          }
         }
-      }
-    )
-
+      )
+    }
   }
 
   object JsonMessage {

@@ -108,7 +108,7 @@ class UsersCtrl(
         }.recover {
           case e: User.EmailTaken => MethodNotAllowed(JsonMessage(e))
         }
-      }
+      }()
     }
 
 }

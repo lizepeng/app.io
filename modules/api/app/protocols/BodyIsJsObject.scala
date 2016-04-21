@@ -3,8 +3,7 @@ package protocols
 import play.api.i18n.Messages
 import play.api.libs.json.JsObject
 import play.api.mvc._
-import JsonProtocol.WrongTypeOfJson
-import security.UserRequest
+import protocols.JsonProtocol.WrongTypeOfJson
 
 import scala.concurrent.Future
 
@@ -14,7 +13,7 @@ import scala.concurrent.Future
 object BodyIsJsObject {
 
   def apply(f: JsObject => Future[Result])(
-    implicit req: UserRequest[AnyContent], messages: Messages
+    implicit req: Request[AnyContent], messages: Messages
   ): Future[Result] = {
     req.body.asJson match {
       case Some(obj: JsObject) => f(obj)

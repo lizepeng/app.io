@@ -82,7 +82,7 @@ class AccessControlsCtrl(
               case e: Group.NotFound => BadRequest(JsonMessage(e))
             }
         }
-      }
+      }()
     }
 
   def destroy(principal_id: UUID, resource: String) =
