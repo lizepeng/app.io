@@ -90,10 +90,8 @@ lang.zh                                          =Chinese
 lang.ja                                          =Japanese
 
 # date time formats
-date.format.long                                 =yyyy-MM-dd
-month.format.long                                =yyyy-MM
-datetime.format                                  =yyyy-MM-dd hh:mm:ss
-datetime.format.created_at                       =yyyy-MM-dd hh:mma
+datetime.format.long                             =MMM d, y h:mm:ss a
+datetime.format.medium_date                      =MMM d, y
 
 # form validation
 email.empty                                      =Email can''t be blank

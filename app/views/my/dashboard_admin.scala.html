@@ -22,7 +22,7 @@
           </li>
           <li class="list-group-item hidden-xs">
             <i class="fa fa-clock-o"></i>
-            Joined on @req.user.created_at.toString("MMM dd, yyyy")
+            Joined on @req.user.created_at.toString(MSG("datetime.format.medium_date"), messages.lang.locale)
           </li>
           <li class="list-group-item">
             UserName @req.user.user_name

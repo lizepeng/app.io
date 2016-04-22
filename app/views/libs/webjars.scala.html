@@ -2,6 +2,7 @@
 
 @import routes.Assets._
 
+@defining( """angular-i18n-(.+)""".r ) { angular_i18n_pattern =>
 @textType match {
   case "css" => {
     @name match {
@@ -92,6 +93,12 @@
           "lib/angular-sanitize/angular-sanitize.min.js")
       }
 
+      case angular_i18n_pattern(locale) => {
+        @js(
+          s"lib/angular-i18n/angular-locale_${locale.toLowerCase}.js",
+          s"lib/angular-i18n/angular-locale_${locale.toLowerCase}.js")
+      }
+
       case "angular-animate" => {
         @js(
           "lib/angular-animate/angular-animate.js",
@@ -133,7 +140,7 @@
 
     }
   }
-}
+}}
 
 @css(name: String, minified: String) = {
   @if(env.mode == play.api.Mode.Dev){

@@ -57,7 +57,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                   <td ng-if="inode.is_directory">
                   </td>
                   <td ng-if="inode.is_directory" class="text-right hidden-xs hidden-sm">
-                    {{ inode.created_at | date:"@MSG("datetime.format.created_at")" }}
+                    {{ inode.created_at | date:"@MSG("datetime.format.long")" }}
                   </td>
                   <td ng-if="inode.is_directory">
                     <div class="btn-toolbar pull-right">
@@ -78,7 +78,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                     {{ inode.size | filesize }}
                   </td>
                   <td ng-if="!inode.is_directory" class="text-right hidden-xs hidden-sm">
-                    {{ inode.created_at | date:"@MSG("datetime.format.created_at")" }}
+                    {{ inode.created_at | date:"@MSG("datetime.format.long")" }}
                   </td>
                   <td ng-if="!inode.is_directory">
                     <div class="btn-toolbar pull-right">

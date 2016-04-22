@@ -60,7 +60,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                 @page.map { h =>
                   <tr>
                     <td>
-                      @h.updated_at.toString("yyyy-MM-dd hh:mm:ss")
+                      @h.updated_at.toString(MSG("datetime.format.long"), messages.lang.locale)
                     </td>
                     <td class="hidden-xs">
                       @h.name
