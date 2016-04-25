@@ -18,6 +18,8 @@ object EnumLike {
     override def toString = self
 
     def in(others: Any*) = others.map(_ == this).reduce(_ || _)
+
+    def underscore = ExtString.camelToUnderscore(self)
   }
 
   trait Definition[T <: Value] extends CanonicalNamed {
