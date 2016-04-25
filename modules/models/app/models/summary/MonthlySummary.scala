@@ -88,6 +88,14 @@ trait MonthlySummary[T <: MonthlySummaryTable[T, ID, KEYS, KEY], ID, KEYS <: Enu
       r <- cql_save(id, date, key).future()
     } yield r
 
+  def save(id: ID, date: LocalDate)(counts: Counts[KEY, _]): Future[ResultSet] = {
+    (Batch.unlogged /: counts.self) { case (batch, (m, c)) =>
+      batch
+        .add(cql_save(id, date, _ => m, c))
+        .add(byKey.cql_save(id, date, _ => m, c))
+    }.future()
+  }
+
   def cql_save(id: ID, date: LocalDate, key: KEYS => KEY, count: Int = 1) = CQL {
     update
       .where(_.id eqs id >>: IDStringifier)

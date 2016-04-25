@@ -142,6 +142,20 @@ trait DailyWorks[T <: DailyWorksTable[T, ID, KEYS, KEY], ID, KEYS <: EnumLike.De
       yearly.save(id, date, key)
   }
 
+  def save(
+    id: ID,
+    work_id: UUID,
+    date: LocalDate
+  )(
+    counts: Counts[KEY, _]
+  ): Future[ResultSet] = {
+    (Batch.unlogged /: counts.self) { case (batch, (m, _)) =>
+      batch
+        .add(cql_save(id, date, _ => m, work_id))
+        .add(byKey.cql_save(id, date, _ => m, work_id))
+    }.future()
+  }
+
   def cql_save(
     id: ID,
     date: LocalDate,
