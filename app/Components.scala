@@ -213,6 +213,7 @@ class Components(context: Context)
       case "InvalidIPFilter"           => new InvalidIPFilter()
       case "RateLimitExceededIPFilter" => new RateLimitExceededIPFilter()
       case "Compressor"                => new Compressor(GzipFilterConfig.fromConfiguration(configuration))
+      case "HtmlCompressor"            => new HtmlCompressor(configuration, environment)
       case "RequestLogger"             => new RequestLogger()
       case "RequestTimeLogger"         => new RequestTimeLogger()
     }

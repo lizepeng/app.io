@@ -44,20 +44,21 @@ routesGenerator := InjectedRoutesGenerator
 
 libraryDependencies ++= Seq(
   filters,
-  "org.webjars.bower" % "bootstrap"          % "3.3.5",
-  "org.webjars.bower" % "font-awesome"       % "4.4.0",
-  "org.webjars.bower" % "holderjs"           % "2.6.0",
-  "org.webjars.bower" % "fuelux"             % "3.10.0",
-  "org.webjars.bower" % "angular-xeditable"  % "0.1.9",
-  "org.webjars.bower" % "angular-bootstrap"  % "0.13.3",
-  "org.webjars.bower" % "angular-resource"   % "1.4.4",
-  "org.webjars.bower" % "angular-animate"    % "1.4.4",
-  "org.webjars.bower" % "angular-sanitize"   % "1.4.4",
-  "org.webjars.bower" % "angular-i18n"       % "1.4.4",
-  "org.webjars.bower" % "underscore"         % "1.8.3",
-  "org.webjars.bower" % "animate.css"        % "3.4.0",
-  "org.webjars"       % "ng-flow"            % "2.6.1",
-  "com.codeborne"     % "phantomjsdriver"    % "1.2.1"   % Test
+  "com.mohiva"        %% "play-html-compressor" % "0.6.1",
+  "org.webjars.bower" %  "bootstrap"            % "3.3.5",
+  "org.webjars.bower" %  "font-awesome"         % "4.4.0",
+  "org.webjars.bower" %  "holderjs"             % "2.6.0",
+  "org.webjars.bower" %  "fuelux"               % "3.10.0",
+  "org.webjars.bower" %  "angular-xeditable"    % "0.1.9",
+  "org.webjars.bower" %  "angular-bootstrap"    % "0.13.3",
+  "org.webjars.bower" %  "angular-resource"     % "1.4.4",
+  "org.webjars.bower" %  "angular-animate"      % "1.4.4",
+  "org.webjars.bower" %  "angular-sanitize"     % "1.4.4",
+  "org.webjars.bower" %  "angular-i18n"         % "1.4.4",
+  "org.webjars.bower" %  "underscore"           % "1.8.3",
+  "org.webjars.bower" %  "animate.css"          % "3.4.0",
+  "org.webjars"       %  "ng-flow"              % "2.6.1",
+  "com.codeborne"     %  "phantomjsdriver"      % "1.2.1"   % Test
 )
 
 dependencyOverrides += "org.webjars.bower" % "angular" % "1.4.4"

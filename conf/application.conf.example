@@ -65,6 +65,7 @@ play.application.loader = AppLoader
 #   RateLimitExceededIPFilter,
 #   RequestLogger,
 #   Compressor,
+#   HtmlCompressor,
 #   RequestTimeLogger
 # ]
 
