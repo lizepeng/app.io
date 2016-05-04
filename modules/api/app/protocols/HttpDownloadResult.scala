@@ -1,5 +1,7 @@
 package protocols
 
+import java.nio.charset.StandardCharsets
+
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import models.cfs.Block._
@@ -34,13 +36,13 @@ trait HttpDownloadResult extends HeaderNames with Status {
         contentTypeOf(file)
       )
     )
-    if (inline) result
-    else {
-      val encoded = UriEncoding.encodePathSegment(name(file), "utf-8")
-      result.withHeaders(
-        CONTENT_DISPOSITION -> s"""attachment; filename="$encoded" """
-      )
-    }
+    val encoded = UriEncoding.encodePathSegment(name(file), StandardCharsets.UTF_8)
+    result.withHeaders(
+      CONTENT_DISPOSITION -> {
+        val dispositionType = if (inline) "inline" else "attachment"
+        s"""$dispositionType; filename="$name"; filename*=utf-8''$encoded"""
+      }
+    )
   }
 
   def contentTypeOf(inode: HttpDownloadable): Option[String] = {
