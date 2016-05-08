@@ -42,9 +42,11 @@ object EnumLike {
       messages(s"$basicName.$v" + (if (postfix.isEmpty) postfix else s".$postfix"))
     }
 
-    def toJson(postfix: String = "")(implicit messages: Messages) = Json.prettyPrint(
+    def toJson(filter: T => Boolean = _ => true, postfix: String = "")(
+      implicit messages: Messages
+    ) = Json.prettyPrint(
       JsObject(
-        values.map { v =>
+        values.filter(filter).map { v =>
           v.self -> JsString(msg(v, postfix))
         }
       )

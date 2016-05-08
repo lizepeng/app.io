@@ -2,11 +2,13 @@ package helpers
 
 import helpers.EnumLikeMapConverts._
 import org.junit.runner._
+import org.specs2.mock._
 import org.specs2.mutable._
 import org.specs2.runner._
+import play.api.i18n.Messages
 
 @RunWith(classOf[JUnitRunner])
-class EnumLikeSpec extends Specification {
+class EnumLikeSpec extends Specification with Mockito {
 
   import EnumLikeSpec._
 
@@ -36,6 +38,40 @@ class EnumLikeSpec extends Specification {
         Enum3("C") -> 2
       )
       map1.keyToEnum[Enum3] mustEqual map3
+    }
+  }
+
+  "EnumLike#toJson" can {
+
+    "convert values to Json format" in {
+      implicit val msg = mock[Messages]
+      msg.apply("EnumLikeSpec.Enum1.A") returns "AA"
+      msg.apply("EnumLikeSpec.Enum1.B") returns "BB"
+      msg.apply("EnumLikeSpec.Enum1.C") returns "CC"
+      msg.apply("EnumLikeSpec.Enum1.A.1") returns "AA1"
+      msg.apply("EnumLikeSpec.Enum1.B.1") returns "BB1"
+      msg.apply("EnumLikeSpec.Enum1.C.1") returns "CC1"
+      val filter1: Enum1 => Boolean = {
+        case Enum1.A => true
+        case _       => false
+      }
+      Enum1.toJson() mustEqual
+        """{
+          |  "A" : "AA",
+          |  "B" : "BB",
+          |  "C" : "CC"
+          |}""".stripMargin
+      Enum1.toJson(postfix = "1") mustEqual
+        """{
+          |  "A" : "AA1",
+          |  "B" : "BB1",
+          |  "C" : "CC1"
+          |}""".stripMargin
+
+      Enum1.toJson(filter = filter1, postfix = "1") mustEqual
+        """{
+          |  "A" : "AA1"
+          |}""".stripMargin
     }
   }
 }
