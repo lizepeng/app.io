@@ -97,7 +97,7 @@ class UsersCtrl(
           saved <- User(
             id = success.uid.getOrElse(UUIDs.timeBased),
             email = success.email,
-            user_name = success.user_name.getOrElse(UserName.empty)
+            user_name = success.user_name.getOrElse(UserName.default)
           ).save
           _resp <- es.Index(saved) into _users
         } yield (saved, _resp)).map { case (saved, _resp) =>

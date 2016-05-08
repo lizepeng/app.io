@@ -13,18 +13,21 @@ import play.api.libs.json._
  */
 case class Name(self: String) extends AnyVal with NameLike
 
-object Name {
+object Name extends NameJsonStringifier {
 
-  def empty = Name("")
+  implicit def formatter: Formatter[Name] = ExtFormatter.anyValFormatter(Name.apply, _.self)
+
+  def constrained: Mapping[Name] = Forms.of[Name].verifying(NameLike.constraint())
+}
+
+trait NameJsonStringifier extends JsonStringifier[Name] {
 
   implicit val jsonFormat = Format(
     (minLength[String](2) <~ maxLength[String](255)).map(js => Name(js)),
     Writes[Name](o => JsString(o.self))
   )
 
-  implicit def formatter: Formatter[Name] = ExtFormatter.anyValFormatter(Name.apply, _.self)
-
-  def constrained: Mapping[Name] = Forms.of[Name].verifying(NameLike.constraint())
+  def default = Name("")
 }
 
 /**
@@ -37,20 +40,23 @@ case class UserName private(chars: Array[Char]) extends NameLike {
   override def toString = self
 }
 
-object UserName {
+object UserName extends UserNameJsonStringifier {
 
   def apply(self: String): UserName = UserName(self.toLowerCase.toCharArray)
 
-  def empty = UserName("")
+  implicit def formatter: Formatter[UserName] = ExtFormatter.anyValFormatter(UserName.apply, _.self)
+
+  def constrained: Mapping[UserName] = Forms.of[UserName].verifying(NameLike.constraint(minLength = 4))
+}
+
+trait UserNameJsonStringifier extends JsonStringifier[UserName] {
 
   implicit val jsonFormat = Format(
     (minLength[String](4) <~ maxLength[String](255)).map(js => UserName(js)),
     Writes[UserName](o => JsString(o.self))
   )
 
-  implicit def formatter: Formatter[UserName] = ExtFormatter.anyValFormatter(UserName.apply, _.self)
-
-  def constrained: Mapping[UserName] = Forms.of[UserName].verifying(NameLike.constraint(minLength = 4))
+  def default = UserName("")
 }
 
 trait NameLike extends Any {

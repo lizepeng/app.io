@@ -24,7 +24,7 @@ import scala.language.postfixOps
  */
 case class User(
   id: UUID,
-  user_name: UserName = UserName.empty,
+  user_name: UserName = UserName.default,
   salt: String = "",
   encrypted_password: String = "",
   session_id: Option[String] = None,

@@ -22,7 +22,7 @@ import scala.util.Success
  */
 case class Group(
   id: UUID = UUIDs.timeBased,
-  group_name: Name = Name.empty,
+  group_name: Name = Name.default,
   description: Option[String] = None,
   is_internal: Boolean = false,
   updated_at: DateTime = DateTime.now
