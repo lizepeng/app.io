@@ -44,10 +44,24 @@ object StringifierMapConverts {
     }
   }
 
-  implicit class TypeKeyMapToStringKeyMap[K, A](val map: Map[K, A]) extends AnyVal {
+  implicit class TypeKeyMapToStringKeyMap[K, V](val map: Map[K, V]) extends AnyVal {
 
-    def keyToString(implicit sf: Stringifier[K]): Map[String, A] = {
+    def keyToString(implicit sf: Stringifier[K]): Map[String, V] = {
       map.map { case (k, v) => (k >>: sf) -> v }
+    }
+  }
+
+  implicit class StringValueMapToTypeValueMap[K](val map: Map[K, String]) extends AnyVal {
+
+    def valueToType[V](implicit sf: Stringifier[V]): Map[K, V] = {
+      map.map { case (k, v) => k -> (sf << v) }.collect { case (k, Success(v)) => k -> v }
+    }
+  }
+
+  implicit class TypeValueMapToStringValueMap[K, V](val map: Map[K, V]) extends AnyVal {
+
+    def valueToString(implicit sf: Stringifier[V]): Map[K, String] = {
+      map.map { case (k, v) => k -> (v >>: sf) }
     }
   }
 }
