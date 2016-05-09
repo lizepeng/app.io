@@ -2,7 +2,7 @@ package models.summary
 
 import com.websudos.phantom.dsl._
 import helpers.ExtMap._
-import helpers.StringifierMapConverts._
+import helpers.StringifierConverts._
 import helpers._
 import models.cassandra._
 import org.joda.time._

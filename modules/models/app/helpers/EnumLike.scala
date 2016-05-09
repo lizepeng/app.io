@@ -54,7 +54,7 @@ object EnumLike {
 
     implicit def self: EnumLike.Definition[T]
 
-    import EnumLikeMapConverts._
+    import EnumLikeConverts._
 
     implicit def jsonMapFormat[A](implicit fmt: Format[A]): Format[Map[T, A]] = {
       Format.of[Map[String, A]].inmap[Map[T, A]](_.keyToEnum[T], _.keyToString)
@@ -63,7 +63,7 @@ object EnumLike {
 }
 
 
-object EnumLikeListConverts {
+object EnumLikeConverts {
 
   implicit class StringListToEnumLikeList(val coll: List[String]) extends AnyVal {
 
@@ -75,12 +75,37 @@ object EnumLikeListConverts {
   implicit class EnumLikeListToStringList[E <: EnumLike.Value](val coll: List[E]) extends AnyVal {
 
     def elementToString: List[String] = {
-      coll.map { case s => s.self }
+      coll.map(_.self)
     }
   }
-}
 
-object EnumLikeMapConverts {
+  implicit class StringSetToEnumLikeSet(val coll: Set[String]) extends AnyVal {
+
+    def elementToEnum[E <: EnumLike.Value](implicit enum: EnumLike.Definition[E]): Set[E] = {
+      coll.collect { case s if enum.hasName(s) => enum.withName(s) }
+    }
+  }
+
+  implicit class EnumLikeSetToStringSet[E <: EnumLike.Value](val coll: Set[E]) extends AnyVal {
+
+    def elementToString: Set[String] = {
+      coll.map(_.self)
+    }
+  }
+
+  implicit class StringSeqToEnumLikeSeq(val coll: Seq[String]) extends AnyVal {
+
+    def elementToEnum[E <: EnumLike.Value](implicit enum: EnumLike.Definition[E]): Seq[E] = {
+      coll.collect { case s if enum.hasName(s) => enum.withName(s) }
+    }
+  }
+
+  implicit class EnumLikeSeqToStringSeq[E <: EnumLike.Value](val coll: Seq[E]) extends AnyVal {
+
+    def elementToString: Seq[String] = {
+      coll.map(_.self)
+    }
+  }
 
   implicit class StringKeyMapToEnumLikeKeyMap[A](val map: Map[String, A]) extends AnyVal {
 

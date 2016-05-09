@@ -1,6 +1,6 @@
 package helpers
 
-import helpers.StringifierMapConverts._
+import helpers.StringifierConverts._
 import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
@@ -91,6 +91,31 @@ class StringifierSpec extends Specification {
       )
 
       map1.valueToString mustEqual Map(12 -> """{"x":1,"y":2}""", 13 -> """{"x":1,"y":3}""")
+    }
+  }
+
+  "Iterable[JsonStringifier]" can {
+
+    import JsonOptionalStringifier._
+
+    "be converted from Iterable[String]" in {
+      val list1 = List[String]("""{"x":1,"y":2}""", """{"x":1,"y":3}""", """{"x":a,"y":b}""")
+      val set1 = Set[String]("""{"x":1,"y":2}""", """{"x":1,"y":2}""", """{"x":a,"y":b}""")
+      val seq1 = Seq[String]("""{"x":1,"y":2}""", """{"x":1,"y":3}""", """{"x":a,"y":b}""")
+
+      list1.elementToType[Position] mustEqual List(Position(1, 2), Position(1, 3))
+      set1.elementToType[Position] mustEqual Set(Position(1, 2))
+      seq1.elementToType[Position] mustEqual Seq(Position(1, 2), Position(1, 3))
+    }
+
+    "be converted to Iterable[String]" in {
+      val list1 = List[Position](Position(1, 2), Position(1, 3))
+      val set1 = List[Position](Position(1, 2), Position(1, 3))
+      val seq1 = List[Position](Position(1, 4), Position(1, 3))
+
+      list1.elementToString mustEqual List("""{"x":1,"y":2}""", """{"x":1,"y":3}""")
+      set1.elementToString mustEqual List("""{"x":1,"y":2}""", """{"x":1,"y":3}""")
+      seq1.elementToString mustEqual List("""{"x":1,"y":4}""", """{"x":1,"y":3}""")
     }
   }
 }

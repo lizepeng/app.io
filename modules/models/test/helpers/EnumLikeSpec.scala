@@ -1,6 +1,6 @@
 package helpers
 
-import helpers.EnumLikeMapConverts._
+import helpers.EnumLikeConverts._
 import org.junit.runner._
 import org.specs2.mock._
 import org.specs2.mutable._
@@ -37,7 +37,10 @@ class EnumLikeSpec extends Specification with Mockito {
         Enum3("B") -> 2,
         Enum3("C") -> 2
       )
+      val list1 = List(Enum1.A, Enum1.B, Enum1.C)
       map1.keyToEnum[Enum3] mustEqual map3
+      list1.elementToString mustEqual List("A", "B", "C")
+      List("A", "B", "C").elementToEnum[Enum1] mustEqual list1
     }
   }
 

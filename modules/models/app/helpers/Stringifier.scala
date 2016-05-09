@@ -35,7 +35,49 @@ object Stringifier {
   }
 }
 
-object StringifierMapConverts {
+object StringifierConverts {
+
+  implicit class StringListToTypeList(val coll: List[String]) extends AnyVal {
+
+    def elementToType[E](implicit sf: Stringifier[E]): List[E] = {
+      coll.map(sf << _).collect { case Success(e) => e }
+    }
+  }
+
+  implicit class TypeListToStringList[E](val coll: List[E]) extends AnyVal {
+
+    def elementToString(implicit sf: Stringifier[E]): List[String] = {
+      coll.map(_ >>: sf)
+    }
+  }
+
+  implicit class StringSetToTypeSet(val coll: Set[String]) extends AnyVal {
+
+    def elementToType[E](implicit sf: Stringifier[E]): Set[E] = {
+      coll.map(sf << _).collect { case Success(e) => e }
+    }
+  }
+
+  implicit class TypeSetToStringSet[E](val coll: Set[E]) extends AnyVal {
+
+    def elementToString(implicit sf: Stringifier[E]): Set[String] = {
+      coll.map(_ >>: sf)
+    }
+  }
+
+  implicit class StringSeqToTypeSeq(val coll: Seq[String]) extends AnyVal {
+
+    def elementToType[E](implicit sf: Stringifier[E]): Seq[E] = {
+      coll.map(sf << _).collect { case Success(e) => e }
+    }
+  }
+
+  implicit class TypeSeqToStringSeq[E](val coll: Seq[E]) extends AnyVal {
+
+    def elementToString(implicit sf: Stringifier[E]): Seq[String] = {
+      coll.map(_ >>: sf)
+    }
+  }
 
   implicit class StringKeyMapToTypeKeyMap[V](val map: Map[String, V]) extends AnyVal {
 
