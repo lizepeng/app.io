@@ -11,11 +11,14 @@ import scala.language.implicitConversions
  */
 package object api_internal {
 
+  implicit def contentTypeOf_JsValue_WithCharset(implicit codec: Codec): ContentTypeOf[JsValue] = {
+    ContentTypeOf[JsValue](Some(ContentTypes.withCharset(ContentTypes.JSON)))
+  }
+
   /**
    * `Writable` also Pretty Print for `JsValue` values - Json
    */
   implicit def prettyWritableOf_JsValue(implicit codec: Codec): Writeable[JsValue] = {
-    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(jsval => codec.encode(Json.prettyPrint(jsval)))
   }
 }
