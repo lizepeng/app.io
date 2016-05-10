@@ -260,6 +260,20 @@ input[type='color'] {
 -------------------------------------------------- */
 /* Extra small mobile devices */
 @media (max-width: 539px) {
+  .container {
+    padding-left: 5px;
+    padding-right: 5px;
+    .navbar-header, .navbar-collapse, .row {
+      margin-left: -5px;
+      margin-right: -5px;
+    }
+  }
+
+  *[class*='col-xs'] {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
   .site-footer {
     font-size: 10px;
   }
