@@ -69,6 +69,7 @@ resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 
 TwirlKeys.templateImports ++= Seq(
   "elasticsearch.SortField",
+  "helpers.ExtDateTimeFormat._",
   "java.util.UUID",
   "models.cfs._",
   "models.misc._",

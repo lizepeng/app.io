@@ -13,7 +13,7 @@ implicit messages: Messages)
   </div>
   <div class="col-xs-12 col-sm-3">
     @common._form_group_static("updated_at") {
-      @tmpl.updated_at.toString(MSG("datetime.format.long"), messages.lang.locale)
+      @DateTimeFormat("datetime.format.long").print(tmpl.updated_at)
     }
   </div>
 
@@ -28,7 +28,7 @@ implicit messages: Messages)
 
   <div class="col-xs-12 col-sm-3">
     @common._form_group_static("created_at") {
-      @tmpl.created_at.toString(MSG("datetime.format.long"), messages.lang.locale)
+      @DateTimeFormat("datetime.format.long").print(tmpl.created_at)
     }
   </div>
 </div>
