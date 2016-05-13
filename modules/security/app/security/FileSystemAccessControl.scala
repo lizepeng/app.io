@@ -16,10 +16,9 @@ case class FileSystemAccessControl(
   resource: INode
 )(
   implicit val basicPlayApi: BasicPlayApi
-)
-  extends AccessControl[User, Access, INode]
+) extends AccessControl[User, Access, INode]
   with BasicPlayComponents
-  with Logging {
+  with I18nLoggingComponents {
 
   import FileSystemAccessControl._
 
@@ -28,12 +27,12 @@ case class FileSystemAccessControl(
       Logger.trace(this.pprint)
       canAccess0
     } catch {
-      case e: BaseException =>
-        Logger.debug(e.reason)
+      case e: Denied        => Logger.debug(e.reason)
         throw e
-      case e: Throwable     =>
-        Logger.error(e.getMessage)
-        throw Denied(principal.id, access, resource)
+      case e: BaseException => Logger.error(e.reason, e)
+        throw Denied(principal.id, access, resource.path)
+      case e: Throwable     => Logger.error(s"can not access file.", e)
+        throw Denied(principal.id, access, resource.path)
     }
   }
 
@@ -52,7 +51,7 @@ case class FileSystemAccessControl(
     }
     //check other permission
     if (resource.permission ?(_.other, access)) true
-    else throw Denied(principal.id, access, resource)
+    else throw Denied(principal.id, access, resource.path)
   }
 
   private def pprintLine(length: Int) =
@@ -65,9 +64,10 @@ case class FileSystemAccessControl(
 
   def pprint =
     s"""
-      |user_id  : ${principal.id}
-      |inode_id : ${resource.id}
-      |access   : ${access.pprint}
+      |${pprintLine(20)}
+      ||  path     : ${resource.path}
+      ||  user_id  : ${principal.id}
+      ||  access   : ${access.pprint}
       |${pprintLine(20)}
       |${pprintIndices(20)}
       |${resource.permission.pprint}
@@ -79,15 +79,15 @@ case class FileSystemAccessControl(
 
 object FileSystemAccessControl
   extends CanonicalNamed
-  with ExceptionDefining {
+    with ExceptionDefining {
 
   override def basicName = CassandraFileSystem.basicName
 
   case class Denied(
     principal: UUID,
     access: Access,
-    resource: INode
-  ) extends AccessControl.Denied[UUID, Access, INode](canonicalName)
+    resource: Path
+  ) extends AccessControl.Denied[UUID, Access, Path](canonicalName)
 
   implicit class INodePermissionChecker(val inode: INode) extends AnyVal {
 

@@ -13,7 +13,6 @@ import play.utils.UriEncoding
 /**
  * @author zepeng.li@gmail.com
  */
-
 trait HttpDownloadable {
 
   def size: Long

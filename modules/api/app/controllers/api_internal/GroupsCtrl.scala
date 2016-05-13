@@ -63,8 +63,6 @@ class GroupsCtrl(
         HttpCaching { grp =>
           Ok(Json.toJson(grp))
         }
-      }.recover {
-        case e: BaseException => NotFound
       }
     }
 
@@ -75,10 +73,9 @@ class GroupsCtrl(
           saved <- _groups.save(Group(group_name = success.group_name, description = success.description))
           _resp <- es.Index(saved) into _groups
         } yield {
-          Created(_resp._1)
-            .withHeaders(
-              LOCATION -> routes.GroupsCtrl.show(saved.id).url
-            )
+          Created(_resp._1).withHeaders(
+            LOCATION -> routes.GroupsCtrl.show(saved.id).url
+          )
         }
       }()
     }
@@ -89,15 +86,11 @@ class GroupsCtrl(
         grp <- _groups.find(id)
         ___ <- _groups.remove(id)
         ___ <- es.Delete(id) from _groups
-      } yield grp).map { _ =>
+      } yield {
         NoContent
-      }.recover {
-        case e: Group.NotWritable =>
-          MethodNotAllowed(JsonMessage(e))
-        case e: Group.NotEmpty    =>
-          MethodNotAllowed(JsonMessage(e))
-        case e: Group.NotFound    =>
-          NotFound
+      }).recover {
+        case e: Group.NotWritable => MethodNotAllowed(JsonMessage(e))
+        case e: Group.NotEmpty    => MethodNotAllowed(JsonMessage(e))
       }
     }
 
@@ -116,28 +109,25 @@ class GroupsCtrl(
   def save(id: UUID) =
     UserAction(_.P05).async { implicit req =>
       BindJson().as[GroupInfo] { grp =>
-        (for {
+        for {
           group <- _groups.find(id)
           saved <- _groups.save(group.copy(group_name = grp.group_name, description = grp.description))
           _resp <- es.Update(saved) in _groups
-        } yield _resp._1).map {
-          Ok(_)
-        }.recover {
-          case e: BaseException => NotFound
+        } yield {
+          Ok(_resp._1)
         }
       }()
     }
 
   def users(id: UUID, pager: Pager) =
     UserAction(_.P16).async { implicit req =>
-      (for {
+      for {
         page <- _groups.children(id, pager)
         usrs <- _users.find(page)
-      } yield (page, usrs)).map { case (page, usrs) =>
-        Ok(Json.toJson(usrs))
-          .withHeaders(linkHeader(page, routes.GroupsCtrl.users(id, _)))
-      }.recover {
-        case e: BaseException => NotFound
+      } yield {
+        Ok(Json.toJson(usrs)).withHeaders(
+          linkHeader(page, routes.GroupsCtrl.users(id, _))
+        )
       }
     }
 
@@ -158,9 +148,7 @@ class GroupsCtrl(
               Created(Json.toJson(user))
             }
           }
-        ).recover {
-          case e: User.NotFound => NotFound(JsonMessage(e))
-        }
+        )
       }
     }
 
@@ -173,8 +161,7 @@ class GroupsCtrl(
     UserAction(_.P19).async { implicit req =>
       _groups.findLayouts(ids).map { layouts =>
         val map = layouts.collect {
-          case (gid, layout) if layout.isDefined =>
-            gid.toString -> layout.get
+          case (gid, Some(layout)) => gid.toString -> layout
         }.toMap
         Ok(Json.toJson(map))
       }
@@ -186,9 +173,7 @@ class GroupsCtrl(
         _groups.setLayout(gid, success).map { saved =>
           Ok(Json.toJson(saved))
         }
-      }().recover {
-        case e: BaseException => NotFound(JsonMessage(e))
-      }
+      }()
     }
 }
 

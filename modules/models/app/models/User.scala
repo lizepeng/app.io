@@ -162,8 +162,8 @@ object User
   case class NotFound(user: String)
     extends BaseException(error_code("not.found"))
 
-  case class WrongPassword(email: String)
-    extends BaseException(error_code("wrong.password"))
+  case class NoCredentials()
+    extends BaseException(error_code("no.credentials"))
 
   case class SessionIdNotMatch(id: UUID)
     extends BaseException(error_code("session_id.not.match"))
@@ -171,11 +171,11 @@ object User
   case class AccessTokenNotMatch(id: UUID)
     extends BaseException(error_code("access_token.not.match"))
 
+  case class WrongPassword(email: String)
+    extends BaseException(error_code("wrong.password"))
+
   case class AuthFailed()
     extends BaseException(error_code("auth.failed"))
-
-  case class NoCredentials()
-    extends BaseException(error_code("no.credentials"))
 
   case class EmailTaken(email: String)
     extends BaseException(error_code("email.taken"))

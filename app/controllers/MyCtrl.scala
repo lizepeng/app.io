@@ -14,6 +14,7 @@ import play.api.i18n.I18nSupport
 import play.api.libs.MimeTypes
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc._
+import security._
 import services._
 import views._
 
@@ -40,12 +41,13 @@ class MyCtrl(
   with UsersCtrl.AccessDef
   with BasicPlayComponents
   with UsersComponents
+  with MaybeUserActionComponents
   with DefaultPlayExecutor
   with CanonicalNameBasedMessages
   with BandwidthConfigComponents
   with CFSImageComponents
   with I18nSupport
-  with I18nLogging {
+  with I18nLoggingComponents {
 
   val ChangePasswordFM = Form[ChangePasswordFD](
     mapping(
@@ -71,17 +73,17 @@ class MyCtrl(
   )
 
   def dashboard =
-    (MaybeUserAction() andThen AuthChecker) { implicit req =>
+    (MaybeUserAction() andThen AuthChecker()) { implicit req =>
       Ok(html.my.dashboard())
     }
 
   def account =
-    (MaybeUserAction() andThen AuthChecker) { implicit req =>
+    (MaybeUserAction() andThen AuthChecker()) { implicit req =>
       Ok(html.my.account(ChangePasswordFM))
     }
 
   def changePassword =
-    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
+    (MaybeUserAction() andThen AuthChecker()).async { implicit req =>
 
       val bound = ChangePasswordFM.bindFromRequest()
       bound.fold(
@@ -111,7 +113,7 @@ class MyCtrl(
     }
 
   def profile =
-    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
+    (MaybeUserAction() andThen AuthChecker()).async { implicit req =>
       _persons.find(req.user.id).map { p =>
         Ok(html.my.profile(filledWith(p)))
       }.recover {
@@ -121,7 +123,7 @@ class MyCtrl(
     }
 
   def changeProfile =
-    (MaybeUserAction() andThen AuthChecker).async { implicit req =>
+    (MaybeUserAction() andThen AuthChecker()).async { implicit req =>
       val bound = ProfileFM.bindFromRequest()
 
       bound.fold(
@@ -153,7 +155,7 @@ class MyCtrl(
     .getOrElse(2 * 1000 * 1000)
 
   def profileImage(size: Int) =
-    (MaybeUserAction() andThen AuthChecker).async {
+    (MaybeUserAction() andThen AuthChecker()).async {
       CFSImage.show(
         filePath = u => Path.home(u) + profileImageFileName,
         size = size
@@ -161,14 +163,14 @@ class MyCtrl(
     }
 
   def testProfileImage =
-    (MaybeUserAction() andThen AuthChecker).async {
+    (MaybeUserAction() andThen AuthChecker()).async {
       CFSImage.test(
         filePath = u => Path.home(u) + profileImageFileName
       )
     }
 
   def uploadProfileImage =
-    (MaybeUserAction() andThen AuthChecker).async(
+    (MaybeUserAction() andThen AuthChecker()).async(
       CFSBodyParser(u => Path.home(u), P16)
     ) {
       CFSImage.upload(

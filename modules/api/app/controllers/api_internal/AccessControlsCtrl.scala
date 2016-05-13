@@ -10,7 +10,6 @@ import models.misc._
 import play.api.i18n._
 import play.api.libs.json._
 import play.api.mvc.Controller
-import protocols.JsonProtocol._
 import protocols._
 import security._
 
@@ -32,8 +31,7 @@ class AccessControlsCtrl(
   with AccessControlsCtrl.AccessDef
   with DefaultPlayExecutor
   with RateLimitConfigComponents
-  with I18nSupport
-  with Logging {
+  with I18nSupport {
 
   def index(q: Option[String], p: Pager, sort: Seq[SortField]) =
     UserAction(_.P03).async { implicit req =>
@@ -48,8 +46,6 @@ class AccessControlsCtrl(
     UserAction(_.P02).async { implicit req =>
       _accessControls.find(principal_id, resource).map { ace =>
         Ok(Json.toJson(ace))
-      }.recover {
-        case e: BaseException => NotFound
       }
     }
 
@@ -60,54 +56,44 @@ class AccessControlsCtrl(
       ).as[AccessControlEntry] { success =>
         _accessControls.find(success).map { found =>
           Ok(Json.toJson(found))
-        }.recoverWith {
-          case e: AccessControlEntry.NotFound =>
-            (for {
-              exists <-
-              if (!success.is_group) _users.exists(success.principal_id)
-              else _groups.exists(success.principal_id)
+        }.recoverWith { case e: AccessControlEntry.NotFound =>
+          for {
+            exists <-
+            if (!success.is_group) _users.exists(success.principal_id)
+            else _groups.exists(success.principal_id)
 
-              saved <- success.save
-              _resp <- es.Index(saved) into _accessControls
-            } yield (saved, _resp)).map { case (saved, _resp) =>
-
-              Created(_resp._1)
-                .withHeaders(
-                  LOCATION -> routes.AccessControlsCtrl.show(
-                    saved.principal_id, saved.resource
-                  ).url
-                )
-            }.recover {
-              case e: User.NotFound  => BadRequest(JsonMessage(e))
-              case e: Group.NotFound => BadRequest(JsonMessage(e))
-            }
+            saved <- success.save
+            _resp <- es.Index(saved) into _accessControls
+          } yield {
+            Created(_resp._1).withHeaders(
+              LOCATION -> routes.AccessControlsCtrl.show(
+                saved.principal_id, saved.resource
+              ).url
+            )
+          }
         }
       }()
     }
 
   def destroy(principal_id: UUID, resource: String) =
     UserAction(_.P06).async { implicit req =>
-      (for {
+      for {
         ___ <- es.Delete(AccessControlEntry.genId(resource, principal_id)) from _accessControls
         ace <- _accessControls.find(principal_id, resource)
         ___ <- _accessControls.remove(principal_id, resource)
-      } yield ace).map { _ =>
+      } yield {
         NoContent
-      }.recover {
-        case e: AccessControlEntry.NotFound => NotFound
       }
     }
 
   def toggle(principal_id: UUID, resource: String, pos: Int) =
     UserAction(_.P05).async { implicit req =>
-      (for {
+      for {
         found <- _accessControls.find(principal_id, resource)
         saved <- found.copy(permission = found.permission ^ (1L << pos)).save
         _resp <- es.Update(saved) in _accessControls
-      } yield _resp._1).map {
-        Ok(_)
-      }.recover {
-        case e: BaseException => NotFound
+      } yield {
+        Ok(_resp._1)
       }
     }
 }

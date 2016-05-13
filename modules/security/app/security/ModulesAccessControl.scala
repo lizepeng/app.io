@@ -24,27 +24,21 @@ case class ModulesAccessControl(
 ) extends AccessControl[User, ModulesAccessControl.Access, ModulesAccessControl.CheckedModule]
   with BasicPlayComponents
   with DefaultPlayExecutor
-  with Logging {
+  with I18nLoggingComponents {
 
   import security.ModulesAccessControl._
 
   override def canAccess: Boolean = false
 
   override def canAccessAsync: Future[Boolean] = {
-
-    checkGroups(resource, access, principal.groups).andThen {
-      case Failure(e: Denied) => Logger.debug("Groups " + e.reason)
-    }.recoverWith {
-      case e: Denied => checkUser(resource, access, principal.id)
-    }.andThen {
-      case Failure(e: Denied)    => Logger.debug("User   " + e.reason)
-      case Failure(e: Throwable) => Logger.error(e.getMessage)
-    }.recover {
-      case e: Throwable if !e.isInstanceOf[Denied] =>
-        throw Denied(principal.id.toString, access, resource)
-    }.andThen {
-      case Failure(r: Denied) => Logger.debug(r.reason)
-    }
+    Future.failed(Denied(s"User(${principal.id.toString}, ${principal.email})", access, resource))
+      .fallbackTo(checkGroups(resource, access, principal.groups))
+      .fallbackTo(checkUser(resource, access, principal.id))
+      .andThen {
+        case Failure(e: Denied)        => Logger.debug(s"Permission check failed, because ${e.reason}")
+        case Failure(e: BaseException) => Logger.error(s"Permission check failed, because ${e.reason}", e)
+        case Failure(e: Throwable)     => Logger.error(s"Permission check failed.", e)
+      }
   }
 
   def checkGroups(
@@ -61,10 +55,8 @@ case class ModulesAccessControl(
           s"""
           |Groups      : $group_ids
           |Module      : $resource
-          |Access      :
-          |$access
-          |Permissions :
-          |${permissions.mkString("\n")}
+          |Access      : $access
+          |${permissions.map(p => s"Permissions : $p").mkString("\n")}
          """.stripMargin
         )
 
@@ -86,10 +78,8 @@ case class ModulesAccessControl(
           s"""
           |User       : $user_id
           |Module     : $resource
-          |Access     :
-          |$access
-          |Permission :
-          |$permission
+          |Access     : $access
+          |Permission : $permission
          """.stripMargin
         )
 

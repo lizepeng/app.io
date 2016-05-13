@@ -5,28 +5,70 @@ import models._
 import play.api.mvc._
 
 import scala.concurrent._
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
  */
 trait Authentication {
-  self: DefaultPlayExecutor =>
+  self: DefaultPlayExecutor with PAMLogging with I18nLogging =>
 
   def _users: Users
 
   def pam: PAM
-}
 
-trait PAM extends (Users => RequestHeader => Future[User]) {
-  self =>
-
-  def thenTry(that: PAM)(implicit ec: ExecutionContext): PAM = new PAM {
-    override def apply(v1: Users): (RequestHeader) => Future[User] = {
-      req => self.apply(v1)(req).recoverWith {
-        case _: BaseException => that.apply(v1)(req)
-      }
+  def authenticate(req: RequestHeader)(
+    implicit Logger: play.api.Logger
+  ) = pam(_users)(req).andThen {
+    loggingError { reason =>
+      s"PAM[${pam.basicName}] auth failed, because $reason"
     }
   }
+}
+
+trait PAM extends (Users => RequestHeader => Future[User])
+  with CanonicalNamed {
+  self: I18nLogging =>
+
+  def thenTry(that: PAM)(
+    implicit ec: ExecutionContext
+  ): PAM = new ThenTryPAM(self, that)
 
   def >>(that: PAM)(implicit ec: ExecutionContext) = thenTry(that)
+}
+
+class ThenTryPAM(first: PAM, second: PAM)(
+  implicit
+  val loggingMessages: LoggingMessages,
+  val ec: ExecutionContext
+) extends PAM
+  with CanonicalNamed
+  with I18nLogging
+  with PAMLogging {
+
+  def basicName = second.basicName
+
+
+  def apply(v1: Users): (RequestHeader) => Future[User] = {
+    req => first.apply(v1)(req).andThen {
+      loggingError { reason =>
+        s"PAM[${first.basicName}] auth failed, because $reason, then try PAM[${second.basicName}]"
+      }
+    }.recoverWith {
+      case _: Throwable => second.apply(v1)(req)
+    }
+  }
+}
+
+trait PAMLogging {
+  self: I18nLogging =>
+
+  def loggingError(message: String => String): PartialFunction[Try[User], Unit] = {
+    case Failure(e: User.NoCredentials)       => Logger.debug(s"${message(e.reason)}")
+    case Failure(e: User.SessionIdNotMatch)   => Logger.debug(s"${message(e.reason)}")
+    case Failure(e: User.AccessTokenNotMatch) => Logger.debug(s"${message(e.reason)}")
+    case Failure(e: User.NotFound)            => Logger.error(s"${message(e.reason)}")
+    case Failure(e: BaseException)            => Logger.debug(s"${message(e.reason)}", e)
+    case Failure(e: Throwable)                => Logger.error(s"${message(e.getMessage)}", e)
+  }
 }

@@ -16,29 +16,29 @@ trait Logging {
   }
 }
 
+case class LoggingMessages(self: Messages) extends AnyVal
+
 trait I18nLogging extends Logging {
 
-  implicit def messagesApi: MessagesApi
+  implicit def loggingMessages: LoggingMessages
+}
 
-  implicit def langs: Langs
+trait I18nLoggingComponents extends I18nLogging {
+
+  def messagesApi: MessagesApi
+
+  def langs: Langs
+
+  implicit lazy val loggingMessages = LoggingMessages(messagesApi.preferred(langs.availables))
 }
 
 trait Loggable extends Product {
 
   def code: String
 
-  def message(
-    implicit messages: Messages
-  ): String = generate("msg")
+  def message(implicit messages: Messages): String = generate("msg")(messages)
 
-  def reason(
-    implicit langs: Langs, messagesApi: MessagesApi
-  ): String = generate("log")(
-    Messages(
-      langs.availables.headOption.getOrElse(Lang.defaultLang),
-      messagesApi
-    )
-  )
+  def reason(implicit messages: LoggingMessages): String = generate("log")(messages.self)
 
   private def generate(key: String)(implicit messages: Messages): String = {
     messages(

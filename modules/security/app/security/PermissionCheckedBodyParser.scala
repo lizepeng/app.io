@@ -17,8 +17,9 @@ trait PermissionCheckedBodyParser[A]
 
   def access: Access
   def resource: CheckedModule
-  def onPermDenied: RequestHeader => Result
   def preCheck: User => Future[Boolean]
+
+  def errorHandler: BodyParserExceptionHandler
 
   implicit def basicPlayApi: BasicPlayApi
   implicit def _accessControls: AccessControls
@@ -32,11 +33,9 @@ trait PermissionCheckedBodyParser[A]
       result <- super.invokeParser(req)(user) if passCheck && canAccess
     } yield result
   }.andThen {
-    case Failure(e: BaseException) => Logger.debug(e.reason)
+    case Failure(e: Throwable) => Logger.error(s"PermissionCheckedBodyParser failed.", e)
   }.recover {
-    case e: ModulesAccessControl.Denied =>
-      parse.error(Future.successful(onPermDenied(req)))
-    case e: BaseException               =>
-      parse.error(Future.successful(onBaseException(req)))
+    case _: BaseException => parse.error(Future.successful(errorHandler.onPermissionDenied(req)))
+    case _: Throwable     => parse.error(Future.successful(errorHandler.onThrowable(req)))
   }
 }

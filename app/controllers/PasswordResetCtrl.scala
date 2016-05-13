@@ -32,11 +32,11 @@ class PasswordResetCtrl(
   with UsersComponents
   with InternalGroupsComponents
   with DefaultPlayExecutor
-  with I18nSupport
   with CanonicalNameBasedMessages
   with AppDomainComponents
   with SystemAccounts
-  with Logging {
+  with I18nLoggingComponents
+  with I18nSupport {
 
   val emailFM = Form[EmailAddress](
     single("email" -> EmailAddress.constrained)
@@ -80,7 +80,7 @@ class PasswordResetCtrl(
           case e: User.NotFound          =>
             onError(emailFM, "email.not.found")
           case e: EmailTemplate.NotFound =>
-            Logger.warn(e.reason)
+            Logger.warn(e.reason, e)
             onError(emailFM, "email.not.found")
         }
 

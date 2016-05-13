@@ -16,12 +16,11 @@ class PingCtrl(
   val _users: Users
 ) extends Controller {
 
-  val action: ActionBuilder[UserRequest] = MaybeUser(AuthenticateByAccessToken).Action() >>
-    new AuthenticationCheck {
-      override def onUnauthorized(req: RequestHeader): Result = HttpBasicAuth.onUnauthorized("ping")
-    }
+  implicit lazy val errorHandler = new UserActionExceptionHandler with DefaultExceptionHandler {
+    override def onUnauthorized = _ => HttpBasicAuth.onUnauthorized("ping")
+  }
 
-  def ping = action { req =>
+  def ping = (MaybeUser(AuthenticateByAccessToken).Action() >> AuthChecker()) { req =>
     Ok(
       Json.prettyPrint(
         Json.obj(

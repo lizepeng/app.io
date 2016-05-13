@@ -14,6 +14,7 @@ import security._
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -23,15 +24,16 @@ case class RateLimitChecker(
   val resource: CheckedModule,
   val basicPlayApi: BasicPlayApi,
   val rateLimitConfig: RateLimitConfig,
-  val _rateLimits: RateLimits
-)
-  extends ActionFunction[UserRequest, UserRequest]
-  with ExHeaders
+  val _rateLimits: RateLimits,
+  val errorHandler: UserActionExceptionHandler
+) extends ActionFunction[UserRequest, UserRequest]
   with CanonicalNamed
   with BasicPlayComponents
   with DefaultPlayExecutor
-  with I18nSupport
-  with AppConfigComponents {
+  with AppConfigComponents
+  with ExHeaders
+  with I18nLoggingComponents
+  with I18nSupport {
 
   override val basicName = "rate_limit"
 
@@ -45,40 +47,43 @@ case class RateLimitChecker(
     val minutes = now.getMinuteOfHour
     val seconds = now.getSecondOfMinute
     val remaining = (rateLimitConfig.span - minutes % rateLimitConfig.span) * 60 - seconds
-    val period_start = now.hourOfDay.roundFloorCopy
-      .plusMinutes((minutes / rateLimitConfig.span) * rateLimitConfig.span)
+    val period_start = now.hourOfDay.roundFloorCopy.plusMinutes((minutes / rateLimitConfig.span) * rateLimitConfig.span)
 
-    _rateLimits.get(resource.name, period_start)(user)
-      .flatMap { counter =>
-        if (counter >= rateLimitConfig.limit) Future.successful {
-          Results.TooManyRequests {
-            JsonMessage(s"api.$basicName.exceeded")(request2Messages(req))
-          }.withHeaders(
+    _rateLimits.get(resource.name, period_start)(user).flatMap { counter =>
+      if (counter >= rateLimitConfig.limit) Future.successful {
+        Results.TooManyRequests {
+          JsonMessage(s"api.$basicName.exceeded")(request2Messages(req))
+        }.withHeaders(
+          X_RATE_LIMIT_LIMIT -> rateLimitConfig.limit.toString,
+          X_RATE_LIMIT_REMAINING -> "0",
+          X_RATE_LIMIT_RESET -> remaining.toString
+        )
+      }
+      else
+        for {
+          ___ <- _rateLimits.inc(resource.name, period_start)(user)
+          ret <- block(req)
+        } yield {
+          ret.withHeaders(
             X_RATE_LIMIT_LIMIT -> rateLimitConfig.limit.toString,
-            X_RATE_LIMIT_REMAINING -> "0",
+            X_RATE_LIMIT_REMAINING -> (rateLimitConfig.limit - counter - 1).toString,
             X_RATE_LIMIT_RESET -> remaining.toString
           )
         }
-        else
-          for {
-            ___ <- _rateLimits.inc(resource.name, period_start)(user)
-            ret <- block(req)
-          } yield {
-            ret.withHeaders(
-              X_RATE_LIMIT_LIMIT -> rateLimitConfig.limit.toString,
-              X_RATE_LIMIT_REMAINING -> (rateLimitConfig.limit - counter - 1).toString,
-              X_RATE_LIMIT_RESET -> remaining.toString
-            )
-          }
-      }
+    }.andThen {
+      case Failure(e: BaseException) => Logger.debug(s"RateLimitChecker failed, because ${e.reason}", e)
+      case Failure(e: Throwable)     => Logger.error(s"RateLimitChecker failed.", e)
+    }.recover {
+      case _: Throwable => errorHandler.onThrowable(req)
+    }
   }
 }
 
 /** Unit of rate limit
-  *
-  * @param limit max value of permitted request in a span
-  * @param span every n minutes from o'clock
-  */
+ *
+ * @param limit max value of permitted request in a span
+ * @param span  every n minutes from o'clock
+ */
 case class RateLimitConfig(limit: Int, span: Int)
 
 trait RateLimitConfigComponents {

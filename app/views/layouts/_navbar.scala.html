@@ -32,12 +32,7 @@
 
 @user_sub_menu = {
   @req.maybeUser match {
-    case None => {
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="@routes.SessionsCtrl.nnew">@MSG("sign.in")</a></li>
-      </ul>
-    }
-    case Some(u) => {
+    case Success(u) => {
       <ul class="nav navbar-nav user-nav navbar-right">
         <li>
           <a href="@routes.MyCtrl.dashboard" title="">
@@ -73,6 +68,11 @@
             </button>
           }
         </li>
+      </ul>
+    }
+    case _ => {
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="@routes.SessionsCtrl.nnew">@MSG("sign.in")</a></li>
       </ul>
     }
   }

@@ -47,8 +47,8 @@ case class FlowJs(
   val _cfs: CassandraFileSystem
 ) extends BasicPlayComponents
   with DefaultPlayExecutor
-  with I18nSupport
-  with Logging {
+  with I18nLoggingComponents
+  with I18nSupport {
 
   def bindFromQueryString(
     implicit req: UserRequest[_]
@@ -176,16 +176,19 @@ case class FlowJs(
         else {
           //should never occur, only in case that the temp file name was taken.
           Logger.debug(s"renaming to $tmpName failed.")
-          Future.successful(Results.NotFound)
+          Future.successful(Results.InternalServerError)
         }
       }
     } yield _result).andThen {
-      case Failure(e: BaseException) =>
-        Logger.debug(e.reason)
-        chunk.delete()
+      case Failure(e: FlowJs.NotSupported) => chunk.delete(); Logger.debug(s"Upload failed, because ${e.reason}")
+      case Failure(e: FlowJs.TooLarge)     => chunk.delete(); Logger.debug(s"Upload failed, because ${e.reason}")
+      case Failure(e: BaseException)       => chunk.delete(); Logger.debug(s"Upload failed, because ${e.reason}", e)
+      case Failure(e: Throwable)           => chunk.delete(); Logger.error(s"Upload failed.", e)
     }.recover {
       case e: FlowJs.NotSupported => Results.UnsupportedMediaType(JsonMessage(e))
       case e: FlowJs.TooLarge     => Results.EntityTooLarge(JsonMessage(e))
+      case e: BaseException       => Results.InternalServerError(JsonMessage(e))
+      case e: Throwable           => Results.InternalServerError(JsonMessage(e.getMessage))
     }
   }
 
@@ -247,11 +250,10 @@ case class FlowJs(
           }
         } else Future.successful {
 
-          val err: FlowJs.TooLarge = FlowJs.TooLarge(File.pprint(maxLength))
-          Logger.debug(err.reason)
+          Logger.debug(FlowJs.TooLarge(File.pprint(maxLength)).reason)
           file.delete()
           Logger.debug(s"deleting file: ${path + filename}.")
-          Results.EntityTooLarge(JsonMessage(err))
+          Results.EntityTooLarge(JsonMessage(FlowJs.TooLarge(File.pprint(maxLength))))
         }
 
       } yield _ret
@@ -283,10 +285,13 @@ case class FlowJs(
     }).recoverWith {
       case e: Directory.ChildNotFound => testTempFile
     }.andThen {
-      case Failure(e: BaseException) => Logger.debug(e.reason)
+      case Failure(e: FileSystemAccessControl.Denied) => Logger.trace(s"Test failed, because ${e.reason}")
+      case Failure(e: BaseException)                  => Logger.debug(s"Test failed, because ${e.reason}", e)
+      case Failure(e: Throwable)                      => Logger.error(s"Test failed.", e)
     }.recover {
-      case e: FileSystemAccessControl.Denied => Results.Forbidden
-      case e: BaseException                  => Results.NotFound
+      case _: FileSystemAccessControl.Denied => Results.NotFound
+      case _: BaseException                  => Results.NotFound
+      case _: Throwable                      => Results.InternalServerError
     }
   }
 
@@ -305,10 +310,15 @@ case class FlowJs(
       if (size == file.size) Results.Ok
       else Results.NoContent
     }).andThen {
-      case Failure(e: BaseException) => Logger.debug(e.reason)
+      case Failure(e: ChildNotFound)              => Logger.trace(s"Test temp file failed, because ${e.reason}")
+      case Failure(e: FlowJs.MissingFlowArgument) => Logger.debug(s"Test temp file failed, because ${e.reason}")
+      case Failure(e: BaseException)              => Logger.debug(s"Test temp file failed, because ${e.reason}", e)
+      case Failure(e: Throwable)                  => Logger.error(s"Test temp file failed.", e)
     }.recover {
-      case e: FlowJs.MissingFlowArgument => Results.NotFound
-      case e: ChildNotFound              => Results.NoContent
+      case _: ChildNotFound              => Results.NoContent
+      case _: FlowJs.MissingFlowArgument => Results.NotFound
+      case _: BaseException              => Results.NotFound
+      case _: Throwable                  => Results.InternalServerError
     }
   }
 }

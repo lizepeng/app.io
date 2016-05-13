@@ -53,14 +53,12 @@ class UsersCtrl(
     UserAction(_.P02).async { implicit req =>
       _users.find(id).map { user =>
         Ok(Json.toJson(user))
-      }.recover {
-        case e: User.NotFound => NotFound
       }
     }
 
   def groups(id: UUID, options: Option[String]) =
     UserAction(_.P16).async { implicit req =>
-      (for {
+      for {
         user <- _users.find(id)
         grps <- _groups.find(
           options match {
@@ -69,10 +67,8 @@ class UsersCtrl(
             case _                => user.groups
           }
         )
-      } yield grps).map { grps =>
+      } yield {
         Ok(Json.toJson(grps.filter(_.id != _internalGroups.AnyoneId)))
-      }.recover {
-        case e: BaseException => NotFound
       }
     }
 
@@ -100,12 +96,11 @@ class UsersCtrl(
             user_name = success.user_name.getOrElse(UserName.default)
           ).save
           _resp <- es.Index(saved) into _users
-        } yield (saved, _resp)).map { case (saved, _resp) =>
-          Created(_resp._1)
-            .withHeaders(
-              LOCATION -> routes.GroupsCtrl.show(saved.id).url
-            )
-        }.recover {
+        } yield {
+          Created(_resp._1).withHeaders(
+            LOCATION -> routes.GroupsCtrl.show(saved.id).url
+          )
+        }).recover {
           case e: User.EmailTaken => MethodNotAllowed(JsonMessage(e))
         }
       }()

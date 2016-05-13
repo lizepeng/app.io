@@ -17,7 +17,9 @@ case class AuthenticateBySession(
 ) extends PAM
   with BasicPlayComponents
   with DefaultPlayExecutor
-  with Logging {
+  with I18nLoggingComponents {
+
+  def basicName = "AuthenticateBySession"
 
   /**
    * authenticate user by user's salt

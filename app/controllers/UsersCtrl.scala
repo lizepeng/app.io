@@ -19,6 +19,7 @@ import security._
 import views._
 
 import scala.concurrent.Future
+import scala.util.Success
 
 /**
  * @author zepeng.li@gmail.com
@@ -67,7 +68,6 @@ class UsersCtrl(
       } yield {
         Ok(html.users.show(user, grps))
       }
-
     }
 
   def index(pager: Pager, sort: Seq[SortField]) = {
@@ -79,8 +79,8 @@ class UsersCtrl(
 
   def nnew = MaybeUserAction().apply { implicit req =>
     req.maybeUser match {
-      case None    => Ok(views.html.users.signup(signUpFM))
-      case Some(u) => Redirect(routes.MyCtrl.dashboard())
+      case Success(u) => Redirect(routes.MyCtrl.dashboard())
+      case _          => Ok(views.html.users.signup(signUpFM))
     }
   }
 

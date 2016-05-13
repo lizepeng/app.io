@@ -17,7 +17,7 @@ import play.api.mvc._
 import protocols.JsonProtocol.JsonMessage
 import protocols._
 import security.FileSystemAccessControl._
-import security.UserRequest
+import security._
 
 import scala.concurrent._
 import scala.util._
@@ -67,15 +67,13 @@ trait CFSImageComponents extends CFSDownloadComponents {
 
   object CFSImage {
 
-    def show(
-      filePath: User => Path,
-      size: Int = 0
+    def show(filePath: User => Path, size: Int = 0)(
+      implicit errorHandler: UserActionExceptionHandler
     ): UserRequest[AnyContent] => Future[Result] = implicit req => {
       val path = filePath(req.user)
       val thumbnail = path.filename.map(Thumbnail.choose(_, size))
       import security._
       (for {
-        origin <- _cfs.file(path) if origin.r.?
         result <- CFSHttpCaching(path + thumbnail).async { file =>
           CFSImage(file)().downloadable.map {
             send(_, _ => path.filename.getOrElse(""), inline = true)
@@ -84,8 +82,7 @@ trait CFSImageComponents extends CFSDownloadComponents {
       } yield {
         result
       }).recover {
-        case e: FileSystemAccessControl.Denied => Results.Forbidden
-        case e: BaseException                  => Results.NotFound
+        case e: FileSystemAccessControl.Denied => errorHandler.onFilePermissionDenied(req)
       }
     }
 
@@ -116,11 +113,9 @@ trait CFSImageComponents extends CFSDownloadComponents {
         }
         case None        => throw CFSBodyParser.MissingFile()
       }).andThen {
-        case Failure(e: MissingFile)   => Logger.warn(e.reason)
-        case Failure(e: Denied)        => Logger.debug(e.reason)
-        case Failure(e: BaseException) => Logger.error(e.reason)
+        case Failure(e: MissingFile) => Logger.warn(e.reason, e)
       }.recover {
-        case e: BaseException => Results.NotFound(JsonMessage(e))
+        case e: CFSBodyParser.MissingFile => Results.BadRequest(JsonMessage(e))
       }
     }
   }

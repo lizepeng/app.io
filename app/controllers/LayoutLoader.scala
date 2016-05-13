@@ -5,7 +5,8 @@ import models._
 import play.api.mvc._
 import security._
 
-import scala.concurrent.Future
+import scala.concurrent._
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -18,7 +19,8 @@ case class LayoutLoader(
   with BasicPlayComponents
   with UsersComponents
   with InternalGroupsComponents
-  with DefaultPlayExecutor {
+  with DefaultPlayExecutor
+  with I18nLoggingComponents {
 
   def loadLayoutOf(user: User): Future[User] =
     _groups.findLayouts(user.groups).map { layouts =>
@@ -31,8 +33,16 @@ case class LayoutLoader(
   override protected def transform[A](
     request: UserOptRequest[A]
   ): Future[UserOptRequest[A]] = request match {
-    case UserOptRequest(None, _)           => Future.successful(request)
-    case UserOptRequest(Some(user), inner) => loadLayoutOf(user).map { u => UserOptRequest(Some(u), inner) }
+    case UserOptRequest(Success(user), inner) =>
+      loadLayoutOf(user).map {
+        u => UserOptRequest(Success(u), inner)
+      }.andThen {
+        case Failure(e: BaseException) => Logger.debug(s"LayoutLoader failed, because ${e.reason}", e)
+        case Failure(e: Throwable)     => Logger.error(s"LayoutLoader failed.", e)
+      }.recover {
+        case _: Throwable => request
+      }
+    case _                                    => Future.successful(request)
   }
 
 }

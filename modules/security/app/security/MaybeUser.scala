@@ -7,8 +7,9 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.WebSocket._
 import play.api.mvc._
 
-import scala.concurrent.Future
+import scala.concurrent._
 import scala.language.higherKinds
+import scala.util._
 
 /**
  * @author zepeng.li@gmail.com
@@ -19,20 +20,23 @@ case class MaybeUser(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _users: Users
-)
-  extends Authentication
+) extends Authentication
   with BasicPlayComponents
-  with DefaultPlayExecutor {
+  with DefaultPlayExecutor
+  with I18nLoggingComponents
+  with PAMLogging {
 
-  def pam: PAM = pamBuilder(basicPlayApi)
+  val pam: PAM = pamBuilder(basicPlayApi)
 
   case class InternalActionBuilder()
     extends ActionBuilder[UserOptRequest]
-    with ActionTransformer[Request, UserOptRequest] {
+      with ActionTransformer[Request, UserOptRequest] {
 
     def transform[A](req: Request[A]): Future[UserOptRequest[A]] = {
-      pam(_users)(req).map(Some(_)).recover {
-        case e: BaseException => None
+      authenticate(req).map {
+        user => Success(user)
+      }.recover {
+        case e: Throwable => Failure(e)
       }.map(UserOptRequest[A](_, req))
     }
 
@@ -42,22 +46,27 @@ case class MaybeUser(
   def Action() = new InternalActionBuilder()
 
   def WebSocket[In, Out](
-    handler: RequestHeader => User => HandlerProps,
-    onError: => Result
+    handler: RequestHeader => User => HandlerProps
   )(
     implicit
     actorSystem: ActorSystem,
-    transformer: MessageFlowTransformer[In, Out] 
-  ) = {
-    acceptOrResult({
-      req:RequestHeader =>
-        pam(_users)(req).map {
+    transformer: MessageFlowTransformer[In, Out],
+    errorHandler: UserActionExceptionHandler
+  ) = acceptOrResult(
+    {
+      req: RequestHeader =>
+        authenticate(req).map {
           user => Right(handler(req)(user))
         }.recover {
-          case e: BaseException => Left(onError)
+          case _: BaseException => Left(errorHandler.onUnauthorized(req))
+          case _: Throwable     => Left(errorHandler.onThrowable(req))
         }
-    }.andThen(_.map(_.right.map { props =>
-      ActorFlow.actorRef(props)
-    })))
-  }
+    }.andThen(
+      _.map(
+        _.right.map { props =>
+          ActorFlow.actorRef(props)
+        }
+      )
+    )
+  )
 }

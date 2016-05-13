@@ -50,7 +50,6 @@ class FileSystemCtrl(
         Ok(html.file_system.show(file))
       }.recover {
         case e: FileSystemAccessControl.Denied => Forbidden
-        case e: BaseException                  => NotFound
       }
     }
 

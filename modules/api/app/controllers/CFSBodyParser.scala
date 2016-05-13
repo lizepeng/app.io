@@ -28,12 +28,7 @@ case class CFSBodyParser(
   access: Access,
   preCheck: User => Future[Boolean] = user => Future.successful(true),
   pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
-  dirPermission: CassandraFileSystem.Permission = CassandraFileSystem.Role.owner.rwx,
-  onUnauthorized: RequestHeader => Result = req => Results.NotFound,
-  onPermDenied: RequestHeader => Result = req => Results.NotFound,
-  onPathNotFound: RequestHeader => Result = req => Results.NotFound,
-  onFilePermDenied: RequestHeader => Result = req => Results.NotFound,
-  onBaseException: RequestHeader => Result = req => Results.NotFound
+  dirPermission: CassandraFileSystem.Permission = CassandraFileSystem.Role.owner.rwx
 )(
   implicit
   val resource: CheckedModule,
@@ -42,8 +37,10 @@ case class CFSBodyParser(
   val _accessControls: AccessControls,
   val _cfs: CassandraFileSystem,
   val bandwidth: BandwidthService,
-  val bandwidthConfig: BandwidthConfig
-) extends PermissionCheckedBodyParser[MultipartFormData[File]] {
+  val bandwidthConfig: BandwidthConfig,
+  val errorHandler: BodyParserExceptionHandler
+) extends PermissionCheckedBodyParser[MultipartFormData[File]]
+  with I18nLoggingComponents {
 
   override def parser(req: RequestHeader)(
     implicit user: User
@@ -63,14 +60,17 @@ case class CFSBodyParser(
     } yield temp).map { case temp =>
       multipartFormData(saveTo(temp)(user))
     }.andThen {
-      case Failure(e: BaseException) => Logger.debug(e.reason)
+      case Failure(e: Directory.NotFound)             => Logger.debug(s"CFSBodyParser failed, because ${e.reason}")
+      case Failure(e: Directory.ChildNotFound)        => Logger.debug(s"CFSBodyParser failed, because ${e.reason}")
+      case Failure(e: FileSystemAccessControl.Denied) => Logger.debug(s"CFSBodyParser failed, because ${e.reason}")
+      case Failure(e: BaseException)                  => Logger.error(s"CFSBodyParser failed, because ${e.reason}", e)
+      case Failure(e: Throwable)                      => Logger.error(s"CFSBodyParser failed.", e)
     }.recover {
-      case _: Directory.NotFound | _: Directory.ChildNotFound =>
-        parse.error(Future.successful(onPathNotFound(req)))
-      case _: FileSystemAccessControl.Denied                  =>
-        parse.error(Future.successful(onFilePermDenied(req)))
-      case e: BaseException                                   =>
-        parse.error(Future.successful(onBaseException(req)))
+      case _: Directory.NotFound             => parse.error(Future.successful(errorHandler.onPathNotFound(req)))
+      case _: Directory.ChildNotFound        => parse.error(Future.successful(errorHandler.onPathNotFound(req)))
+      case _: FileSystemAccessControl.Denied => parse.error(Future.successful(errorHandler.onFilePermissionDenied(req)))
+      case _: BaseException                  => parse.error(Future.successful(errorHandler.onFilePermissionDenied(req)))
+      case _: Throwable                      => parse.error(Future.successful(errorHandler.onThrowable(req)))
     }
   }
 

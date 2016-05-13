@@ -22,20 +22,18 @@ object MaybeUserAction {
   }
 }
 
+trait MaybeUserActionComponents {
+
+  implicit lazy val userActionExceptionHandler = DefaultUserActionExceptionHandler
+  implicit lazy val bodyParserExceptionHandler = new BodyParserExceptionHandler with DefaultExceptionHandler
+}
+
 case class UserActionRequired(
   _groups: Groups,
   _accessControls: AccessControls
 )
 
-object UserActionRequired {
-
-  implicit def _accessControls(implicit required: UserActionRequired): AccessControls = required._accessControls
-
-  implicit def _groups(implicit required: UserActionRequired): Groups = required._groups
-
-}
-
-trait UserActionComponents[T <: BasicAccessDef] {
+trait UserActionComponents[T <: BasicAccessDef] extends MaybeUserActionComponents {
   self: T =>
 
   import UsersComponents._
@@ -46,21 +44,25 @@ trait UserActionComponents[T <: BasicAccessDef] {
 
   implicit def _groups: Groups = userActionRequired._groups
 
-  implicit def onDenied: (CheckedModule, Access, RequestHeader) => Result = {
-    (_, _, _) => Results.NotFound
-  }
-
   def UserAction(specifiers: (T => Access.Pos)*)(
     implicit
     resource: CheckedModule,
-    onDenied: (CheckedModule, Access, RequestHeader) => Result,
     basicPlayApi: BasicPlayApi,
     userActionRequired: UserActionRequired
   ): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))
     MaybeUser().Action() andThen
       LayoutLoader() andThen
-      AuthChecker andThen
+      AuthChecker() andThen
       PermissionChecker(access)
   }
+}
+
+object DefaultUserActionExceptionHandler extends UserActionExceptionHandler {
+
+  def onUnauthorized = _ => Results.Redirect(routes.SessionsCtrl.nnew())
+  def onPermissionDenied = _ => Results.Redirect(routes.Application.index())
+  def onFilePermissionDenied = _ => Results.Redirect(routes.Application.index())
+  def onPathNotFound = _ => Results.Redirect(routes.Application.index())
+  def onThrowable = _ => Results.Redirect(routes.Application.index())
 }

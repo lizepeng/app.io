@@ -14,11 +14,12 @@ import scala.util.Try
  */
 case class AuthenticateByAccessToken(
   basicPlayApi: BasicPlayApi
-)
-  extends PAM
+) extends PAM
   with BasicPlayComponents
   with DefaultPlayExecutor
-  with Logging {
+  with I18nLoggingComponents {
+
+  def basicName = "AuthenticateByAccessToken"
 
   /**
    * authenticate user by user's id & access token

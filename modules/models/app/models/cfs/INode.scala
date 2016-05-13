@@ -19,6 +19,8 @@ trait INode extends HasUUID with TimeBased {
 
   def name: String
 
+  def path: Path
+
   def parent: UUID
 
   def is_directory: Boolean

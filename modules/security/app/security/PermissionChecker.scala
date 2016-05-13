@@ -6,34 +6,33 @@ import play.api.mvc._
 import security.ModulesAccessControl._
 
 import scala.concurrent.Future
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
  */
-case class PermissionChecker(
-  access: Access
-)(
+case class PermissionChecker(access: Access)(
   implicit
   val resource: CheckedModule,
-  val onDenied: (CheckedModule, Access, RequestHeader) => Result,
   val basicPlayApi: BasicPlayApi,
-  val _accessControls: AccessControls
-)
-  extends ActionFilter[UserRequest]
+  val _accessControls: AccessControls,
+  val errorHandler: UserActionExceptionHandler
+) extends ActionFilter[UserRequest]
   with BasicPlayComponents
-  with DefaultPlayExecutor {
+  with DefaultPlayExecutor
+  with I18nLoggingComponents {
 
   override protected def filter[A](
     req: UserRequest[A]
   ): Future[Option[Result]] = {
-    def onError = Some(onDenied(resource, access, req))
-
-    ModulesAccessControl(req.user, access, resource)
-      .canAccessAsync.map {
+    ModulesAccessControl(req.user, access, resource).canAccessAsync.map {
       case true  => None
-      case false => onError
+      case false => Some(errorHandler.onPermissionDenied(req))
+    }.andThen {
+      case Failure(e: Throwable) => Logger.error(s"PermissionChecker failed.", e)
     }.recover {
-      case e: Throwable => onError
+      case _: BaseException => Some(errorHandler.onPermissionDenied(req))
+      case _: Throwable     => Some(errorHandler.onThrowable(req))
     }
   }
 }

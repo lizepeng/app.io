@@ -23,9 +23,11 @@ trait CFSDownloadComponents extends HttpDownloadResult {
   def bandwidth: BandwidthService
   def bandwidthConfig: BandwidthConfig
 
+
   case class CFSHttpCaching(path: Path)(
-    implicit val req: UserRequest[_]
+    implicit req: UserRequest[_], errorHandler: UserActionExceptionHandler
   ) {
+
     def apply(block: File => Result): Future[Result] =
       async(b => Future.successful(block(b)))
 
@@ -36,8 +38,7 @@ trait CFSDownloadComponents extends HttpDownloadResult {
       } yield file).flatMap {
         HttpCaching.async(block)
       }.recover {
-        case e: FileSystemAccessControl.Denied => Results.Forbidden
-        case e: BaseException                  => Results.NotFound
+        case e: FileSystemAccessControl.Denied => errorHandler.onFilePermissionDenied(req)
       }
     }
   }

@@ -10,6 +10,7 @@ import play.api.http.HttpConfiguration
 import play.api.i18n._
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc._
+import security._
 import views._
 
 import scala.concurrent.Future
@@ -31,9 +32,10 @@ class SessionsCtrl(
   with security.Session
   with BasicPlayComponents
   with UsersComponents
+  with MaybeUserActionComponents
   with DefaultPlayExecutor
-  with I18nSupport
-  with Logging {
+  with I18nLoggingComponents
+  with I18nSupport {
 
   val loginFM = Form[LoginFD](
     mapping(
@@ -51,8 +53,8 @@ class SessionsCtrl(
 
   def nnew = MaybeUserAction().apply { implicit req =>
     req.maybeUser match {
-      case Some(u) => Redirect(routes.Application.index())
-      case None    => Ok(html.account.login(loginFM))
+      case Success(u) => Redirect(routes.Application.index())
+      case _          => Ok(html.account.login(loginFM))
     }
   }
 
@@ -61,19 +63,19 @@ class SessionsCtrl(
     form.fold(
       failure => Future.successful(BadRequest(html.account.login(failure))),
       success => _users.auth(success.email, success.password).recover {
-        case e: User.NotFound      => Logger.warn(e.reason); throw User.AuthFailed()
-        case e: User.WrongPassword => Logger.warn(e.reason); throw User.AuthFailed()
+        case e: User.NotFound      => Logger.warn(e.reason, e); throw User.AuthFailed()
+        case e: User.WrongPassword => Logger.warn(e.reason, e); throw User.AuthFailed()
       }.andThen {
         case Success(user) => req.clientIP.map(_userLoginIPs.log(user.id, _))
       }.flatMap { user =>
         Redirect(routes.MyCtrl.dashboard()).createSession(user, success.remember_me)
-      }.recover { case e: BaseException =>
-        BadRequest(html.account.login(form.withGlobalError(e.message)))
+      }.recover {
+        case e: User.AuthFailed => BadRequest(html.account.login(form.withGlobalError(e.message)))
       }
     )
   }
 
-  def destroy = (MaybeUserAction() andThen AuthChecker)
+  def destroy = (MaybeUserAction() andThen AuthChecker())
     .async(BodyParsers.parse.empty) { req =>
       Redirect(routes.Application.index()).destroySession(req.user)
     }

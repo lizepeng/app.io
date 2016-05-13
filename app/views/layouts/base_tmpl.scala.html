@@ -29,7 +29,7 @@
     @above_content
     <div class="container">
       @content
-      @req.maybeUser.map { _ =>
+      @req.maybeUser.toOption.map { _ =>
         @ng._notification()
       }
     </div>
@@ -43,7 +43,7 @@
   @libs.webjars("js", "angular-bootstrap-tpls")
   @libs.webjars("js", "underscore")
   @configNgApp
-  @req.maybeUser.map { _ =>
+  @req.maybeUser.toOption.map { _ =>
     @libs.assets("js", "ws.helper")
     @libs.assets("js", "ui.notification")
     @libs.assets("js", "ui.common")

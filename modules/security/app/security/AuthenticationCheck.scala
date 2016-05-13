@@ -1,8 +1,10 @@
 package security
 
+import helpers.BaseException
 import play.api.mvc._
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 /**
  * @author zepeng.li@gmail.com
@@ -10,22 +12,21 @@ import scala.concurrent.Future
 trait AuthenticationCheck
   extends ActionRefiner[MaybeUserRequest, UserRequest] {
 
-  /**
-   * when access denied
-   *
-   * @param req
-   * @return
-   */
-  def onUnauthorized(req: RequestHeader): Result = throw Unauthorized()
+  def errorHandler: UserActionExceptionHandler
 
   override protected def refine[A](
     req: MaybeUserRequest[A]
   ): Future[Either[Result, UserRequest[A]]] = {
     Future.successful {
       req.maybeUser match {
-        case None    => Left(onUnauthorized(req.inner))
-        case Some(u) => Right(UserRequest[A](u, req.inner))
+        case Failure(_: BaseException) => Left(errorHandler.onUnauthorized(req.inner))
+        case Failure(_: Throwable)     => Left(errorHandler.onThrowable(req.inner))
+        case Success(u)                => Right(UserRequest[A](u, req.inner))
       }
     }
   }
 }
+
+case class AuthChecker(
+  implicit val errorHandler: UserActionExceptionHandler
+) extends AuthenticationCheck

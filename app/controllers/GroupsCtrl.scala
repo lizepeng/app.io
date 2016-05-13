@@ -37,10 +37,8 @@ class GroupsCtrl(
   def show(id: UUID) =
     UserAction(_.P02, _.P16, _.P17).async { implicit req =>
       _groups.find(id).map { grp =>
-        if (grp.is_internal) MethodNotAllowed
+        if (grp.is_internal) Redirect(routes.GroupsCtrl.index())
         else Ok(html.groups.show(grp))
-      }.recover {
-        case e: BaseException => NotFound
       }
     }
 }

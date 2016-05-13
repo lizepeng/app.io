@@ -64,8 +64,6 @@ class EmailTemplatesCtrl(
     UserAction(_.P03).async { implicit req =>
       _emailTemplates.list(pager).map { list =>
         Ok(html.email_templates.index(Page(pager, list)))
-      }.recover {
-        case e: BaseException => NotFound
       }
     }
 
@@ -138,7 +136,7 @@ class EmailTemplatesCtrl(
         }
       result.recover {
         case e: EmailTemplate.NotFound => Redirect {
-          routes.EmailTemplatesCtrl.nnew()
+          routes.EmailTemplatesCtrl.index()
         }
       }
     }
@@ -200,19 +198,19 @@ class EmailTemplatesCtrl(
     }
 
   def destroy(id: String, lang: Lang) =
-    UserAction(_.P06).async { implicit req => {
-      for {
+    UserAction(_.P06).async { implicit req =>
+      (for {
         tmpl <- _emailTemplates.find(id, lang)
         ___ <- _emailTemplates.destroy(id, lang)
       } yield RedirectToPreviousURI.getOrElse {
         Redirect(routes.EmailTemplatesCtrl.index())
       }.flashing {
         AlertLevel.Success -> message("deleted", tmpl.name)
+      }).recover {
+        case e: EmailTemplate.NotFound => Redirect {
+          routes.EmailTemplatesCtrl.index()
+        }
       }
-    }.recover {
-      case e: EmailTemplate.NotFound => NotFound(e.message)
-    }
-
     }
 
   private def key_editing(id: String) = s"$canonicalName - $id - version"

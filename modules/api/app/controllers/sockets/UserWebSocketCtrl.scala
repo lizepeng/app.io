@@ -4,8 +4,8 @@ import controllers.actors.UserWebSocket._
 import controllers.actors.WSProtocol._
 import controllers.actors._
 import helpers._
-import models.Users
-import play.api.i18n.I18nSupport
+import models._
+import play.api.i18n._
 import play.api.mvc._
 import security._
 
@@ -15,14 +15,14 @@ class UserWebSocketCtrl(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _users: Users
-)
-  extends Controller
+) extends Controller
   with BasicPlayComponents
   with I18nSupport {
 
+  implicit lazy val errorHandler = new UserActionExceptionHandler with DefaultExceptionHandler
+
   def connect: WebSocket =
     MaybeUser().WebSocket[Try[Recv], Send](
-      req => user => UserWebSocket.props(_, user.id),
-      Forbidden
+      req => user => UserWebSocket.props(_, user.id)
     )
 }

@@ -258,8 +258,10 @@ msg.models.users.auth.failed                     =Wrong Username/Email and passw
 log.models.users.email.taken                     =Email {0} is invalid or already taken
 log.models.users.not.found                       =no such user: [{0}]
 log.models.users.wrong.password                  =wrong password of user: [{0}]
-log.models.users.auth.failed                     =TODO
-log.models.users.no.credentials                  =TODO
+log.models.users.auth.failed                     =Authentication Failed.
+log.models.users.no.credentials                  =No credential provided.
+log.models.users.session_id.not.match            =Session Id doesn't match.
+log.models.users.access_token.not.match          =Access Token doesn't match.
 
 # file_system
 controllers.api_internal.file_system.name        =File System(Internal API)

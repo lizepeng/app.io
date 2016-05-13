@@ -7,7 +7,7 @@
 @base_tmpl(title, above_content, main_menu)(content)(css:_*)(js:_*)
 
 @main_menu = {
-  @req.maybeUser.map { u =>
+  @req.maybeUser.toOption.map { u =>
     <li class="dropdown" dropdown>
       <a href="@routes.FileSystemCtrl.index(Path.root)">
         <i class="fa fa-fw fa-hdd-o"></i>

@@ -7,40 +7,29 @@ import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
 
 import scala.concurrent.Future
-import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
  */
 trait AuthenticatedBodyParser[A]
   extends BodyParser[A]
-  with BasicPlayComponents
-  with DefaultPlayExecutor
-  with Authentication
-  with I18nLogging {
+    with BasicPlayComponents
+    with DefaultPlayExecutor
+    with Authentication
+    with I18nLogging
+    with PAMLogging {
 
-  def onUnauthorized: RequestHeader => Result
-
-  def onBaseException: RequestHeader => Result
+  def errorHandler: BodyParserExceptionHandler
 
   def basicPlayApi: BasicPlayApi
 
   override def apply(req: RequestHeader) = {
     Accumulator.flatten {
-      pam(_users)(req).flatMap {
+      authenticate(req).flatMap {
         user => invokeParser(req)(user)
-      }.andThen {
-        case Failure(e: BaseException) => Logger.debug(e.reason)
       }.recover {
-        case e: User.NoCredentials     =>
-          parse.error(Future.successful(onUnauthorized(req)))
-        case e: User.SessionIdNotMatch =>
-          parse.error(Future.successful(onUnauthorized(req)))
-        case e: BaseException          =>
-          parse.error(Future.successful(onBaseException(req)))
-        case e: Throwable              =>
-          Logger.debug("AuthenticatedBodyParser Failed", e)
-          parse.error(Future.successful(onBaseException(req)))
+        case e: BaseException => parse.error(Future.successful(errorHandler.onUnauthorized(req)))
+        case e: Throwable     => parse.error(Future.successful(errorHandler.onThrowable(req)))
       }.map(_.apply(req))
     }
   }
@@ -49,5 +38,7 @@ trait AuthenticatedBodyParser[A]
     implicit user: User
   ): Future[BodyParser[A]] = parser(req)(user)
 
-  def parser(req: RequestHeader)(implicit user: User): Future[BodyParser[A]]
+  def parser(req: RequestHeader)(
+    implicit user: User
+  ): Future[BodyParser[A]]
 }

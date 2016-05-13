@@ -35,11 +35,11 @@ class FileSystemCtrl(
   with UserActionComponents[FileSystemCtrl.AccessDef]
   with FileSystemCtrl.AccessDef
   with DefaultPlayExecutor
-  with I18nSupport
   with AppConfigComponents
   with RateLimitConfigComponents
   with BandwidthConfigComponents
-  with Logging {
+  with I18nLoggingComponents
+  with I18nSupport {
 
   def index(path: Path, pager: Pager) =
     UserAction(_.P03).async { implicit req =>
@@ -55,8 +55,7 @@ class FileSystemCtrl(
           linkHeader(page, routes.FileSystemCtrl.index(path, _))
         )
       }.recover {
-        case e: FileSystemAccessControl.Denied => Forbidden
-        case e: BaseException                  => NotFound
+        case e: FileSystemAccessControl.Denied => Forbidden(JsonMessage(e))
       }
     }
 
@@ -71,11 +70,9 @@ class FileSystemCtrl(
         case Some(file) => FlowJs().bindFromRequestBody.upload(file, path)()
         case None       => throw CFSBodyParser.MissingFile()
       }).andThen {
-        case Failure(e: CFSBodyParser.MissingFile)      => Logger.warn(e.message)
-        case Failure(e: FileSystemAccessControl.Denied) => Logger.debug(e.message)
-        case Failure(e: BaseException)                  => Logger.error(e.message)
+        case Failure(e: CFSBodyParser.MissingFile) => Logger.warn(e.reason, e)
       }.recover {
-        case e: BaseException => NotFound(JsonMessage(e))
+        case e: CFSBodyParser.MissingFile => Results.BadRequest(JsonMessage(e))
       }
     }
 
@@ -96,14 +93,13 @@ class FileSystemCtrl(
       }).map {
         _ => NoContent
       }.recover {
-        case e: FileSystemAccessControl.Denied => Forbidden
-        case e: Directory.ChildNotFound        => NotFound
+        case e: FileSystemAccessControl.Denied => Forbidden(JsonMessage(e))
       }
     }
 
   def updatePermission(path: Path, gid: Option[UUID], pos: Int) =
     UserAction(_.P16).async(BodyParsers.parse.empty) { implicit req =>
-      (for {
+      for {
         inode <- _cfs.inode(path)
         _ <- gid match {
           case Some(g) =>
@@ -115,22 +111,17 @@ class FileSystemCtrl(
         }
       } yield {
         Ok
-      }).recover {
-        case e: BaseException => NotFound
       }
     }
 
   def deletePermission(path: Path, gid: UUID) =
     UserAction(_.P16).async { implicit req =>
-      (for {
+      for {
         inode <- _cfs.inode(path)
         _ <- inode.deletePerm(gid)
       } yield {
         Ok
-      }).recover {
-        case e: BaseException => NotFound
       }
-
     }
 }
 
