@@ -1,7 +1,5 @@
 package security
 
-import java.util.UUID
-
 import helpers.ExtString._
 import helpers._
 import models._
@@ -31,29 +29,32 @@ case class ModulesAccessControl(
   override def canAccess: Boolean = false
 
   override def canAccessAsync: Future[Boolean] = {
-    Future.failed(Denied(s"User(${principal.id.toString}, ${principal.email})", access, resource))
-      .fallbackTo(checkGroups(resource, access, principal.groups))
-      .fallbackTo(checkUser(resource, access, principal.id))
-      .andThen {
-        case Failure(e: Denied)        => Logger.debug(s"Permission check failed, because ${e.reason}")
-        case Failure(e: BaseException) => Logger.error(s"Permission check failed, because ${e.reason}", e)
-        case Failure(e: Throwable)     => Logger.error(s"Permission check failed.", e)
-      }
+    Future.failed {
+      Denied(s"User", access, resource)
+    }.recoverWith {
+      case _ => checkGroups(resource, access, principal)
+    }.recoverWith {
+      case _ => checkUser(resource, access, principal)
+    }.andThen {
+      case Failure(e: Denied)        => Logger.debug(s"${e.reason}")
+      case Failure(e: BaseException) => Logger.error(s"Permission check failed, because ${e.reason}", e)
+      case Failure(e: Throwable)     => Logger.error(s"Permission check failed.", e)
+    }
   }
 
   def checkGroups(
     resource: CheckedModule,
     access: Access,
-    group_ids: Traversable[UUID]
+    principal: User
   ): Future[Boolean] = {
-    val gids = group_ids.toSet
+    val gids = principal.groups
     _accessControls
       .findPermissions(resource.name, gids)
       .map(_.map(Permission.apply))
       .map { permissions =>
         Logger.trace(
           s"""
-          |Groups      : $group_ids
+          |Groups      : $gids
           |Module      : $resource
           |Access      : $access
           |${permissions.map(p => s"Permissions : $p").mkString("\n")}
@@ -61,22 +62,23 @@ case class ModulesAccessControl(
         )
 
         if (Permission.union(permissions: _*) ? access) true
-        else throw Denied(group_ids.toString(), access, resource)
+        else throw Denied(s"${principal.email} : $gids", access, resource)
       }
   }
 
   def checkUser(
     resource: CheckedModule,
     access: Access,
-    user_id: UUID
-  ): Future[Boolean] =
+    principal: User
+  ): Future[Boolean] = {
+    val uid = principal.id
     _accessControls
-      .findPermission(resource.name, user_id)
+      .findPermission(resource.name, uid)
       .map(_.map(Permission.apply).getOrElse(Permission.Nothing))
       .map { permission =>
         Logger.trace(
           s"""
-          |User       : $user_id
+          |User       : $uid
           |Module     : $resource
           |Access     : $access
           |Permission : $permission
@@ -84,9 +86,9 @@ case class ModulesAccessControl(
         )
 
         if (permission ? access) true
-        else throw Denied(user_id.toString, access, resource)
+        else throw Denied(s"${principal.email} : $uid", access, resource)
       }
-
+  }
 }
 
 object ModulesAccessControl

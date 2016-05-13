@@ -26,16 +26,17 @@ class PasswordResetCtrl(
   val _expirableLinks: ExpirableLinks,
   val _emailTemplates: EmailTemplates,
   val _sysConfig: SysConfigs
-) extends PasswordResetCtrlCNamed
-  with Controller
-  with BasicPlayComponents
-  with UsersComponents
-  with InternalGroupsComponents
-  with DefaultPlayExecutor
+) extends Controller
+  with PasswordResetCtrlCNamed
   with CanonicalNameBasedMessages
+  with BasicPlayComponents
+  with DefaultPlayExecutor
+  with UsersComponents
+  with MaybeUserActionComponents
+  with InternalGroupsComponents
   with AppDomainComponents
-  with SystemAccounts
   with I18nLoggingComponents
+  with SystemAccounts
   with I18nSupport {
 
   val emailFM = Form[EmailAddress](

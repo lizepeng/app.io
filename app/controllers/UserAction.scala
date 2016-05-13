@@ -6,26 +6,26 @@ import play.api.mvc._
 import security.ModulesAccessControl._
 import security._
 
+import scala.concurrent._
+
 /**
  * @author zepeng.li@gmail.com
  */
-object MaybeUserAction {
+trait MaybeUserActionComponents {
 
   import UsersComponents._
 
-  def apply()(
+  implicit lazy val userActionExceptionHandler = DefaultUserActionExceptionHandler
+  implicit lazy val bodyParserExceptionHandler = new BodyParserExceptionHandler with DefaultExceptionHandler
+
+  def MaybeUserAction()(
     implicit
     basicPlayApi: BasicPlayApi,
     _groups: Groups
   ): ActionBuilder[UserOptRequest] = {
-    MaybeUser().Action() andThen LayoutLoader()
+    MaybeUser().Action() andThen
+      LayoutLoader()
   }
-}
-
-trait MaybeUserActionComponents {
-
-  implicit lazy val userActionExceptionHandler = DefaultUserActionExceptionHandler
-  implicit lazy val bodyParserExceptionHandler = new BodyParserExceptionHandler with DefaultExceptionHandler
 }
 
 case class UserActionRequired(
@@ -48,13 +48,14 @@ trait UserActionComponents[T <: BasicAccessDef] extends MaybeUserActionComponent
     implicit
     resource: CheckedModule,
     basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired
+    userActionRequired: UserActionRequired,
+    executionContext: ExecutionContext
   ): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))
     MaybeUser().Action() andThen
       LayoutLoader() andThen
       AuthChecker() andThen
-      PermissionChecker(access)
+      PermissionChecker(access, _ => Future.successful(true))
   }
 }
 

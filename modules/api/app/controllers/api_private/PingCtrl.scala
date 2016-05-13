@@ -20,15 +20,16 @@ class PingCtrl(
     override def onUnauthorized = _ => HttpBasicAuth.onUnauthorized("ping")
   }
 
-  def ping = (MaybeUser(AuthenticateByAccessToken).Action() >> AuthChecker()) { req =>
-    Ok(
-      Json.prettyPrint(
-        Json.obj(
-          "username" -> req.user.user_name,
-          "email" -> req.user.email,
-          "datetime" -> DateTime.now
+  def ping = (MaybeUser(AuthenticateByAccessToken).Action() >> AuthChecker()) {
+    req =>
+      Ok(
+        Json.prettyPrint(
+          Json.obj(
+            "username" -> req.user.user_name,
+            "email" -> req.user.email,
+            "datetime" -> DateTime.now
+          )
         )
       )
-    )
   }
 }

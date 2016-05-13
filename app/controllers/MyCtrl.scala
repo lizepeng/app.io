@@ -171,7 +171,7 @@ class MyCtrl(
 
   def uploadProfileImage =
     (MaybeUserAction() andThen AuthChecker()).async(
-      CFSBodyParser(u => Path.home(u), P16)
+      CFSBodyParser(u => Path.home(u), P16).parser
     ) {
       CFSImage.upload(
         filePath = u => Path.home(u) + profileImageFileName,

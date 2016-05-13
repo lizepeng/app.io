@@ -14,20 +14,20 @@ import scala.util._
 /**
  * @author zepeng.li@gmail.com
  */
-case class MaybeUser(
-  pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
-)(
+case class MaybeUser(pamBuilder: BasicPlayApi => PAM = AuthenticateBySession)(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _users: Users
 ) extends Authentication
   with BasicPlayComponents
   with DefaultPlayExecutor
-  with I18nLoggingComponents
-  with PAMLogging {
+  with I18nLoggingComponents {
 
   val pam: PAM = pamBuilder(basicPlayApi)
 
+  /**
+   * A UserAction which authenticate user before processing the request.
+   */
   case class InternalActionBuilder()
     extends ActionBuilder[UserOptRequest]
       with ActionTransformer[Request, UserOptRequest] {
@@ -44,6 +44,31 @@ case class MaybeUser(
   }
 
   def Action() = new InternalActionBuilder()
+
+  ///////////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * A BodyParser which authenticate user before parsing the request body.
+   */
+  case class InternalParserBuilder(
+    implicit val basicPlayApi: BasicPlayApi
+  ) extends BodyParserBuilder[(RequestHeader, Try[User])]
+    with BodyParserTransformer[RequestHeader, (RequestHeader, Try[User])]
+    with BasicPlayComponents
+    with DefaultPlayExecutor {
+
+    def transform(req: RequestHeader) = {
+      authenticate(req).map {
+        user => Success(user)
+      }.recover {
+        case e: Throwable => Failure(e)
+      }.map(req -> _)
+    }
+  }
+
+  def Parser() = new InternalParserBuilder()
+
+  ///////////////////////////////////////////////////////////////////////////////////
 
   def WebSocket[In, Out](
     handler: RequestHeader => User => HandlerProps

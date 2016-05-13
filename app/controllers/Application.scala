@@ -11,13 +11,13 @@ class Application(
   implicit
   val basicPlayApi: BasicPlayApi,
   val _groups: Groups
-)
-  extends Controller
-  with BasicPlayComponents
-  with I18nSupport
+) extends Controller
   with CanonicalNamed
+  with BasicPlayComponents
+  with MaybeUserActionComponents
+  with AppConfigComponents
   with ViewMessages
-  with AppConfigComponents {
+  with I18nSupport {
 
   override val basicName = "app"
 

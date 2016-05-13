@@ -25,6 +25,7 @@ class AccessControlsCtrl(
   with CheckedModuleName
   with Controller
   with BasicPlayComponents
+  with DefaultPlayExecutor
   with UserActionComponents[AccessControlsCtrl.AccessDef]
   with AccessControlsCtrl.AccessDef
   with I18nSupport {

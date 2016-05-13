@@ -7,6 +7,8 @@ import play.api.mvc._
 import security.ModulesAccessControl._
 import security._
 
+import scala.concurrent._
+
 /**
  * @author zepeng.li@gmail.com
  */
@@ -33,12 +35,13 @@ trait UserActionComponents[T <: BasicAccessDef] {
     resource: CheckedModule,
     basicPlayApi: BasicPlayApi,
     userActionRequired: UserActionRequired,
-    rateLimitConfig: RateLimitConfig
+    rateLimitConfig: RateLimitConfig,
+    executionContext: ExecutionContext
   ): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))
     MaybeUser().Action() andThen
       AuthChecker() andThen
       RateLimitChecker() andThen
-      PermissionChecker(access)
+      PermissionChecker(access, _ => Future.successful(true))
   }
 }

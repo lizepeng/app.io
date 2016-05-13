@@ -10,20 +10,19 @@ import scala.util._
 /**
  * @author zepeng.li@gmail.com
  */
-trait Authentication {
-  self: DefaultPlayExecutor with PAMLogging with I18nLogging =>
+trait Authentication extends PAMLogging {
+  self: DefaultPlayExecutor =>
 
   def _users: Users
 
   def pam: PAM
 
-  def authenticate(req: RequestHeader)(
-    implicit Logger: play.api.Logger
-  ) = pam(_users)(req).andThen {
-    loggingError { reason =>
-      s"PAM[${pam.basicName}] auth failed, because $reason"
+  def authenticate(req: RequestHeader) =
+    pam(_users)(req).andThen {
+      loggingPAMExceptions { reason =>
+        s"PAM[${pam.basicName}] auth failed, because $reason"
+      }
     }
-  }
 }
 
 trait PAM extends (Users => RequestHeader => Future[User])
@@ -48,10 +47,9 @@ class ThenTryPAM(first: PAM, second: PAM)(
 
   def basicName = second.basicName
 
-
   def apply(v1: Users): (RequestHeader) => Future[User] = {
     req => first.apply(v1)(req).andThen {
-      loggingError { reason =>
+      loggingPAMExceptions { reason =>
         s"PAM[${first.basicName}] auth failed, because $reason, then try PAM[${second.basicName}]"
       }
     }.recoverWith {
@@ -60,10 +58,9 @@ class ThenTryPAM(first: PAM, second: PAM)(
   }
 }
 
-trait PAMLogging {
-  self: I18nLogging =>
+trait PAMLogging extends I18nLogging {
 
-  def loggingError(message: String => String): PartialFunction[Try[User], Unit] = {
+  def loggingPAMExceptions(message: String => String): PartialFunction[Try[User], Unit] = {
     case Failure(e: User.NoCredentials)       => Logger.debug(s"${message(e.reason)}")
     case Failure(e: User.SessionIdNotMatch)   => Logger.debug(s"${message(e.reason)}")
     case Failure(e: User.AccessTokenNotMatch) => Logger.debug(s"${message(e.reason)}")

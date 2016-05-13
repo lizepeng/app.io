@@ -20,14 +20,14 @@ class ExperimentalCtrl(
   val basicPlayApi: BasicPlayApi,
   val _groups: Groups,
   val _users: Users
-)
-  extends Controller
-  with BasicPlayComponents
-  with DefaultPlayExecutor
-  with NotificationRegionComponents
-  with AkkaTimeOutConfig
+) extends Controller
   with CanonicalNamed
   with PackageNameAsCanonicalName
+  with BasicPlayComponents
+  with MaybeUserActionComponents
+  with NotificationRegionComponents
+  with DefaultPlayExecutor
+  with AkkaTimeOutConfig
   with I18nSupport {
 
   def chat = MaybeUserAction().apply { implicit req =>
