@@ -25,6 +25,7 @@ class GroupsCtrl(
   with BasicPlayComponents
   with UserActionComponents[GroupsCtrl.AccessDef]
   with GroupsCtrl.AccessDef
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with I18nSupport {
 

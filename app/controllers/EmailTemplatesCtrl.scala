@@ -27,6 +27,7 @@ class EmailTemplatesCtrl(
   with BasicPlayComponents
   with UserActionComponents[AccessControlsCtrl.AccessDef]
   with AccessControlsCtrl.AccessDef
+  with ExceptionHandlers
   with UsersComponents
   with DefaultPlayExecutor
   with CanonicalNameBasedMessages

@@ -42,6 +42,7 @@ class MyCtrl(
   with BasicPlayComponents
   with UsersComponents
   with MaybeUserActionComponents
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with CanonicalNameBasedMessages
   with BandwidthConfigComponents

@@ -19,7 +19,7 @@ case class UserActionRequired(
 )
 
 trait UserActionComponents[T <: BasicAccessDef] {
-  self: T =>
+  self: T with ExceptionHandlers =>
 
   def userActionRequired: UserActionRequired
 
@@ -27,8 +27,6 @@ trait UserActionComponents[T <: BasicAccessDef] {
   implicit def _accessControls: AccessControls = userActionRequired._accessControls
   implicit def _rateLimits: RateLimits = userActionRequired._rateLimits
 
-  implicit lazy val userActionExceptionHandler = new UserActionExceptionHandler with DefaultExceptionHandler
-  implicit lazy val bodyParserExceptionHandler = new BodyParserExceptionHandler with DefaultExceptionHandler
 
   def UserAction(specifiers: (T => Access.Pos)*)(
     implicit
@@ -44,4 +42,10 @@ trait UserActionComponents[T <: BasicAccessDef] {
       RateLimitChecker() andThen
       PermissionChecker(access, _ => Future.successful(true))
   }
+}
+
+trait ExceptionHandlers {
+
+  implicit lazy val userActionExceptionHandler = new UserActionExceptionHandler with DefaultExceptionHandler
+  implicit lazy val bodyParserExceptionHandler = new BodyParserExceptionHandler with DefaultExceptionHandler
 }

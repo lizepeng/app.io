@@ -34,6 +34,7 @@ class FileSystemCtrl(
   with BasicPlayComponents
   with UserActionComponents[FileSystemCtrl.AccessDef]
   with FileSystemCtrl.AccessDef
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with AppConfigComponents
   with RateLimitConfigComponents

@@ -29,6 +29,7 @@ class AccessControlsCtrl(
   with BasicPlayComponents
   with UserActionComponents[AccessControlsCtrl.AccessDef]
   with AccessControlsCtrl.AccessDef
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with RateLimitConfigComponents
   with I18nSupport {

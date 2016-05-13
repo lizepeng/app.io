@@ -25,6 +25,7 @@ class ExperimentalCtrl(
   with PackageNameAsCanonicalName
   with BasicPlayComponents
   with MaybeUserActionComponents
+  with ExceptionHandlers
   with NotificationRegionComponents
   with DefaultPlayExecutor
   with AkkaTimeOutConfig

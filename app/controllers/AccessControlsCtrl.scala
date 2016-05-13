@@ -28,6 +28,7 @@ class AccessControlsCtrl(
   with DefaultPlayExecutor
   with UserActionComponents[AccessControlsCtrl.AccessDef]
   with AccessControlsCtrl.AccessDef
+  with ExceptionHandlers
   with I18nSupport {
 
   def index(q: Option[String], pager: Pager, sort: Seq[SortField]) =

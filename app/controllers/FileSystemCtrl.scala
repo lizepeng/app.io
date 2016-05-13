@@ -28,6 +28,7 @@ class FileSystemCtrl(
   with InternalGroupsComponents
   with UserActionComponents[FileSystemCtrl.AccessDef]
   with FileSystemCtrl.AccessDef
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with BandwidthConfigComponents
   with CFSStreamComponents

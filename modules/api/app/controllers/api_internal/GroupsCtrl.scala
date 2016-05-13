@@ -34,6 +34,7 @@ class GroupsCtrl(
   with BasicPlayComponents
   with UserActionComponents[GroupsCtrl.AccessDef]
   with GroupsCtrl.AccessDef
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with RateLimitConfigComponents
   with I18nSupport

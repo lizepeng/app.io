@@ -12,11 +12,9 @@ import scala.concurrent._
  * @author zepeng.li@gmail.com
  */
 trait MaybeUserActionComponents {
+  self: ExceptionHandlers =>
 
   import UsersComponents._
-
-  implicit lazy val userActionExceptionHandler = DefaultUserActionExceptionHandler
-  implicit lazy val bodyParserExceptionHandler = new BodyParserExceptionHandler with DefaultExceptionHandler
 
   def MaybeUserAction()(
     implicit
@@ -33,8 +31,8 @@ case class UserActionRequired(
   _accessControls: AccessControls
 )
 
-trait UserActionComponents[T <: BasicAccessDef] extends MaybeUserActionComponents {
-  self: T =>
+trait UserActionComponents[T <: BasicAccessDef] {
+  self: T with ExceptionHandlers =>
 
   import UsersComponents._
 
@@ -66,4 +64,10 @@ object DefaultUserActionExceptionHandler extends UserActionExceptionHandler {
   def onFilePermissionDenied = _ => Results.Redirect(routes.Application.index())
   def onPathNotFound = _ => Results.Redirect(routes.Application.index())
   def onThrowable = _ => Results.Redirect(routes.Application.index())
+}
+
+trait ExceptionHandlers {
+
+  implicit lazy val userActionExceptionHandler = DefaultUserActionExceptionHandler
+  implicit lazy val bodyParserExceptionHandler = new BodyParserExceptionHandler with DefaultExceptionHandler
 }

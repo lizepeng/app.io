@@ -15,6 +15,7 @@ class Application(
   with CanonicalNamed
   with BasicPlayComponents
   with MaybeUserActionComponents
+  with ExceptionHandlers
   with AppConfigComponents
   with ViewMessages
   with I18nSupport {

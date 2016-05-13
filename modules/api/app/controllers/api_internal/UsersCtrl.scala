@@ -31,8 +31,9 @@ class UsersCtrl(
   with LinkHeader
   with BasicPlayComponents
   with InternalGroupsComponents
-  with UserActionComponents[SearchCtrl.AccessDef]
-  with SearchCtrl.AccessDef
+  with UserActionComponents[UsersCtrl.AccessDef]
+  with UsersCtrl.AccessDef
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with RateLimitConfigComponents
   with BootingProcess

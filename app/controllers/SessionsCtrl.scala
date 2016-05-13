@@ -33,6 +33,7 @@ class SessionsCtrl(
   with BasicPlayComponents
   with UsersComponents
   with MaybeUserActionComponents
+  with ExceptionHandlers
   with DefaultPlayExecutor
   with I18nLoggingComponents
   with I18nSupport {

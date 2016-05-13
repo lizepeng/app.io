@@ -29,6 +29,7 @@ class SearchCtrl(
   with BasicPlayComponents
   with UserActionComponents[SearchCtrl.AccessDef]
   with SearchCtrl.AccessDef
+  with ExceptionHandlers
   with RateLimitConfigComponents
   with DefaultPlayExecutor
   with I18nSupport {
