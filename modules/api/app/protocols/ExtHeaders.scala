@@ -3,7 +3,7 @@ package protocols
 /**
  * @author zepeng.li@gmail.com
  */
-trait ExHeaders {
+trait ExtHeaders {
 
   val LINK                   = "Link"
   val X_RATE_LIMIT_LIMIT     = "X-Rate-Limit-Limit"

@@ -26,13 +26,13 @@ sealed class RateLimitTable
     extends UUIDColumn(this)
     with PartitionKey[UUID]
 
+  object datetime
+    extends DateTimeColumn(this)
+      with PartitionKey[DateTime]
+
   object resource
     extends StringColumn(this)
     with PrimaryKey[String]
-
-  object datetime
-    extends DateTimeColumn(this)
-    with PrimaryKey[DateTime]
 
   object counter
     extends CounterColumn(this)

@@ -19,7 +19,7 @@ case class UserActionRequired(
 )
 
 trait UserActionComponents[T <: BasicAccessDef] {
-  self: T with ExceptionHandlers =>
+  self: T with RateLimitConfigComponents with ExceptionHandlers =>
 
   def userActionRequired: UserActionRequired
 
@@ -27,13 +27,11 @@ trait UserActionComponents[T <: BasicAccessDef] {
   implicit def _accessControls: AccessControls = userActionRequired._accessControls
   implicit def _rateLimits: RateLimits = userActionRequired._rateLimits
 
-
   def UserAction(specifiers: (T => Access.Pos)*)(
     implicit
     resource: CheckedModule,
     basicPlayApi: BasicPlayApi,
     userActionRequired: UserActionRequired,
-    rateLimitConfig: RateLimitConfig,
     executionContext: ExecutionContext
   ): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))

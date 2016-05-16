@@ -28,7 +28,7 @@ sealed class IPRateLimitTable
 
   object datetime
     extends DateTimeColumn(this)
-    with PrimaryKey[DateTime]
+    with PartitionKey[DateTime]
 
   object counter
     extends CounterColumn(this)

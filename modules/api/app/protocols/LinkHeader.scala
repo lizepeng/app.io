@@ -6,7 +6,7 @@ import play.api.mvc.{Call, RequestHeader}
 /**
  * @author zepeng.li@gmail.com
  */
-trait LinkHeader extends ExHeaders {
+trait LinkHeader extends ExtHeaders {
 
   /**
    * Create link header for pagination.
