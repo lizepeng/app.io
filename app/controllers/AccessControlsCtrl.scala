@@ -26,6 +26,7 @@ class AccessControlsCtrl(
   with Controller
   with BasicPlayComponents
   with DefaultPlayExecutor
+  with UserActionRequiredComponents
   with UserActionComponents[AccessControlsCtrl.AccessDef]
   with AccessControlsCtrl.AccessDef
   with ExceptionHandlers

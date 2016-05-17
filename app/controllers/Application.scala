@@ -1,10 +1,10 @@
 package controllers
 
 import helpers._
-import models.Groups
+import models._
 import models.cfs.Path
-import play.api.i18n.I18nSupport
-import play.api.mvc.Controller
+import play.api.i18n._
+import play.api.mvc._
 import views._
 
 class Application(
@@ -14,6 +14,7 @@ class Application(
 ) extends Controller
   with CanonicalNamed
   with BasicPlayComponents
+  with UsersComponents
   with MaybeUserActionComponents
   with ExceptionHandlers
   with AppConfigComponents

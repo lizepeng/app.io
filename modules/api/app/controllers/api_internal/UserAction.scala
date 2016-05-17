@@ -22,14 +22,17 @@ case class UserActionRequired(
   _rateLimits: RateLimits
 )
 
-trait UserActionComponents[T <: BasicAccessDef] {
-  self: T with RateLimitConfigComponents with ExceptionHandlers =>
+trait UserActionRequiredComponents {
 
   def userActionRequired: UserActionRequired
 
-  implicit def _users: Users = userActionRequired._users
-  implicit def _accessControls: AccessControls = userActionRequired._accessControls
-  implicit def _rateLimits: RateLimits = userActionRequired._rateLimits
+  implicit def _users = userActionRequired._users
+  implicit def _accessControls = userActionRequired._accessControls
+  implicit def _rateLimits = userActionRequired._rateLimits
+}
+
+trait UserActionComponents[T <: BasicAccessDef] {
+  self: T with UserActionRequiredComponents with RateLimitConfigComponents with ExceptionHandlers =>
 
   def UserAction(specifiers: (T => Access.Pos)*)(
     implicit
@@ -50,7 +53,6 @@ trait UserActionComponents[T <: BasicAccessDef] {
   )(
     path: User => Path,
     preCheck: User => Future[Boolean] = user => Future.successful(true),
-    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
     dirPermission: CFS.Permission = CFS.Role.owner.rwx
   )(
     block: UserRequest[MultipartFormData[File]] => Future[Result]
@@ -63,7 +65,8 @@ trait UserActionComponents[T <: BasicAccessDef] {
     materializer: Materializer,
     _cfs: CFS,
     bandwidth: BandwidthService,
-    bandwidthConfig: BandwidthConfig
+    bandwidthConfig: BandwidthConfig,
+    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
   ): Action[MultipartFormData[File]] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))
 

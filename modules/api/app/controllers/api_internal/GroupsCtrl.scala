@@ -32,6 +32,7 @@ class GroupsCtrl(
   with Controller
   with LinkHeader
   with BasicPlayComponents
+  with UserActionRequiredComponents
   with UserActionComponents[GroupsCtrl.AccessDef]
   with GroupsCtrl.AccessDef
   with ExceptionHandlers

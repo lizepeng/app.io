@@ -492,8 +492,3 @@ trait UsersComponents {
 
   implicit def _users: Users = _groups._users
 }
-
-object UsersComponents {
-
-  implicit def _users(implicit _groups: Groups): Users = _groups._users
-}

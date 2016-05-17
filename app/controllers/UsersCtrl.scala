@@ -37,6 +37,7 @@ class UsersCtrl(
   with Controller
   with security.Session
   with BasicPlayComponents
+  with UserActionRequiredComponents
   with MaybeUserActionComponents
   with UserActionComponents[UsersCtrl.AccessDef]
   with UsersCtrl.AccessDef

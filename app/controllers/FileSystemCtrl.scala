@@ -24,8 +24,8 @@ class FileSystemCtrl(
   with CheckedModuleName
   with Controller
   with BasicPlayComponents
-  with UsersComponents
   with InternalGroupsComponents
+  with UserActionRequiredComponents
   with UserActionComponents[FileSystemCtrl.AccessDef]
   with FileSystemCtrl.AccessDef
   with ExceptionHandlers
