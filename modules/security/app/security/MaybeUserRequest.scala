@@ -26,13 +26,22 @@ case class UserOptRequest[A](
 /**
  * A HTTP request that made by a user.
  */
-case class UserRequest[A](
+trait UserRequest[A] extends MaybeUserRequest[A] {
+
+  def user: User
+
+  def inner: Request[A]
+
+  def maybeUser: Try[User] = Success(user)
+}
+
+/**
+ * Default implementation of [[UserRequest]].
+ */
+private[security] case class UserRequestImpl[A](
   user: User,
   inner: Request[A]
-) extends WrappedRequest[A](inner) with MaybeUserRequest[A] {
-
-  override def maybeUser: Try[User] = Success(user)
-}
+) extends WrappedRequest[A](inner) with UserRequest[A]
 
 /**
  * A HTTP request header that may be made by a user.
@@ -55,13 +64,22 @@ case class UserOptRequestHeader(
 /**
  * A HTTP request header that made by a user.
  */
-case class UserRequestHeader(
+trait UserRequestHeader extends MaybeUserRequestHeader {
+
+  def user: User
+
+  def inner: RequestHeader
+
+  def maybeUser: Try[User] = Success(user)
+}
+
+/**
+ * Default implementation of [[UserRequestHeader]].
+ */
+private[security] case class UserRequestHeaderImpl(
   user: User,
   inner: RequestHeader
-) extends WrappedRequestHeader(inner) with MaybeUserRequestHeader {
-
-  override def maybeUser: Try[User] = Success(user)
-}
+) extends WrappedRequestHeader(inner) with UserRequestHeader
 
 /**
  * Wrap an existing request header. Useful to extend a request header.

@@ -24,7 +24,7 @@ object AuthChecker {
         req.maybeUser match {
           case Failure(_: BaseException) => Left(eh.onUnauthorized(req))
           case Failure(_: Throwable)     => Left(eh.onThrowable(req))
-          case Success(u)                => Right(UserRequest[A](u, req.inner))
+          case Success(u)                => Right(UserRequestImpl[A](u, req.inner))
         }
       }
     }
@@ -43,7 +43,7 @@ object AuthChecker {
         req.maybeUser match {
           case Failure(_: BaseException) => Left(parse.error(Future.successful(eh.onUnauthorized(req))))
           case Failure(_: Throwable)     => Left(parse.error(Future.successful(eh.onThrowable(req))))
-          case Success(u)                => Right(UserRequestHeader(u, req.inner))
+          case Success(u)                => Right(UserRequestHeaderImpl(u, req.inner))
         }
       }
     }
