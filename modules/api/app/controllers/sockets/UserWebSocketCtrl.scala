@@ -23,6 +23,6 @@ class UserWebSocketCtrl(
 
   def connect: WebSocket =
     MaybeUser().WebSocket[Try[Recv], Send](
-      req => user => UserWebSocket.props(_, user.id)
+      implicit req => user => UserWebSocket.props(_, user.id)
     )
 }
