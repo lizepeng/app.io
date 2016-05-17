@@ -71,7 +71,7 @@ trait UserActionComponents[T <: BasicAccessDef] {
       AuthChecker.Parser andThen
       RateLimitChecker.Parser andThen
       PermissionChecker.Parser(access, preCheck)).async {
-      case (rh, u) => CFSBodyParser(path, dirPermission).parser(rh)(u)
+      req => CFSBodyParser(path, dirPermission).parser(req)(req.user)
     }
 
     (MaybeUser(pamBuilder).Action() andThen

@@ -1,4 +1,3 @@
-import helpers.BaseException
 import models.User
 
 import scala.language.implicitConversions
@@ -8,16 +7,5 @@ import scala.language.implicitConversions
  */
 package object security {
 
-  /**
-   * May be caused by [[User.SessionIdNotMatch]] or [[User.NoCredentials]]
-   *
-   * @see [[AuthenticateBySession.apply]]
-   * @see [[AuthenticationCheck.onUnauthorized]]
-   */
-  case class Unauthorized()
-    extends BaseException("security.unauthorized")
-
-  //we need this implicit method for convenience
-  //if method has multiple implicit parameters
   implicit def authenticatedUser(implicit req: UserRequest[_]): User = req.user
 }

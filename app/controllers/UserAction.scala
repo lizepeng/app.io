@@ -84,7 +84,7 @@ trait UserActionComponents[T <: BasicAccessDef] {
     val parser = (MaybeUser(pamBuilder).Parser andThen
       AuthChecker.Parser andThen
       PermissionChecker.Parser(access, preCheck)).async {
-      case (rh, u) => CFSBodyParser(path, dirPermission).parser(rh)(u)
+      req => CFSBodyParser(path, dirPermission).parser(req)(req.user)
     }
 
     (MaybeUser(pamBuilder).Action() andThen

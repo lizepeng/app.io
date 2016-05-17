@@ -2,7 +2,6 @@ package security
 
 import akka.stream._
 import helpers._
-import models._
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
 
@@ -23,8 +22,8 @@ object AuthChecker {
     ): Future[Either[Result, UserRequest[A]]] = {
       Future.successful {
         req.maybeUser match {
-          case Failure(_: BaseException) => Left(eh.onUnauthorized(req.inner))
-          case Failure(_: Throwable)     => Left(eh.onThrowable(req.inner))
+          case Failure(_: BaseException) => Left(eh.onUnauthorized(req))
+          case Failure(_: Throwable)     => Left(eh.onThrowable(req))
           case Success(u)                => Right(UserRequest[A](u, req.inner))
         }
       }
@@ -36,16 +35,15 @@ object AuthChecker {
     eh: BodyParserExceptionHandler,
     ec: ExecutionContext,
     mat: Materializer
-  ) = new BodyParserRefiner[(RequestHeader, Try[User]), (RequestHeader, User)] {
+  ) = new BodyParserRefiner[MaybeUserRequestHeader, UserRequestHeader] {
     override protected def refine[B](
-      req: (RequestHeader, Try[User])
-    ): Future[Either[BodyParser[B], (RequestHeader, User)]] = {
-      val (rh, maybeUser) = req
+      req: MaybeUserRequestHeader
+    ): Future[Either[BodyParser[B], UserRequestHeader]] = {
       Future.successful {
-        maybeUser match {
-          case Failure(_: BaseException) => Left(parse.error(Future.successful(eh.onUnauthorized(rh))))
-          case Failure(_: Throwable)     => Left(parse.error(Future.successful(eh.onThrowable(rh))))
-          case Success(u)                => Right(rh -> u)
+        req.maybeUser match {
+          case Failure(_: BaseException) => Left(parse.error(Future.successful(eh.onUnauthorized(req))))
+          case Failure(_: Throwable)     => Left(parse.error(Future.successful(eh.onThrowable(req))))
+          case Success(u)                => Right(UserRequestHeader(u, req.inner))
         }
       }
     }

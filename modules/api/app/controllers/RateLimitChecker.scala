@@ -53,17 +53,16 @@ object RateLimitChecker {
     params: RateLimit.Params,
     _rateLimits: RateLimits,
     eh: BodyParserExceptionHandler
-  ) = new BodyParserFunction[(RequestHeader, User), (RequestHeader, User)]
+  ) = new BodyParserFunction[UserRequestHeader, UserRequestHeader]
     with BasicPlayComponents
     with DefaultPlayExecutor {
     override def invoke[B](
-      req: (RequestHeader, User),
-      block: ((RequestHeader, User)) => Future[BodyParser[B]]
+      req: UserRequestHeader,
+      block: UserRequestHeader => Future[BodyParser[B]]
     ): Future[BodyParser[B]] = {
-      val (rh, user) = req
-      RateLimit.Check(rh, user, shouldIncrement = true).fold[BodyParser[B]](
+      RateLimit.Check(req, req.user, shouldIncrement = true).fold[BodyParser[B]](
         r => Future.successful(parse.error[B](r)),
-        _ => block(rh, user)
+        _ => block(req)
       )
     }
     def basicPlayApi = _basicPlayApi

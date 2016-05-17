@@ -1,6 +1,5 @@
 package security
 
-import akka.stream._
 import helpers._
 import models._
 import play.api.mvc.BodyParsers.parse
@@ -8,6 +7,7 @@ import play.api.mvc._
 import security.ModulesAccessControl._
 
 import scala.concurrent._
+import scala.util.Failure
 
 /**
  * @author zepeng.li@gmail.com
@@ -17,11 +17,13 @@ object PermissionChecker {
   def apply(access: Access, preCheck: User => Future[Boolean])(
     implicit
     resource: CheckedModule,
-    basicPlayApi: BasicPlayApi,
+    _basicPlayApi: BasicPlayApi,
     _accessControls: AccessControls,
-    eh: UserActionExceptionHandler,
-    ec: ExecutionContext
-  ) = new ActionFilter[UserRequest] {
+    eh: UserActionExceptionHandler
+  ) = new ActionFilter[UserRequest]
+    with BasicPlayComponents
+    with DefaultPlayExecutor
+    with I18nLoggingComponents {
     override protected def filter[A](
       req: UserRequest[A]
     ): Future[Option[Result]] = {
@@ -31,38 +33,46 @@ object PermissionChecker {
       } yield passCheck && canAccess).map {
         case true  => None
         case false => Some(eh.onPermissionDenied(req))
+      }.andThen {
+        case Failure(e: Denied)        => //Logged in canAccessAsync
+        case Failure(e: BaseException) => Logger.error(s"Permission preCheck failed, because ${e.reason}", e)
+        case Failure(e: Throwable)     => Logger.error(s"Permission preCheck failed.", e)
       }.recover {
         case _: BaseException => Some(eh.onPermissionDenied(req))
         case _: Throwable     => Some(eh.onThrowable(req))
       }
     }
+    def basicPlayApi = _basicPlayApi
   }
 
   def Parser(access: Access, preCheck: User => Future[Boolean])(
     implicit
     resource: CheckedModule,
-    basicPlayApi: BasicPlayApi,
+    _basicPlayApi: BasicPlayApi,
     _accessControls: AccessControls,
-    eh: BodyParserExceptionHandler,
-    ec: ExecutionContext,
-    mat: Materializer
-  ) = new BodyParserFilter[(RequestHeader, User)] {
+    eh: BodyParserExceptionHandler
+  ) = new BodyParserFilter[UserRequestHeader]
+    with BasicPlayComponents
+    with DefaultPlayExecutor
+    with I18nLoggingComponents {
     override protected def filter[B](
-      req: (RequestHeader, User)
+      req: UserRequestHeader
     ): Future[Option[BodyParser[B]]] = {
-      val (rh, user) = req
       (for {
-        passCheck <- preCheck(user)
-        canAccess <- ModulesAccessControl(user, access, resource).canAccessAsync
+        passCheck <- preCheck(req.user)
+        canAccess <- ModulesAccessControl(req.user, access, resource).canAccessAsync
       } yield passCheck && canAccess).map {
         case true  => None
-        case false => Some(parse.error(Future.successful(eh.onPermissionDenied(rh))))
+        case false => Some(parse.error(Future.successful(eh.onPermissionDenied(req))))
+      }.andThen {
+        case Failure(e: Denied)        => //Logged in canAccessAsync
+        case Failure(e: BaseException) => Logger.error(s"Permission preCheck failed, because ${e.reason}", e)
+        case Failure(e: Throwable)     => Logger.error(s"Permission preCheck failed.", e)
       }.recover {
-        case _: BaseException => Some(parse.error(Future.successful(eh.onPermissionDenied(rh))))
-        case _: Throwable     => Some(parse.error(Future.successful(eh.onThrowable(rh))))
+        case _: BaseException => Some(parse.error(Future.successful(eh.onPermissionDenied(req))))
+        case _: Throwable     => Some(parse.error(Future.successful(eh.onThrowable(req))))
       }
     }
-    def defaultContext = ec
-    def materializer = mat
+    def basicPlayApi = _basicPlayApi
   }
 }

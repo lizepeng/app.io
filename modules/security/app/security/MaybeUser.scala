@@ -52,8 +52,8 @@ case class MaybeUser(pamBuilder: BasicPlayApi => PAM = AuthenticateBySession)(
    */
   case class InternalParserBuilder(
     implicit val basicPlayApi: BasicPlayApi
-  ) extends BodyParserBuilder[(RequestHeader, Try[User])]
-    with BodyParserTransformer[RequestHeader, (RequestHeader, Try[User])]
+  ) extends BodyParserBuilder[UserOptRequestHeader]
+    with BodyParserTransformer[RequestHeader, UserOptRequestHeader]
     with BasicPlayComponents
     with DefaultPlayExecutor {
 
@@ -62,7 +62,7 @@ case class MaybeUser(pamBuilder: BasicPlayApi => PAM = AuthenticateBySession)(
         user => Success(user)
       }.recover {
         case e: Throwable => Failure(e)
-      }.map(req -> _)
+      }.map(UserOptRequestHeader(_, req))
     }
   }
 
