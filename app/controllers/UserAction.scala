@@ -1,10 +1,13 @@
 package controllers
 
-import helpers.BasicPlayApi
+import akka.stream._
+import helpers._
 import models._
+import models.cfs.{CassandraFileSystem => CFS, _}
 import play.api.mvc._
 import security.ModulesAccessControl._
 import security._
+import services._
 
 import scala.concurrent._
 
@@ -54,6 +57,39 @@ trait UserActionComponents[T <: BasicAccessDef] {
       LayoutLoader() andThen
       AuthChecker() andThen
       PermissionChecker(access, _ => Future.successful(true))
+  }
+
+  def UserUploadingToCFS(
+    specifiers: (T => Access.Pos)*
+  )(
+    path: User => Path,
+    preCheck: User => Future[Boolean] = user => Future.successful(true),
+    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
+    dirPermission: CFS.Permission = CFS.Role.owner.rwx
+  )(
+    block: UserRequest[MultipartFormData[File]] => Future[Result]
+  )(
+    implicit
+    resource: CheckedModule,
+    basicPlayApi: BasicPlayApi,
+    userActionRequired: UserActionRequired,
+    executionContext: ExecutionContext,
+    materializer: Materializer,
+    _cfs: CFS,
+    bandwidth: BandwidthService,
+    bandwidthConfig: BandwidthConfig
+  ): Action[MultipartFormData[File]] = {
+    val access = Access.union(specifiers.map(_ (this).toAccess))
+
+    val parser = (MaybeUser(pamBuilder).Parser andThen
+      AuthChecker.Parser andThen
+      PermissionChecker.Parser(access, preCheck)).async {
+      case (rh, u) => CFSBodyParser(path, dirPermission).parser(rh)(u)
+    }
+
+    (MaybeUser(pamBuilder).Action() andThen
+      AuthChecker() andThen
+      PermissionChecker(access, preCheck)).async(parser)(block)
   }
 }
 

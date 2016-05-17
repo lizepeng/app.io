@@ -10,7 +10,6 @@ import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart._
 import security.FileSystemAccessControl._
-import security.ModulesAccessControl._
 import security._
 import services._
 
@@ -25,16 +24,10 @@ import scala.util.Failure
  */
 case class CFSBodyParser(
   path: User => Path,
-  access: Access,
-  preCheck: User => Future[Boolean] = user => Future.successful(true),
-  pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
   dirPermission: CFS.Permission = CFS.Role.owner.rwx
 )(
   implicit
-  val resource: CheckedModule,
   val basicPlayApi: BasicPlayApi,
-  val _users: Users,
-  val _accessControls: AccessControls,
   val _cfs: CFS,
   val bandwidth: BandwidthService,
   val bandwidthConfig: BandwidthConfig,
@@ -43,14 +36,7 @@ case class CFSBodyParser(
   with DefaultPlayExecutor
   with I18nLoggingComponents {
 
-  def parser: BodyParser[MultipartFormData[File]] =
-    (MaybeUser(pamBuilder).Parser andThen
-      AuthChecker.Parser andThen
-      PermissionChecker.Parser(access, preCheck)).async {
-      case (rh, u) => block(rh)(u)
-    }
-
-  private def block(req: RequestHeader)(
+  def parser(req: RequestHeader)(
     implicit user: User
   ): Future[BodyParser[MultipartFormData[File]]] = {
     (for {

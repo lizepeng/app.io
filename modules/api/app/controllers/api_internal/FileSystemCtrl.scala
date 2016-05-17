@@ -66,7 +66,7 @@ class FileSystemCtrl(
     }
 
   def create(path: Path) =
-    UserAction(_.P01).async(CFSBodyParser(_ => path, P01).parser) { implicit req =>
+    UserUploadingToCFS(_.P01)(_ => path) { implicit req =>
       (req.body.file("file").map(_.ref) match {
         case Some(file) => FlowJs().bindFromRequestBody.upload(file, path)()
         case None       => throw CFSBodyParser.MissingFile()

@@ -29,19 +29,19 @@ class MyCtrl(
 )(
   implicit
   val basicPlayApi: BasicPlayApi,
-  val _groups: Groups,
+  val userActionRequired: UserActionRequired,
   val _persons: Persons,
   val _cfs: CassandraFileSystem,
-  val _accessControls: AccessControls,
   val bandwidth: BandwidthService,
   val es: ElasticSearch
 ) extends UserCanonicalNamed
   with Controller
   with security.Session
-  with UsersCtrl.AccessDef
   with BasicPlayComponents
   with UsersComponents
   with MaybeUserActionComponents
+  with UserActionComponents[MyCtrl]
+  with UsersCtrl.AccessDef
   with ExceptionHandlers
   with DefaultPlayExecutor
   with CanonicalNameBasedMessages
@@ -171,9 +171,7 @@ class MyCtrl(
     }
 
   def uploadProfileImage =
-    (MaybeUserAction() andThen AuthChecker()).async(
-      CFSBodyParser(u => Path.home(u), P16).parser
-    ) {
+    UserUploadingToCFS(_.P16)(Path.home(_)) {
       CFSImage.upload(
         filePath = u => Path.home(u) + profileImageFileName,
         permission = Role.owner.rw + Role.other.r,
