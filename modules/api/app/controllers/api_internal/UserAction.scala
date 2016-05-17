@@ -1,6 +1,5 @@
 package controllers.api_internal
 
-import akka.stream._
 import controllers._
 import helpers._
 import models._
@@ -11,7 +10,7 @@ import security._
 import services._
 
 import scala.concurrent._
-import scala.language.postfixOps
+import scala.language.{higherKinds, postfixOps}
 
 /**
  * @author zepeng.li@gmail.com
@@ -31,28 +30,23 @@ trait UserActionRequiredComponents {
   implicit def _rateLimits = userActionRequired._rateLimits
 }
 
-trait UserActionComponents[T <: BasicAccessDef] {
+trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
   self: T with UserActionRequiredComponents with RateLimitConfigComponents with ExceptionHandlers =>
 
   def UserAction(specifiers: (T => Access.Pos)*)(
     implicit
     resource: CheckedModule,
     basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired,
-    executionContext: ExecutionContext
+    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
   ): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))
-    MaybeUser().Action() andThen
-      AuthChecker() andThen
-      RateLimitChecker() andThen
-      PermissionChecker(access, _ => Future.successful(true))
+    UserAction0[UserRequest](access, shouldIncrement = true, EmptyActionFunction[UserRequest]())
   }
 
   def UserUploadingToCFS(
     specifiers: (T => Access.Pos)*
   )(
     path: User => Path,
-    preCheck: User => Future[Boolean] = user => Future.successful(true),
     dirPermission: CFS.Permission = CFS.Role.owner.rwx
   )(
     block: UserRequest[MultipartFormData[File]] => Future[Result]
@@ -60,27 +54,68 @@ trait UserActionComponents[T <: BasicAccessDef] {
     implicit
     resource: CheckedModule,
     basicPlayApi: BasicPlayApi,
-    userActionRequired: UserActionRequired,
-    executionContext: ExecutionContext,
-    materializer: Materializer,
+    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
     _cfs: CFS,
     bandwidth: BandwidthService,
-    bandwidthConfig: BandwidthConfig,
-    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
+    bandwidthConfig: BandwidthConfig
   ): Action[MultipartFormData[File]] = {
-    val access = Access.union(specifiers.map(_ (this).toAccess))
+    UserAction00[UserRequestHeader, UserRequest, MultipartFormData[File]](
+      Access.union(specifiers.map(_ (this).toAccess)),
+      otherParserChecker = EmptyBodyParserFunction[UserRequestHeader](),
+      otherActionChecker = EmptyActionFunction[UserRequest](),
+      parser = req => CFSBodyParser(path, dirPermission).parser(req)(req.user),
+      method = block
+    )
+  }
 
-    val parser = (MaybeUser(pamBuilder).Parser andThen
+  def UserAction00[P, Q[_], A](
+    access: Access,
+    otherParserChecker: BodyParserFunction[UserRequestHeader, P],
+    otherActionChecker: ActionFunction[UserRequest, Q],
+    parser: P => Future[BodyParser[A]],
+    method: Q[A] => Future[Result]
+  )(
+    implicit
+    resource: CheckedModule,
+    basicPlayApi: BasicPlayApi,
+    pamBuilder: BasicPlayApi => PAM
+  ): Action[A] = {
+    UserAction0(access, shouldIncrement = false, otherActionChecker).async(
+      UserBodyParser0(access, otherParserChecker).async(parser)
+    )(method)
+  }
+
+  def UserBodyParser0[P](
+    access: Access,
+    otherParserChecker: BodyParserFunction[UserRequestHeader, P]
+  )(
+    implicit
+    resource: CheckedModule,
+    basicPlayApi: BasicPlayApi,
+    pamBuilder: BasicPlayApi => PAM
+  ): BodyParserBuilder[P] = {
+    MaybeUser(pamBuilder).Parser andThen
       AuthChecker.Parser andThen
       RateLimitChecker.Parser andThen
-      PermissionChecker.Parser(access, preCheck)).async {
-      req => CFSBodyParser(path, dirPermission).parser(req)(req.user)
-    }
+      PermissionChecker.Parser(access) andThen
+      otherParserChecker
+  }
 
-    (MaybeUser(pamBuilder).Action() andThen
+  def UserAction0[P[_]](
+    access: Access,
+    shouldIncrement: Boolean,
+    otherActionChecker: ActionFunction[UserRequest, P]
+  )(
+    implicit
+    resource: CheckedModule,
+    basicPlayApi: BasicPlayApi,
+    pamBuilder: BasicPlayApi => PAM
+  ): ActionBuilder[P] = {
+    MaybeUser(pamBuilder).Action() andThen
       AuthChecker() andThen
-      RateLimitChecker(shouldIncrement = false) andThen
-      PermissionChecker(access, preCheck)).async(parser)(block)
+      RateLimitChecker(shouldIncrement) andThen
+      PermissionChecker(access) andThen
+      otherActionChecker
   }
 }
 

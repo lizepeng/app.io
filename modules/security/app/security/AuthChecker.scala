@@ -1,6 +1,5 @@
 package security
 
-import akka.stream._
 import helpers._
 import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
@@ -32,10 +31,11 @@ object AuthChecker {
 
   def Parser(
     implicit
-    eh: BodyParserExceptionHandler,
-    ec: ExecutionContext,
-    mat: Materializer
-  ) = new BodyParserRefiner[MaybeUserRequestHeader, UserRequestHeader] {
+    _basicPlayApi: BasicPlayApi,
+    eh: BodyParserExceptionHandler
+  ) = new BodyParserRefiner[MaybeUserRequestHeader, UserRequestHeader]
+    with BasicPlayComponents
+    with DefaultPlayExecutor {
     override protected def refine[B](
       req: MaybeUserRequestHeader
     ): Future[Either[BodyParser[B], UserRequestHeader]] = {
@@ -47,7 +47,6 @@ object AuthChecker {
         }
       }
     }
-    def defaultContext = ec
-    def materializer = mat
+    def basicPlayApi = _basicPlayApi
   }
 }
