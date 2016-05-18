@@ -28,17 +28,20 @@ trait UserActionRequiredComponents {
   implicit def _users = userActionRequired._users
   implicit def _accessControls = userActionRequired._accessControls
   implicit def _rateLimits = userActionRequired._rateLimits
+
+  implicit def basicPlayApi: BasicPlayApi
 }
 
 trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
-  self: T with UserActionRequiredComponents with RateLimitConfigComponents with ExceptionHandlers =>
+  self: T
+    with CheckedModuleName
+    with UserActionRequiredComponents
+    with RateLimitConfigComponents
+    with ExceptionHandlers =>
 
-  def UserAction(specifiers: (T => Access.Pos)*)(
-    implicit
-    resource: CheckedModule,
-    basicPlayApi: BasicPlayApi,
-    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
-  ): ActionBuilder[UserRequest] = {
+  implicit def pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
+
+  def UserAction(specifiers: (T => Access.Pos)*): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))
     UserAction0[UserRequest](access, shouldIncrement = true, EmptyActionFunction[UserRequest]())
   }
@@ -47,22 +50,21 @@ trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
     specifiers: (T => Access.Pos)*
   )(
     path: User => Path,
+    otherParserChecker: BodyParserFunction[UserRequestHeader, UserRequestHeader] = EmptyBodyParserFunction[UserRequestHeader](),
+    otherActionChecker: ActionFunction[UserRequest, UserRequest] = EmptyActionFunction[UserRequest](),
     dirPermission: CFS.Permission = CFS.Role.owner.rwx
   )(
     block: UserRequest[MultipartFormData[File]] => Future[Result]
   )(
     implicit
-    resource: CheckedModule,
-    basicPlayApi: BasicPlayApi,
-    pamBuilder: BasicPlayApi => PAM = AuthenticateBySession,
     _cfs: CFS,
     bandwidth: BandwidthService,
     bandwidthConfig: BandwidthConfig
   ): Action[MultipartFormData[File]] = {
     UserAction00[UserRequestHeader, UserRequest, MultipartFormData[File]](
       Access.union(specifiers.map(_ (this).toAccess)),
-      otherParserChecker = EmptyBodyParserFunction[UserRequestHeader](),
-      otherActionChecker = EmptyActionFunction[UserRequest](),
+      otherParserChecker = otherParserChecker,
+      otherActionChecker = otherActionChecker,
       parser = req => CFSBodyParser(path, dirPermission).parser(req)(req.user),
       method = block
     )
@@ -74,11 +76,6 @@ trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
     otherActionChecker: ActionFunction[UserRequest, Q],
     parser: P => Future[BodyParser[A]],
     method: Q[A] => Future[Result]
-  )(
-    implicit
-    resource: CheckedModule,
-    basicPlayApi: BasicPlayApi,
-    pamBuilder: BasicPlayApi => PAM
   ): Action[A] = {
     UserAction0(access, shouldIncrement = false, otherActionChecker).async(
       UserBodyParser0(access, otherParserChecker).async(parser)
@@ -88,11 +85,6 @@ trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
   def UserBodyParser0[P](
     access: Access,
     otherParserChecker: BodyParserFunction[UserRequestHeader, P]
-  )(
-    implicit
-    resource: CheckedModule,
-    basicPlayApi: BasicPlayApi,
-    pamBuilder: BasicPlayApi => PAM
   ): BodyParserBuilder[P] = {
     MaybeUser(pamBuilder).Parser andThen
       AuthChecker.Parser andThen
@@ -105,11 +97,6 @@ trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
     access: Access,
     shouldIncrement: Boolean,
     otherActionChecker: ActionFunction[UserRequest, P]
-  )(
-    implicit
-    resource: CheckedModule,
-    basicPlayApi: BasicPlayApi,
-    pamBuilder: BasicPlayApi => PAM
   ): ActionBuilder[P] = {
     MaybeUser(pamBuilder).Action() andThen
       AuthChecker() andThen

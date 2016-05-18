@@ -54,8 +54,7 @@ object RateLimitChecker {
     _rateLimits: RateLimits,
     eh: BodyParserExceptionHandler
   ) = new BodyParserFunction[UserRequestHeader, UserRequestHeader]
-    with BasicPlayComponents
-    with DefaultPlayExecutor {
+    with BodyParserFunctionComponents {
     override def invoke[B](
       req: UserRequestHeader,
       block: UserRequestHeader => Future[BodyParser[B]]

@@ -2,7 +2,6 @@ package security
 
 import helpers._
 import models._
-import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
 import security.ModulesAccessControl._
 
@@ -43,17 +42,16 @@ object PermissionChecker {
     _accessControls: AccessControls,
     eh: BodyParserExceptionHandler
   ) = new BodyParserFilter[UserRequestHeader]
-    with BasicPlayComponents
-    with DefaultPlayExecutor {
+    with BodyParserFunctionComponents {
     override protected def filter[B](
       req: UserRequestHeader
     ): Future[Option[BodyParser[B]]] = {
       ModulesAccessControl(req.user, access, resource).canAccessAsync.map {
         case true  => None
-        case false => Some(parse.error(Future.successful(eh.onPermissionDenied(req))))
+        case false => onSome(eh.onPermissionDenied(req))
       }.recover {
-        case _: BaseException => Some(parse.error(Future.successful(eh.onPermissionDenied(req))))
-        case _: Throwable     => Some(parse.error(Future.successful(eh.onThrowable(req))))
+        case _: BaseException => onSome(eh.onPermissionDenied(req))
+        case _: Throwable     => onSome(eh.onThrowable(req))
       }
     }
     def basicPlayApi = _basicPlayApi

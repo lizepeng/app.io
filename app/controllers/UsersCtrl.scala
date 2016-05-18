@@ -3,7 +3,6 @@ package controllers
 import java.util.UUID
 
 import com.datastax.driver.core.utils.UUIDs
-import controllers.UsersCtrl.PasswordConfirmation
 import elasticsearch._
 import helpers._
 import models._
@@ -53,14 +52,14 @@ class UsersCtrl(
       "password" -> mapping(
         "original" -> Password.constrained,
         "confirmation" -> text
-      )(PasswordConfirmation.apply)(PasswordConfirmation.unapply)
+      )(Password.Confirmation.apply)(Password.Confirmation.unapply)
         .verifying("password.not.confirmed", _.isConfirmed)
     )(SignUpFD.apply)(SignUpFD.unapply)
   )
 
   case class SignUpFD(
     email: EmailAddress,
-    password: PasswordConfirmation
+    password: Password.Confirmation
   )
 
   def show(id: UUID) =
@@ -164,10 +163,4 @@ object UsersCtrl
   }
 
   object AccessDef extends AccessDef
-
-  case class PasswordConfirmation(original: Password, confirmation: String) {
-
-    def isConfirmed = original.self == confirmation
-  }
-
 }

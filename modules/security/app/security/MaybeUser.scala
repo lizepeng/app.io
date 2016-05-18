@@ -54,8 +54,7 @@ case class MaybeUser(pamBuilder: BasicPlayApi => PAM = AuthenticateBySession)(
     implicit val basicPlayApi: BasicPlayApi
   ) extends BodyParserBuilder[UserOptRequestHeader]
     with BodyParserTransformer[RequestHeader, UserOptRequestHeader]
-    with BasicPlayComponents
-    with DefaultPlayExecutor {
+    with BodyParserFunctionComponents {
 
     def transform(req: RequestHeader) = {
       authenticate(req).map {

@@ -1,6 +1,5 @@
 package controllers
 
-import controllers.UsersCtrl._
 import elasticsearch.ElasticSearch
 import helpers._
 import models._
@@ -35,6 +34,7 @@ class MyCtrl(
   val bandwidth: BandwidthService,
   val es: ElasticSearch
 ) extends UserCanonicalNamed
+  with CheckedModuleName
   with Controller
   with security.Session
   with BasicPlayComponents
@@ -56,14 +56,14 @@ class MyCtrl(
       "new_password" -> mapping(
         "original" -> Password.constrained,
         "confirmation" -> text
-      )(PasswordConfirmation.apply)(PasswordConfirmation.unapply)
+      )(Password.Confirmation.apply)(Password.Confirmation.unapply)
         .verifying("password.not.confirmed", _.isConfirmed)
     )(ChangePasswordFD.apply)(ChangePasswordFD.unapply)
   )
 
   case class ChangePasswordFD(
     old_password: Password,
-    new_password: PasswordConfirmation
+    new_password: Password.Confirmation
   )
 
   val ProfileFM = Form(

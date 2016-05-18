@@ -1,7 +1,9 @@
 package security
 
 import akka.stream._
+import helpers._
 import play.api.libs.streams._
+import play.api.mvc.BodyParsers.parse
 import play.api.mvc._
 
 import scala.concurrent._
@@ -53,14 +55,17 @@ trait BodyParserRefiner[-R, +P] extends BodyParserFunction[R, P] {
 
   final def invoke[B](req: R, block: P => Future[BodyParser[B]]) =
     refine(req).flatMap(_.fold(Future.successful, block))(defaultContext)
-}
 
+  protected def onLeft(ret: Result) = Left(parse.error(Future.successful(ret)))
+}
 
 trait BodyParserFilter[R] extends BodyParserRefiner[R, R] {
 
   protected def filter[B](req: R): Future[Option[BodyParser[B]]]
 
   final def refine[A](req: R) = filter(req).map(_.toLeft(req))(defaultContext)
+
+  protected def onSome(ret: Result) = Some(parse.error(Future.successful(ret)))
 }
 
 trait BodyParserTransformer[-R, +P] extends BodyParserRefiner[R, P] {
@@ -68,4 +73,9 @@ trait BodyParserTransformer[-R, +P] extends BodyParserRefiner[R, P] {
   protected def transform(req: R): Future[P]
 
   final def refine[B](req: R) = transform(req).map(Right(_))(defaultContext)
+}
+
+trait BodyParserFunctionComponents
+  extends BasicPlayComponents with DefaultPlayExecutor with I18nLoggingComponents {
+  self: BodyParserFunction[_, _] =>
 }

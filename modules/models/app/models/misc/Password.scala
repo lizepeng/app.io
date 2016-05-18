@@ -37,4 +37,9 @@ object Password {
   private val noUpper = """[^A-Z]*""".r
   private val noLower = """[^a-z]*""".r
   private def isEmpty(s: String) = s == null || s.trim.isEmpty
+
+  case class Confirmation(original: Password, confirmation: String) {
+
+    def isConfirmed = original.self == confirmation
+  }
 }

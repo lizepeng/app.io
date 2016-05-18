@@ -1,6 +1,5 @@
 package controllers
 
-import controllers.UsersCtrl._
 import helpers._
 import models._
 import models.misc._
@@ -44,11 +43,11 @@ class PasswordResetCtrl(
     single("email" -> EmailAddress.constrained)
   )
 
-  val resetFM = Form[PasswordConfirmation](
+  val resetFM = Form[Password.Confirmation](
     mapping(
       "password.original" -> Password.constrained,
       "password.confirmation" -> text
-    )(PasswordConfirmation.apply)(PasswordConfirmation.unapply)
+    )(Password.Confirmation.apply)(Password.Confirmation.unapply)
       .verifying("password.not.confirmed", _.isConfirmed)
   )
 
