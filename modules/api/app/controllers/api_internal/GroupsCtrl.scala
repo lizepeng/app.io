@@ -70,7 +70,7 @@ class GroupsCtrl(
 
   def create =
     UserAction(_.P01).async { implicit req =>
-      BindJson().as[GroupInfo] { success =>
+      BindJson().as[GroupInfo].async { success =>
         for {
           saved <- _groups.save(Group(group_name = success.group_name, description = success.description))
           _resp <- es.Index(saved) into _groups
@@ -99,18 +99,16 @@ class GroupsCtrl(
   def checkName =
     UserAction(_.P02).async { implicit req =>
       BodyIsJsObject { obj =>
-        Future.successful {
-          Reads.at[Name](__ \ "group_name").reads(obj).fold(
-            failure => UnprocessableEntity(JsonClientErrors(failure)),
-            success => Ok
-          )
-        }
+        Reads.at[Name](__ \ "group_name").reads(obj).fold(
+          failure => UnprocessableEntity(JsonClientErrors(failure)),
+          success => Ok
+        )
       }
     }
 
   def save(id: UUID) =
     UserAction(_.P05).async { implicit req =>
-      BindJson().as[GroupInfo] { grp =>
+      BindJson().as[GroupInfo].async { grp =>
         for {
           group <- _groups.find(id)
           saved <- _groups.save(group.copy(group_name = grp.group_name, description = grp.description))
@@ -135,7 +133,7 @@ class GroupsCtrl(
 
   def addUser(id: UUID) =
     UserAction(_.P17).async { implicit req =>
-      BodyIsJsObject { obj =>
+      BodyIsJsObject.async { obj =>
         def u1 = Reads.at[UUID](__ \ "id").reads(obj).map(_users.find)
         def u2 = Reads.at[EmailAddress](__ \ "email").reads(obj).map(_users.find)
         (u1 orElse u2).fold(
@@ -171,7 +169,7 @@ class GroupsCtrl(
 
   def setLayout(gid: UUID) =
     UserAction(_.P20).async { implicit req =>
-      BindJson().as[Layout] { success =>
+      BindJson().as[Layout].async { success =>
         _groups.setLayout(gid, success).map { saved =>
           Ok(Json.toJson(saved))
         }

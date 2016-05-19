@@ -90,7 +90,7 @@ class UsersCtrl(
 
   def create =
     UserAction(_.P01).async { implicit req =>
-      BindJson().as[UserInfo] {
+      BindJson().as[UserInfo].async {
         success => (for {
           saved <- User(
             id = success.uid.getOrElse(UUIDs.timeBased),

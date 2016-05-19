@@ -12,7 +12,7 @@ import scala.concurrent.Future
  */
 object BodyIsJsObject {
 
-  def apply(f: JsObject => Future[Result])(
+  def async(f: JsObject => Future[Result])(
     implicit req: Request[AnyContent], messages: Messages
   ): Future[Result] = {
     req.body.asJson match {
@@ -20,5 +20,11 @@ object BodyIsJsObject {
       case _                   =>
         Future.successful(Results.BadRequest(WrongTypeOfJson()))
     }
+  }
+
+  def apply(f: JsObject => Result)(
+    implicit req: Request[AnyContent], messages: Messages
+  ): Future[Result] = {
+    async(obj => Future.successful(f(obj)))
   }
 }

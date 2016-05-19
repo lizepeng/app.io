@@ -55,7 +55,7 @@ class AccessControlsCtrl(
     UserAction(_.P01).async { implicit req =>
       BindJson.and(
         Json.obj("permission" -> 0L)
-      ).as[AccessControlEntry] { success =>
+      ).as[AccessControlEntry].async { success =>
         _accessControls.find(success).map { found =>
           Ok(Json.toJson(found))
         }.recoverWith { case e: AccessControlEntry.NotFound =>

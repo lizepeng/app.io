@@ -17,10 +17,16 @@ object BindJson {
 
   class Builder1(part: Option[JsObject]) {
 
-    def as[T](f: T => Future[Result]): Builder2[T] = new Builder2(part, f)
+    def as[T]: Builder2[T] = new Builder2(part)
   }
 
-  class Builder2[T](part: Option[JsObject], f: T => Future[Result]) {
+  class Builder2[T](part: Option[JsObject]) {
+
+    def apply(f: T => Result) = new Builder3[T](part, t => Future.successful(f(t)))
+    def async(f: T => Future[Result]) = new Builder3[T](part, f)
+  }
+
+  class Builder3[T](part: Option[JsObject], f: T => Future[Result]) {
 
     def recover(handler: ErrorHandler)(
       implicit req: Request[AnyContent],
@@ -32,7 +38,7 @@ object BindJson {
       implicit req: Request[AnyContent],
       reads: Reads[T],
       messages: Messages
-    ) = BodyIsJsObject { obj =>
+    ) = BodyIsJsObject.async { obj =>
       part.map(_ ++ obj).getOrElse(obj).validate[T].fold(
         failure => Future.successful(
           (handler orElse ({
