@@ -27,6 +27,7 @@ class SearchCtrl(
   with Controller
   with LinkHeader
   with BasicPlayComponents
+  with AuthenticateBySessionComponents
   with UserActionRequiredComponents
   with UserActionComponents[SearchCtrl.AccessDef]
   with SearchCtrl.AccessDef

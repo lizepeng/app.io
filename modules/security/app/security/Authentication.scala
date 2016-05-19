@@ -69,3 +69,8 @@ trait PAMLogging extends I18nLogging {
     case Failure(e: Throwable)                => Logger.error(s"${message(e.getMessage)}", e)
   }
 }
+
+trait PAMBuilderComponents {
+
+  implicit def pamBuilder: BasicPlayApi => PAM
+}

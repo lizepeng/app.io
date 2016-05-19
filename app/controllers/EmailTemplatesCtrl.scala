@@ -25,6 +25,7 @@ class EmailTemplatesCtrl(
   with CheckedModuleName
   with Controller
   with BasicPlayComponents
+  with AuthenticateBySessionComponents
   with UserActionRequiredComponents
   with UserActionComponents[AccessControlsCtrl.AccessDef]
   with AccessControlsCtrl.AccessDef

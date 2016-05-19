@@ -49,3 +49,8 @@ case class AuthenticateBySession(
 
   private def toUUID(str: String) = Try(UUID.fromString(str)).toOption
 }
+
+trait AuthenticateBySessionComponents extends PAMBuilderComponents {
+
+  implicit def pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
+}

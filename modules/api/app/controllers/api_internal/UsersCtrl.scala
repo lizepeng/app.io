@@ -31,6 +31,7 @@ class UsersCtrl(
   with LinkHeader
   with BasicPlayComponents
   with InternalGroupsComponents
+  with AuthenticateBySessionComponents
   with UserActionRequiredComponents
   with UserActionComponents[UsersCtrl.AccessDef]
   with UsersCtrl.AccessDef

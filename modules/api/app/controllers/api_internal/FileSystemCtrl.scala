@@ -32,6 +32,7 @@ class FileSystemCtrl(
   with Controller
   with LinkHeader
   with BasicPlayComponents
+  with AuthenticateBySessionComponents
   with UserActionRequiredComponents
   with UserActionComponents[FileSystemCtrl.AccessDef]
   with FileSystemCtrl.AccessDef

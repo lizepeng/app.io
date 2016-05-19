@@ -31,6 +31,7 @@ class PasswordResetCtrl(
   with BasicPlayComponents
   with DefaultPlayExecutor
   with UsersComponents
+  with AuthenticateBySessionComponents
   with MaybeUserActionComponents
   with ExceptionHandlers
   with InternalGroupsComponents

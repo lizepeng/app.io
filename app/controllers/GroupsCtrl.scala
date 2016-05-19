@@ -23,6 +23,7 @@ class GroupsCtrl(
   with CheckedModuleName
   with Controller
   with BasicPlayComponents
+  with AuthenticateBySessionComponents
   with UserActionRequiredComponents
   with UserActionComponents[GroupsCtrl.AccessDef]
   with GroupsCtrl.AccessDef

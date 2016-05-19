@@ -5,6 +5,7 @@ import models._
 import models.cfs.Path
 import play.api.i18n._
 import play.api.mvc._
+import security._
 import views._
 
 class Application(
@@ -15,6 +16,7 @@ class Application(
   with CanonicalNamed
   with BasicPlayComponents
   with UsersComponents
+  with AuthenticateBySessionComponents
   with MaybeUserActionComponents
   with ExceptionHandlers
   with AppConfigComponents

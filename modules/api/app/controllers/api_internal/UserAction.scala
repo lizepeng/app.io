@@ -35,11 +35,10 @@ trait UserActionRequiredComponents {
 trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
   self: T
     with CheckedModuleName
+    with PAMBuilderComponents
     with UserActionRequiredComponents
     with RateLimitConfigComponents
     with ExceptionHandlers =>
-
-  implicit def pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
 
   def UserAction(specifiers: (T => Access.Pos)*): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))

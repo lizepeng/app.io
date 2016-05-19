@@ -30,7 +30,8 @@ trait UserActionRequiredComponents extends UsersComponents {
 }
 
 trait MaybeUserActionComponents {
-  self: ExceptionHandlers =>
+  self: PAMBuilderComponents
+    with ExceptionHandlers =>
 
   implicit def _users: Users
 
@@ -39,17 +40,16 @@ trait MaybeUserActionComponents {
     basicPlayApi: BasicPlayApi,
     _groups: Groups
   ): ActionBuilder[UserOptRequest] = {
-    MaybeUser().Action() andThen LayoutLoader()
+    MaybeUser(pamBuilder).Action() andThen LayoutLoader()
   }
 }
 
 trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
   self: T
     with CheckedModuleName
+    with PAMBuilderComponents
     with UserActionRequiredComponents
     with ExceptionHandlers =>
-
-  implicit def pamBuilder: BasicPlayApi => PAM = AuthenticateBySession
 
   def UserAction(specifiers: (T => Access.Pos)*): ActionBuilder[UserRequest] = {
     val access = Access.union(specifiers.map(_ (this).toAccess))

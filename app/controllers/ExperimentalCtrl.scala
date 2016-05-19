@@ -9,6 +9,7 @@ import play.api.i18n.I18nSupport
 import play.api.libs.iteratee.Iteratee
 import play.api.libs.json.Json
 import play.api.mvc.Controller
+import security._
 import services.actors._
 import views.html
 
@@ -24,6 +25,7 @@ class ExperimentalCtrl(
   with CanonicalNamed
   with PackageNameAsCanonicalName
   with BasicPlayComponents
+  with AuthenticateBySessionComponents
   with MaybeUserActionComponents
   with ExceptionHandlers
   with NotificationRegionComponents

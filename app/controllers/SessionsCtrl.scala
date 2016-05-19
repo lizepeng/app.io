@@ -32,6 +32,7 @@ class SessionsCtrl(
   with security.Session
   with BasicPlayComponents
   with UsersComponents
+  with AuthenticateBySessionComponents
   with MaybeUserActionComponents
   with ExceptionHandlers
   with DefaultPlayExecutor

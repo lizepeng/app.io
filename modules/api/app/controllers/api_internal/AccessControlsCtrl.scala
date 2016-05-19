@@ -27,6 +27,7 @@ class AccessControlsCtrl(
   with Controller
   with LinkHeader
   with BasicPlayComponents
+  with AuthenticateBySessionComponents
   with UserActionRequiredComponents
   with UserActionComponents[AccessControlsCtrl.AccessDef]
   with AccessControlsCtrl.AccessDef

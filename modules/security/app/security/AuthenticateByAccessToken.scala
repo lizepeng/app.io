@@ -47,3 +47,8 @@ case class AuthenticateByAccessToken(
 
   private def toUUID(str: String) = Try(UUID.fromString(str)).toOption
 }
+
+trait AuthenticateByAccessTokenComponents extends PAMBuilderComponents {
+
+  implicit def pamBuilder: BasicPlayApi => PAM = AuthenticateByAccessToken
+}

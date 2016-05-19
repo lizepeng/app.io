@@ -25,6 +25,7 @@ class FileSystemCtrl(
   with Controller
   with BasicPlayComponents
   with InternalGroupsComponents
+  with AuthenticateBySessionComponents
   with UserActionRequiredComponents
   with UserActionComponents[FileSystemCtrl.AccessDef]
   with FileSystemCtrl.AccessDef
