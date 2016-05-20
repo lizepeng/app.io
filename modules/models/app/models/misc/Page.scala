@@ -39,7 +39,6 @@ object Page {
   implicit def writableOf_Page[E](
     implicit codec: Codec, tjs: Writes[E]
   ): Writeable[Page[E]] = {
-    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(
       p => codec.encode(Json.prettyPrint(Json.toJson(p: Iterable[E]))),
       Some(ContentTypes.JSON)

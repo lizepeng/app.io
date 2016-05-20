@@ -7,7 +7,6 @@ import helpers._
 import models.cfs._
 import models.misc._
 import play.api.i18n._
-import play.api.libs.json.Json
 import play.api.mvc._
 import protocols.JsonProtocol.JsonMessage
 import protocols._
@@ -54,7 +53,7 @@ class FileSystemCtrl(
           page <- curr.list(pager)
         } yield page
       }).map { page =>
-        Ok(Json.toJson(page.elements)).withHeaders(
+        Ok(page).withHeaders(
           linkHeader(page, routes.FileSystemCtrl.index(path, _))
         )
       }.recover {

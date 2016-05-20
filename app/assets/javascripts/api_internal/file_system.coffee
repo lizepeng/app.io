@@ -8,10 +8,11 @@ angular.module 'api_internal.cfs', []
   ($http) ->
     resource = {}
 
-    resource.list = (path) ->
+    resource.list = (path, pager) ->
       $http(
         method : 'GET'
         url    : "/api_internal/cfs/list/#{path.encode()}"
+        params : pager
       )
 
     resource.delete = (path) ->

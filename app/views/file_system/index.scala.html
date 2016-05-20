@@ -112,7 +112,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
 
 
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          @ng._pager("GroupList.links")
+          @ng._pager("INodeListSvc.links")
         </div>
       </div>
 
@@ -165,8 +165,10 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
   <script>
     views.files.index.run(['INodeListSvc', function(INodeListSvc) {
       INodeListSvc.options = {
-        page     : @pager.pageNum,
-        pageSize : @pager.pageSize,
+        pager    : {
+          page     : @pager.pageNum,
+          per_page : @pager.pageSize,
+        },
         nextPage : '@Html(routes.FileSystemCtrl.index(path,pager.next).toString)',
         prevPage : '@Html(routes.FileSystemCtrl.index(path,pager.prev).toString)',
         userId   : '@req.user.id',

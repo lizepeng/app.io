@@ -22,7 +22,7 @@ views.files.index
     service.load = ->
       @path = new Path(@options.path)
 
-      CFS.list(@path).then (resp) =>
+      CFS.list(@path, @options.pager).then (resp) =>
         @inodes =
           _.chain resp.data
             .filter (inode) -> inode.name isnt '.'
