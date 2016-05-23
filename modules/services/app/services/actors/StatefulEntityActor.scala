@@ -29,9 +29,9 @@ trait StatefulEntityCommands {
   /** Common trait for all commands. */
   trait Command
   /** Get Information of an entity. */
-  case object Get extends Command
+  case class Get() extends Command
   /** Get Index of an entity. */
-  case object GetIndex extends Command
+  case class GetIndex() extends Command
   /** Message passed among cluster actors, which is not a command. */
   trait Notification
 }
