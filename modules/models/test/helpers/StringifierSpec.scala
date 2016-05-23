@@ -1,9 +1,12 @@
 package helpers
 
+import java.util.UUID
+
 import helpers.StringifierConverts._
 import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 import scala.util._
@@ -116,6 +119,16 @@ class StringifierSpec extends Specification {
       list1.elementToString mustEqual List("""{"x":1,"y":2}""", """{"x":1,"y":3}""")
       set1.elementToString mustEqual List("""{"x":1,"y":2}""", """{"x":1,"y":3}""")
       seq1.elementToString mustEqual List("""{"x":1,"y":4}""", """{"x":1,"y":3}""")
+    }
+  }
+
+  "Stringifier[A]" can {
+
+    "be converted to/from Stringifier[B]" >> {
+      case class AB(a: UUID, b: UUID)
+      val sf = Stringifier.of[(UUID, UUID)].inmap[AB]((AB.apply _).tupled, AB.unapply(_).get)
+      val ab = AB(UUID.randomUUID(), UUID.randomUUID())
+      sf << (ab >>: sf) mustEqual Success(ab)
     }
   }
 }

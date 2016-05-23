@@ -2,6 +2,8 @@ package helpers
 
 import java.util.UUID
 
+import play.api.libs.functional._
+
 import scala.util._
 
 /**
@@ -18,7 +20,7 @@ trait Stringifier[T] {
   def >>: : T => String
 }
 
-object Stringifier {
+trait DefaultStringifiers {
 
   implicit val uuidStringifier = new Stringifier[UUID] {
 
@@ -33,6 +35,32 @@ object Stringifier {
 
     def >>: = s => s
   }
+
+  implicit val uuidPairStringifier = new Stringifier[(UUID, UUID)] {
+    def << : (String) => Try[(UUID, UUID)] = { s =>
+      s.split(':') match {
+        case Array(a, b) => Try((UUID.fromString(a), UUID.fromString(b)))
+        case _           => Failure(new RuntimeException("Too many colons"))
+      }
+    }
+    def >>: : ((UUID, UUID)) => String = { p =>
+      s"${p._1.toString}:${p._2.toString}"
+    }
+  }
+}
+
+object Stringifier extends DefaultStringifiers {
+
+  def of[A](implicit sf: Stringifier[A]): Stringifier[A] = sf
+
+  implicit val invariantFunctorFormat: InvariantFunctor[Stringifier] =
+    new InvariantFunctor[Stringifier] {
+      def inmap[A, B](fa: Stringifier[A], f1: A => B, f2: B => A) =
+        new Stringifier[B] {
+          def << : String => Try[B] = s => (fa << s).map(f1)
+          def >>: : B => String = b => f2(b) >>: fa
+        }
+    }
 }
 
 object StringifierConverts {
