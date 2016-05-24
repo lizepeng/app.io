@@ -1,7 +1,5 @@
 package services.actors
 
-import java.util.UUID
-
 import akka.actor._
 import akka.pattern._
 import helpers._
@@ -68,16 +66,19 @@ abstract class StatefulEntityActor extends EntityActor
 
   /**
    * Convert {{{self.path.name}}} to UUID, then invoke another function with it.
-   *
-   * @param f the function being executed.
-   * @tparam T the return type of function f.
-   * @return the return value of function f.
    */
-  def PathAsUUID[T](f: UUID => Future[T]): Future[T] =
-    for {
-      _uuid <- Future(UUID.fromString(self.path.name))
-      found <- f(_uuid)
-    } yield found
+  def PathAs[ID](implicit sf: Stringifier[ID]) = new EntityFinder[ID](sf << self.path.name)
+
+  /**
+   * Invoke another function to find entity.
+   *
+   * @param id the id which will be used to find entity.
+   * @tparam ID the type of id.
+   */
+  class EntityFinder[ID](id: Try[ID]) {
+
+    def invoke[T](f: ID => Future[T]): Future[T] = Future.fromTry(id).flatMap(f)
+  }
 
   /**
    * A Step of initialization process which will never be recovered.
