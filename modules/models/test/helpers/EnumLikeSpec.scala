@@ -6,6 +6,7 @@ import org.specs2.mock._
 import org.specs2.mutable._
 import org.specs2.runner._
 import play.api.i18n.Messages
+import play.api.libs.json.Json
 
 @RunWith(classOf[JUnitRunner])
 class EnumLikeSpec extends Specification with Mockito {
@@ -41,6 +42,13 @@ class EnumLikeSpec extends Specification with Mockito {
       map1.keyToEnum[Enum3] mustEqual map3
       list1.elementToString mustEqual List("A", "B", "C")
       List("A", "B", "C").elementToEnum[Enum1] mustEqual list1
+    }
+  }
+
+  "EnumLike.Value" can {
+
+    "be read from/written to Json" >> {
+      Json.fromJson[Enum1](Json.toJson(Enum1.A)).get mustEqual Enum1.A
     }
   }
 

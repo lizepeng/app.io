@@ -54,6 +54,10 @@ object EnumLike {
 
     implicit def self: EnumLike.Definition[T]
 
+    implicit def jsonFormat = {
+      Format.of[String].inmap[T](self.withName, _.self)
+    }
+
     import EnumLikeConverts._
 
     implicit def jsonMapFormat[A](implicit fmt: Format[A]): Format[Map[T, A]] = {
@@ -61,7 +65,6 @@ object EnumLike {
     }
   }
 }
-
 
 object EnumLikeConverts {
 
