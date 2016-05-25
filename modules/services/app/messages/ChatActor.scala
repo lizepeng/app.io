@@ -19,7 +19,7 @@ class ChatActor extends UserMessageActor {
 
   override def preStart() = {
     super.preStart()
-    mediator ! List(ChatHistory)
+    manager ! List(ChatHistory)
   }
 
   def isAllResourcesReady = super.isResourcesReady &&

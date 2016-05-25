@@ -21,12 +21,12 @@ object EntityActor {
 
 abstract class EntityActor extends PersistentActor with ActorLogging {
 
-  import ResourcesMediator._
+  import ResourcesManager._
   import ShardRegion.Passivate
 
-//TODO  self.path.toStringWithoutAddress
+  //TODO  self.path.toStringWithoutAddress
   val persistenceId = s"${self.path.parent.name}-${self.path.name}"
-  val mediator      = context.actorSelection(ResourcesMediator.actorPath)
+  val manager       = context.actorSelection(ResourcesManager.actorPath)
 
   var basicPlayApi  : BasicPlayApi = _
   var receiveTimeout: Timeout      = 2 minutes
@@ -42,7 +42,7 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
   override def preStart() = {
     super.preStart()
     context become awaitingResources
-    mediator ! List(GetBasicPlayApi)
+    manager ! List(GetBasicPlayApi)
     self ! EntityActor.SetReceiveTimeout
   }
 

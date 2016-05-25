@@ -10,9 +10,9 @@ import services._
 /**
  * @author zepeng.li@gmail.com
  */
-object ResourcesMediator extends CanonicalNamedActor {
+object ResourcesManager extends CanonicalNamedActor {
 
-  override val basicName = "resources_mediator"
+  override val basicName = "resources_manager"
 
   def props(
     implicit
@@ -23,13 +23,13 @@ object ResourcesMediator extends CanonicalNamedActor {
     _chatHistories: ChatHistories,
     _mailInbox: MailInbox,
     _mailSent: MailSent
-  ): Props = Props(new ResourcesMediator)
+  ): Props = Props(new ResourcesManager)
 
   case object GetBasicPlayApi
   case object GetKeySpaceDef
 }
 
-class ResourcesMediator(
+class ResourcesManager(
   implicit
   basicPlayApi: BasicPlayApi,
   keySpaceDef: KeySpaceDef,
@@ -38,15 +38,14 @@ class ResourcesMediator(
   _chatHistories: ChatHistories,
   _mailInbox: MailInbox,
   _mailSent: MailSent
-)
-  extends Actor
+) extends Actor
   with ActorLogging {
 
   override def preStart() = {
     log.info("Started")
   }
 
-  import ResourcesMediator._
+  import ResourcesManager._
 
   def receive = {
 

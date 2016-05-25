@@ -12,7 +12,7 @@ import org.junit.runner._
 import org.specs2.runner._
 import play.api._
 import play.api.inject.DefaultApplicationLifecycle
-import services.actors.ResourcesMediator
+import services.actors.ResourcesManager
 
 /**
  * @author zepeng.li@gmail.com
@@ -77,7 +77,7 @@ class CassandraJournalSpec extends JournalSpec(
             case _ => sender ! List(basicPlayApi, keySpaceDef)
           }
         }
-      ), ResourcesMediator.basicName
+      ), ResourcesManager.basicName
     )
   }
 

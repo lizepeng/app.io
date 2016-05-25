@@ -22,7 +22,7 @@ class MailActor extends UserMessageActor {
 
   override def preStart() = {
     super.preStart()
-    mediator ! List(MailInbox, MailSent)
+    manager ! List(MailInbox, MailSent)
   }
 
   def isAllResourcesReady = super.isResourcesReady &&

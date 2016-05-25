@@ -13,7 +13,7 @@ import com.websudos.phantom.connectors.KeySpaceDef
 import helpers.BasicPlayApi
 import play.api.libs.iteratee._
 import plugins.akka.persistence.cassandra._
-import services.actors.ResourcesMediator
+import services.actors.ResourcesManager
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -23,18 +23,18 @@ import scala.util.Try
  */
 class CassandraSnapshotStore extends SnapshotStore with Stash {
 
-  import ResourcesMediator._
+  import ResourcesManager._
   import context.dispatcher
 
   val maxLoadAttempts = 3
   val batchSize       = 1000
-  val mediator        = context.actorSelection(ResourcesMediator.actorPath)
+  val manager         = context.actorSelection(ResourcesManager.actorPath)
   val serialization   = SerializationExtension(context.system)
 
   var snapshots: Snapshots = _
 
   context become awaitingResources
-  mediator ! List(GetBasicPlayApi, GetKeySpaceDef)
+  manager ! List(GetBasicPlayApi, GetKeySpaceDef)
 
   def awaitingResources: Actor.Receive = {
     case List(bpa: BasicPlayApi, cp: KeySpaceDef) =>

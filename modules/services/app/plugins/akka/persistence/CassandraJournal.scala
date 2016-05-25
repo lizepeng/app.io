@@ -12,7 +12,7 @@ import com.websudos.phantom.connectors.KeySpaceDef
 import helpers._
 import play.api.libs.iteratee._
 import plugins.akka.persistence.cassandra._
-import services.actors.ResourcesMediator
+import services.actors.ResourcesManager
 
 import scala.collection.immutable
 import scala.collection.immutable.Seq
@@ -24,18 +24,18 @@ import scala.util._
  */
 class CassandraJournal extends AsyncWriteJournal with Stash with ActorLogging {
 
-  import ResourcesMediator._
+  import ResourcesManager._
   import context.dispatcher
 
   val volumeSize    = 500000
   val batchSize     = 1000
-  val mediator      = context.actorSelection(ResourcesMediator.actorPath)
+  val manager       = context.actorSelection(ResourcesManager.actorPath)
   val serialization = SerializationExtension(context.system)
 
   var journal: Journal = _
 
   context become awaitingResources
-  mediator ! List(GetBasicPlayApi, GetKeySpaceDef)
+  manager ! List(GetBasicPlayApi, GetKeySpaceDef)
 
   def awaitingResources: Actor.Receive = {
     case List(bpa: BasicPlayApi, cp: KeySpaceDef) =>

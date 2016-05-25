@@ -16,7 +16,7 @@ import play.api.mvc._
 import play.filters.gzip.GzipFilterConfig
 import router.Routes
 import services._
-import services.actors.ResourcesMediator
+import services.actors.ResourcesManager
 import services.web.ip_api.IPService
 
 import scala.concurrent._
@@ -219,7 +219,7 @@ class Components(context: Context)
     }
 
   def startActors(): Unit = {
-    actorSystem.actorOf(ResourcesMediator.props, ResourcesMediator.basicName)
+    actorSystem.actorOf(ResourcesManager.props, ResourcesManager.basicName)
 
     //Start Actor ShardRegion
     MailActor.startRegion(configuration, actorSystem)
