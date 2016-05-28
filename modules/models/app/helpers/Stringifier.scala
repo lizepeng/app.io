@@ -38,13 +38,13 @@ trait DefaultStringifiers {
 
   implicit val uuidPairStringifier = new Stringifier[(UUID, UUID)] {
     def << : (String) => Try[(UUID, UUID)] = { s =>
-      s.split(':') match {
+      s.split("--") match {
         case Array(a, b) => Try((UUID.fromString(a), UUID.fromString(b)))
         case _           => Failure(new RuntimeException("Too many colons"))
       }
     }
     def >>: : ((UUID, UUID)) => String = { p =>
-      s"${p._1.toString}:${p._2.toString}"
+      s"${p._1.toString}--${p._2.toString}"
     }
   }
 }
