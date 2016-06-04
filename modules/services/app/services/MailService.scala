@@ -1,14 +1,13 @@
 package services
 
-import akka.actor.{ActorSystem, Cancellable}
+import akka.actor._
 import helpers._
 import models._
-import org.apache.commons.mail.{HtmlEmail, MultiPartEmail}
 import play.api._
 import play.api.i18n._
 import play.api.libs.mailer._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent._
 import scala.concurrent.duration._
 
 /**
@@ -31,7 +30,7 @@ class MailService(
     mailer: String,
     tmpl: EmailTemplate,
     args: Map[String, Any] = Map()
-  ): Cancellable = send(
+  ): Future[String] = send(
     mailer, tmpl, args ++ Seq(
       "to.user_name" -> user.user_name,
       "to.email" -> user.email
@@ -39,11 +38,18 @@ class MailService(
   )
 
   def send(
-    mailer: String,
-    tmpl: EmailTemplate,
-    args: Map[String, Any] = Map()
-  ): Cancellable = plugin.instance(mailer).schedule {
+    mailer: String, tmpl: EmailTemplate, args: Map[String, Any] = Map()
+  ): Future[String] = plugin.instance(mailer).send {
+    buildMail(tmpl, args)
+  }
 
+  def schedule(
+    mailer: String, tmpl: EmailTemplate, args: Map[String, Any] = Map()
+  ): Cancellable = plugin.instance(mailer).schedule {
+    buildMail(tmpl, args)
+  }
+
+  def buildMail(tmpl: EmailTemplate, args: Map[String, Any]): Email = {
     if (tmpl.invalid) {
       genAlertMail(s"Email Template ${tmpl.id} is empty!!!")
     } else {
@@ -105,25 +111,21 @@ class MAMailerPlugin(
 
   private def mailerInstance(conf: Configuration): MailerClient = {
 
-    val smtpHost = conf.getString("smtp.host").getOrElse {
-      throw new RuntimeException("key.smtp.host needs to be set in application.conf in order to use this plugin (or set smtp.mock to true)")
-    }
-    val smtpPort = conf.getInt("smtp.port").getOrElse(25)
-    val smtpSsl = conf.getBoolean("smtp.ssl").getOrElse(false)
-    val smtpTls = conf.getBoolean("smtp.tls").getOrElse(false)
-    val smtpUser = conf.getString("smtp.user")
-    val smtpPassword = conf.getString("smtp.password")
-    val debugMode = conf.getBoolean("smtp.debug").getOrElse(false)
-    val smtpTimeout = conf.getInt("smtp.timeout")
-    val smtpConnectionTimeout = conf.getInt("smtp.connection.timeout")
+    val smtpConfig = SMTPConfiguration(
+      host = conf.getString("smtp.host").getOrElse {
+        throw new RuntimeException("key.smtp.host needs to be set in application.conf in order to use this plugin (or set smtp.mock to true)")
+      },
+      port = conf.getInt("smtp.port").getOrElse(25),
+      ssl = conf.getBoolean("smtp.ssl").getOrElse(false),
+      tls = conf.getBoolean("smtp.tls").getOrElse(false),
+      user = conf.getString("smtp.user"),
+      password = conf.getString("smtp.password"),
+      debugMode = conf.getBoolean("smtp.debug").getOrElse(false),
+      timeout = conf.getInt("smtp.timeout"),
+      connectionTimeout = conf.getInt("smtp.connection.timeout")
+    )
 
-    new SMTPMailer(smtpHost, smtpPort, smtpSsl, smtpTls, smtpUser, smtpPassword, debugMode, smtpTimeout, smtpConnectionTimeout) {
-      override def send(email: MultiPartEmail): String = email.send()
-
-      override def createMultiPartEmail(): MultiPartEmail = new MultiPartEmail()
-
-      override def createHtmlEmail(): HtmlEmail = new HtmlEmail()
-    }
+    new SMTPMailer(smtpConfig)
   }
 
   private def getSubConfig(conf: Configuration, key: String): Configuration = {
@@ -145,4 +147,12 @@ case class MAMailer(api: MailerClient, smtp_user: String)(
       Logger.trace(s"Email:[$id] has been sent")
     }
   }
+
+  def send(email: Email)(
+    implicit messages: Messages
+  ) = Future(
+    api.send {
+      email.copy(from = s"${messages("app.name")} <$smtp_user>")
+    }
+  )
 }

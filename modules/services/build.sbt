@@ -7,7 +7,7 @@ scalacOptions += "-feature"
 libraryDependencies ++= Seq(
   ws,
   "com.sksamuel.elastic4s" %% "elastic4s-core"        % "2.2.0",
-  "com.typesafe.play"      %% "play-mailer"           % "3.0.1",
+  "com.typesafe.play"      %% "play-mailer"           % "5.0.0-M1",
   "com.typesafe.akka"      %% "akka-persistence"      % "2.4.2",
   "com.typesafe.akka"      %% "akka-cluster-tools"    % "2.4.2",
   "com.typesafe.akka"      %% "akka-cluster-sharding" % "2.4.2",
