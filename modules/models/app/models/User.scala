@@ -38,14 +38,14 @@ case class User(
   updated_at: DateTime = DateTime.now
 ) extends HasUUID with TimeBased {
 
-  object preferences {
+  object preferences extends JsonOptionalStringifier.FormatAsImplicit {
 
     def apply[T](key: String)(
-      implicit _users: Users, jos: JsonOptionalStringifier[T]
+      implicit _users: Users, fmt: Format[T]
     ) = _users.preferences.find(id, key)
 
     def +[T](entry: (String, T))(
-      implicit _users: Users, jos: JsonOptionalStringifier[T]
+      implicit _users: Users, fmt: Format[T]
     ) = _users.preferences.save(id, entry)
 
     def -(key: String)(

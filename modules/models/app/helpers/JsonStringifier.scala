@@ -41,7 +41,16 @@ object JsonOptionalStringifier {
 
   case class JsonReadsFailed(e: JsError) extends BaseException("json.reads.failed")
 
-  implicit def jsonStringifier[A](implicit fmt: Format[A]) = {
-    new JsonOptionalStringifier[A] {def jsonFormat = fmt}
+  trait SelfAsImplicit[A] {
+    self: JsonOptionalStringifier[A] =>
+
+    implicit def jsonStringifier: JsonOptionalStringifier[A] = self
+  }
+
+  trait FormatAsImplicit {
+
+    implicit def jsonStringifier[A](implicit fmt: Format[A]) = {
+      new JsonOptionalStringifier[A] {def jsonFormat = fmt}
+    }
   }
 }

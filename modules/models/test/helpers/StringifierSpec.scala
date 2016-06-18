@@ -74,11 +74,14 @@ class StringifierSpec extends Specification {
   }
 
   case class Position(x: Int, y: Int)
-  implicit val fmt = Json.format[Position]
+
+  object Position extends JsonOptionalStringifier.FormatAsImplicit {
+
+    implicit val fmt = Json.format[Position]
+  }
+
 
   "Map[Any, JsonStringifier]" can {
-
-    import JsonOptionalStringifier._
 
     "be converted from Map[Any, String]" in {
       val map1 = Map[Int, String](
@@ -98,8 +101,6 @@ class StringifierSpec extends Specification {
   }
 
   "Iterable[JsonStringifier]" can {
-
-    import JsonOptionalStringifier._
 
     "be converted from Iterable[String]" in {
       val list1 = List[String]("""{"x":1,"y":2}""", """{"x":1,"y":3}""", """{"x":a,"y":b}""")
