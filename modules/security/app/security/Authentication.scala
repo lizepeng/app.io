@@ -61,7 +61,7 @@ class ThenTryPAM(first: PAM, second: PAM)(
 trait PAMLogging extends I18nLogging {
 
   def loggingPAMExceptions(message: String => String): PartialFunction[Try[User], Unit] = {
-    case Failure(e: User.NoCredentials)       => Logger.debug(s"${message(e.reason)}")
+    case Failure(e: User.NoCredentials)       => Logger.trace(s"${message(e.reason)}")
     case Failure(e: User.SessionIdNotMatch)   => Logger.debug(s"${message(e.reason)}")
     case Failure(e: User.AccessTokenNotMatch) => Logger.debug(s"${message(e.reason)}")
     case Failure(e: User.NotFound)            => Logger.error(s"${message(e.reason)}")

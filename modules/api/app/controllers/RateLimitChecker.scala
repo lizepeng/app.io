@@ -138,6 +138,10 @@ object RateLimit {
     ): Future[A] = _rateLimits
       .get(resource.name, params.floor)(user)
       .map(RateLimit(_, params))
+      .andThen {
+        case Failure(e: BaseException) => Logger.debug(s"RateLimitChecker failed, because ${e.reason}", e)
+        case Failure(e: Throwable)     => Logger.error(s"RateLimitChecker failed.", e)
+      }
       .flatMap { limit =>
         if (limit.exceeded) {
           val result = Results.TooManyRequests {
@@ -152,12 +156,7 @@ object RateLimit {
           }
           ret <- success(limit)
         } yield ret
-      }.andThen {
-      case Failure(e: BaseException) => Logger.debug(s"RateLimitChecker failed, because ${e.reason}", e)
-      case Failure(e: Throwable)     => Logger.error(s"RateLimitChecker failed.", e)
-    }.recoverWith {
-      case _: Throwable => failure(Future.successful(eh.onThrowable(request)))
-    }
+      }
   }
 }
 
