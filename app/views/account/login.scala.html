@@ -1,4 +1,5 @@
-@(fm: Form[_])(implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
+@(fm: Form[_], next: Option[String])(
+implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
 @import common._
 @import helper._
@@ -13,7 +14,7 @@
     }
   }
 
-  @form(action = routes.SessionsCtrl.create(), 'class -> "signin-form") {
+  @form(action = routes.SessionsCtrl.create(next), 'class -> "signin-form") {
 
     <h3 class="signin-form-heading">@(MSG("sign.in.head") + " " + MSG("app.name"))</h3>
 

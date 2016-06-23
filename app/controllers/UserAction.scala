@@ -126,7 +126,7 @@ trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
 
 object DefaultUserActionExceptionHandler extends UserActionExceptionHandler {
 
-  def onUnauthorized = _ => Results.Redirect(routes.SessionsCtrl.nnew())
+  def onUnauthorized: (RequestHeader) => Result = req => Results.Redirect(routes.SessionsCtrl.nnew(Some(req.uri)))
   def onPermissionDenied = _ => Results.Redirect(routes.Application.index())
   def onFilePermissionDenied = _ => Results.Redirect(routes.Application.index())
   def onPathNotFound = _ => Results.Redirect(routes.Application.index())

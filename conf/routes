@@ -26,8 +26,8 @@ GET  /cfs/download/$path<.*>                controllers.FileSystemCtrl.download(
 GET  /cfs/show/$path<.*>                    controllers.FileSystemCtrl.show(path:Path)
 GET  /cfs/$path<.*>                         controllers.FileSystemCtrl.index(path:Path,p:Pager?=Pager.first)
 
-GET  /login                                 controllers.SessionsCtrl.nnew
-POST /login                                 controllers.SessionsCtrl.create
+GET  /login                                 controllers.SessionsCtrl.nnew(next:Option[String]?=None)
+POST /login                                 controllers.SessionsCtrl.create(next:Option[String]?=None)
 POST /logout                                controllers.SessionsCtrl.destroy
 
 GET  /join                                  controllers.UsersCtrl.nnew

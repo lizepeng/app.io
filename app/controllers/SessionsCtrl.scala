@@ -53,29 +53,37 @@ class SessionsCtrl(
     remember_me: Boolean
   )
 
-  def nnew = MaybeUserAction().apply { implicit req =>
-    req.maybeUser match {
-      case Success(u) => Redirect(routes.Application.index())
-      case _          => Ok(html.account.login(loginFM))
-    }
-  }
-
-  def create = MaybeUserAction().async { implicit req =>
-    val form = loginFM.bindFromRequest
-    form.fold(
-      failure => Future.successful(BadRequest(html.account.login(failure))),
-      success => _users.auth(success.email, success.password).recover {
-        case e: User.NotFound      => Logger.warn(e.reason, e); throw User.AuthFailed()
-        case e: User.WrongPassword => Logger.warn(e.reason, e); throw User.AuthFailed()
-      }.andThen {
-        case Success(user) => req.clientIP.map(_userLoginIPs.log(user.id, _))
-      }.flatMap { user =>
-        Redirect(routes.MyCtrl.dashboard()).createSession(user, success.remember_me)
-      }.recover {
-        case e: User.AuthFailed => BadRequest(html.account.login(form.withGlobalError(e.message)))
+  def nnew(next: Option[String]) =
+    MaybeUserAction().apply { implicit req =>
+      req.maybeUser match {
+        case Success(u) => next match {
+          case None      => Redirect(routes.Application.index())
+          case Some(uri) => Redirect(uri)
+        }
+        case _          => Ok(html.account.login(loginFM, next))
       }
-    )
-  }
+    }
+
+  def create(next: Option[String]) =
+    MaybeUserAction().async { implicit req =>
+      val form = loginFM.bindFromRequest
+      form.fold(
+        failure => Future.successful(BadRequest(html.account.login(failure, next))),
+        success => _users.auth(success.email, success.password).recover {
+          case e: User.NotFound      => Logger.warn(e.reason, e); throw User.AuthFailed()
+          case e: User.WrongPassword => Logger.warn(e.reason, e); throw User.AuthFailed()
+        }.andThen {
+          case Success(user) => req.clientIP.map(_userLoginIPs.log(user.id, _))
+        }.flatMap { user =>
+          (next match {
+            case None      => Redirect(routes.MyCtrl.dashboard())
+            case Some(uri) => Redirect(uri)
+          }).createSession(user, success.remember_me)
+        }.recover {
+          case e: User.AuthFailed => BadRequest(html.account.login(form.withGlobalError(e.message), next))
+        }
+      )
+    }
 
   def destroy = (MaybeUserAction() andThen AuthChecker())
     .async(BodyParsers.parse.empty) { req =>
