@@ -65,10 +65,6 @@ package object syntax {
 
   }
 
-  /**
-   *
-   * @param i
-   */
   implicit class Int2DateTime(val i: Int) extends AnyVal {
 
     def day: Period = days
@@ -98,4 +94,8 @@ package object syntax {
     def ci = ("(?i)" + sc.parts.mkString).r
   }
 
+  implicit class StringToSymbol(val string: String) extends AnyVal {
+
+    def s = Symbol(string)
+  }
 }

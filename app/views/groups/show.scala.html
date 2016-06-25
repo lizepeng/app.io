@@ -26,13 +26,13 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
         ng-controller="NewEntryCtrl" novalidate>
 
         @ng._form_control("email",
-          '_type        -> "text",
-          'maxLength    -> 64,
-          'email        -> None,
-          'placeholder  -> GroupsCtrl.msg("user.email.placeholder"),
-          'typeahead    -> "user as user.email for user in getUsers($viewValue)",
-          'autocomplete -> "off",
-          Symbol("ng-model") -> "user"
+          '_type            -> "text",
+          'maxLength        -> 64,
+          'email            -> None,
+          'placeholder      -> GroupsCtrl.msg("user.email.placeholder"),
+          'autocomplete     -> "off",
+          "uib-typeahead".s -> "user as user.email for user in getUsers($viewValue)",
+          "ng-model".s      -> "user"
         )
 
         <button type="submit" class="btn btn-success" ng-click="create(user)"

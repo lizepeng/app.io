@@ -8,6 +8,7 @@ views.welcome.index = angular.module 'welcome.index', [ 'ngSanitize', 'ngAnimate
   ($scope) ->
     $scope.interval = 5000
     $scope.slides   = [ {
+        id      : 0
         classes : 'item1'
         content : """
           <div class="carousel-caption">
@@ -23,6 +24,7 @@ views.welcome.index = angular.module 'welcome.index', [ 'ngSanitize', 'ngAnimate
             </p>
         </div> """
       }, {
+        id      : 1
         classes : 'item2'
         content : """
           <div class="carousel-caption">
@@ -38,6 +40,7 @@ views.welcome.index = angular.module 'welcome.index', [ 'ngSanitize', 'ngAnimate
             </p>
         </div> """
       }, {
+        id      : 2
         classes : 'item3'
         content : """
           <div class="carousel-caption">

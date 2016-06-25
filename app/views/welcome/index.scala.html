@@ -67,9 +67,12 @@
 
 @carousel = {
   <div ng-controller="CarouselCtrl">
-    <carousel interval="interval">
-      <slide ng-repeat="slide in slides" active="slide.active" class="{{slide.classes}}" ng-bind-html="slide.content">
-      </slide>
-    </carousel>
+    <div class="carousel">
+      <uib-carousel active="slide.active" interval="interval">
+        <uib-slide ng-repeat="slide in slides track by slide.id" class="{{slide.classes}}" index="slide.id">
+          <div ng-bind-html="slide.content"></div>
+        </uib-slide>
+      </uib-carousel>
+    </div>
   </div>
 }

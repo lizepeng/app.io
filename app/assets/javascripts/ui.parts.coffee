@@ -37,11 +37,11 @@ angular.module 'ui.parts', [
 # Helper to make confirm message box easier to use.
 #
 .factory 'ModalDialog', [
-  '$modal'
-  ($modal) ->
+  '$uibModal'
+  ($uibModal) ->
     service  = {}
     service.templateUrl = ''
-    service.open = -> $modal.open
+    service.open = -> $uibModal.open
       templateUrl : service.templateUrl
       controller  : 'ModalDialogCtrl'
     service
@@ -49,12 +49,12 @@ angular.module 'ui.parts', [
 
 .controller 'ModalDialogCtrl', [
   '$scope'
-  '$modalInstance'
-  ($scope, $modalInstance) ->
+  '$uibModalInstance'
+  ($scope, $uibModalInstance) ->
     $scope.ok =
-      -> $modalInstance.close()
+      -> $uibModalInstance.close()
     $scope.cancel =
-      -> $modalInstance.dismiss 'cancel'
+      -> $uibModalInstance.dismiss 'cancel'
     return
 ]
 

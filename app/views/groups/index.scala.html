@@ -104,13 +104,13 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
           'tabindex     -> 1,
           'placeholder  -> GroupsCtrl.msg("name.placeholder"),
           'autocomplete -> "off",
-          Symbol("ng-model") -> "group.group_name"
+          "ng-model".s  -> "group.group_name"
         )
 
         @ng._form_control("description",
           'tabindex    -> 2,
           'placeholder -> GroupsCtrl.msg("description.placeholder"),
-          Symbol("ng-model") -> "group.description"
+          "ng-model".s -> "group.description"
         )
 
         <button type="submit" class="btn btn-success"

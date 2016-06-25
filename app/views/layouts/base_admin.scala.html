@@ -18,11 +18,11 @@
 }
 
 @main_menu = {
-  <li class="dropdown" dropdown>
-    <a href="#" class="dropdown-toggle" dropdown-toggle>
+  <li class="dropdown" uib-dropdown>
+    <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
       @MSG("modules") <span class="caret"></span>
     </a>
-    <ul class="dropdown-menu" role="menu">
+    <ul class="dropdown-menu" uib-dropdown-menu role="menu">
       <li>
         <a href="@routes.FileSystemCtrl.index(Path.root)">
           <i class="fa fa-fw fa-hdd-o"></i>

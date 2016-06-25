@@ -19,23 +19,23 @@ implicit req: UserRequest[_], messages: Messages, env: Environment, secured: Reg
     <form name="form" ng-controller="NewEntryCtrl">
       <div class="col-xs-12 col-sm-5">
         @ng._form_control("principal",
-          '_label       -> AccessControlsCtrl.msg("principal"),
-          '_inline      -> false,
-          'tabindex     -> 1,
-          'placeholder  -> AccessControlsCtrl.msg("principal.placeholder"),
-          'typeahead    -> "item as item.label for item in getItems($viewValue)",
-          'autocomplete -> "off",
-          Symbol("ng-model") -> "newEntry.principal"
+          '_label           -> AccessControlsCtrl.msg("principal"),
+          '_inline          -> false,
+          'tabindex         -> 1,
+          'placeholder      -> AccessControlsCtrl.msg("principal.placeholder"),
+          "uib-typeahead".s -> "item as item.label for item in getItems($viewValue)",
+          'autocomplete     -> "off",
+          "ng-model".s      -> "newEntry.principal"
         )
       </div>
 
       <div class="col-xs-12 col-sm-5">
         @ng._select("resource",
-          '_label       -> AccessControlsCtrl.msg("resource"),
-          '_inline      -> false,
-          'tabindex     -> 2,
-          Symbol("ng-model")   -> "newEntry.resource",
-          Symbol("ng-options") -> "k as v for (k,v) in ACListSvc.resources"
+          '_label        -> AccessControlsCtrl.msg("resource"),
+          '_inline       -> false,
+          'tabindex      -> 2,
+          "ng-model".s   -> "newEntry.resource",
+          "ng-options".s -> "k as v for (k,v) in ACListSvc.resources"
         )
       </div>
 

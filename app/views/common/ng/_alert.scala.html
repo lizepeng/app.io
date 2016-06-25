@@ -4,9 +4,9 @@
 @()(implicit messages: Messages)
 
 <div class="ng-cloak" ng-controller="AlertCtrl">
-  <alert ng-repeat="alert in Alert.alerts"
+  <uib-alert ng-repeat="alert in Alert.alerts"
     type="{{alert.type}}"
     close="Alert.dismiss($index)">
     {{ alert.msg || '@MSG("ui.alert.msg.empty")' }}
-  </alert>
+  </uib-alert>
 </div>

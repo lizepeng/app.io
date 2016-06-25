@@ -27,13 +27,13 @@
       @form(action = routes.UsersCtrl.create(), 'class -> "form-signup") {
 
         @{_input_email(fm("email"),
-          Symbol("data-autocheck-url") -> routes.UsersCtrl.checkEmail,
+          "data-autocheck-url".s -> routes.UsersCtrl.checkEmail,
           'tabindex    -> 1
           )(_fc_form_group)
         }
 
         @{_input_password(fm("password.original"),
-          Symbol("data-autocheck-url") -> routes.UsersCtrl.checkPassword,
+          "data-autocheck-url".s -> routes.UsersCtrl.checkPassword,
           'tabindex    -> 2
           )(_fc_form_group)
         }

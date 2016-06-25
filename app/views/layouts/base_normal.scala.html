@@ -8,7 +8,7 @@
 
 @main_menu = {
   @req.maybeUser.toOption.map { u =>
-    <li class="dropdown" dropdown>
+    <li class="dropdown" uib-dropdown>
       <a href="@routes.FileSystemCtrl.index(Path.root)">
         <i class="fa fa-fw fa-hdd-o"></i>
         @MSG(FileSystemCtrl.message("name"))

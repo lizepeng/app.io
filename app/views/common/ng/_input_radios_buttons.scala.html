@@ -6,7 +6,7 @@ implicit messages: Messages)
   <div class="btn-group" data-toggle="buttons">
     @defining(args.toMap.get('_btnstyle)) { btnstyle =>
       @options.map { v =>
-        <label class="btn @btnstyle.map{cls => @cls}" ng-model="@(name).value" btn-radio="'@v._1'">
+        <label class="btn @btnstyle.map{cls => @cls}" ng-model="@(name).value" uib-btn-radio="'@v._1'">
           <input type="radio" id="@(id)_@v._1" name="@name" ng-model="@(name).value" value="@v._1"
             autocomplete="off"
             @toHtmlArgs(htmlArgs)>

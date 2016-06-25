@@ -91,7 +91,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
           'tabindex     -> 1,
           'placeholder  -> UsersCtrl.msg("email.placeholder"),
           'autocomplete -> "off",
-          Symbol("ng-model") -> "user.email"
+          "ng-model".s  -> "user.email"
         )
 
         @ng._form_control("name",
@@ -99,7 +99,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
           'minLength    -> 4,
           'tabindex    -> 2,
           'placeholder -> UsersCtrl.msg("name.placeholder"),
-          Symbol("ng-model") -> "user.user_name"
+          "ng-model".s -> "user.user_name"
         )
 
         <button type="submit" class="btn btn-success" ng-click="create(user)"
