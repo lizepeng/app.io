@@ -33,8 +33,9 @@ views.users.index.factory 'UserListSvc', [
   '$scope'
   'User'
   'UserListSvc'
+  'ClientError'
   'Alert'
-  ($scope, User, UserListSvc, Alert) ->
+  ($scope, User, UserListSvc, ClientError, Alert) ->
     $scope.UserListSvc = UserListSvc
     $scope.jsRoutes    = jsRoutes
     $scope.keyword     = ''
@@ -42,7 +43,7 @@ views.users.index.factory 'UserListSvc', [
     $scope.create = (data) ->
       new User(data).$save(
         (value) -> UserListSvc.values.unshift value
-        (res) -> Alert.danger res.data.message
+        (resp) -> Alert.danger ClientError.firstMsg(resp)
       )
 
     $scope.$watch 'keyword', (nv) -> UserListSvc.reload nv

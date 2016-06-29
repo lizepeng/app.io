@@ -1,4 +1,4 @@
-@(title: String, above_content: Html = Html(""), main_menu: Html = Html(""))(
+@(title: String, above_content: Html = Html(""), main_menu: Html = Html(""), white_navbar: Boolean = false)(
   content: Html)(
   css: Html *)(
   js: Html *)(
@@ -16,6 +16,8 @@
     <meta name="author" content="">
     @libs.webjars("css", "bootstrap")
     @libs.webjars("css", "font-awesome")
+    @libs.webjars("css", "metis-menu")
+    @libs.webjars("css", "awesome-bootstrap-checkbox")
     @libs.webjars("css", "animate.css")
     @libs.assets("css", "main")
     @css
@@ -24,32 +26,47 @@
       <script src="../assets/js/html5shiv.js"></script>
     <![endif]-->
   </head>
-  <body>
-    @{_navbar(main_menu)}
-    @above_content
-    <div class="container">
+  <body class="body-small">
+    @{_navigation(main_menu)}
+    <div class="page-wrapper container-fluid gray-bg">
+      @{_navbar(white_navbar)}
+      @above_content
       @content
       @req.maybeUser.toOption.map { _ =>
         @ng._notification()
       }
+      @{_footer()}
     </div>
-    @{_footer()}
+    @libs.webjars("js", "angular")
+    @libs.webjars("js", s"angular-i18n-${messages.lang.code}")
+    @libs.webjars("js", "angular-bootstrap-tpls")
+    @libs.webjars("js", "underscore")
+    @libs.webjars("js", "jquery")
+    @libs.webjars("js", "metis-menu")
+    @libs.webjars("js", "pace")
+    @configNgApp
+    @req.maybeUser.toOption.map { _ =>
+      @libs.assets("js", "ws.helper")
+      @libs.assets("js", "ui.notification")
+      @libs.assets("js", "ui.common")
+      @configUserWebSocket
+    }
+    @js
+    <script>
+      $(window).bind("load resize", function() {
+        if ($(document).width() < 768) {
+          $('body').addClass('body-small')
+        } else {
+          $('body').removeClass('body-small')
+        }
+      });
+      Pace.options.ajax.trackWebSockets = false;
+      $("#side-menu").metisMenu();
+    </script>
   </body>
 
   <link rel="shortcut icon" type="image/png"
     href="@routes.Assets.at("images/favicon.png")">
-  @libs.webjars("js", "angular")
-  @libs.webjars("js", s"angular-i18n-${messages.lang.code}")
-  @libs.webjars("js", "angular-bootstrap-tpls")
-  @libs.webjars("js", "underscore")
-  @configNgApp
-  @req.maybeUser.toOption.map { _ =>
-    @libs.assets("js", "ws.helper")
-    @libs.assets("js", "ui.notification")
-    @libs.assets("js", "ui.common")
-    @configUserWebSocket
-  }
-  @js
 </html>
 
 @configNgApp = {

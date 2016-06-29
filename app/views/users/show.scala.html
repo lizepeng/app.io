@@ -6,19 +6,27 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
 
 @layouts.base(UsersCtrl.msg("title")) {
 
-  <div class="page-header">
-    <h1>
+  <div class="row page-heading white-bg">
+    <h2>
       <i class="fa fa-user fa-lg fa-fw"></i>
       @if(user.user_name.self.nonEmpty) {
         @user.user_name
       } else {
         @user.email
       }
-    </h1>
+    </h2>
   </div>
 
-  <div class="row" ng-controller="InfoCtrl" data-id="@user.id">
-    @{_info(user, groups)}
+  <div class="row wrapper-content" ng-controller="InfoCtrl" data-id="@user.id">
+    <div class="col-xs-12">
+      <div class="ibox">
+        <div class="ibox-content">
+          <div class="row">
+            @{_info(user, groups)}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 }()(
   libs.webjars("js", "angular-resource"),

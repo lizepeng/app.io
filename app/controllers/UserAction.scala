@@ -3,6 +3,7 @@ package controllers
 import helpers._
 import models._
 import models.cfs.{CassandraFileSystem => CFS, _}
+import play.api.http._
 import play.api.mvc._
 import security.ModulesAccessControl._
 import security._
@@ -126,7 +127,13 @@ trait UserActionComponents[T <: BasicAccessDef] extends ActionComponents {
 
 object DefaultUserActionExceptionHandler extends UserActionExceptionHandler {
 
-  def onUnauthorized: (RequestHeader) => Result = req => Results.Redirect(routes.SessionsCtrl.nnew(Some(req.uri)))
+  def onUnauthorized: (RequestHeader) => Result = { req =>
+    val uri = req.method match {
+      case HttpVerbs.GET => Some(req.uri)
+      case _             => None
+    }
+    Results.Redirect(routes.SessionsCtrl.nnew(uri))
+  }
   def onPermissionDenied = _ => Results.Redirect(routes.Application.index())
   def onFilePermissionDenied = _ => Results.Redirect(routes.Application.index())
   def onPathNotFound = _ => Results.Redirect(routes.Application.index())

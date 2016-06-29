@@ -5,30 +5,41 @@
 
 @layouts.base(f.name){
 
-  <div class="row">
+  <div class="row page-heading white-bg">
+    <h2>
+      <i class="fa fa-database fa-lg fa-fw"></i>
+      @FileSystemCtrl.msg("head")
+    </h2>
     @{_breadcrumb(f.path)}
   </div>
 
-  <div class="row">
+  <div class="row wrapper-content">
     <div class="col-xs-12">
-      <p>@f.size_pp</p>
+      <div class="ibox">
+        <div class="ibox-content">
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              @if(f.video.?) {
+                <video src="@routes.FileSystemCtrl.stream(f.path)"
+                type="@f.mimeType"
+                class="col-xs-12"
+                autobuffer autoloop loop controls>
+                </video>
+              }
+              @if(f.audio.?) {
+                <audio src="@routes.FileSystemCtrl.stream(f.path)"
+                class="col-xs-12"
+                autobuffer autoloop loop controls></audio>
+              }
+              @if(f.image.?) {
+                <img src="@routes.FileSystemCtrl.stream(f.path)"
+                class="col-xs-12 col-sm-8 col-sm-offset-2" alt="">
+              }
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    @if(f.video.?) {
-      <video src="@routes.FileSystemCtrl.stream(f.path)"
-      type="@f.mimeType"
-      class="col-xs-12"
-      autobuffer autoloop loop controls>
-      </video>
-    }
-    @if(f.audio.?) {
-      <audio src="@routes.FileSystemCtrl.stream(f.path)"
-      class="col-xs-12"
-      autobuffer autoloop loop controls></audio>
-    }
-    @if(f.image.?) {
-      <img src="@routes.FileSystemCtrl.stream(f.path)"
-      class="col-xs-12 col-sm-8 col-sm-offset-2" alt="">
-    }
   </div>
 
 }()()

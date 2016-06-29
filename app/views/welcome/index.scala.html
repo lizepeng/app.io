@@ -1,78 +1,462 @@
-@()(implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
+@()(implicit req: RequestHeader, messages: Messages, env: Environment)
 
-@layouts.base("Welcome to " + MSG("app.name"), above_content = carousel){
+@base_tmpl(
+  "Welcome to " + MSG("app.name"),
+  navbar        = navbar,
+  above_content = carousel,
+  body_args     = Map(
+    "data-spy".s    -> "scroll",
+    "data-target".s -> "#navbar-collapsible-content"
+  )) {
 
-  <div class="page-header text-center">
-    <h1>Why you'll love @MSG("app.name")<br>
-      <small>Powerful features to make software development more collaborative</small>
-    </h1>
-  </div>
-
-  <div class="row">
-    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
-      <span class="text-info">
-        <i class="fa fa-comments-o fa-4x icon-circle"></i>
-      </span>
-      <h3>Great collaboration starts with communication.</h3>
-      <p>Review changes, comment on lines of code, report issues, and plan the future of your project with discussion tools.</p>
-    </div>
-
-    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
-      <span class="text-info">
-        <i class="fa fa-group fa-4x icon-circle"></i>
-      </span>
-      <h3>Friction-less development across teams.</h3>
-      <p>Work with project collaborators or teams of people in organization accounts to communicate with ease.</p>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
-      <span class="text-info">
-        <i class="fa fa-cloud-upload fa-4x icon-circle"></i>
-      </span>
-      <h3>World’s largest open source community.</h3>
-      <p>Share your projects with the world, get feedback, and contribute to millions of repositories hosted on GitHub.</p>
-    </div>
-
-    <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-0 col-md-6 col-lg-6 text-center">
-      <span class="text-info">
-        <i class="fa fa-bolt fa-4x icon-circle"></i>
-      </span>
-      <h3>Do more with powerful integrations.</h3>
-      <p>Discover applications and tools that integrate with GitHub to help you and your team build software better, together.</p>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-
-    </div>
-  </div>
+  @features
+  @team
+  @testimonials
+  @pricing
+  @contact
 }(
   libs.assets("css", "welcome/index")
-)(
-  libs.webjars("js", "angular-sanitize"),
-  libs.webjars("js", "angular-animate"),
-  libs.assets("js", "welcome/index"),
-  jsRoutes
-)
+)()
 
-@jsRoutes = {
-  @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.UsersCtrl.nnew,
-    routes.javascript.Application.wiki
-  )
+@navbar = {
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <div class="container-fluid">
+
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapsible-content" aria-expanded="false">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">
+        <i class="fa fa-github fa-lg"></i> @MSG("app.name")
+      </a>
+    </div>
+
+    <div class="navbar-collapse collapse" id="navbar-collapsible-content">
+      <ul class="nav navbar-nav navbar-right" >
+        <li class="active"><a href="#features">Features <span class="sr-only">(current)</span></a></li>
+        <li><a href="#team">Team</a></li>
+        <li><a href="#testimonials">Testimonials</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="@routes.SessionsCtrl.nnew()">@MSG("sign.in")</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
 }
 
 @carousel = {
-  <div ng-controller="CarouselCtrl">
-    <div class="carousel">
-      <uib-carousel active="slide.active" interval="interval">
-        <uib-slide ng-repeat="slide in slides track by slide.id" class="{{slide.classes}}" index="slide.id">
-          <div ng-bind-html="slide.content"></div>
-        </uib-slide>
-      </uib-carousel>
+<div id="carousel-example-generic" class="carousel" data-ride="carousel">
+  <!-- Indicators -->
+  <ol class="carousel-indicators">
+    <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+    <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+    <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+  </ol>
+
+  <!-- Wrapper for slides -->
+  <div class="carousel-inner" role="listbox">
+    <div class="item active">
+      <img data-src="holder.js/1920x500/auto/#777:#555/text:First slide" alt="First slide [900x500]">
+      <div class="carousel-caption">
+        <h3>First slide label</h3>
+        <p>Nulla vitae elit libero, a pharetra augue mollis interdum.</p>
+      </div>
+    </div>
+    <div class="item">
+      <img data-src="holder.js/1920x500/auto/#666:#444/text:Second slide" alt="Second slide [900x500]">
+      <div class="carousel-caption">
+        <h3>Second slide label</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+    </div>
+    <div class="item">
+      <img data-src="holder.js/1920x500/auto/#555:#333/text:Third slide" alt="Third slide [900x500]">
+      <div class="carousel-caption">
+        <h3>Third slide label</h3>
+        <p>Praesent commodo cursus magna, vel scelerisque nisl consectetur.</p>
+      </div>
     </div>
   </div>
+
+  <!-- Controls -->
+  <a class="left carousel-control hidden-xs" href="#carousel-example-generic" role="button" data-slide="prev">
+    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="right carousel-control hidden-xs" href="#carousel-example-generic" role="button" data-slide="next">
+    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
+</div>
+}
+
+@features = {
+<section id="features" class="row">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="page-header text-center">
+          <h1>Why you'll love @MSG("app.name")<br>
+            <small>Powerful features to make software development more collaborative</small>
+          </h1>
+        </div>
+
+        <div class="row">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 text-center">
+              <span class="text-info">
+                <i class="fa fa-comments-o fa-4x"></i>
+              </span>
+              <h3>Great collaboration starts with communication.</h3>
+              <p>Review changes, comment on lines of code, report issues, and plan the future of your project with discussion tools.</p>
+            </div>
+
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 text-center">
+              <span class="text-info">
+                <i class="fa fa-group fa-4x"></i>
+              </span>
+              <h3>Friction-less development across teams.</h3>
+              <p>Work with project collaborators or teams of people in organization accounts to communicate with ease.</p>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 text-center">
+              <span class="text-info">
+                <i class="fa fa-cloud-upload fa-4x"></i>
+              </span>
+              <h3>World’s largest open source community.</h3>
+              <p>Share your projects with the world, get feedback, and contribute to millions of repositories hosted on GitHub.</p>
+            </div>
+
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 text-center">
+              <span class="text-info">
+                <i class="fa fa-bolt fa-4x"></i>
+              </span>
+              <h3>Do more with powerful integrations.</h3>
+              <p>Discover applications and tools that integrate with GitHub to help you and your team build software better, together.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+}
+
+@team = {
+<section id="team" class="row">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="page-header text-center">
+          <h1>Our Team<br>
+            <small>Ornare scelerisque fringilla montes fermentum nonummy. Elementum. Aliquam integer euismod inceptos arcu tincidunt. Ut. Potenti Aliquet.</small>
+          </h1>
+        </div>
+      </div>
+
+      <div class="col-xs-12 col-sm-4">
+        <div class="thumbnail team-member">
+          <img data-src="holder.js/100x100/auto/#CCC:#444/text:?" alt="" class="img-circle img-thumbnail">
+          <div class="caption text-center">
+            <h3>Ante taciti</h3>
+            <p>Libero ligula, faucibus libero dolor neque mus sit ac dapibus sit natoque ligula sed lacinia leo amet libero primis feugiat dui ipsum dui hendrerit.</p>
+            <ul class="list-inline social-icon">
+              <li>
+                <a href="#" class="bg-primary">
+                  <i class="fa fa-facebook"></i>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="bg-primary">
+                  <i class="fa fa-linkedin"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-4">
+        <div class="thumbnail team-member">
+          <img data-src="holder.js/128x128/auto/#CCC:#444/text:?" alt="" class="img-circle img-thumbnail">
+          <div class="caption text-center">
+            <h3>Sem pede</h3>
+            <p>Sem pede nunc non at ultricies dui bibendum aptent iaculis posuere magna tempor inceptos dolor suscipit tincidunt augue nibh, platea libero. Faucibus primis massa metus sodales. Hendrerit duis, id luctus.</p>
+            <ul class="list-inline social-icon">
+              <li>
+                <a href="#" class="bg-primary">
+                  <i class="fa fa-facebook"></i>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="bg-primary">
+                  <i class="fa fa-linkedin"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-4">
+        <div class="thumbnail team-member">
+          <img data-src="holder.js/100x100/auto/#CCC:#444/text:?" alt="" class="img-circle img-thumbnail">
+          <div class="caption text-center">
+            <h3>Mus nonummy</h3>
+            <p>Scelerisque vehicula montes vel nunc sodales potenti eu, viverra velit risus justo blandit dis condimentum conubia, diam quisque, mauris purus donec arcu.</p>
+            <ul class="list-inline social-icon">
+              <li>
+                <a href="#" class="bg-primary">
+                  <i class="fa fa-facebook"></i>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="bg-primary">
+                  <i class="fa fa-linkedin"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+}
+
+@testimonials = {
+<section id="testimonials" class="row">
+
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="page-header text-center">
+          <span class="text-info">
+            <i class="fa fa-comment fa-4x"></i>
+          </span>
+          <h2>What our users say</h2>
+          <p>
+            Tellus risus ornare luctus venenatis integer, magna pulvinar lacinia congue congue lectus, placerat morbi dictumst curabitur consequat parturient vivamus integer, libero venenatis leo eros taciti ad litora. Vitae orci lobortis eros. Dignissim hac. Vel. Turpis venenatis lacinia ut nunc Sem.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="partners" class="row">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="page-header text-center">
+          <h2>What our partners say</h2>
+          <p>
+            Faucibus conubia hymenaeos morbi urna sociis hymenaeos natoque phasellus at. Netus ante dictum facilisi.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-xs-12">
+        <div class="row">
+
+          <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+            <div class="bubble">
+              <i class="fa fa-quote-left fa-lg"></i>
+              Elementum odio aliquet euismod o porttitor. Ac porta euismod interdum vulputate porta platea elementum.
+            </div>
+
+            <div class="media">
+              <div class="media-left">
+                <a href="#">
+                  <img class="media-object img-circle" data-src="holder.js/40x40/#CCC:#444/text:?" alt="40x40">
+                </a>
+              </div>
+              <div class="media-body">
+                <h5 class="media-heading">Magnis nostra</h5>
+                Company X Director.
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+            <div class="bubble">
+              <i class="fa fa-quote-left fa-lg"></i>
+              Elementum odio aliquet euismod arcu o porttitor. Ac porta euismod interdum vulputate porta platea.
+            </div>
+
+            <div class="media">
+              <div class="media-left">
+                <a href="#">
+                  <img class="media-object img-circle" data-src="holder.js/40x40/#CCC:#444/text:?" alt="40x40">
+                </a>
+              </div>
+              <div class="media-body">
+                <h5 class="media-heading">Magnis nostra</h5>
+                Company X Director.
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+            <div class="bubble">
+              <i class="fa fa-quote-left fa-lg"></i>
+              Elementum odio aliquet euismod arcu o. Ac porta euismod interdum vulputate porta platea elementum.
+            </div>
+
+            <div class="media">
+              <div class="media-left">
+                <a href="#">
+                  <img class="media-object img-circle" data-src="holder.js/40x40/#CCC:#444/text:?" alt="40x40">
+                </a>
+              </div>
+              <div class="media-body">
+                <h5 class="media-heading">Magnis nostra</h5>
+                Company X Director.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+}
+
+@pricing = {
+<section id="pricing" class="row">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="page-header text-center">
+          <h1>App Pricing<br>
+            <small>Quam a lacus morbi at nibh. Diam inceptos commodo primis rutrum facilisi.</small>
+          </h1>
+        </div>
+      </div>
+
+      <div class="col-xs-12">
+        <div class="row">
+          <div class="col-xs-12 col-sm-4">
+            <div class="panel panel-info text-center">
+              <div class="panel-heading">
+                <h3 class="panel-title">Basic</h3>
+              </div>
+              <div class="panel-body">
+                Nunc. Odio. Magnis nostra sem lectus maecenas sociosqu bibendum.
+              </div>
+              <ul class="list-group">
+                <li class="list-group-item">$16/month</li>
+                <li class="list-group-item">Features</li>
+                <li class="list-group-item">Our Team</li>
+              </ul>
+              <div class="panel-footer">
+                <button type="button" class="btn btn-success btn-block">Signup</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-sm-4">
+            <div class="panel panel-primary text-center" style="font-size:16px;">
+              <div class="panel-heading">
+                <h3 class="panel-title">Standard</h3>
+              </div>
+              <div class="panel-body">
+                Nunc. Odio. Magnis nostra sem lectus maecenas sociosqu bibendum.
+              </div>
+              <ul class="list-group">
+                <li class="list-group-item">$24/month</li>
+                <li class="list-group-item">Features</li>
+                <li class="list-group-item">Our Team</li>
+                <li class="list-group-item">Testimonials</li>
+                <li class="list-group-item">Pricing</li>
+              </ul>
+              <div class="panel-footer">
+                <button type="button" class="btn btn-success btn-block">Signup</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-sm-4">
+            <div class="panel panel-info text-center">
+              <div class="panel-heading">
+                <h3 class="panel-title">Premium</h3>
+              </div>
+              <div class="panel-body">
+                Nunc. Odio. Magnis nostra sem lectus maecenas sociosqu bibendum.
+              </div>
+              <ul class="list-group">
+                <li class="list-group-item">$50/month</li>
+                <li class="list-group-item">Features</li>
+                <li class="list-group-item">Our Team</li>
+                <li class="list-group-item">Testimonials</li>
+                <li class="list-group-item">Contacts</li>
+              </ul>
+              <div class="panel-footer">
+                <button type="button" class="btn btn-success btn-block">Signup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xs-12">
+        <p>Quam massa. A conubia mollis nulla consequat ad eu scelerisque ad. Duis mollis. Leo ante class. Accumsan consequat placerat litora lectus molestie velit libero nunc potenti odio, interdum ultrices vitae Facilisis congue elementum ultrices massa eget phasellus auctor ipsum primis euismod tincidunt class euismod ut pulvinar pretium tortor interdum.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</section>
+}
+
+@contact = {
+<section id="contact" class="row">
+  <div class="contact-bg-image"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="page-header text-center">
+          <h1>Contact Us</h1>
+          <p>Accumsan consequat placerat litora lectus molestie velit libero nunc potenti odio, interdum ultrices vitae</p>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-6">
+        <address>
+          <strong>Twitter, Inc.</strong><br>
+          1355 Market Street, Suite 900<br>
+          San Francisco, CA 94103<br>
+          <abbr title="Phone">P:</abbr> (123) 456-7890
+        </address>
+      </div>
+      <div class="col-xs-12 text-center" >
+        <button type="button" class="btn btn-success">Send us mail</button>
+        <p>Or follow us on social platform</p>
+        <ul class="list-inline social-icon">
+          <li>
+            <a href="#" class="bg-primary">
+              <i class="fa fa-facebook"></i>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="bg-primary">
+              <i class="fa fa-linkedin"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="col-xs-12 text-center">
+        <strong>© 2016 Company Name</strong>
+        <p>Fusce conubia volutpat nostra eleifend duis Netus.</p>
+      </div>
+    </div>
+  </div>
+</section>
 }

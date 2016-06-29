@@ -6,87 +6,104 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
 
 @layouts.base(GroupsCtrl.msg("title")) {
 
-  @ng._alert()
-
-  <div class="page-header">
-    <h1>
+  <div class="row page-heading white-bg">
+    <h2>
       <i class="fa fa-group fa-lg fa-fw"></i>
       @GroupsCtrl.msg("head")
-      <small>@group.group_name</small>
-    </h1>
+    </h2>
   </div>
 
-  <div class="row">
-    @{_info(group)}
+  <div class="alert-container">
+    @ng._alert()
   </div>
 
-  <div class="row">
-    <div class="col-xs-12">
-      <form name="form" class="form-inline"
-        ng-controller="NewEntryCtrl" novalidate>
+  <div class="row wrapper-content">
+    <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4 col-md-push-8 col-lg-push-8">
+      <div class="ibox">
+        <div class="ibox-content">
+          <div class="row">
+            @{_info(group)}
+          </div>
+          <div class="row">
+            <form name="form" ng-controller="NewEntryCtrl" novalidate>
 
-        @ng._form_control("email",
-          '_type            -> "text",
-          'maxLength        -> 64,
-          'email            -> None,
-          'placeholder      -> GroupsCtrl.msg("user.email.placeholder"),
-          'autocomplete     -> "off",
-          "uib-typeahead".s -> "user as user.email for user in getUsers($viewValue)",
-          "ng-model".s      -> "user"
-        )
+              <div class="col-xs-12 col-sm-6 col-md-12 col-lg-12">
+                @ng._form_control("email",
+                  '_type            -> "text",
+                  'maxLength        -> 64,
+                  'email            -> None,
+                  'placeholder      -> GroupsCtrl.msg("user.email.placeholder"),
+                  'autocomplete     -> "off",
+                  "uib-typeahead".s -> "user as user.email for user in getUsers($viewValue)",
+                  "ng-model".s      -> "user"
+                )
+              </div>
 
-        <button type="submit" class="btn btn-success" ng-click="create(user)"
-          ng-disabled="form.$invalid || !user.email">
-          <i class="fa fa-user-plus"></i>
-          @MSG("add.user")
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <div class="row" ng-controller="UserGroupsCtrl" data-id="@group.id">
-
-    @ng._msg_confirm_delete()
-
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <div class="table-responsive">
-        <table class="table table-hover table-ellipsis">
-          <thead>
-            <tr>
-              <th class="col-xs-4 col-sm-5">
-                @MSG("email")
-              </th>
-              <th class="hidden-xs col-sm-5 ">
-                @MSG("name")
-              </th>
-              <th class="col-xs-2  col-sm-2 text-right">
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="ng-cloak" ng-repeat="user in UsersListSvc.users">
-              <td>
-                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(user.id).url}}">
-                  <i class="fa fa-user"></i>
-                  {{ user.email }}
-                </a>
-              </td>
-              <td class="hidden-xs">
-                {{ user.user_name }}
-              </td>
-              <td>
-                <button type="button" class="btn btn-danger btn-xs pull-right"
-                  ng-click="confirm(user)">
-                  <i class="fa fa-user-times"></i>
-                  @MSG("delete")
+              <div class="col-xs-12 col-sm-6 col-md-12 col-lg-12">
+                <button type="submit" class="btn btn-success" ng-click="create(user)"
+                  ng-disabled="form.$invalid || !user.email">
+                  <i class="fa fa-user-plus"></i>
+                  @MSG("add.user")
                 </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8 col-md-pull-4 col-lg-pull-4">
+      <div class="ibox">
+        <div class="ibox-content">
+          <div class="row" ng-controller="UserGroupsCtrl" data-id="@group.id">
+
+            @ng._msg_confirm_delete()
+
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <div class="table-responsive">
+                <table class="table table-hover table-ellipsis">
+                  <thead>
+                    <tr>
+                      <th class="col-xs-4 col-sm-5">
+                        @MSG("email")
+                      </th>
+                      <th class="hidden-xs col-sm-5 ">
+                        @MSG("name")
+                      </th>
+                      <th class="col-xs-2  col-sm-2 text-right">
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="ng-cloak" ng-repeat="user in UsersListSvc.users">
+                      <td>
+                        <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(user.id).url}}">
+                          <i class="fa fa-user"></i>
+                          {{ user.email }}
+                        </a>
+                      </td>
+                      <td class="hidden-xs">
+                        {{ user.user_name }}
+                      </td>
+                      <td>
+                        <button type="button" class="btn btn-danger btn-xs pull-right"
+                          ng-click="confirm(user)">
+                          <i class="fa fa-user-times"></i>
+                          @MSG("delete")
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
+
 }()(
   libs.webjars("js", "angular-resource"),
   libs.assets("js", "api.helper"),

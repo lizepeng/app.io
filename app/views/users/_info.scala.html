@@ -31,11 +31,11 @@ implicit req: UserRequest[_], messages: Messages)
   }
 </div>
 
-<div class="col-xs-12 col-sm-4">
+<div class="col-xs-6 col-sm-4">
   @common._form_group_static("internal_groups") {
     <ul class="list-group">
       @halfs._1.map { case (group, idx) =>
-        <li class="list-group-item">
+        <li class="list-group-item text-ellipsis">
           @isGroupMember(user, idx)
           @group.group_name
         </li>
@@ -44,11 +44,11 @@ implicit req: UserRequest[_], messages: Messages)
   }
 </div>
 
-<div class="col-xs-12 col-sm-4">
+<div class="col-xs-6 col-sm-4">
   @common._form_group_static("internal_groups") {
     <ul class="list-group">
       @halfs._2.map { case (group, idx) =>
-        <li class="list-group-item">
+        <li class="list-group-item text-ellipsis">
           @isGroupMember(user, idx)
           @group.group_name
         </li>

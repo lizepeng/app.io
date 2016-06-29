@@ -1,104 +1,72 @@
-body {
-  padding-top: 0px;
+.carousel-inner > .item > img {
+  max-width: none;
+  min-width: 100%;
+  height: 500px
 }
 
-.carousel-indicators .active {
-  margin: -1px 5px;
+.social-icon a {
+  color: #fff;
+  padding: 4px 8px;
+  height: 28px;
+  width: 28px;
+  display: block;
+  border-radius: 50px;
+  font-size: 14px;
 }
 
-.carousel-indicators li {
-  margin: 0px 5px;
+.team-member {
+  padding-top: 20px;
+  border: none;
 }
 
-.carousel .item1 {
-  background-color: #758fcb;
+#team, #partners {
+  background: #EEEEEE;
 }
 
-.carousel .item2 {
-  background-color: #999;
+#partners .media {
+  padding-top: 5px;
+  padding-left: 24px;
+  margin-bottom: 30px;
 }
 
-.carousel .item3 {
-  background-color: #eee;
-}
-
-.item3 h1 {
-  color: #444;
-}
-
-.item3 p {
-  color: #555;
-}
-
-.icon-circle {
-  width: 120px;
+.bubble {
+  position: relative;
   height: 120px;
-  line-height: 2.1;
-  border-radius: 60px;
-  border: 1px solid #ccc;
+  padding: 20px;
+  background: #FFFFFF;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  font-style: italic;
+  font-size: 14px;
 }
 
-.col-sm-6 {
-  padding-bottom: 40px;
+.bubble:after {
+  content: '';
+  position: absolute;
+  border-style: solid;
+  border-width: 15px 14px 0;
+  border-color: #FFFFFF transparent;
+  display: block;
+  width: 0;
+  z-index: 1;
+  bottom: -15px;
+  left: 30px;
 }
 
-@media (max-width: 539px){
-  .carousel-caption p {
-    margin-bottom: 10px;
-    font-size: 14px;
-    line-height: 1.4;
-  }
-  .carousel .item {
-    height: 400px;
-  }
-}
-
-@media (min-width: 540px) and (max-width: 767px){
-  .carousel-caption p {
-    margin-bottom: 20px;
-    font-size: 16px;
-    line-height: 1.4;
-  }
-  .carousel .item {
-    height: 400px;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-
-  /* Bump up size of carousel content */
-  .carousel-caption p {
-    margin-bottom: 40px;
-    font-size: 18px;
-    line-height: 1.4;
-  }
-  .carousel .item {
-    height: 500px;
-  }
-}
-
-/* Medium devices */
-@media (min-width: 992px) and (max-width: 1199px) {
-
-  .carousel-caption p {
-    margin-bottom: 20px;
-    font-size: 21px;
-    line-height: 1.4;
-  }
-  .carousel .item {
-    height: 500px;
-  }
-}
-
-/* Large devices */
-@media (min-width: 1200px) {
-
-  .carousel-caption p {
-    margin-bottom: 40px;
-    font-size: 24px;
-    line-height: 1.4;
-  }
-  .carousel .item {
-    height: 500px;
-  }
+.contact-bg-image {
+  background: #EEEEEE;
+  background-image: url('/assets/images/simple_world_map.svg');
+  background-position: 50% 0;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: absolute;
+  width: 100%;
+  height: 400px;
+  opacity: 0.2;
+  -webkit-filter: blur(4px);
+  -moz-filter: blur(4px);
+  -o-filter: blur(4px);
+  -ms-filter: blur(4px);
+  filter: blur(4px);
 }

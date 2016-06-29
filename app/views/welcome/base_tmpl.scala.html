@@ -1,0 +1,44 @@
+@(title: String, navbar: Html = Html(""), above_content: Html = Html(""), body_args: Map[Symbol,Any] = Map())(
+  content: Html)(
+  css: Html *)(
+  js: Html *)(
+  implicit req: RequestHeader, messages: Messages, env: Environment)
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>@title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    @libs.webjars("css", "bootstrap")
+    @libs.webjars("css", "font-awesome")
+    @libs.webjars("css", "animate.css")
+    @css
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../assets/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+  <body @toHtmlArgs(bodyHtmlArgs)>
+    @navbar
+    @above_content
+    <div class="container-fluid">
+      @content
+    </div>
+    @libs.webjars("js", "bootstrap")
+    @libs.webjars("js", "holder")
+    @js
+  </body>
+
+  <link rel="shortcut icon" type="image/png"
+    href="@routes.Assets.at("images/favicon.png")">
+</html>
+
+@bodyHtmlArgs = @{
+  body_args
+    .filterNot(_._1.name.startsWith("_"))
+    .filterNot(_._1 == 'id)
+    .toMap
+}

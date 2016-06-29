@@ -55,7 +55,9 @@ views.groups.show.factory 'UsersListSvc', [
   'Group'
   'User'
   'UsersListSvc'
-  ($scope, Group, User, UsersListSvc) ->
+  'ClientError'
+  'Alert'
+  ($scope, Group, User, UsersListSvc, ClientError, Alert) ->
     $scope.UsersListSvc = UsersListSvc
 
     $scope.getUsers = (val) -> User.query(q : "*#{val}*").$promise
@@ -66,7 +68,7 @@ views.groups.show.factory 'UsersListSvc', [
           users = UsersListSvc.users
           users.unshift value if _.findIndex(users, id:value.id) is -1
         (resp) ->
-          Alert.danger resp.data.message
+          Alert.danger ClientError.firstMsg(resp)
 
     return
 ]

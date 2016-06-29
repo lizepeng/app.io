@@ -57,7 +57,7 @@ class SessionsCtrl(
     MaybeUserAction().apply { implicit req =>
       req.maybeUser match {
         case Success(u) => next match {
-          case None      => Redirect(routes.Application.index())
+          case None      => Redirect(routes.MyCtrl.dashboard())
           case Some(uri) => Redirect(uri)
         }
         case _          => Ok(html.account.login(loginFM, next))

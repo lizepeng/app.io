@@ -1,36 +1,35 @@
-@(fm: Form[_])(implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
+@(fm: Form[_])(
+implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
 @import common._
 @import helper._
 
-@layouts.base(PasswordResetCtrl.msg("title") + " - " + MSG("app.name")){
+@account.base_tmpl(PasswordResetCtrl.msg("title") + " - " + MSG("app.name")){
 
-  @fm.globalErrors.map { gerr =>
-    @common._alert("danger"){
-      @MSG(gerr.message)
+  <h3 class="text-center">
+    @PasswordResetCtrl.msg("new.head")
+  </h3>
+
+  @fm.globalErrors.map { err =>
+    @common._alert("danger", dismissible = true){
+      @MSG(err.message)
     }
   }
 
-  <div class="panel panel-primary auth-form">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        @PasswordResetCtrl.msg("title")
-      </h3>
-    </div>
-    <div class="panel-body">
-      @form(action = routes.PasswordResetCtrl.create()) {
+  @form(action = routes.PasswordResetCtrl.create(), 'class -> "account-form") {
 
-        @{_input_email(fm("email"),
-          'placeholder -> PasswordResetCtrl.msg("email.enter"),
-          'tabindex    -> 1
-          )(_fc_form_group)
-        }
+    <p>@PasswordResetCtrl.msg("new.description")</p>
 
-        <button type="submit" class="btn btn-default" tabindex="2">
-          @MSG("submit")
-        </button>
-      }
-    </div>
-  </div>
+    @{_input_email(fm("email"),
+      'placeholder -> PasswordResetCtrl.msg("email.enter"),
+      'tabindex    -> 1,
+      '_icons      -> "fa fa-envelope-o fa-fw"
+      )(_fc_input_group)
+    }
+
+    <button type="submit" class="btn btn-success btn-lg btn-block" tabindex="2">
+      @MSG("submit")
+    </button>
+  }
 
 }()()

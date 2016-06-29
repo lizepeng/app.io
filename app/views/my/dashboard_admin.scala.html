@@ -2,42 +2,51 @@
 
 @layouts.base(MSG("admin")){
 
-<div class="row">
-  <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+<div class="row page-heading white-bg">
+  <h2>
+    <i class="fa fa-home fa-lg fa-fw"></i>
+    @MSG("dashboard")
+  </h2>
+</div>
+
+<div class="row wrapper-content">
+  <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
     <div class="row">
-      <div class="col-xs-5 col-sm-12 col-md-12 col-lg-12 avatar">
+      <div class="col-xs-5 col-sm-5 col-md-12 col-lg-12 avatar">
         <div class="thumbnail">
           <img ng-src="@routes.MyCtrl.profileImage(s = 150)" class="img-rounded" err-src="http://google.com/favicon.ico">
         </div>
       </div>
-      <div class="col-xs-7 col-sm-12 col-md-12 col-lg-12">
-        <ul class="list-group vcard-details">
-          <li class="list-group-item">
-            <i class="fa fa-map-marker fa-lg"></i>
-            Beijing, China
-          </li>
-          <li class="list-group-item">
-            <i class="fa fa-envelope-o"></i>
-            <a href="mailto:@req.user.email">@req.user.email</a>
-          </li>
-          <li class="list-group-item hidden-xs">
-            <i class="fa fa-clock-o"></i>
-            Joined on @DateTimeFormat("datetime.format.medium_date").print(req.user.created_at)
-          </li>
-          <li class="list-group-item">
-            UserName @req.user.user_name
-          </li>
-        </ul>
+      <div class="col-xs-7 col-sm-7 col-md-12 col-lg-12">
+        <div class="ibox">
+          <div class="ibox-content no-padding">
+            <ul class="list-group vcard-details">
+              <li class="list-group-item">
+                <i class="fa fa-map-marker fa-lg"></i>
+                Beijing, China
+              </li>
+              <li class="list-group-item">
+                <i class="fa fa-envelope-o"></i>
+                <a href="mailto:@req.user.email">@req.user.email</a>
+              </li>
+              <li class="list-group-item hidden-xs">
+                <i class="fa fa-clock-o"></i>
+                Joined on @DateTimeFormat("datetime.format.medium_date").print(req.user.created_at)
+              </li>
+              <li class="list-group-item">
+                UserName @req.user.user_name
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
-
-
   </div>
 
-  <div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+  <div class="col-xs-12 col-sm-12 col-md-9 col-lg-9">
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <div>
+        <div class="tabs-container">
           <div class="pull-right hidden-xs">
             <a href="@routes.MyCtrl.profile" class="btn btn-sm btn-default">
               <i class="fa fa-pencil"></i>
@@ -57,70 +66,79 @@
                 Repositories
               </a>
             </li>
-            <li role="presentation" class="hidden-xs">
+            <li role="presentation" class="hidden-xs hidden-sm hidden-md">
               <a href="#">
                 <i class="fa fa-rss"></i>
                 Public activity
               </a>
             </li>
           </ul>
-        </div>
-      </div>
-    </div>
 
-    <div class="row">
-      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Popular repositories</h3>
-          </div>
-          <ul class="list-group">
-            <li class="list-group-item">
-              <a href="#" class="mini-repo-list-item">
-                <i class="fa fa-bookmark repo-icon"></i>
-                <span>play-cassandra</span>
-                <span class="stars">
-                  2
-                  <i class="fa fa-star s"></i>
-                </span>
-              </a>
-            </li>
-            <li class="list-group-item">Item 2</li>
-            <li class="list-group-item">Item 3</li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Repositories contributed to</h3>
-          </div>
-          <div class="panel-body">
-            Panel content
-          </div>
-        </div>
-      </div>
-    </div>
+          <div class="tab-content">
+            <!-- Tab panes -->
+            <div class="tab-pane active">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                        <h3 class="panel-title">Popular repositories</h3>
+                      </div>
+                      <ul class="list-group">
+                        <li class="list-group-item">
+                          <a href="#" class="mini-repo-list-item">
+                            <i class="fa fa-bookmark repo-icon"></i>
+                            <span>play-cassandra</span>
+                            <span class="stars">
+                              2
+                              <i class="fa fa-star s"></i>
+                            </span>
+                          </a>
+                        </li>
+                        <li class="list-group-item">Item 2</li>
+                        <li class="list-group-item">Item 3</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                        <h3 class="panel-title">Repositories contributed to</h3>
+                      </div>
+                      <div class="panel-body no-borders">
+                        Panel content
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-    <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Contributions</h3>
+                <div class="row">
+                  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                        <h3 class="panel-title">Contributions</h3>
+                      </div>
+                      <div class="panel-body no-borders">
+                        <img data-src="holder.js/400x140" alt="" class="img-responsive">
+                      </div>
+                    </div>
+
+                    <h4>Contribution activity</h4>
+                    <h5 style="border-bottom: 1px solid #ddd; margin-top: 35px; text-align: center">
+                      <div class="text-center" style="position:relative;top:11px;display:inline-block;background:#fff;border:5px solid #fff">
+                        <i class="fa fa-exclamation-circle"></i>
+                        <strong>1</strong> Issue reported
+                      </div>
+                    </h5>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
-          <div class="panel-body">
-            <img data-src="holder.js/400x140" alt="" class="img-responsive">
-          </div>
+
         </div>
-
-        <h4>Contribution activity</h4>
-        <h5 style="border-bottom: 1px solid #ddd; margin-top: 35px; text-align: center">
-          <div class="text-center" style="position:relative;top:11px;display:inline-block;background:#fff;border:5px solid #fff">
-            <i class="fa fa-exclamation-circle"></i>
-            <strong>1</strong> Issue reported
-          </div>
-        </h5>
-
       </div>
     </div>
 
@@ -129,10 +147,6 @@
 
 }{
   <style>
-    .nav-tabs {
-      margin-bottom: 10px;
-    }
-
     .mini-repo-list-item {
       padding: 6px 64px 6px 30px;
     }

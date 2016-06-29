@@ -1,10 +1,14 @@
-@(key:String)(html:Html)(implicit messages: Messages)
+@(key:String,nowrap:Boolean=false)(html:Html)(implicit messages: Messages)
 
 <div class="form-group">
   <label class="control-label">@MSG(key)</label>
   <div>
-    <p class="form-control-static">
+    @if(nowrap) {
       @html
-    </p>
+    } else {
+      <p class="form-control-static text-ellipsis">
+        @html
+      </p>
+    }
   </div>
 </div>

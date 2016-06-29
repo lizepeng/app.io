@@ -1,24 +1,19 @@
 @()(implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
-@layouts.base(PasswordResetCtrl.msg("title") + " - " + MSG("app.name")){
+@account.base_tmpl(PasswordResetCtrl.msg("title") + " - " + MSG("app.name")){
 
-  <div class="panel panel-primary auth-form">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        @PasswordResetCtrl.msg("title")
-      </h3>
-    </div>
-    <div class="panel-body">
-      <p>
-        @PasswordResetCtrl.msg("sent.msg1")
-      </p>
-      <p>
-        @PasswordResetCtrl.msg("sent.msg2")
-      </p>
-      <a href="@routes.SessionsCtrl.nnew()" class="btn btn-default" tabindex="2">
-        @PasswordResetCtrl.msg("return.to.sign.in")
-        <i class="fa fa-arrow-right"></i>
-      </a>
-    </div>
-  </div>
+  <h3 class="text-center">
+    @PasswordResetCtrl.msg("new.head")
+  </h3>
+
+  <p>
+    @PasswordResetCtrl.msg("sent.msg1")
+  </p>
+  <p>
+    @PasswordResetCtrl.msg("sent.msg2")
+  </p>
+  <a href="@routes.SessionsCtrl.nnew()" class="btn btn-default btn-lg btn-block" tabindex="2">
+    @PasswordResetCtrl.msg("return.to.sign.in")
+    <i class="fa fa-arrow-right"></i>
+  </a>
 }()()

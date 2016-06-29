@@ -8,6 +8,8 @@ import play.api.mvc._
 import security._
 import views._
 
+import scala.util._
+
 class Application(
   implicit
   val basicPlayApi: BasicPlayApi,
@@ -26,7 +28,10 @@ class Application(
   override val basicName = "app"
 
   def index = MaybeUserAction().apply { implicit req =>
-    Ok(html.welcome.index())
+    req.maybeUser match {
+      case Success(u) => Redirect(routes.MyCtrl.dashboard())
+      case _          => Ok(html.welcome.index())
+    }
   }
 
   def about = MaybeUserAction().apply { implicit req =>

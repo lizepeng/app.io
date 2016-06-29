@@ -40,12 +40,12 @@ views.groups.index.factory 'GroupListSvc', [
   '$scope'
   '$http'
   '$q'
-  'ClientError'
   'Group'
   'GroupListSvc'
   'ModalDialog'
+  'ClientError'
   'Alert'
-  ($scope, $http, $q, ClientError, Group, GroupListSvc, ModalDialog, Alert) ->
+  ($scope, $http, $q, Group, GroupListSvc, ModalDialog, ClientError, Alert) ->
     $scope.GroupListSvc     = GroupListSvc
     $scope.Layouts          = GroupListSvc.Layouts
     $scope.jsRoutes         = jsRoutes
@@ -76,8 +76,8 @@ views.groups.index.factory 'GroupListSvc', [
         ->
           idx = GroupListSvc.values.indexOf(data)
           GroupListSvc.values.splice idx, 1
-        (res) ->
-          Alert.danger res.data.message
+        (resp) ->
+          Alert.danger ClientError.firstMsg(resp)
       )
 
     $scope.setLayout = (gid, layout) -> Group.setLayout gid, layout

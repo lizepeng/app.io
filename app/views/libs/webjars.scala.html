@@ -3,6 +3,7 @@
 @import routes.Assets._
 
 @defining( """angular-i18n-(.+)""".r ) { angular_i18n_pattern =>
+@defining( """pace-theme-(.+)-(.+)""".r ) { pace_theme_pattern =>
 @textType match {
   case "css" => {
     @name match {
@@ -34,6 +35,23 @@
           "lib/angular-xeditable/dist/css/xeditable.css")
       }
 
+      case "metis-menu" => {
+        @css(
+          "lib/metisMenu/dist/metisMenu.css",
+          "lib/metisMenu/dist/metisMenu.min.css")
+      }
+
+      case pace_theme_pattern(style, color) => {
+        @css(
+          s"lib/pace/themes/$color/pace-theme-$style.css",
+          s"lib/pace/themes/$color/pace-theme-$style.css")
+      }
+
+      case "awesome-bootstrap-checkbox" => {
+        @css(
+          "lib/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css",
+          "lib/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css")
+      }
     }
   }
   case "js" => {
@@ -46,6 +64,12 @@
         @js(
           "lib/bootstrap/dist/js/bootstrap.js",
           "lib/bootstrap/dist/js/bootstrap.min.js")
+      }
+
+      case "jquery" => {
+        @js(
+          "lib/jquery/dist/jquery.js",
+          "lib/jquery/dist/jquery.min.js")
       }
 
       case "backbone" => {
@@ -119,8 +143,20 @@
 
       case "ng-flow" => {
         @js(
-          "lib/ng-flow/ng-flow-standalone.js",
-          "lib/ng-flow/ng-flow-standalone.min.js")
+          "lib/ng-flow/dist/ng-flow-standalone.js",
+          "lib/ng-flow/dist/ng-flow-standalone.min.js")
+      }
+
+      case "metis-menu" => {
+        @js(
+          "lib/metisMenu/dist/metisMenu.js",
+          "lib/metisMenu/dist/metisMenu.min.js")
+      }
+
+      case "pace" => {
+        @js(
+          "lib/pace/pace.js",
+          "lib/pace/pace.min.js")
       }
 
       case "jquery-ui" => {
@@ -140,7 +176,7 @@
 
     }
   }
-}}
+}}}
 
 @css(name: String, minified: String) = {
   @if(env.mode == play.api.Mode.Dev){

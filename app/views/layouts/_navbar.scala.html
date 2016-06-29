@@ -1,79 +1,28 @@
-@(main_menu: Html)(implicit req: MaybeUserRequest[_], messages: Messages)
+@(white_navbar: Boolean = false)(implicit messages: Messages)
 
 @import helper._
 
-<div class="navbar-wrapper">
-
-  <div class="navbar navbar-default navbar-static-top" role="navigation" ng-controller="NavbarCtrl">
-    <div class="container">
-
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="@routes.Application.index">
-          <i class="fa fa-foursquare fa-lg"></i> @MSG("app.name")
-        </a>
-      </div>
-
-      <div class="navbar-collapse collapse" uib-collapse="isCollapsed">
-        <ul class="nav navbar-nav" >
-          @main_menu
-        </ul>
-        @user_sub_menu
-      </div>
-
+<div class="row border-bottom">
+  <nav class="navbar navbar-static-top @if(white_navbar){white-bg}" role="navigation">
+    <div class="navbar-header">
+      <span minimaliza-sidebar></span>
     </div>
-  </div>
+    <ul class="nav navbar-top-links pull-right">
+      <li>
+        <a href="@routes.MyCtrl.dashboard">
+          <div class="profile-img-xs">
+            <img ng-src="@routes.MyCtrl.profileImage(s = 24)" err-src="http://google.com/favicon.ico">
+          </div>
+        </a>
+      </li>
+      <li>
+        @form(routes.SessionsCtrl.destroy, 'class -> "navbar-form") {
+          <button type="submit" class="btn form-inline-btn">
+            <i class="fa fa-sign-out fa-lg"></i>
+            <span class="hidden-xs">@MSG("sign.out")</span>
+          </button>
+        }
+      </li>
+    </ul>
+  </nav>
 </div>
-
-
-@user_sub_menu = {
-  @req.maybeUser match {
-    case Success(u) => {
-      <ul class="nav navbar-nav user-nav navbar-right">
-        <li>
-          <a href="@routes.MyCtrl.dashboard" title="">
-            <div class="hidden-xs profile-img-xs">
-              <img ng-src="@routes.MyCtrl.profileImage(s = 24)" alt="@u.email" err-src="http://google.com/favicon.ico">
-            </div>
-            <div class="visible-xs">
-              <i class="fa fa-user fa-lg"></i>
-              @MSG("dashboard")
-            </div>
-          </a>
-        </li>
-        <li class="hidden-xs"><a href="#">
-          <i class="fa fa-plus fa-lg"></i>
-        </a></li>
-        <li class="hidden-xs"><a href="#" >
-          <i class="fa fa-inbox fa-lg"></i>
-        </a></li>
-        <li><a href="@routes.MyCtrl.profile">
-          <i class="fa fa-cog fa-lg"></i>
-          <span class="hidden-sm hidden-md hidden-lg">
-            @MSG("settings")
-          </span>
-        </a></li>
-        <li class="divider"></li>
-        <li>
-          @form(routes.SessionsCtrl.destroy, 'class -> "navbar-form") {
-            <button type="submit" class="btn form-inline-btn">
-              <i class="fa fa-sign-out fa-lg"></i>
-              <span class="hidden-sm hidden-md hidden-lg">
-                @MSG("sign.out")
-              </span>
-            </button>
-          }
-        </li>
-      </ul>
-    }
-    case _ => {
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="@routes.SessionsCtrl.nnew()">@MSG("sign.in")</a></li>
-      </ul>
-    }
-  }
-}

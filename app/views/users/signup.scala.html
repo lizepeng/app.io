@@ -18,9 +18,9 @@
                 col-lg-5  col-lg-offset-2
                 signup-form">
       <h4>@MSG("Create your personal account")</h4>
-      @fm.globalErrors.map { gerr =>
-        @common._alert("danger"){
-          @MSG(gerr.message)
+      @fm.globalErrors.map { err =>
+        @common._alert("danger", dismissible = true){
+          @MSG(err.message)
         }
       }
 

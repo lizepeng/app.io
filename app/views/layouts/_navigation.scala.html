@@ -1,0 +1,46 @@
+@(main_menu: Html)(implicit req: MaybeUserRequest[_], messages: Messages)
+
+@import helper._
+
+<nav class="navbar-default navbar-static-side" role="navigation">
+  <div class="sidebar-collapse">
+    <ul side-navigation class="nav metismenu" id="side-menu">
+      <li class="nav-header">
+
+        <div class="profile-element" uib-dropdown>
+          <img alt="image" class="img-circle" src="@routes.MyCtrl.profileImage(s = 64)"/>
+          <a uib-dropdown-toggle>
+            <span class="clear">
+              <span class="block m-t-xs">
+                <strong class="font-bold">
+                  @req.maybeUser.toOption.map { user =>
+                    @user.email
+                  }
+                </strong>
+                <span class="caret"></span>
+              </span>
+            </span>
+          </a>
+          <ul uib-dropdown-menu class="animated fadeIn m-t-xs ng-cloak">
+            <li><a href="@routes.MyCtrl.dashboard">@MSG("dashboard")</a></li>
+            <li><a href="@routes.MyCtrl.profile">@MSG("settings")</a></li>
+            <li class="divider"></li>
+            <li>
+              @form(routes.SessionsCtrl.destroy, 'class -> "navbar-form") {
+                <button type="submit" class="btn form-inline-btn">
+                  @MSG("sign.out")
+                </button>
+              }
+            </li>
+          </ul>
+        </div>
+        <div class="logo-element">
+          <i class="fa fa-github fa-lg"></i>
+        </div>
+      </li>
+
+      @main_menu
+    </ul>
+
+  </div>
+</nav>

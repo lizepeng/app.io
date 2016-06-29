@@ -53,8 +53,9 @@ views.access_controls.index.factory 'ACListSvc', [
   '$scope'
   'ACListSvc'
   'ModalDialog'
+  'ClientError'
   'Alert'
-  ($scope, ACListSvc, ModalDialog, Alert) ->
+  ($scope, ACListSvc, ModalDialog, ClientError, Alert) ->
     $scope.ACListSvc        = ACListSvc
     $scope.jsRoutes         = jsRoutes
     ModalDialog.templateUrl = 'confirm_delete.html'
@@ -75,7 +76,7 @@ views.access_controls.index.factory 'ACListSvc', [
     $scope.delete = (ace) ->
       ace.$delete(
         -> ACListSvc.delete ace
-        (res) -> Alert.danger res.data.message
+        (resp) -> Alert.danger ClientError.firstMsg(resp)
       )
 
     return
@@ -86,7 +87,9 @@ views.access_controls.index.factory 'ACListSvc', [
   '$http'
   'ACListSvc'
   'AccessControl'
-  ($scope, $http, ACListSvc, AC) ->
+  'ClientError'
+  'Alert'
+  ($scope, $http, ACListSvc, AC, ClientError, Alert) ->
     $scope.ACListSvc  = ACListSvc
     $scope.checkModel = {}
     $scope.newEntry   =
@@ -111,8 +114,8 @@ views.access_controls.index.factory 'ACListSvc', [
                 principal_id : value.principal_id
                 resource     : value.resource) is -1
               ACListSvc.aces.unshift value
-          (res) ->
-            Alert.danger res.data.message
+          (resp) ->
+            Alert.danger ClientError.firstMsg(resp)
         )
 
     $scope.getItems = (val) ->

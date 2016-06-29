@@ -1,4 +1,4 @@
-@(title: String, above_content: Html = Html(""))(
+@(title: String, above_content: Html = Html(""), white_navbar: Boolean = false)(
   content: Html)(
   css: Html *)(
   js: Html *)(
@@ -6,7 +6,7 @@
 
 @import helper._
 
-@base_tmpl(title, above_content, main_menu)(content)(css ++ Seq(ext_css):_*)(js:_*)
+@base_tmpl(title, above_content, main_menu, white_navbar)(content)(css ++ Seq(ext_css):_*)(js:_*)
 
 @ext_css = {
   <style type="text/css" media="screen">
@@ -18,42 +18,35 @@
 }
 
 @main_menu = {
-  <li class="dropdown" uib-dropdown>
-    <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
-      @MSG("modules") <span class="caret"></span>
+  <li>
+    <a href="@routes.FileSystemCtrl.index(Path.root)">
+      <i class="fa fa-fw fa-database"></i>
+      <span class="nav-label">@MSG(FileSystemCtrl.message("name"))</span>
     </a>
-    <ul class="dropdown-menu" uib-dropdown-menu role="menu">
-      <li>
-        <a href="@routes.FileSystemCtrl.index(Path.root)">
-          <i class="fa fa-fw fa-hdd-o"></i>
-          @MSG(FileSystemCtrl.message("name"))
-        </a>
-      </li>
-      <li>
-        <a href="@routes.EmailTemplatesCtrl.index()">
-          <i class="fa fa-fw fa-envelope-square"></i>
-          @MSG(EmailTemplatesCtrl.message("name"))
-        </a>
-      </li>
-      <li>
-        <a href="@routes.AccessControlsCtrl.index()">
-          <i class="fa fa-fw fa-shield"></i>
-          @MSG(AccessControlsCtrl.message("name"))
-        </a>
-      </li>
-      <li class="divider"></li>
-      <li>
-        <a href="@routes.GroupsCtrl.index()">
-          <i class="fa fa-fw fa-group"></i>
-          @MSG(GroupsCtrl.message("name"))
-        </a>
-      </li>
-      <li>
-        <a href="@routes.UsersCtrl.index()">
-          <i class="fa fa-fw fa-user"></i>
-          @MSG(UsersCtrl.message("name"))
-        </a>
-      </li>
-    </ul>
+  </li>
+  <li>
+    <a href="@routes.EmailTemplatesCtrl.index()">
+      <i class="fa fa-fw fa-envelope"></i>
+      <span class="nav-label">@MSG(EmailTemplatesCtrl.message("name"))</span>
+    </a>
+  </li>
+  <li>
+    <a href="@routes.AccessControlsCtrl.index()">
+      <i class="fa fa-fw fa-shield"></i>
+      <span class="nav-label">@MSG(AccessControlsCtrl.message("name"))</span>
+    </a>
+  </li>
+  <li class="divider"></li>
+  <li>
+    <a href="@routes.GroupsCtrl.index()">
+      <i class="fa fa-fw fa-group"></i>
+      <span class="nav-label">@MSG(GroupsCtrl.message("name"))</span>
+    </a>
+  </li>
+  <li>
+    <a href="@routes.UsersCtrl.index()">
+      <i class="fa fa-fw fa-user"></i>
+      <span class="nav-label">@MSG(UsersCtrl.message("name"))</span>
+    </a>
   </li>
 }

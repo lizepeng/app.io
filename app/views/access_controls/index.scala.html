@@ -6,119 +6,134 @@ implicit req: UserRequest[_], messages: Messages, env: Environment, secured: Reg
 
 @layouts.base(AccessControlsCtrl.msg("title")) {
 
-  @ng._alert()
-
-  <div class="page-header">
-    <h1>
+  <div class="row page-heading white-bg">
+    <h2>
       <i class="fa fa-shield fa-lg fa-fw text-success"></i>
       @AccessControlsCtrl.msg("head")
-    </h1>
+    </h2>
   </div>
 
-  <div class="row">
-    <form name="form" ng-controller="NewEntryCtrl">
-      <div class="col-xs-12 col-sm-5">
-        @ng._form_control("principal",
-          '_label           -> AccessControlsCtrl.msg("principal"),
-          '_inline          -> false,
-          'tabindex         -> 1,
-          'placeholder      -> AccessControlsCtrl.msg("principal.placeholder"),
-          "uib-typeahead".s -> "item as item.label for item in getItems($viewValue)",
-          'autocomplete     -> "off",
-          "ng-model".s      -> "newEntry.principal"
-        )
-      </div>
-
-      <div class="col-xs-12 col-sm-5">
-        @ng._select("resource",
-          '_label        -> AccessControlsCtrl.msg("resource"),
-          '_inline       -> false,
-          'tabindex      -> 2,
-          "ng-model".s   -> "newEntry.resource",
-          "ng-options".s -> "k as v for (k,v) in ACListSvc.resources"
-        )
-      </div>
-
-      <div class="col-xs-12 col-sm-2 btn-wrapper">
-        <button type="submit" class="btn btn-success pull-right" ng-click="create(newEntry)">
-          <i class="fa fa-save fa-lg"></i>
-          @MSG("create")
-        </button>
-      </div>
-
-    </form>
+  <div class="alert-container">
+    @ng._alert()
   </div>
 
-  <div class="row" ng-controller="ACListCtrl">
+  <div class="row wrapper-content">
+    <div class="col-xs-12 col-sm-12 col-md-9 col-lg-9" ng-controller="ACListCtrl">
+      <div class="ibox">
+        <div class="ibox-content">
+          @ng._msg_confirm_delete()
 
-    @ng._msg_confirm_delete()
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th class="col-xs-5">
+                        @AccessControlsCtrl.msg("principal")
+                      </th>
+                      <th class="col-xs-6">
+                        @AccessControlsCtrl.msg("resource")
+                      </th>
+                      <th class="col-xs-1"></th>
+                    </tr>
+                  </thead>
+                  <tbody ng-repeat="ace in ACListSvc.aces" class="ng-cloak">
+                    <tr class="bg-info">
+                      <td ng-if="ace.is_group">
+                        <a ng-if="!ACListSvc.groups[ace.principal_id].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal_id).url}}">
+                          <i class="fa fa-group fa-lg fa-fw text-info"></i>
+                          {{ ACListSvc.groups[ace.principal_id].group_name }}
+                        </a>
+                        <span ng-if="ACListSvc.groups[ace.principal_id].is_internal">
+                          <i class="fa fa-group fa-lg fa-fw"></i>
+                          {{ ACListSvc.groups[ace.principal_id].group_name }}
+                        </span>
+                      </td>
+                      <td ng-if="!ace.is_group">
+                        <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ace.principal_id).url}}">
+                          <i class="fa fa-user fa-lg fa-fw text-info"></i>
+                          {{ ACListSvc.users[ace.principal_id].email }}
+                        </a>
+                      </td>
+                      <td>
+                        {{ ACListSvc.resources[ace.resource] || ace.resource }}
+                      </td>
+                      <td>
+                        <div class="btn-toolbar pull-right">
+                          <div class="btn-group" style="padding-top:3px">
+                            <button type="button" class="btn form-inline-btn" ng-click="confirm(ace)">
+                              <i class="fa fa-trash-o fa-lg"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr ng-class="ace.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
+                      <td colspan="3">
+                        <div class="col-xs-6 col-sm-3 col-md-4 col-lg-3" ng-repeat="(key, value) in ACListSvc.access_def[ace.resource]">
+                          <div class="checkbox checkbox-info checkbox-inline">
+                            <input type="checkbox"
+                              ng-model="ace.permissions[key]"
+                              ng-change="toggle(ace, key)">
+                            <label>{{ value }}</label>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th class="col-xs-6 col-sm-4">
-                @AccessControlsCtrl.msg("principal")
-              </th>
-              <th class="col-xs-6 col-sm-6">
-                @AccessControlsCtrl.msg("resource")
-              </th>
-            </tr>
-          </thead>
-          <tbody ng-repeat="ace in ACListSvc.aces"  class="ng-cloak">
-            <tr class="bg-info">
-              <td ng-if="ace.is_group">
-                <a ng-if="!ACListSvc.groups[ace.principal_id].is_internal" ng-href="{{jsRoutes.controllers.GroupsCtrl.show(ace.principal_id).url}}">
-                  <i class="fa fa-group fa-lg fa-fw text-info"></i>
-                  {{ ACListSvc.groups[ace.principal_id].group_name }}
-                </a>
-                <span ng-if="ACListSvc.groups[ace.principal_id].is_internal">
-                  <i class="fa fa-group fa-lg fa-fw"></i>
-                  {{ ACListSvc.groups[ace.principal_id].group_name }}
-                </span>
-              </td>
-              <td ng-if="!ace.is_group">
-                <a ng-href="{{jsRoutes.controllers.UsersCtrl.show(ace.principal_id).url}}">
-                  <i class="fa fa-user fa-lg fa-fw text-info"></i>
-                  {{ ACListSvc.users[ace.principal_id].email }}
-                </a>
-              </td>
-              <td>
-                {{ ACListSvc.resources[ace.resource] || ace.resource }}
-              </td>
-            </tr>
-            <tr ng-class="ace.resource.indexOf('access_controls') > -1? 'bg-danger' : ''">
-              <td colspan="2">
-                <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" ng-repeat="(key, value) in ACListSvc.access_def[ace.resource]">
-                  <label class="checkbox-inline" >
-                    <input type="checkbox"
-                      ng-model="ace.permissions[key]"
-                      ng-change="toggle(ace, key)">
-                    {{ value }}
-                  </label>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="2">
-                <div class="btn-toolbar pull-right">
-                  <div class="btn-group" style="padding-top:3px">
-                    <button type="button" class="btn btn-danger btn-xs" ng-click="confirm(ace)">
-                      <i class="fa fa-trash-o"></i>
-                      @MSG("delete")
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              @ng._pager("ACListSvc.links")
+            </div>
+
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      @ng._pager("ACListSvc.links")
+    <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+      <div class="ibox">
+        <div class="ibox-content">
+          <div class="row">
+            <form name="form" ng-controller="NewEntryCtrl">
+              <div class="col-xs-12 col-sm-5 col-md-12 col-lg-12">
+                @ng._form_control("principal",
+                  '_label           -> AccessControlsCtrl.msg("principal"),
+                  '_inline          -> false,
+                  'tabindex         -> 1,
+                  'placeholder      -> AccessControlsCtrl.msg("principal.placeholder"),
+                  "uib-typeahead".s -> "item as item.label for item in getItems($viewValue)",
+                  'autocomplete     -> "off",
+                  "ng-model".s      -> "newEntry.principal"
+                )
+              </div>
+
+              <div class="col-xs-12 col-sm-5 col-md-12 col-lg-12">
+                @ng._select("resource",
+                  '_label        -> AccessControlsCtrl.msg("resource"),
+                  '_inline       -> false,
+                  'tabindex      -> 2,
+                  "ng-model".s   -> "newEntry.resource",
+                  "ng-options".s -> "k as v for (k,v) in ACListSvc.resources"
+                )
+              </div>
+
+              <div class="col-xs-12 col-sm-2 col-md-12 col-lg-12 btn-wrapper">
+                <button type="submit" class="btn btn-primary pull-right" ng-click="create(newEntry)">
+                  <i class="fa fa-save fa-lg"></i>
+                  @MSG("create")
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 

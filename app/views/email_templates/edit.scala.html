@@ -6,47 +6,45 @@ implicit req: UserRequest[_], messages: Messages, env: Environment, langs: Langs
 
 @layouts.base(EmailTemplatesCtrl.msg("edit.title")){
 
-  @common._flashing()
-
-  @fm.globalErrors.map { gerr =>
-    @common._alert("danger"){
-      @MSG(gerr.message)
-    }
-  }
-
-  <div class="page-header">
-    <h1>
+  <div class="row page-heading white-bg">
+    <h2>
       <i class="fa fa-envelope-o fa-lg fa-fw"></i>
       @EmailTemplatesCtrl.msg("head")
-      <small>@EmailTemplatesCtrl.msg("edit.tab.name")</small>
-    </h1>
+    </h2>
   </div>
 
-  <div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <!-- Nav tabs -->
-          <ul class="nav nav-tabs">
-            <li role="presentation" class="active">
-              <a href="#" aria-controls="edit">
-                <i class="fa fa-edit fa-lg"></i>
-                @EmailTemplatesCtrl.msg("edit.tab.name")
-              </a>
-            </li>
-            <li role="presentation">
-              <a href="@routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang)" aria-controls="history">
-                <i class="fa fa-history fa-lg"></i>
-                @EmailTemplatesCtrl.msg("history.tab.name")
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+  <div class="alert-container">
+    @common._flashing()
+
+    @fm.globalErrors.map { err =>
+      @common._alert("danger", dismissible = true){
+        @MSG(err.message)
+      }
+    }
+  </div>
+
+  <div class="row wrapper-content">
+    <div class="col-xs-12">
+      <div class="tabs-container">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs">
+          <li role="presentation" class="active">
+            <a href="#" aria-controls="edit">
+              <i class="fa fa-edit fa-lg"></i>
+              @EmailTemplatesCtrl.msg("edit.tab.name")
+            </a>
+          </li>
+          <li role="presentation">
+            <a href="@routes.EmailTemplatesCtrl.history(tmpl.id, tmpl.lang)" aria-controls="history">
+              <i class="fa fa-history fa-lg"></i>
+              @EmailTemplatesCtrl.msg("history.tab.name")
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content">
           <!-- Tab panes -->
-          <div class="panel panel-default">
+          <div class="tab-pane active">
             <div class="panel-body">
 
               @form(action = routes.EmailTemplatesCtrl.save(tmpl.id, tmpl.lang)) {

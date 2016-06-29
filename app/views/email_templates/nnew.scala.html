@@ -6,79 +6,98 @@ implicit req: UserRequest[_], messages: Messages, env: Environment, langs: Langs
 
 @layouts.base(EmailTemplatesCtrl.msg("new.title")){
 
-  @fm.globalErrors.map { gerr =>
-    @common._alert("danger"){
-      @MSG(gerr.message)
-    }
-  }
-
-  <div class="page-header">
-    <h1>
+  <div class="row page-heading white-bg">
+    <h2>
       <i class="fa fa-envelope-o fa-lg fa-fw"></i>
       @EmailTemplatesCtrl.msg("head")
-      <small>@EmailTemplatesCtrl.msg("new.head")</small>
-    </h1>
+    </h2>
   </div>
 
-  @form(action = routes.EmailTemplatesCtrl.create()) {
+  <div class="alert-container">
+    @fm.globalErrors.map { err =>
+      @common._alert("danger", dismissible = true){
+        @MSG(err.message)
+      }
+    }
+  </div>
 
-    <div class="row">
-      <div class="col-xs-12 col-sm-9">
-        @{_input_text(fm("name"),
-          '_label      -> MSG("name"),
-          'placeholder -> EmailTemplatesCtrl.msg("name.place_holder")
-          )(_fc_form_group)
-        }
-      </div>
+  <div class="row wrapper-content">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <div class="ibox">
+        @form(action = routes.EmailTemplatesCtrl.create()) {
+          <div class="ibox-title">
+            <h4>@EmailTemplatesCtrl.msg("new.head")</h4>
+          </div>
+          <div class="ibox-content">
 
-      <div class="col-xs-12 col-sm-3">
-        @{_select(fm("lang"),
-          langs.availables.map(l => (l.code, MSG(s"lang.${l.code}")))
-          )(_fc_form_group)
+            <div class="row">
+              <div class="col-xs-12 col-sm-9">
+                @{_input_text(fm("name"),
+                  '_label      -> MSG("name"),
+                  'placeholder -> EmailTemplatesCtrl.msg("name.place_holder")
+                  )(_fc_form_group)
+                }
+              </div>
+
+              <div class="col-xs-12 col-sm-3">
+                @{_select(fm("lang"),
+                  langs.availables.map(l => (l.code, MSG(s"lang.${l.code}")))
+                  )(_fc_form_group)
+                }
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xs-12">
+                @{_input_text(fm("subject"),
+                  '_label      -> MSG("email.subject"),
+                  'placeholder -> EmailTemplatesCtrl.msg("email.subject.place_holder")
+                  )(_fc_form_group)
+                }
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xs-12">
+                @{_input_text(fm("to"),
+                  '_label      -> MSG("email.to"),
+                  'placeholder -> EmailTemplatesCtrl.msg("email.to.place_holder")
+                  )(_fc_form_group)
+                }
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xs-12">
+                @{_textarea(fm("text"),
+                  '_label      -> MSG("email.text"),
+                  'placeholder -> EmailTemplatesCtrl.msg("email.text.sample"),
+                  'rows        -> 12
+                  )(_fc_form_group)
+                }
+              </div>
+            </div>
+
+          </div>
+          <div class="ibox-footer">
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="pull-right">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-save fa-lg"></i>
+                    @MSG("create")
+                  </button>
+
+                  <a class="btn btn-link" href="@routes.EmailTemplatesCtrl.index()">
+                    @MSG("cancel")
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         }
+
       </div>
     </div>
-
-    <div class="row">
-      <div class="col-xs-12">
-        @{_input_text(fm("subject"),
-          '_label      -> MSG("email.subject"),
-          'placeholder -> EmailTemplatesCtrl.msg("email.subject.place_holder")
-          )(_fc_form_group)
-        }
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-xs-12">
-        @{_input_text(fm("to"),
-          '_label      -> MSG("email.to"),
-          'placeholder -> EmailTemplatesCtrl.msg("email.to.place_holder")
-          )(_fc_form_group)
-        }
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-xs-12">
-        @{_textarea(fm("text"),
-          '_label      -> MSG("email.text"),
-          'placeholder -> EmailTemplatesCtrl.msg("email.text.sample"),
-          'rows        -> 12
-          )(_fc_form_group)
-        }
-      </div>
-    </div>
-
-    <div class="pull-right">
-      <button type="submit" class="btn btn-success">
-        <i class="fa fa-save fa-lg"></i>
-        @MSG("create")
-      </button>
-
-      <a class="btn btn-link" href="@routes.EmailTemplatesCtrl.index()">
-        @MSG("cancel")
-      </a>
-    </div>
-  }
+  </div>
 }()()

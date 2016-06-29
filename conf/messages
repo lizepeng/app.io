@@ -102,7 +102,6 @@ password.too.long                                =Password is too long (maximum 
 password.all_number                              =Password need at least one number
 password.all_upper                               =Password need at least one lowercase letter
 password.all_lower                               =Password need at least one uppercase letter
-password.not.confirmed                           =Password doesn''t match the confirmation
 
 # --- Constraints
 constraint.required                              =Required
@@ -161,6 +160,7 @@ query.params.page.failed                         =Unable to bind page/per_page
 
 # sign in / sign up
 user.name                                        =User Name
+user.user_name                                   =User Name
 
 remember.me                                      =Remember me
 password.original                                =Password
@@ -232,6 +232,7 @@ controllers.api_internal.users.name              =Users(Internal API)
 controllers.users.name                           =Users
 controllers.users.password.changed               =Password changed successfully
 controllers.users.old.password.invalid           =Old Password is invalid
+controllers.users.password.not.confirmed         =Password doesn''t match the confirmation
 
 controllers.api_internal.users.ac.1              =Create
 controllers.api_internal.users.ac.2              =Show
@@ -252,8 +253,8 @@ views.users.new.user                             =New User
 
 msg.models.users.email.taken                     =Email is invalid or already taken
 msg.models.users.not.found                       =User {0} doesn''t exists
-msg.models.users.wrong.password                  =Wrong Password
-msg.models.users.auth.failed                     =Wrong Username/Email and password combination
+msg.models.users.wrong.password                  =Wrong Password.
+msg.models.users.auth.failed                     =Incorrect username or password.
 
 log.models.users.email.taken                     =Email {0} is invalid or already taken
 log.models.users.not.found                       =no such user: [{0}]
@@ -309,6 +310,8 @@ controllers.password_reset.email.not.found       =Can't find that email, sorry.
 
 views.password_reset.head                        =Forgot your password?
 views.password_reset.title                       =Forgot password
+views.password_reset.new.head                    =Reset your password
+views.password_reset.new.description             =Enter your email address and we will send you a link to reset your password.
 views.password_reset.email.enter                 =Enter your email address
 views.password_reset.return.to.sign.in           =Return to sign in
 views.password_reset.sent.msg1                   =We’ve sent you an email containing a link that will allow you to reset your password for the next 24 hours.

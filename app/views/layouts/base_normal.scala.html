@@ -1,18 +1,16 @@
-@(title: String, above_content: Html = Html(""))(
+@(title: String, above_content: Html = Html(""), white_navbar: Boolean = false)(
   content: Html)(
   css: Html *)(
   js: Html *)(
   implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
-@base_tmpl(title, above_content, main_menu)(content)(css:_*)(js:_*)
+@base_tmpl(title, above_content, main_menu, white_navbar)(content)(css:_*)(js:_*)
 
 @main_menu = {
-  @req.maybeUser.toOption.map { u =>
-    <li class="dropdown" uib-dropdown>
-      <a href="@routes.FileSystemCtrl.index(Path.root)">
-        <i class="fa fa-fw fa-hdd-o"></i>
-        @MSG(FileSystemCtrl.message("name"))
-      </a>
-    </li>
-  }
+  <li>
+    <a href="@routes.FileSystemCtrl.index(Path.root)">
+      <i class="fa fa-fw fa-database"></i>
+      <span class="nav-label">@MSG(FileSystemCtrl.message("name"))</span>
+    </a>
+  </li>
 }

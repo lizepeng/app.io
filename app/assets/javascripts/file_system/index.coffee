@@ -57,8 +57,9 @@ views.files.index
   'FileExtension'
   'INodeListSvc'
   'ModalDialog'
+  'ClientError'
   'Alert'
-  ($scope, CFS, Path, FileExtension, INodeListSvc, ModalDialog, Alert) ->
+  ($scope, CFS, Path, FileExtension, INodeListSvc, ModalDialog, ClientError, Alert) ->
     $scope.INodeListSvc     = INodeListSvc
     $scope.jsRoutes         = jsRoutes
     $scope.uploading        = false
@@ -87,13 +88,13 @@ views.files.index
     $scope.delete = (file) ->
       CFS.delete(file.path).then(
          -> INodeListSvc.delete file
-        (data) -> Alert.danger data.message
+        (resp) -> Alert.danger ClientError.firstMsg(resp)
       )
 
     $scope.clear = ->
       CFS.delete(INodeListSvc.path).then(
         -> INodeListSvc.clear()
-        (data) -> Alert.danger data.message
+        (resp) -> Alert.danger ClientError.firstMsg(resp)
       )
 
     $scope.created = (file) ->

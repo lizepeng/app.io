@@ -57,8 +57,7 @@ class MyCtrl(
       "new_password" -> mapping(
         "original" -> Password.constrained,
         "confirmation" -> text
-      )(Password.Confirmation.apply)(Password.Confirmation.unapply)
-        .verifying("password.not.confirmed", _.isConfirmed)
+      )(Password.Confirmation.apply)(Password.Confirmation.unapply).verifying()
     )(ChangePasswordFD.apply)(ChangePasswordFD.unapply)
   )
 
@@ -94,7 +93,15 @@ class MyCtrl(
             BadRequest(html.my.account(bound))
           },
         success => {
-          if (!req.user.hasPassword(success.old_password))
+          if (!success.new_password.isConfirmed)
+            Future.successful {
+              BadRequest(
+                html.my.account(
+                  bound.withGlobalError(message("password.not.confirmed"))
+                )
+              )
+            }
+          else if (!req.user.hasPassword(success.old_password))
             Future.successful {
               BadRequest(
                 html.my.account(

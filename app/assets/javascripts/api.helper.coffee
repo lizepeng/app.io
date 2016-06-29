@@ -13,7 +13,9 @@ angular.module 'api.helper', []
     unknown = "Unknown Error Occurred."
     switch resp.status
       when 422 then resp.data.errors?[0].errors?[0].message || unknown
-      else unknown
+      else
+        console.log resp #log response for debugging!
+        resp.data?.message || unknown
 
   return service
 

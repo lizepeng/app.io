@@ -4,19 +4,19 @@ implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 @import common._
 @import helper._
 
-@layouts.base(MSG("app.name") + " - " + MSG("sign.in.title")){
+@base_tmpl(MSG("app.name") + " - " + MSG("sign.in.title")){
 
-  @common._flashing()
+  <h2 class="text-center">
+    @(MSG("sign.in.head") + " " + MSG("app.name"))
+  </h2>
 
-  @fm.globalErrors.map { gerr =>
-    @common._alert("danger"){
-      @MSG(gerr.message)
+  @fm.globalErrors.map { err =>
+    @common._alert("danger", dismissible = true){
+      @MSG(err.message)
     }
   }
 
-  @form(action = routes.SessionsCtrl.create(next), 'class -> "signin-form") {
-
-    <h3 class="signin-form-heading">@(MSG("sign.in.head") + " " + MSG("app.name"))</h3>
+  @form(action = routes.SessionsCtrl.create(next), 'class -> "account-form") {
 
     @{_input_email(fm("email"),
       'placeholder -> MSG("email"),
@@ -38,8 +38,7 @@ implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
       )(_fc_raw)
     }
 
-
-    <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="3">
+    <button type="submit" class="btn btn-success btn-lg btn-block" tabindex="3">
       @MSG("sign.in")
     </button>
 
@@ -47,36 +46,4 @@ implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
       <span class="help-inline">@MSG("user.pwd.forgot")</span>
     </a>
   }
-
-}{
-  <style>
-    .signin-form {
-      max-width: 330px;
-      padding: 15px;
-      margin: 0 auto;
-    }
-
-    .signin-form .signin-form-heading,
-    .signin-form .checkbox {
-      margin-bottom: 10px;
-    }
-
-    .signin-form .checkbox {
-      font-weight: normal;
-    }
-
-    .signin-form .form-control {
-      position: relative;
-      height: auto;
-      -webkit-box-sizing: border-box;
-         -moz-box-sizing: border-box;
-              box-sizing: border-box;
-      padding: 10px;
-      font-size: 16px;
-    }
-
-    .signin-form .form-control:focus {
-      z-index: 2;
-    }
-  </style>
-}()
+}()()
