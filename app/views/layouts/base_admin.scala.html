@@ -1,4 +1,4 @@
-@(title: String, above_content: Html = Html(""), white_navbar: Boolean = false)(
+@(title: String, white_navbar: Boolean = false)(
   content: Html)(
   css: Html *)(
   js: Html *)(
@@ -6,7 +6,7 @@
 
 @import helper._
 
-@base_tmpl(title, above_content, main_menu, white_navbar)(content)(css ++ Seq(ext_css):_*)(js:_*)
+@base_tmpl(title, main_menu, white_navbar)(content)(css ++ Seq(ext_css):_*)(js:_*)
 
 @ext_css = {
   <style type="text/css" media="screen">

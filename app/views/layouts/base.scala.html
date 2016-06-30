@@ -1,4 +1,4 @@
-@(title: String, above_content: Html = Html(""), white_navbar: Boolean = false)(
+@(title: String, white_navbar: Boolean = false)(
   content: Html)(
   css: Html *)(
   js: Html *)(
@@ -10,12 +10,12 @@
 @layoutsOpt match {
   case Some(layouts) => {
     @if(layouts.contains(baseAdmin)) {
-      @base_admin(title, above_content, white_navbar)(content)(css:_*)(js:_*)
+      @base_admin(title, white_navbar)(content)(css:_*)(js:_*)
     } else {
-      @base_normal(title, above_content, white_navbar)(content)(css:_*)(js:_*)
+      @base_normal(title, white_navbar)(content)(css:_*)(js:_*)
     }
   }
   case None => {
-    @base_normal(title, above_content, white_navbar)(content)(css:_*)(js:_*)
+    @base_normal(title, white_navbar)(content)(css:_*)(js:_*)
   }
 }

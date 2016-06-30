@@ -1,10 +1,10 @@
-@(title: String, above_content: Html = Html(""), white_navbar: Boolean = false)(
+@(title: String, white_navbar: Boolean = false)(
   content: Html)(
   css: Html *)(
   js: Html *)(
   implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
-@base_tmpl(title, above_content, main_menu, white_navbar)(content)(css:_*)(js:_*)
+@base_tmpl(title, main_menu, white_navbar)(content)(css:_*)(js:_*)
 
 @main_menu = {
   <li>

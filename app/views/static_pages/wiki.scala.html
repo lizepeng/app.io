@@ -1,6 +1,6 @@
 @(videoOpt: Option[Path])(implicit req: MaybeUserRequest[_], messages: Messages, env: Environment)
 
-@layouts.base(MSG("wiki"), above_content = movie){
+@welcome.base_tmpl(MSG("wiki"), above_content = movie){
 
   <div class="row">
     <div class="col-xs-10 col-sm-6">

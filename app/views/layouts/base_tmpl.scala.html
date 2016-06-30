@@ -1,4 +1,4 @@
-@(title: String, above_content: Html = Html(""), main_menu: Html = Html(""), white_navbar: Boolean = false)(
+@(title: String, main_menu: Html = Html(""), white_navbar: Boolean = false)(
   content: Html)(
   css: Html *)(
   js: Html *)(
@@ -30,7 +30,6 @@
     @{_navigation(main_menu)}
     <div class="page-wrapper container-fluid gray-bg">
       @{_navbar(white_navbar)}
-      @above_content
       @content
       @req.maybeUser.toOption.map { _ =>
         @ng._notification()
