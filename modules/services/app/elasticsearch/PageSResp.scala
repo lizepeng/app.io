@@ -53,5 +53,5 @@ object PageSResp {
   implicit def contentTypeOf_PageSearchResponse(
     implicit codec: Codec
   ): ContentTypeOf[PageSResp] =
-    ContentTypeOf[PageSResp](Some(ContentTypes.JSON))
+    ContentTypeOf[PageSResp](Some(ContentTypes.withCharset(ContentTypes.JSON)))
 }

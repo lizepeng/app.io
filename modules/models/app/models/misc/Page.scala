@@ -41,7 +41,7 @@ object Page {
   ): Writeable[Page[E]] = {
     Writeable(
       p => codec.encode(Json.prettyPrint(Json.toJson(p: Iterable[E]))),
-      Some(ContentTypes.JSON)
+      Some(ContentTypes.withCharset(ContentTypes.JSON))
     )
   }
 

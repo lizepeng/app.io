@@ -33,7 +33,6 @@ object PageMSResp {
   implicit def writableOf_PageMultiSearchResponse(
     implicit codec: Codec
   ): Writeable[PageMSResp] = {
-    import play.api.libs.iteratee.Execution.Implicits.trampoline
     Writeable(
       p => {
         val builder = XContentFactory.jsonBuilder.prettyPrint
@@ -68,5 +67,5 @@ object PageMSResp {
   implicit def contentTypeOf_PageMultiSearchResponse(
     implicit codec: Codec
   ): ContentTypeOf[PageMSResp] =
-    ContentTypeOf[PageMSResp](Some(ContentTypes.JSON))
+    ContentTypeOf[PageMSResp](Some(ContentTypes.withCharset(ContentTypes.JSON)))
 }
