@@ -100,4 +100,26 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
     </div>
   </div>
 
-}()()
+}()(js)
+
+@js = {
+  <script>
+    $('.form-inline-btn').on('click', function(e) {
+      e.preventDefault();
+      var form = $(this).closest('form');
+      swal({
+        title              : '@MSG("confirm.delete.title")',
+        text               : '@MSG("confirm.delete.text")',
+        type               : 'warning',
+        showCancelButton   : true,
+        confirmButtonText  : '@MSG("confirm.delete.btn_confirm")',
+        cancelButtonText   : '@MSG("confirm.delete.btn_cancel")',
+        confirmButtonClass : 'btn btn-lg btn-danger',
+        cancelButtonClass  : 'btn btn-lg btn-default',
+        buttonsStyling     : false
+      }).then(function() {
+        form.submit();
+      }, function(dismiss) {});
+    });
+  </script>
+}

@@ -57,8 +57,6 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
         <div class="ibox-content">
           <div class="row" ng-controller="UserGroupsCtrl" data-id="@group.id">
 
-            @ng._msg_confirm_delete()
-
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
               <div class="table-responsive">
                 <table class="table table-hover table-ellipsis">
@@ -87,7 +85,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                       </td>
                       <td>
                         <button type="button" class="btn btn-danger btn-xs pull-right"
-                          ng-click="confirm(user)">
+                          ng-click="remove(user)">
                           <i class="fa fa-user-times"></i>
                           @MSG("delete")
                         </button>

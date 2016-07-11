@@ -47,6 +47,12 @@
           s"lib/pace/themes/$color/pace-theme-$style.css")
       }
 
+      case "sweet-alert-2" => {
+        @css(
+          "lib/sweetalert2/dist/sweetalert2.css",
+          "lib/sweetalert2/dist/sweetalert2.min.css")
+      }
+
       case "awesome-bootstrap-checkbox" => {
         @css(
           "lib/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css",
@@ -157,6 +163,12 @@
         @js(
           "lib/pace/pace.js",
           "lib/pace/pace.min.js")
+      }
+
+      case "sweet-alert-2" => {
+        @js(
+          "lib/sweetalert2/dist/sweetalert2.js",
+          "lib/sweetalert2/dist/sweetalert2.min.js")
       }
 
       case "jquery-ui" => {

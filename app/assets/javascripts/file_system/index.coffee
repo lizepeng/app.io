@@ -56,26 +56,24 @@ views.files.index
   'Path'
   'FileExtension'
   'INodeListSvc'
-  'ModalDialog'
   'ClientError'
   'Alert'
-  ($scope, CFS, Path, FileExtension, INodeListSvc, ModalDialog, ClientError, Alert) ->
+  ($scope, CFS, Path, FileExtension, INodeListSvc, ClientError, Alert) ->
     $scope.INodeListSvc     = INodeListSvc
     $scope.jsRoutes         = jsRoutes
     $scope.uploading        = false
     $scope.faName           = FileExtension.faName
-    ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.confirmDelete = (file) ->
-      ModalDialog.open().result.then(
+      swal(INodeListSvc.confirmDelete).then(
         -> $scope.delete file
-        ->
+        (dismiss) ->
       )
 
-    $scope.confirmClearDir = ->
-      ModalDialog.open().result.then(
+    $scope.confirmClear = ->
+      swal(INodeListSvc.confirmClear).then(
         -> $scope.clear()
-        ->
+        (dismiss) ->
       )
 
     $scope.success = ($file, resp) ->

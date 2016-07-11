@@ -19,6 +19,7 @@
     @libs.webjars("css", "metis-menu")
     @libs.webjars("css", "awesome-bootstrap-checkbox")
     @libs.webjars("css", "animate.css")
+    @libs.webjars("css", "sweet-alert-2")
     @libs.assets("css", "main")
     @css
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -43,6 +44,7 @@
     @libs.webjars("js", "jquery")
     @libs.webjars("js", "metis-menu")
     @libs.webjars("js", "pace")
+    @libs.webjars("js", "sweet-alert-2")
     @configNgApp
     @req.maybeUser.toOption.map { _ =>
       @libs.assets("js", "ws.helper")

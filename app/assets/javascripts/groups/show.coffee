@@ -27,17 +27,9 @@ views.groups.show.factory 'UsersListSvc', [
   '$attrs'
   'Group'
   'UsersListSvc'
-  'ModalDialog'
-  ($scope, $attrs, Group, UsersListSvc, ModalDialog) ->
+  ($scope, $attrs, Group, UsersListSvc) ->
     $scope.UsersListSvc = UsersListSvc
     $scope.jsRoutes     = jsRoutes
-    ModalDialog.templateUrl = 'confirm_delete.html'
-
-    $scope.confirm = (user) ->
-      ModalDialog.open().result.then(
-        -> $scope.remove user
-        ->
-      )
 
     $scope.remove = (user) ->
       Group.delUser UsersListSvc.group, uid: user.id,

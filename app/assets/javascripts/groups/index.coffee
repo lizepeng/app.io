@@ -42,14 +42,12 @@ views.groups.index.factory 'GroupListSvc', [
   '$q'
   'Group'
   'GroupListSvc'
-  'ModalDialog'
   'ClientError'
   'Alert'
-  ($scope, $http, $q, Group, GroupListSvc, ModalDialog, ClientError, Alert) ->
+  ($scope, $http, $q, Group, GroupListSvc, ClientError, Alert) ->
     $scope.GroupListSvc     = GroupListSvc
     $scope.Layouts          = GroupListSvc.Layouts
     $scope.jsRoutes         = jsRoutes
-    ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.checkName = (name) ->
       d = $q.defer()
@@ -66,9 +64,9 @@ views.groups.index.factory 'GroupListSvc', [
         GroupListSvc.values.push value
 
     $scope.confirm = (grp) ->
-      ModalDialog.open().result.then(
+      swal(GroupListSvc.confirmDelete).then(
         -> $scope.delete grp
-        ->
+        (dismiss) ->
       )
 
     $scope.delete = (data) ->

@@ -19,7 +19,6 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
   </div>
 
   <div class="row wrapper-content" ng-controller="FilesCtrl">
-    @ng._msg_confirm_delete()
 
     <div class="col-xs-12 col-sm-12 col-md-9 col-lg-9">
       <div class="ibox">
@@ -139,7 +138,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
               </div>
 
               <div class="col-xs-12 col-sm-6 col-md-12 col-lg-12 float-e-margins">
-                <button type="button" class="btn btn-danger btn-block" disabled ng-click="confirmClearDir()">
+                <button type="button" class="btn btn-danger btn-block" disabled ng-click="confirmClear()">
                   <i class="fa fa-trash fa-lg"></i>
                   @FileSystemCtrl.msg("clear.dir")
                 </button>
@@ -189,6 +188,28 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
         intGroupNames : @Html(GroupsCtrl.intGroupNames(intGroups)),
         owner         : '@MSG("file_system.role.owner")',
         other         : '@MSG("file_system.role.other")'
+      };
+      INodeListSvc.confirmDelete = {
+        title              : '@MSG("confirm.delete.title")',
+        text               : '@MSG("confirm.delete.text")',
+        type               : 'warning',
+        showCancelButton   : true,
+        confirmButtonText  : '@MSG("confirm.delete.btn_confirm")',
+        cancelButtonText   : '@MSG("confirm.delete.btn_cancel")',
+        confirmButtonClass : 'btn btn-lg btn-danger',
+        cancelButtonClass  : 'btn btn-lg btn-default',
+        buttonsStyling     : false
+      };
+      INodeListSvc.confirmClear = {
+        title              : '@FileSystemCtrl.msg("confirm.clear.title")',
+        text               : '@FileSystemCtrl.msg("confirm.clear.text")',
+        type               : 'warning',
+        showCancelButton   : true,
+        confirmButtonText  : '@FileSystemCtrl.msg("confirm.clear.btn_confirm")',
+        cancelButtonText   : '@FileSystemCtrl.msg("confirm.clear.btn_cancel")',
+        confirmButtonClass : 'btn btn-lg btn-danger',
+        cancelButtonClass  : 'btn btn-lg btn-default',
+        buttonsStyling     : false
       };
     }]);
   </script>

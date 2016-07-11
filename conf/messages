@@ -294,6 +294,11 @@ views.file_system.created_at                     =Date Created
 views.file_system.upload.new.file                =Upload New File
 views.file_system.clear.dir                      =Clear All
 
+views.file_system.confirm.clear.title            =Are you sure?
+views.file_system.confirm.clear.text             =You won't be able to revert this!
+views.file_system.confirm.clear.btn_confirm      =Yes, clear this directory.
+views.file_system.confirm.clear.btn_cancel       =No, cancel.
+
 file_system.role.owner                           =Owner
 file_system.role.other                           =Public
 
@@ -427,6 +432,11 @@ msg.master.updated                               ={0} has been updated
 msg.master.deleted                               ={0} has been deleted
 
 msg.confirm_delete.title                         =Are you ABSOLUTELY sure?
+
+confirm.delete.title                             =Are you sure?
+confirm.delete.text                              =You won't be able to revert this!
+confirm.delete.btn_confirm                       =Yes, delete it.
+confirm.delete.btn_cancel                        =No, cancel.
 
 ui.alert.msg.empty                               =Unknown Error Occurred.
 ui.notification.msg.empty                        =Empty Notification.

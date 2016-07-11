@@ -52,18 +52,16 @@ views.access_controls.index.factory 'ACListSvc', [
 .controller 'ACListCtrl', [
   '$scope'
   'ACListSvc'
-  'ModalDialog'
   'ClientError'
   'Alert'
-  ($scope, ACListSvc, ModalDialog, ClientError, Alert) ->
+  ($scope, ACListSvc, ClientError, Alert) ->
     $scope.ACListSvc        = ACListSvc
     $scope.jsRoutes         = jsRoutes
-    ModalDialog.templateUrl = 'confirm_delete.html'
 
     $scope.confirm = (ace) ->
-      ModalDialog.open().result.then(
+      swal(ACListSvc.confirmDelete).then(
         -> $scope.delete ace
-        ->
+        (dismiss) ->
       )
 
     $scope.toggle = (ace, pos) ->

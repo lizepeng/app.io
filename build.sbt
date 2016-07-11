@@ -61,6 +61,7 @@ libraryDependencies ++= Seq(
   "org.webjars.bower" %  "metisMenu"                  % "2.5.0",
   "org.webjars.bower" %  "pace"                       % "1.0.2",
   "org.webjars.bower" %  "awesome-bootstrap-checkbox" % "0.3.7",
+  "org.webjars.bower" %  "sweetalert2"                % "4.0.8",
   "com.codeborne"     %  "phantomjsdriver"            % "1.2.1"   % Test
 )
 

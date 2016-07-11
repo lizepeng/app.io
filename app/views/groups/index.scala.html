@@ -22,7 +22,6 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
       <div class="ibox">
         <div class="ibox-content">
           <div class="row">
-            @ng._msg_confirm_delete()
 
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
               <div class="table-responsive">
@@ -169,6 +168,17 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
         sort     : @Html(SortField.toJson(sort)),
         nextPage : '@Html(routes.GroupsCtrl.index(pager.next, sort).toString)',
         prevPage : '@Html(routes.GroupsCtrl.index(pager.prev, sort).toString)'
+      };
+      GroupListSvc.confirmDelete = {
+        title              : '@MSG("confirm.delete.title")',
+        text               : '@MSG("confirm.delete.text")',
+        type               : 'warning',
+        showCancelButton   : true,
+        confirmButtonText  : '@MSG("confirm.delete.btn_confirm")',
+        cancelButtonText   : '@MSG("confirm.delete.btn_cancel")',
+        confirmButtonClass : 'btn btn-lg btn-danger',
+        cancelButtonClass  : 'btn btn-lg btn-default',
+        buttonsStyling     : false
       };
     }]);
   </script>
