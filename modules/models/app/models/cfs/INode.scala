@@ -11,6 +11,7 @@ import org.joda.time.DateTime
 import play.api.libs.json._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
  * @author zepeng.li@gmail.com
@@ -35,12 +36,12 @@ trait INode extends HasUUID with TimeBased {
 
   lazy val updated_at: DateTime = created_at
 
-  def rename(newName: String)(
+  def rename(newName: String, ttl: Duration = Duration.Inf)(
     implicit cfs: CassandraFileSystem
   ): Future[Boolean] = {
     for {
       pdir <- cfs._directories.find(parent)(onFound = p => p)
-      done <- cfs._directories.renameChild(pdir, this, newName)
+      done <- cfs._directories.renameChild(pdir, this, newName, ttl)
     } yield done
   }
 
@@ -82,7 +83,7 @@ trait INodeKey[T <: CassandraTable[T, R], R] {
 
   object inode_id
     extends TimeUUIDColumn(self)
-    with PartitionKey[UUID]
+      with PartitionKey[UUID]
 
 }
 
@@ -91,27 +92,27 @@ trait INodeColumns[T <: CassandraTable[T, R], R] {
 
   object parent
     extends UUIDColumn(self)
-    with StaticColumn[UUID]
+      with StaticColumn[UUID]
 
   object is_directory
     extends BooleanColumn(self)
-    with StaticColumn[Boolean]
+      with StaticColumn[Boolean]
 
   object owner_id
     extends UUIDColumn(self)
-    with StaticColumn[UUID]
+      with StaticColumn[UUID]
 
   object permission
     extends LongColumn(self)
-    with StaticColumn[Long]
+      with StaticColumn[Long]
 
   object ext_permission
     extends StaticMapColumn[T, R, UUID, Int](self)
-    with StaticColumn[Map[UUID, Int]]
+      with StaticColumn[Map[UUID, Int]]
 
   object attributes
     extends StaticMapColumn[T, R, String, String](self)
-    with StaticColumn[Map[String, String]]
+      with StaticColumn[Map[String, String]]
 
 }
 
@@ -120,15 +121,15 @@ trait FileColumns[T <: CassandraTable[T, R], R] {
 
   object size
     extends LongColumn(self)
-    with StaticColumn[Long]
+      with StaticColumn[Long]
 
   object indirect_block_size
     extends IntColumn(self)
-    with StaticColumn[Int]
+      with StaticColumn[Int]
 
   object block_size
     extends IntColumn(self)
-    with StaticColumn[Int]
+      with StaticColumn[Int]
 
 }
 
@@ -137,7 +138,7 @@ trait DirectoryColumns[T <: CassandraTable[T, R], R] {
 
   object name
     extends StringColumn(self)
-    with ClusteringOrder[String] with Ascending
+      with ClusteringOrder[String] with Ascending
 
   object child_id
     extends UUIDColumn(self)
@@ -149,11 +150,11 @@ trait DirectoryColumns[T <: CassandraTable[T, R], R] {
  */
 sealed class INodeTable
   extends NamedCassandraTable[INodeTable, Row]
-  with INodeCanonicalNamed
-  with INodeKey[INodeTable, Row]
-  with INodeColumns[INodeTable, Row]
-  with FileColumns[INodeTable, Row]
-  with DirectoryColumns[INodeTable, Row] {
+    with INodeCanonicalNamed
+    with INodeKey[INodeTable, Row]
+    with INodeColumns[INodeTable, Row]
+    with FileColumns[INodeTable, Row]
+    with DirectoryColumns[INodeTable, Row] {
 
   override def fromRow(r: Row): Row = r
 }

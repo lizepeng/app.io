@@ -10,6 +10,7 @@ import models.cassandra._
 import play.api.libs.iteratee._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
  * @author zepeng.li@gmail.com
@@ -27,15 +28,15 @@ trait BlockCanonicalNamed extends CanonicalNamed {
 
 sealed class BlockTable
   extends NamedCassandraTable[BlockTable, Block]
-  with BlockCanonicalNamed {
+    with BlockCanonicalNamed {
 
   object indirect_block_id
     extends TimeUUIDColumn(this)
-    with PartitionKey[UUID]
+      with PartitionKey[UUID]
 
   object offset
     extends LongColumn(this)
-    with ClusteringOrder[Long] with Ascending
+      with ClusteringOrder[Long] with Ascending
 
   object data
     extends BlobColumn(this)
@@ -59,7 +60,7 @@ class Blocks(
   with BasicPlayComponents
   with CassandraComponents
   with BootingProcess
-  with Logging{
+  with Logging {
 
   onStart(CQL(create.ifNotExists).future())
 
@@ -89,10 +90,18 @@ class Blocks(
     )
   }
 
-  def write(ind_blk_id: UUID, blk_id: Long, blk: BLK): Future[ResultSet] = {
-    insert.value(_.indirect_block_id, ind_blk_id)
-      .value(_.offset, blk_id)
-      .value(_.data, blk.toByteBuffer).future()
+  def write(
+    ind_blk_id: UUID, blk_id: Long, blk: BLK, ttl: Duration = Duration.Inf
+  ): Future[ResultSet] = {
+    val cql =
+      insert
+        .value(_.indirect_block_id, ind_blk_id)
+        .value(_.offset, blk_id)
+        .value(_.data, blk.toByteBuffer)
+    (ttl match {
+      case t: FiniteDuration => cql.ttl(t)
+      case _                 => cql
+    }).future()
   }
 
   def purge(ind_blk_id: UUID): Future[ResultSet] = {

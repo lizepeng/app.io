@@ -14,6 +14,7 @@ import play.api.libs.iteratee._
 import play.api.libs.json._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
  * @author zepeng.li@gmail.com
@@ -39,10 +40,10 @@ case class File(
     if (offset == 0) cfs._indirectBlocks.read(id)
     else cfs._indirectBlocks.read(this, offset)
 
-  def save()(
+  def save(ttl: Duration = Duration.Inf)(
     implicit cfs: CassandraFileSystem
   ): Iteratee[BLK, File] =
-    cfs._files.streamWriter(this)
+    cfs._files.streamWriter(this, ttl)
 
   override def delete()(
     implicit cfs: CassandraFileSystem
@@ -58,10 +59,10 @@ case class File(
  */
 sealed class FileTable
   extends NamedCassandraTable[FileTable, File]
-  with INodeCanonicalNamed
-  with INodeKey[FileTable, File]
-  with INodeColumns[FileTable, File]
-  with FileColumns[FileTable, File] {
+    with INodeCanonicalNamed
+    with INodeKey[FileTable, File]
+    with INodeColumns[FileTable, File]
+    with FileColumns[FileTable, File] {
 
   override def fromRow(r: Row): File = {
     File(
@@ -139,7 +140,9 @@ class Files(
     case Some(f)                   => onFound(f)
   }
 
-  def streamWriter(inode: File): Iteratee[BLK, File] = {
+  def streamWriter(
+    inode: File, ttl: Duration = Duration.Inf
+  ): Iteratee[BLK, File] = {
     import scala.Predef._
     Enumeratee.grouped[BLK] {
       Traversable.take[BLK](inode.block_size) &>>
@@ -147,16 +150,16 @@ class Files(
     } &>>
       Iteratee.foldM[BLK, IndirectBlock](new IndirectBlock(inode.id)) {
         (curr, blk) =>
-          _blocks.write(curr.id, curr.length, blk)
+          _blocks.write(curr.id, curr.length, blk, ttl)
           val next = curr + blk.length
 
           next.length < inode.indirect_block_size match {
             case true  => Future.successful(next)
-            case false => _indirectBlocks.write(next).map(_.next)
+            case false => _indirectBlocks.write(next, ttl).map(_.next)
           }
       }.mapM { last =>
-        _indirectBlocks.write(last) iff (last.length != 0)
-        this.write(inode.copy(size = last.offset + last.length))
+        _indirectBlocks.write(last, ttl) iff (last.length != 0)
+        this.write(inode.copy(size = last.offset + last.length), ttl)
       }
 
   }
@@ -168,16 +171,21 @@ class Files(
   } yield Unit
 
 
-  private def write(f: File): Future[File] = CQL {
-    insert.value(_.inode_id, f.id)
-      .value(_.parent, f.parent)
-      .value(_.is_directory, false)
-      .value(_.size, f.size)
-      .value(_.indirect_block_size, f.indirect_block_size)
-      .value(_.block_size, f.block_size)
-      .value(_.owner_id, f.owner_id)
-      .value(_.permission, f.permission.self)
-      .value(_.ext_permission, f.ext_permission.self.mapValuesSafely(_.self.toInt))
-      .value(_.attributes, f.attributes)
-  }.future().map(_ => f)
+  private def write(f: File, ttl: Duration = Duration.Inf): Future[File] = {
+    val cql =
+      insert.value(_.inode_id, f.id)
+        .value(_.parent, f.parent)
+        .value(_.is_directory, false)
+        .value(_.size, f.size)
+        .value(_.indirect_block_size, f.indirect_block_size)
+        .value(_.block_size, f.block_size)
+        .value(_.owner_id, f.owner_id)
+        .value(_.permission, f.permission.self)
+        .value(_.ext_permission, f.ext_permission.self.mapValuesSafely(_.self.toInt))
+        .value(_.attributes, f.attributes)
+    (ttl match {
+      case t: FiniteDuration => CQL {cql.ttl(t)}
+      case _                 => CQL {cql}
+    }).future().map(_ => f)
+  }
 }
