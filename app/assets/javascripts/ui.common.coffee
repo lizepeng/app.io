@@ -46,3 +46,13 @@ angular.module 'ui.common', []
       controller: 'minimalizaSidebarCtrl'
     }
 ]
+
+#
+# upload percentage
+#
+.filter 'percent', [ ->
+  return (value) ->
+    p1 = Math.floor((value || 0) * 100)
+    p2 = Math.max(0, Math.min(100, p1))
+    return """#{p2}%"""
+  ]
