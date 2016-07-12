@@ -1,21 +1,23 @@
 @(path:Path)(implicit req: UserRequest[_], messages: Messages)
 
-<ol class="breadcrumb">
-  @path.subPaths.map {
-    case subPath if subPath == path => {
-      <li class="active">
-        @pathLabel(subPath)
-      </li>
-      }
-    case subPath => {
-      <li class="active">
-        <a href="@routes.FileSystemCtrl.index(subPath)">
+@if(path != Path.root) {
+  <ol class="breadcrumb">
+    @path.subPaths.map {
+      case subPath if subPath == path => {
+        <li class="active">
           @pathLabel(subPath)
-        </a>
-      </li>
-      }
-  }
-</ol>
+        </li>
+        }
+      case subPath => {
+        <li class="active">
+          <a href="@routes.FileSystemCtrl.index(subPath)">
+            @pathLabel(subPath)
+          </a>
+        </li>
+        }
+    }
+  </ol>
+}
 
 @pathLabel(sub:Path) = {
   @{sub match {

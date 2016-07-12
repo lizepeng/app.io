@@ -78,10 +78,17 @@ views.files.index
 
     $scope.success = ($file, resp) ->
       $scope.uploading = false
+      $scope.progress_percentage = '0%'
+      $file.cancel()
       $scope.created(JSON.parse(resp)) if resp isnt ''
 
     $scope.startUpload = ->
       $scope.uploading = true
+      $scope.progress_percentage = '0%'
+
+    $scope.progress = ($flow) ->
+      percentage = $flow.progress()
+      $scope.progress_percentage = Math.floor(percentage * 100) + '%' if percentage != 1
 
     $scope.delete = (file) ->
       CFS.delete(file.path).then(
