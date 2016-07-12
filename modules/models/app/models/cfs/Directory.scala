@@ -352,27 +352,29 @@ class Directories(
    * @param dir     target dir
    * @param inode   renaming inode
    * @param newName new name for target inode
-   * @return
+   * @return true if renaming succeeded, or throw [[Directory.ChildExists]]
    */
   def renameChild(
     dir: Directory,
     inode: INode,
     newName: String
   ): Future[Boolean] = CQL {
-    //TODO How about if inode with target name already exists ?
-    Batch.logged
-      .add {
-        insert
-          .value(_.inode_id, dir.id)
-          .value(_.name, newName)
-          .value(_.child_id, inode.id).ifNotExists()
-      }
-      .add {
+    insert
+      .value(_.inode_id, dir.id)
+      .value(_.name, newName)
+      .value(_.child_id, inode.id).ifNotExists()
+  }.future()
+    .map(_.wasApplied()).andThen {
+    case Success(true) =>
+      CQL {
         delete
           .where(_.inode_id eqs dir.id)
           .and(_.name eqs inode.name)
-      }
-  }.future().map(_.wasApplied)
+      }.future()
+  }.map {
+    case false => throw Directory.ChildExists(dir, newName)
+    case b     => b
+  }
 
   /**
    * Write target dir name into children list of its parent

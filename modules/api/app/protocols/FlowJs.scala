@@ -4,7 +4,6 @@ import helpers.ExtEnumeratee.Enumeratee
 import helpers._
 import models.cfs.Block._
 import models.cfs.CassandraFileSystem._
-import models.cfs.Directory._
 import models.cfs._
 import play.api.i18n.I18nSupport
 import play.api.libs.MimeTypes
@@ -163,7 +162,7 @@ case class FlowJs(
         else throw FlowJs.TooLarge(File.pprint(maxLength))
       }
       tmpName <- tempFileName.andThen {
-        case Success(fn) => Logger.trace(s"uploading $fn")
+        case Success(fn) => Logger.trace(s"renaming chunk to $fn")
       }
       renamed <- currentChunkSize.map(_ == chunk.size).flatMap {
         case false => Future(false) //the upload was stopped by end user
@@ -186,7 +185,7 @@ case class FlowJs(
       case Failure(e: Throwable)           => chunk.delete(); Logger.error(s"Upload failed.", e)
     }.recover {
       case e: FlowJs.NotSupported => Results.UnsupportedMediaType(JsonMessage(e))
-      case e: FlowJs.TooLarge     => Results.EntityTooLarge(JsonMessage(e))
+      case e: FlowJs.TooLarge     => Results.NotFound(JsonMessage(e))
       case e: BaseException       => Results.InternalServerError(JsonMessage(e))
       case e: Throwable           => Results.InternalServerError(JsonMessage(e.getMessage))
     }
@@ -238,10 +237,16 @@ case class FlowJs(
       Logger.trace(s"concatenating all temp files of ${path + filename}.")
       for {
         curr <- _cfs.dir(path)
-        file <- tempFiles &>
+        f_id <- identifier
+        //use identifier as name of temp file
+        temp <- tempFiles &>
           Enumeratee.mapFlatten[File] { f =>
             f.read() &> Enumeratee.onIterateeDone[BLK](() => f.delete())
-          } |>>> curr.save(filename, permission, overwrite, checker = _.w.?)
+          } |>>> curr.save(f_id, permission, overwrite, checker = _.w.?)
+        //rename temp file to target file
+        file <- temp
+          .rename(filename)
+          .map(_ => temp.copy(name = filename, path = temp.path + filename))
         _ret <-
         if (file.size <= maxLength) {
           onUploaded(curr, file).map { _ =>
@@ -249,21 +254,33 @@ case class FlowJs(
             Results.Created(Json.toJson(file)(File.jsonWrites))
           }
         } else Future.successful {
-
-          Logger.debug(FlowJs.TooLarge(File.pprint(maxLength)).reason)
+          val ex = FlowJs.TooLarge(File.pprint(maxLength))
+          Logger.debug(ex.reason)
           file.delete()
           Logger.debug(s"deleting file: ${path + filename}.")
-          Results.EntityTooLarge(JsonMessage(FlowJs.TooLarge(File.pprint(maxLength))))
+          Results.NotFound(JsonMessage(ex))
         }
 
       } yield _ret
     }
 
     concat.recoverWith {
-      case e: ChildExists =>
-        Logger.debug(s"file: ${path + filename} was created during uploading, clean temp files.")
-        (tempFiles |>>> Iteratee.foreach[File](f => f.delete())).map(_ => Results.Ok)
-        Future.successful(Results.Ok)
+      case ex@Directory.ChildExists(_, name) =>
+        for {
+          f_id <- identifier
+          _ret <-
+          if (name == f_id) {
+            Logger.debug(s"file: ${path + name} is concatenating by other uploading thread.")
+            Future.successful(Results.Created)
+          } else if (name == filename) {
+            Logger.warn(s"file: ${path + name} was created by other uploading process, abort uploading.")
+            _cfs.file(path + f_id).map(_.delete())
+            Future.successful(Results.NotFound(JsonMessage(ex)))
+          } else {
+            Logger.error(s"unknown error occurred when uploading: ${path + filename}", ex)
+            Future.successful(Results.InternalServerError(JsonMessage(ex)))
+          }
+        } yield _ret
     }
   }
 
@@ -310,12 +327,12 @@ case class FlowJs(
       if (size == file.size) Results.Ok
       else Results.NoContent
     }).andThen {
-      case Failure(e: ChildNotFound)              => Logger.trace(s"Test temp file failed, because ${e.reason}")
+      case Failure(e: Directory.ChildNotFound)    => Logger.trace(s"Test temp file failed, because ${e.reason}")
       case Failure(e: FlowJs.MissingFlowArgument) => Logger.debug(s"Test temp file failed, because ${e.reason}")
       case Failure(e: BaseException)              => Logger.debug(s"Test temp file failed, because ${e.reason}", e)
       case Failure(e: Throwable)                  => Logger.error(s"Test temp file failed.", e)
     }.recover {
-      case _: ChildNotFound              => Results.NoContent
+      case _: Directory.ChildNotFound    => Results.NoContent
       case _: FlowJs.MissingFlowArgument => Results.NotFound
       case _: BaseException              => Results.NotFound
       case _: Throwable                  => Results.InternalServerError
