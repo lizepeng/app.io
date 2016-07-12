@@ -14,6 +14,7 @@ import security._
 import services._
 
 import scala.concurrent._
+import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Failure
 
@@ -62,7 +63,8 @@ case class CFSBodyParser(
   def saveTo(dir: Directory)(implicit user: User): FilePartHandler[File] = {
     case FileInfo(partName, filename, contentType) =>
       Streams.iterateeToAccumulator(
-        (bandwidth.LimitTo(bandwidthConfig.upload) &>> dir.save()).map { file =>
+        (bandwidth.LimitTo(bandwidthConfig.upload) &>>
+          dir.save(ttl = 1 day)).map { file =>
           FilePart(partName, filename, contentType, file)
         }
       )

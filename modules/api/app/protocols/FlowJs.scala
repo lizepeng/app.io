@@ -15,6 +15,7 @@ import security.FileSystemAccessControl._
 import security._
 
 import scala.concurrent._
+import scala.concurrent.duration._
 import scala.language._
 import scala.util._
 
@@ -166,7 +167,7 @@ case class FlowJs(
       }
       renamed <- currentChunkSize.map(_ == chunk.size).flatMap {
         case false => Future(false) //the upload was stopped by end user
-        case true  => chunk.rename(tmpName)
+        case true  => chunk.rename(tmpName, ttl = 1 day)
       }.andThen {
         case Success(false) => chunk.delete()
       }

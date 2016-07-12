@@ -16,6 +16,7 @@ import play.api.libs.iteratee.{Enumeratee => _, _}
 import play.api.libs.json._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util._
 
 /**
@@ -42,6 +43,7 @@ case class Directory(
    * @param permission file permission
    * @param overwrite  whether to overwrite existing file
    * @param checker    check if user have permission to overwrite existing file
+   * @param ttl        time to live of a temporary file
    * @param user       user who is saving the file
    * @param cfs        cassandra file system
    * @return
@@ -50,7 +52,8 @@ case class Directory(
     fileName: String = "",
     permission: Permission = Role.owner.rw,
     overwrite: Boolean = false,
-    checker: PermissionChecker = alwaysBlock
+    checker: PermissionChecker = alwaysBlock,
+    ttl: Duration = Duration.Inf
   )(
     implicit user: User, cfs: CassandraFileSystem
   ): Iteratee[BLK, File] = {
@@ -65,14 +68,14 @@ case class Directory(
       if (fileName.nonEmpty) f
       else f.copy(name = f.id.toString, path = path + f.id.toString)
     Iteratee.flatten {
-      addChild(ff).recoverWith {
+      addChild(ff, ttl).recoverWith {
         case e: Directory.ChildExists if overwrite =>
           for {
             old <- file(ff.name)
             ___ <- old.delete() if checker(old)
-            ___ <- updateChild(ff)
+            ___ <- updateChild(ff, ttl)
           } yield Unit
-      }.map { _ => ff.save() }
+      }.map { _ => ff.save(ttl) }
     }
   }
 
@@ -150,15 +153,15 @@ case class Directory(
   ): Future[Directory] =
     Directory(name, path / name, uid, id, permission = dirPermission).save()
 
-  def addChild(child: INode)(
+  def addChild(child: INode, ttl: Duration = Duration.Inf)(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs._directories.addChild(this, child)
+    cfs._directories.addChild(this, child, ttl)
 
-  def updateChild(child: INode)(
+  def updateChild(child: INode, ttl: Duration = Duration.Inf)(
     implicit cfs: CassandraFileSystem
   ): Future[Directory] =
-    cfs._directories.updateChild(this, child)
+    cfs._directories.updateChild(this, child, ttl)
 
   def delChild(childName: String)(
     implicit cfs: CassandraFileSystem
@@ -223,10 +226,10 @@ case class Directory(
  */
 sealed class DirectoryTable
   extends NamedCassandraTable[DirectoryTable, Directory]
-  with INodeCanonicalNamed
-  with INodeKey[DirectoryTable, Directory]
-  with INodeColumns[DirectoryTable, Directory]
-  with DirectoryColumns[DirectoryTable, Directory] {
+    with INodeCanonicalNamed
+    with INodeKey[DirectoryTable, Directory]
+    with INodeColumns[DirectoryTable, Directory]
+    with DirectoryColumns[DirectoryTable, Directory] {
 
   override def fromRow(r: Row): Directory = {
     Directory(
@@ -317,26 +320,36 @@ class Directories(
   }
 
   def addChild(
-    dir: Directory, inode: INode
-  ): Future[Directory] = CQL {
-    insert
-      .value(_.inode_id, dir.id)
-      .value(_.name, inode.name)
-      .value(_.child_id, inode.id)
-      .ifNotExists()
-  }.future().map { rs =>
-    if (rs.wasApplied()) dir
-    else throw Directory.ChildExists(dir.id, inode.name)
+    dir: Directory, inode: INode, ttl: Duration = Duration.Inf
+  ): Future[Directory] = {
+    val cql =
+      insert
+        .value(_.inode_id, dir.id)
+        .value(_.name, inode.name)
+        .value(_.child_id, inode.id)
+        .ifNotExists()
+    (ttl match {
+      case t: FiniteDuration => CQL {cql.ttl(t)}
+      case _                 => CQL {cql}
+    }).future().map { rs =>
+      if (rs.wasApplied()) dir
+      else throw Directory.ChildExists(dir.id, inode.name)
+    }
   }
 
   def updateChild(
-    dir: Directory, inode: INode
-  ): Future[Directory] = CQL {
-    update
-      .where(_.inode_id eqs dir.id)
-      .and(_.name eqs inode.name)
-      .modify(_.child_id setTo inode.id)
-  }.future().map(_ => dir)
+    dir: Directory, inode: INode, ttl: Duration = Duration.Inf
+  ): Future[Directory] = {
+    val cql =
+      update
+        .where(_.inode_id eqs dir.id)
+        .and(_.name eqs inode.name)
+        .modify(_.child_id setTo inode.id)
+    (ttl match {
+      case t: FiniteDuration => CQL {cql.ttl(t)}
+      case _                 => CQL {cql}
+    }).future().map(_ => dir)
+  }
 
   def delChild(
     dir: Directory, childName: String
@@ -352,28 +365,33 @@ class Directories(
    * @param dir     target dir
    * @param inode   renaming inode
    * @param newName new name for target inode
+   * @param ttl     time to live of a temporary file
    * @return true if renaming succeeded, or throw [[Directory.ChildExists]]
    */
   def renameChild(
-    dir: Directory,
-    inode: INode,
-    newName: String
-  ): Future[Boolean] = CQL {
-    insert
-      .value(_.inode_id, dir.id)
-      .value(_.name, newName)
-      .value(_.child_id, inode.id).ifNotExists()
-  }.future()
-    .map(_.wasApplied()).andThen {
-    case Success(true) =>
-      CQL {
-        delete
-          .where(_.inode_id eqs dir.id)
-          .and(_.name eqs inode.name)
-      }.future()
-  }.map {
-    case false => throw Directory.ChildExists(dir, newName)
-    case b     => b
+    dir: Directory, inode: INode, newName: String, ttl: Duration = Duration.Inf
+  ): Future[Boolean] = {
+    val cql =
+      insert
+        .value(_.inode_id, dir.id)
+        .value(_.name, newName)
+        .value(_.child_id, inode.id)
+        .ifNotExists()
+    (ttl match {
+      case t: FiniteDuration => CQL {cql.ttl(t)}
+      case _                 => CQL {cql}
+    }).future()
+      .map(_.wasApplied()).andThen {
+      case Success(true) =>
+        CQL {
+          delete
+            .where(_.inode_id eqs dir.id)
+            .and(_.name eqs inode.name)
+        }.future()
+    }.map {
+      case false => throw Directory.ChildExists(dir, newName)
+      case b     => b
+    }
   }
 
   /**
