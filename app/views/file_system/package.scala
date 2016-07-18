@@ -38,8 +38,8 @@ package object file_system {
 
     def image = new PolarQuestion {
       def ? : Boolean = ext.exists {
-        case ci"png" | ci"jpg" | ci"gif" => true
-        case _                           => false
+        case ci"png" | ci"jpg" | ci"jpeg" | ci"gif" | ci"svg" => true
+        case _                                                => false
       }
     }
 
