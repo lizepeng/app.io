@@ -72,7 +72,9 @@ angular.module 'api_internal.cfs', []
     switch file_ext
       when 'png'    then 'fa-file-image-o'
       when 'jpg'    then 'fa-file-image-o'
+      when 'jpeg'   then 'fa-file-image-o'
       when 'gif'    then 'fa-file-image-o'
+      when 'svg'    then 'fa-file-image-o'
       when 'mp3'    then 'fa-file-audio-o'
       when 'wma'    then 'fa-file-audio-o'
       when 'm4a'    then 'fa-file-audio-o'

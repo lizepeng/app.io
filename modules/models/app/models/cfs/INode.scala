@@ -36,12 +36,43 @@ trait INode extends HasUUID with TimeBased {
 
   lazy val updated_at: DateTime = created_at
 
-  def rename(newName: String, ttl: Duration = Duration.Inf)(
+  /**
+   * Rename this inode to another name
+   *
+   * @param newName   new name for target inode
+   * @param overwrite whether to overwrite existing inode
+   * @param checker   check if user have permission to overwrite existing inode
+   * @param ttl       time to live of a temporary inode
+   * @param cfs       cassandra file system
+   * @return
+   */
+  def rename(
+    newName: String,
+    overwrite: Boolean = false,
+    checker: PermissionChecker = alwaysBlock,
+    ttl: Duration = Duration.Inf
+  )(
     implicit cfs: CassandraFileSystem
   ): Future[Boolean] = {
     for {
       pdir <- cfs._directories.find(parent)(onFound = p => p)
-      done <- cfs._directories.renameChild(pdir, this, newName, ttl)
+      done <- cfs._directories.renameChild(pdir, this, newName, ttl).recoverWith {
+        case e: Directory.ChildExists if overwrite =>
+          if (is_directory) {
+            for {
+              old <- pdir.dir(newName)
+              ___ <- old.delete(recursive = true, checker)
+              ret <- rename(newName, overwrite, checker, ttl)
+            } yield ret
+          }
+          else {
+            for {
+              old <- pdir.file(newName)
+              ___ <- old.delete() if checker(old)
+              ret <- rename(newName, overwrite, checker, ttl)
+            } yield ret
+          }
+      }
     } yield done
   }
 

@@ -246,7 +246,7 @@ case class FlowJs(
           } |>>> curr.save(f_id, permission, overwrite, checker = _.w.?)
         //rename temp file to target file
         file <- temp
-          .rename(filename)
+          .rename(filename, overwrite, checker = _.w.?)
           .map(_ => temp.copy(name = filename, path = temp.path + filename))
         _ret <-
         if (file.size <= maxLength) {

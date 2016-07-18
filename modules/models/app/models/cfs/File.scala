@@ -6,7 +6,6 @@ import com.datastax.driver.core.utils.UUIDs
 import com.websudos.phantom.dsl._
 import helpers.ExtMap._
 import helpers._
-import helpers.syntax._
 import models.cassandra._
 import models.cfs.Block.BLK
 import models.cfs.CassandraFileSystem._
@@ -27,7 +26,7 @@ case class File(
   id: UUID = UUIDs.timeBased(),
   size: Long = 0,
   indirect_block_size: Int = 1024 * 32 * 1024 * 8,
-  block_size: Int = 1024 * 8,
+  block_size: Int = 1024 * 512,
   permission: Permission = Role.owner.rw,
   ext_permission: ExtPermission = ExtPermission(),
   attributes: Map[String, String] = Map(),
@@ -143,23 +142,28 @@ class Files(
   def streamWriter(
     inode: File, ttl: Duration = Duration.Inf
   ): Iteratee[BLK, File] = {
-    import scala.Predef._
     Enumeratee.grouped[BLK] {
       Traversable.take[BLK](inode.block_size) &>>
         Iteratee.consume[BLK]()
     } &>>
       Iteratee.foldM[BLK, IndirectBlock](new IndirectBlock(inode.id)) {
         (curr, blk) =>
-          _blocks.write(curr.id, curr.length, blk, ttl)
-          val next = curr + blk.length
-
-          next.length < inode.indirect_block_size match {
-            case true  => Future.successful(next)
-            case false => _indirectBlocks.write(next, ttl).map(_.next)
-          }
+          for {
+            ____ <- _blocks.write(curr.id, curr.length, blk, ttl)
+            temp <- Future.successful(curr + blk.length)
+            next <- temp.length < inode.indirect_block_size match {
+              case true  => Future.successful(temp)
+              case false => _indirectBlocks.write(temp, ttl).map(_.next)
+            }
+          } yield next
       }.mapM { last =>
-        _indirectBlocks.write(last, ttl) iff (last.length != 0)
-        this.write(inode.copy(size = last.offset + last.length), ttl)
+        for {
+          ____ <- {
+            if (last.length != 0) _indirectBlocks.write(last, ttl)
+            else Future.successful(last)
+          }
+          file <- this.write(inode.copy(size = last.offset + last.length), ttl)
+        } yield file
       }
 
   }
