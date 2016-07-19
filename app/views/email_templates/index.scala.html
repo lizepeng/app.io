@@ -68,7 +68,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
                         <div class="btn-group">
                           @form(routes.EmailTemplatesCtrl.destroy(tmpl.id, tmpl.lang), 'class -> "form-inline") {
                             @common._previous_uri()
-                            <button type="submit" class="btn form-inline-btn">
+                            <button type="submit" class="btn form-inline-btn btn-remove-email-tmpl">
                               <i class="fa fa-trash-o fa-lg text-danger"></i>
                             </button>
                           }
@@ -104,7 +104,7 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
 
 @js = {
   <script>
-    $('.form-inline-btn').on('click', function(e) {
+    $('.btn-remove-email-tmpl').on('click', function(e) {
       e.preventDefault();
       var form = $(this).closest('form');
       swal({
