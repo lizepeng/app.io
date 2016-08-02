@@ -39,7 +39,7 @@ trait HttpDownloadResult extends HeaderNames with Status {
     result.withHeaders(
       CONTENT_DISPOSITION -> {
         val dispositionType = if (inline) "inline" else "attachment"
-        s"""$dispositionType; filename="$name"; filename*=utf-8''$encoded"""
+        s"""$dispositionType; filename="${name(file)}"; filename*=utf-8''$encoded"""
       }
     )
   }
