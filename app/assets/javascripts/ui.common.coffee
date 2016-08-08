@@ -1,7 +1,7 @@
 #
 # Common UI Helpers.
 #
-angular.module 'ui.common', []
+angular.module 'ui.common', [ 'ngCookies' ]
 
 #
 # If ng-src in image resolves to a 404, then fallback to err-src.
@@ -14,23 +14,31 @@ angular.module 'ui.common', []
 
 .controller 'minimalizaSidebarCtrl', [
   '$scope'
-  '$element'
+  '$cookies'
   '$timeout'
-  ($scope, $element, $timeout) ->
+  ($scope, $cookies, $timeout) ->
 
     $scope.minimalize = ->
-      $('body').toggleClass 'mini-navbar'
-      if !$('body').hasClass('mini-navbar') or $('body').hasClass('body-small')
+      previous = $cookies.get('mini-navbar') is 'Y'
+      minimalized = if previous then 'N' else 'Y'
+      # Set cookie
+      $cookies.put 'mini-navbar', minimalized, path : '/'
+      # Toggle mini-navbar
+      $('body').toggleClass 'mini-navbar', minimalized
+      if !minimalized or $('body').hasClass('body-small')
         # Hide menu in order to smoothly turn on when maximize menu
-        $('#side-menu').hide()
+        $('.side-menu').hide()
         # For smoothly turn on menu
         $timeout (->
-          $('#side-menu').fadeIn 400
+          $('.side-menu').fadeIn 400
         ), 200
       else
         # Remove all inline style from jquery fadeIn function to reset menu state
-        $('#side-menu').removeAttr 'style'
+        $('.side-menu').removeAttr 'style'
       return
+
+    # Set mini-navbar based on cookie
+    $('body').toggleClass 'mini-navbar', $cookies.get('mini-navbar') is 'Y'
 
     return
 ]

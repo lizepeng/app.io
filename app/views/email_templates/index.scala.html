@@ -103,7 +103,8 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
 }()(js)
 
 @js = {
-  <script>
+<script>
+  $(function() {
     $('.btn-remove-email-tmpl').on('click', function(e) {
       e.preventDefault();
       var form = $(this).closest('form');
@@ -121,5 +122,6 @@ implicit req: UserRequest[_], messages: Messages, env: Environment)
         form.submit();
       }, function(dismiss) {});
     });
-  </script>
+  });
+</script>
 }

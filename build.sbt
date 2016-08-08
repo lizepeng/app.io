@@ -55,6 +55,7 @@ libraryDependencies ++= Seq(
   "org.webjars.bower" %  "angular-animate"            % "1.4.4",
   "org.webjars.bower" %  "angular-sanitize"           % "1.4.4",
   "org.webjars.bower" %  "angular-i18n"               % "1.4.4",
+  "org.webjars.bower" %  "angular-cookies"            % "1.4.4",
   "org.webjars.bower" %  "underscore"                 % "1.8.3",
   "org.webjars.bower" %  "animate.css"                % "3.4.0",
   "org.webjars.bower" %  "ng-flow"                    % "2.6.1",

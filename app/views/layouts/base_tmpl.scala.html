@@ -26,6 +26,30 @@
     <!--[if lt IE 9]>
       <script src="../assets/js/html5shiv.js"></script>
     <![endif]-->
+    @libs.webjars("js", "jquery")
+    @libs.webjars("js", "pace")
+    @libs.webjars("js", "metis-menu")
+    <script>
+      $(window).bind("load resize", function() {
+        $('body').toggleClass('body-small', $(document).width() < 768);
+      });
+      Pace.options.ajax.trackWebSockets = false;
+      $('.side-menu').metisMenu();
+    </script>
+    @libs.webjars("js", "angular")
+    @libs.webjars("js", "angular-cookies")
+    @libs.webjars("js", s"angular-i18n-${messages.lang.code}")
+    @libs.webjars("js", "angular-bootstrap-tpls")
+    @libs.webjars("js", "underscore")
+    @libs.webjars("js", "sweet-alert-2")
+    @libs.assets("js", "ui.common")
+    @configNgApp
+    @req.maybeUser.toOption.map { _ =>
+      @libs.assets("js", "ws.helper")
+      @libs.assets("js", "ui.notification")
+      @configUserWebSocket
+    }
+    @js
   </head>
   <body class="body-small">
     @{_navigation(main_menu)}
@@ -37,33 +61,6 @@
       }
       @{_footer()}
     </div>
-    @libs.webjars("js", "angular")
-    @libs.webjars("js", s"angular-i18n-${messages.lang.code}")
-    @libs.webjars("js", "angular-bootstrap-tpls")
-    @libs.webjars("js", "underscore")
-    @libs.webjars("js", "jquery")
-    @libs.webjars("js", "metis-menu")
-    @libs.webjars("js", "pace")
-    @libs.webjars("js", "sweet-alert-2")
-    @configNgApp
-    @req.maybeUser.toOption.map { _ =>
-      @libs.assets("js", "ws.helper")
-      @libs.assets("js", "ui.notification")
-      @libs.assets("js", "ui.common")
-      @configUserWebSocket
-    }
-    @js
-    <script>
-      $(window).bind("load resize", function() {
-        if ($(document).width() < 768) {
-          $('body').addClass('body-small')
-        } else {
-          $('body').removeClass('body-small')
-        }
-      });
-      Pace.options.ajax.trackWebSockets = false;
-      $("#side-menu").metisMenu();
-    </script>
   </body>
 
   <link rel="shortcut icon" type="image/png"
@@ -76,6 +73,7 @@
       .controller('NavbarCtrl', ['$scope', function($scope){
         $scope.isCollapsed = true;
       }]);
+    angular.module('app').requires.push('ui.common');
   </script>
 }
 
@@ -85,6 +83,5 @@
     angular.module('ui.notification').run(['WebSocketOptions', function(WebSocketOptions) {
       WebSocketOptions.url = "@sockets.routes.UserWebSocketCtrl.connect.webSocketURL()";
     }]);
-    angular.module('app').requires.push('ui.common');
   </script>
 }
