@@ -67,11 +67,15 @@ trait CFSImageComponents extends CFSDownloadComponents {
 
   object CFSImage {
 
-    def show(filePath: User => Path, size: Int = 0)(
+    def show(
+      filePath: User => Path,
+      size: Int = 0,
+      thumbnailHelper: ThumbnailHelper = Thumbnail
+    )(
       implicit errorHandler: UserActionExceptionHandler
     ): UserRequest[AnyContent] => Future[Result] = implicit req => {
       val path = filePath(req.user)
-      val thumbnail = path.filename.map(Thumbnail.choose(_, size))
+      val thumbnail = path.filename.map(thumbnailHelper.choose(_, size))
       import security._
       (for {
         result <- CFSHttpCaching(path + thumbnail).async { file =>
@@ -98,7 +102,8 @@ trait CFSImageComponents extends CFSDownloadComponents {
       permission: Permission = Role.owner.rw,
       overwrite: Boolean = false,
       maxLength: Long = 16 * 1024 * 1024,
-      accept: Seq[String] = Seq()
+      accept: Seq[String] = Seq(),
+      thumbnailHelper: ThumbnailHelper = Thumbnail
     ): UserRequest[MultipartFormData[File]] => Future[Result] = implicit req => {
       val path = filePath(req.user)
       (req.body.file("file").map(_.ref) match {
@@ -109,7 +114,7 @@ trait CFSImageComponents extends CFSDownloadComponents {
           maxLength = maxLength,
           accept = accept
         ).bindFromRequestBody.upload(chunk, path.parent) { (curr, file) =>
-          Thumbnail.generate(curr, file)(req.user)
+          thumbnailHelper.generate(curr, file)(req.user)
         }
         case None        => throw CFSBodyParser.MissingFile()
       }).andThen {
@@ -120,38 +125,50 @@ trait CFSImageComponents extends CFSDownloadComponents {
     }
   }
 
-  case class Thumbnail(file: File, width: Int, height: Int) {
+  case class Thumbnail(file: File, width: Int, height: Int) extends ThumbnailNaming {
 
-    def name: String = Thumbnail.generateName(file.name, width, height)
+    def name: String = generateName(file.name, width, height)
 
     def saveInto(dir: Directory)(
       implicit user: User
     ): Future[File] = {
-      CFSImage(file)(_.scaleTo(width, height)).enumerator |>>>
+      CFSImage(file)(_.cover(width, height)).enumerator |>>>
         dir.save(name, file.permission, overwrite = true, checker = _.w.?)
     }
   }
 
-  object Thumbnail {
+  object Thumbnail extends ThumbnailHelper {
+
+    def aspectRatio: (Int, Int) = (1, 1)
+  }
+
+  trait ThumbnailHelper extends ThumbnailNaming {
+
+    def aspectRatio: (Int, Int)
+
+    def calcHeight(width: Int) = width * aspectRatio._2 / aspectRatio._1
 
     def generate(curr: Directory, file: File)(
       implicit user: User
     ): Future[Seq[File]] = {
       Future.sequence(
         for (i <- Array(32, 64, 128, 256, 512)) yield {
-          Thumbnail(file, i, i).saveInto(curr)
+          Thumbnail(file, i, calcHeight(i)).saveInto(curr)
         }
       )
     }
 
     def choose(filename: String, size: Int) = size match {
       case s if s <= 0   => filename
-      case s if s <= 32  => generateName(filename, 32, 32)
-      case s if s <= 64  => generateName(filename, 64, 64)
-      case s if s <= 128 => generateName(filename, 128, 128)
-      case s if s <= 256 => generateName(filename, 256, 256)
-      case _             => generateName(filename, 512, 512)
+      case s if s <= 32  => generateName(filename, 32, calcHeight(32))
+      case s if s <= 64  => generateName(filename, 64, calcHeight(64))
+      case s if s <= 128 => generateName(filename, 128, calcHeight(128))
+      case s if s <= 256 => generateName(filename, 256, calcHeight(256))
+      case _             => generateName(filename, 512, calcHeight(512))
     }
+  }
+
+  trait ThumbnailNaming {
 
     def generateName(filename: String, width: Int, height: Int): String = {
       val filenamePattern = """(\w+).(\w+)""".r
@@ -161,5 +178,4 @@ trait CFSImageComponents extends CFSDownloadComponents {
       }
     }
   }
-
 }
