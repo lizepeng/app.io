@@ -1,5 +1,7 @@
 package models.misc
 
+import java.util.Base64
+
 import play.api._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -25,10 +27,16 @@ case class DataURI(
 
 object DataURI {
 
-  def empty = DataURI()
-
   def defaultMimeType = http.MimeTypes.TEXT
   def defaultCharSet = "US-ASCII"
+
+  def empty = DataURI()
+
+  def from(filename: String, bytes: Array[Byte]) = DataURI(
+    mime_type = libs.MimeTypes.forFileName(filename).getOrElse(http.MimeTypes.BINARY),
+    base64 = true,
+    data = Base64.getEncoder.encodeToString(bytes)
+  )
 
   /**
    * Data URI Syntax:
