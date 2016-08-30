@@ -1,7 +1,7 @@
 package helpers
 
 /**
- * @author zepeng.li@gmail.com CanonicalNamed
+ * @author zepeng.li@gmail.com
  */
 trait CanonicalNamed extends Any {
 
@@ -21,4 +21,12 @@ trait CanonicalNamed extends Any {
 trait PackageNameAsCanonicalName extends CanonicalNamed {
 
   def basicName: String = ""
+}
+
+trait ClassNameAsCanonicalName extends CanonicalNamed {
+
+  //@see regular-expressions "Look around"
+  val namePattern = """\w+(?=\$|$)""".r
+
+  val basicName = namePattern.findAllIn(this.getClass.getName).mkString(".")
 }

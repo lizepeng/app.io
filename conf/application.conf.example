@@ -138,7 +138,16 @@ akka {
   loggers = ["akka.event.slf4j.Slf4jLogger"]
   loglevel = "DEBUG"
 
-  actor.provider = "akka.cluster.ClusterActorRefProvider"
+  actor {
+    provider = "akka.cluster.ClusterActorRefProvider"
+
+    serializers {
+      json = "plugins.akka.serialization.json.Serializer"
+    }
+    serialization-bindings {
+      "org.joda.time.LocalDate" = json
+    }
+  }
 
   remote {
     log-remote-lifecycle-events = off

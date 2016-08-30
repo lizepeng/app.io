@@ -1,20 +1,21 @@
 package messages
 
 import akka.actor._
+import helpers._
 import services.actors._
 
 import scala.language.postfixOps
 
 object NotificationActor
-  extends ActorClusterSharding {
-
-  val shardName: String = "notification_actors"
+  extends ActorClusterSharding
+    with NotificationActorCNamed
+    with CanonicalNameAsShardName {
 
   def props: Props = Props(classOf[NotificationActor])
 
 }
 
-class NotificationActor extends UserMessageActor {
+class NotificationActor extends UserMessageActor with NotificationActorCNamed {
 
   def isAllResourcesReady = {
     super.isResourcesReady
@@ -35,4 +36,9 @@ trait NotificationRegionComponents {
   def actorSystem: ActorSystem
 
   def _notificationRegion = NotificationActor.getRegion(actorSystem)
+}
+
+trait NotificationActorCNamed extends CanonicalNamed {
+
+  def basicName = "notification_actors"
 }

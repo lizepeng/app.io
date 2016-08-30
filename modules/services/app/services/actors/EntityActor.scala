@@ -4,7 +4,7 @@ import akka.actor._
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
 import akka.util.Timeout
-import helpers.BasicPlayApi
+import helpers._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -17,16 +17,17 @@ object EntityActor {
 
   case object SetReceiveTimeout
   case object UnsetReceiveTimeout
+  case object PrePassivate
+  case object Passivate
 }
 
-abstract class EntityActor extends PersistentActor with ActorLogging {
+abstract class EntityActor extends PersistentActor with ActorLogging with CanonicalNamed {
 
   import ResourcesManager._
   import ShardRegion.Passivate
 
-  //TODO  self.path.toStringWithoutAddress
-  val persistenceId = s"${self.path.parent.name}-${self.path.name}"
-  val manager       = context.actorSelection(ResourcesManager.actorPath)
+  def persistenceId = s"/sharding/$basicName/${self.path.name}"
+  def manager = context.actorSelection(ResourcesManager.actorPath)
 
   var basicPlayApi  : BasicPlayApi = _
   var receiveTimeout: Timeout      = 2 minutes
@@ -80,27 +81,37 @@ abstract class EntityActor extends PersistentActor with ActorLogging {
   }
 
   // Ready to receive message
-  def receiveCommand: Receive = handleTimeout
+  def receiveCommand: Receive = {
+    handleTimeout orElse handlePrePassivation orElse handlePassivation
+  }
 
   def handleTimeout: Receive = {
 
     case EntityActor.SetReceiveTimeout =>
-      if (isIdle) {
-        log.debug(s"${self.path.name}, Set ReceiveTimeout: $receiveTimeout.")
-        context.setReceiveTimeout(receiveTimeout.duration)
-      }
+      log.debug(s"${self.path.name}, Set ReceiveTimeout: $receiveTimeout.")
+      context.setReceiveTimeout(receiveTimeout.duration)
 
     case EntityActor.UnsetReceiveTimeout =>
-      if (!isIdle) {
-        log.debug(s"${self.path.name}, Set no ReceiveTimeout.")
-        context.setReceiveTimeout(Duration.Undefined)
-      }
+      log.debug(s"${self.path.name}, Set no ReceiveTimeout.")
+      context.setReceiveTimeout(Duration.Undefined)
 
     case ReceiveTimeout =>
       if (isIdle) {
-        context.parent ! Passivate(stopMessage = PoisonPill)
+        self ! EntityActor.PrePassivate
         log.debug(s"${self.path.name}, Passivate after being idle for $receiveTimeout.")
+      } else {
+        log.debug(s"${self.path.name}, Receive time out but not idle.")
       }
+  }
+
+  def handlePrePassivation: Receive = {
+    case EntityActor.PrePassivate => self ! EntityActor.Passivate
+  }
+
+  final def handlePassivation: Receive = {
+    case EntityActor.Passivate =>
+      context.parent ! Passivate(stopMessage = PoisonPill)
+      log.debug(s"${self.path.name}, Passivated.")
   }
 
   def stashAll: Receive = {

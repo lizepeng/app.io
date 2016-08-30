@@ -3,19 +3,21 @@ package messages
 import java.util.UUID
 
 import akka.actor._
+import helpers._
 import models._
 import services.actors._
 
 import scala.language.postfixOps
 
-object MailActor extends ActorClusterSharding {
-
-  val shardName: String = "mail_actors"
+object MailActor
+  extends ActorClusterSharding
+    with MailActorCNamed
+    with CanonicalNameAsShardName {
 
   def props: Props = Props(classOf[MailActor])
 }
 
-class MailActor extends UserMessageActor {
+class MailActor extends UserMessageActor with MailActorCNamed {
 
   var _mailInbox: MailInbox = _
   var _mailSent : MailSent  = _
@@ -45,4 +47,9 @@ class MailActor extends UserMessageActor {
       sockets.route(mail, sender())
 
   }: Receive) orElse super.receiveCommand
+}
+
+trait MailActorCNamed extends CanonicalNamed {
+
+  def basicName = "mail_actors"
 }

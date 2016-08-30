@@ -2,18 +2,14 @@ package services.actors
 
 import akka.actor._
 import akka.pattern._
+import akka.persistence.AtLeastOnceDelivery._
+import akka.persistence._
 import helpers._
 
 import scala.concurrent._
+import scala.concurrent.duration._
 import scala.reflect._
 import scala.util._
-
-/**
- * [[StatefulEntityActor]] 's Companion Object.
- *
- * @author zepeng.li@gmail.com
- */
-object StatefulEntityActor extends StatefulEntityCommands
 
 /**
  * Commands definition, which must also be [[Serializable]].
@@ -21,27 +17,45 @@ object StatefulEntityActor extends StatefulEntityCommands
 trait CommandsDefining extends Serializable
 
 /**
- * Commands in [[StatefulEntityActor]].
+ * Commands/Notifications in [[StatefulEntityActor]].
  */
-trait StatefulEntityCommands {
-  /** Common trait for all commands. */
-  trait Command
+trait StatefulEntityCommands extends CommandDef with NotificationDef {
+
   /** Get Information of an entity. */
   case class Get() extends Command
   /** Get Index of an entity. */
   case class GetIndex() extends Command
-  /** Message passed among cluster actors, which is not a command. */
-  trait Notification
+  /** Test Actor */
+  case class Test() extends Command
 }
 
 /**
  * A Stateful EntityActor
  */
 abstract class StatefulEntityActor extends EntityActor
+  with AtLeastOnceDelivery
   with BasicPlayComponents
   with I18nLoggingComponents {
 
   import context.dispatcher
+
+  override def isIdle = numberOfUnconfirmed < 1
+
+  override def receiveRecover: Receive = stateFromSnapshot
+
+  def stateFromSnapshot: Receive = {
+    case SnapshotOffer(md, snapshot: AtLeastOnceDeliverySnapshot) => setDeliverySnapshot(snapshot)
+  }
+
+  override def handlePrePassivation: Receive = {
+    case EntityActor.PrePassivate          => saveSnapshot(stateToSnapshot)
+    case SaveSnapshotSuccess(md)           => deleteSnapshots(SnapshotSelectionCriteria(maxTimestamp = md.timestamp - 10.day.toMillis))
+    case SaveSnapshotFailure(md, cause)    => log.error(cause, s"Save snapshot failed, $md")
+    case DeleteSnapshotsSuccess(cr)        => self ! EntityActor.Passivate
+    case DeleteSnapshotsFailure(cr, cause) => self ! EntityActor.Passivate; log.error(cause, s"Delete snapshots failed, $cr")
+  }
+
+  def stateToSnapshot: Any = getDeliverySnapshot
 
   /**
    * After all resources depended are ready, launch the initialization process.

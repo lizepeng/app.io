@@ -1,19 +1,21 @@
 package messages
 
 import akka.actor._
+import helpers._
 import models._
 import services.actors._
 
 import scala.language.postfixOps
 
-object ChatActor extends ActorClusterSharding {
-
-  val shardName: String = "chat_actors"
+object ChatActor
+  extends ActorClusterSharding
+    with ChatActorCNamed
+    with CanonicalNameAsShardName {
 
   def props: Props = Props(classOf[ChatActor])
 }
 
-class ChatActor extends UserMessageActor {
+class ChatActor extends UserMessageActor with ChatActorCNamed {
 
   var _chatHistories: ChatHistories = _
 
@@ -40,4 +42,9 @@ class ChatActor extends UserMessageActor {
       sockets.route(msg, sender())
 
   }: Receive) orElse super.receiveCommand
+}
+
+trait ChatActorCNamed extends CanonicalNamed {
+
+  def basicName = "chat_actors"
 }

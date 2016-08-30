@@ -11,6 +11,7 @@ import models.misc._
 import models.sys._
 import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
+import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 
@@ -155,6 +156,23 @@ object User
   val secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking")
 
   /**
+   * User ID
+   *
+   * @param uid user id
+   */
+  case class ID(uid: UUID) extends AnyVal {
+
+    override def toString = this >>: Stringifier.of[ID]
+  }
+
+  object ID {
+
+    implicit val jsonFormat = Format.of[UUID].inmap[ID](ID.apply, _.uid)
+
+    implicit val stringifier: Stringifier[ID] = Stringifier.of[UUID].inmap[ID](ID.apply, _.uid)
+  }
+
+  /**
    * Thrown when user is not found
    *
    * @param user email or uuid
@@ -237,6 +255,8 @@ class Users(
     case None => throw User.NotFound(id.toString)
     case _    => true
   }
+
+  def findBy(id: User.ID): Future[User] = find(id.uid)
 
   def find(id: UUID): Future[User] = CQL {
     select.where(_.id eqs id)
