@@ -57,7 +57,7 @@ case class User(
 
   def hasPassword(passwd: Password) = {
     if (encrypted_password == "") false
-    else BCrypt.checkpw(s"$salt--${passwd.self}", encrypted_password)
+    else BCrypt.checkpw(s"${passwd.self}--$salt", encrypted_password)
   }
 
   def encryptPassword = {
@@ -92,7 +92,7 @@ case class User(
   def withNoSessionId = copy(session_id = None)
 
   private def encrypt(salt: String, passwd: Password) =
-    BCrypt.hashpw(s"$salt--${passwd.self}", BCrypt.gensalt())
+    BCrypt.hashpw(s"${passwd.self}--$salt", BCrypt.gensalt())
 
   private def makeSalt(passwd: Password) =
     Codecs.sha2(randomString, length = 256)
